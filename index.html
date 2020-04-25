@@ -19,7 +19,7 @@
   <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
 
   <!-- Custom styles for this template -->
-  <link href="css/resume.min.css" rel="stylesheet">
+  <link href="css/resume.css" rel="stylesheet">
 </head>
 
 <body id="page-top">
@@ -27,11 +27,9 @@
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top" id="sideNav">
     <a class="navbar-brand js-scroll-trigger" href="#page-top">
       <span class="d-block d-lg-none">Zhenghan Yong</span>
-      <span class="d-none d-lg-block">
-        <img class="img-fluid img-profile rounded-circle mx-auto mb-2" src="img/profile.jpg" alt="">
-      </span>
     </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -55,19 +53,21 @@
     </div>
   </nav>
 
-  <div class="container-fluid p-0">
+  <div class="vm container-fluid justify-content-center">
+    <section class=" resume-section d-flex justify-content-center" id="about">
+      <div class="about-text w-50">
 
-    <section class="resume-section p-3 p-lg-5 d-flex align-items-center" id="about">
-      <div class="w-100">
-        <h1 class="mb-0">Zhenghan(Gary)
+        <h1 class="mb-0">Gary
           <span class="text-primary">Yong</span>
         </h1>
-        <div class="subheading mb-5">2B <b>Management Engineering</b> Student at <b>University of Waterloo</b>  · 1(226)868-6208 ·
+        <div class="subheading mb-5">3A <b>Management Engineering</b> Student at <b>University of Waterloo</b> ·
+          1(226)868-6208 ·
           <a href="mailto:z2yong@edu.uwaterloo.ca">z2yong@edu.uwaterloo.ca</a>
         </div>
-        <p class="lead mb-5">Dedicated hardworking individual specialized in process optimization using engineering principles.</p>
+        <p class="lead mb-5">Dedicated hardworking individual specialized in process optimization using engineering
+          principles.</p>
         <div class="social-icons">
-          <a href="https://www.linkedin.com/in/zhenghan-yong-66a9ba164/">
+          <a href="https://www.linkedin.com/in/gary-yong-66a9ba164">
             <i class="fab fa-linkedin-in"></i>
           </a>
           <a href="https://github.com/17yongga">
@@ -78,6 +78,9 @@
           </a>
         </div>
       </div>
+      <div class="w-50">
+        <img src='img/profile.png' class="bg"> </img>
+      </div>
     </section>
 
     <hr class="m-0">
@@ -85,18 +88,38 @@
     <section class="resume-section p-3 p-lg-5 d-flex justify-content-center" id="experience">
       <div class="w-100">
         <h2 class="mb-5">Experience</h2>
-
         <div class="resume-item d-flex flex-column flex-md-row justify-content-between mb-5">
           <div class="resume-content">
-            <h3 class="mb-0">Supply Chain Logistics Analyst</h3>
+            <h3 class="mb-0">Software Engineering Analyst</h3>
+            <div class="subheading mb-3">Accenture</div>
+            <ul>
+              <li>Defined product requirements and scope by working collaboratively with industry experts in fashion,
+                retail and blockchain technology </li>
+              <li>Developed a product authentication blockchain platform to reduce annual billion-dollar loss in
+                high-end fashion counterfeiting industry</li>
+              <li>Conducted user research to implement user-friendly UI/UX designs that maximize usability and user
+                satisfaction</li>
+              <li>Maintained a 12-week roadmap for delivery in an Agile Scrum environment with user testing and
+                continuous integration on AWS </li>
+            </ul>
+          </div>
+          <div class="resume-date text-md-right">
+            <span class="text-primary">Sept 2019 - Dec 2019</span>
+          </div>
+        </div>
+        <div class="resume-item d-flex flex-column flex-md-row justify-content-between mb-5">
+          <div class="resume-content">
+            <h3 class="mb-0">Logistics Project Analyst, Supply Chain</h3>
             <div class="subheading mb-3">Loblaw Companies Limited</div>
             <ul>
-              <li>Designed and developed an asset tracking system using&nbsp;<strong>Bluetooth Low Energy&nbsp;</strong>beacons and<strong>&nbsp;IoT services</strong>,&nbsp;&nbsp;giving an estimated&nbsp;<strong>$1M</strong>&nbsp;of annual cost improvement for the operation.&nbsp;</li>
-              <li>Created a&nbsp;<strong>web application&nbsp;</strong>using&nbsp;<strong>JavaScript</strong>&nbsp;that allowed clients to access and query pallet tracking records from&nbsp;<strong>MySQL</strong>&nbsp;database.</li>
-              <li>Developed a&nbsp;<strong>computer vision program</strong>&nbsp;that reads CAD drawings of warehouse racks and outputs its dimensions.&nbsp;</li>
-              <li>Collaborated with colleagues in achieving&nbsp;<strong>augmented reality</strong>&nbsp;warehouse picking and AR label recognition on Microsoft&nbsp;<strong>Hololens</strong>.</li>
-              <li>Designed and programmed a<strong>&nbsp;physics simulator</strong>&nbsp;in&nbsp;<strong>Unity&nbsp;</strong>to evaluate the stability of a virtual pallet.</li>
-              </ul>
+              <li>Conducted process analysis of the pallet tracking procedures and proposed data delivery automation
+                using IoT system</li>
+              <li>Defined system requirements from stakeholder interviews and proposed a product roadmap from design to
+                implementation</li>
+              <li>Analyzed warehouse labor time study and logistics expense report to gain $1M annual savings after
+                system automation</li>
+              <li>Translated stakeholder vision into developer-ready functional stories with acceptance criteria</li>
+            </ul>
           </div>
           <div class="resume-date text-md-right">
             <span class="text-primary">Janurary 2019 - April 2019</span>
@@ -105,15 +128,19 @@
 
         <div class="resume-item d-flex flex-column flex-md-row justify-content-between">
           <div class="resume-content">
-           
+
             <h3 class="mb-0"><span> </span>Monitoring Associate</h3>
             <div class="subheading mb-3">Pureliving China</div>
             <ul>
-              <li>Developed an&nbsp;<strong>excel tool</strong>&nbsp;that improved the efficiency of business transaction processing and sorting by<strong>&nbsp;1600%</strong>.</li>
-              <li>Provided professional on-site setup/troubleshooting services to&nbsp;<strong>100+</strong>&nbsp;clients.&nbsp;</li>
-              <li>Worked with the finance department on sales order fulfillment and billing for<strong>&nbsp;300+</strong>&nbsp;monitoring services.</li>
-              <li>Collaborated with sales to complete sales orders totaling<strong>&nbsp;$800K</strong>.&nbsp;</li>
-              </ul>
+              <li>Analyzed and identified inefficient transaction processing procedure founded by project analysis and
+                time study report</li>
+              <li>Developed an Excel VBA tool that reduced weekly business transaction processing time from 4 hours to
+                15 minutes</li>
+              <li>Designed and iterated on user feedback to create a user-centric UI/UX for the tool with comprehensive
+                validation rules</li>
+              <li>Performed 30+ onsite interviews to collect client information and propose tailored product
+                services</strong>.&nbsp;</li>
+            </ul>
           </div>
           <div class="resume-date text-md-right">
             <span class="text-primary">May 2018 - August 2018</span>
@@ -132,15 +159,35 @@
 
         <div class="resume-item d-flex flex-column flex-md-row justify-content-between mb-5">
           <div class="resume-content">
-            <h3 class="mb-0">Pallet Tracking Automation</h3>
+            <h3 class="mb-0">Rideshare Service Platform</h3>
+            <div class="subheading mb-0">Personal Project</div>
+            <ul>
+              <li>Developed a ridesharing app that allows students to find safe and cheap rides fast with cost-savings
+                up to 600% </li>
+              <li>Interviewed drivers and riders to define system requirements and minimum viable product</li>
+              <li>Identified cost, safety, and efficiency issues with the existing rideshare solutions available through
+                market research</li>
+            </ul>
+          </div>
+          <div class="resume-date text-md-right">
+            <span class="text-primary">June 2018 - October 2018</span>
+          </div>
+        </div>
+
+        <div class="resume-item d-flex flex-column flex-md-row justify-content-between mb-5">
+          <div class="resume-content">
+
+            <h3 class="mb-0"><span> </span>Pallet Tracking Automation System</h3>
             <div class="subheading mb-0">Loblaw Companies Limited</div>
-            <h5 class="mb-0"><em>Node-RED, JavaScript, MySQL</em></h6>
-              <ul>
-                <li>Designed, developed and managed an asset tracking system that tracks outbound pallets by placing&nbsp;<strong>Bluetooth Low Energy</strong>&nbsp;beacons onto each outbound pallets<strong>.</strong></li>
-                <li>Created a<strong>&nbsp;web&nbsp;application</strong>&nbsp;using&nbsp;<strong>JavaScript&nbsp;</strong>and<strong>&nbsp;Node-RED</strong>&nbsp;that processed raw pallet tracking data and stored them in&nbsp;<strong>MySQL</strong>&nbsp;database, then displayed sorted data from the database on a&nbsp;<strong>web UI</strong>.</li>
-                <li>Constructed proof of concept for the system through on-site tests and presented a working prototype to department leads.&nbsp;</li>
-                <li>Estimated&nbsp;<strong>$1M</strong>&nbsp;annual cost improvement by eliminating manual labor and human errors.</li>
-                </ul>
+            <ul>
+              <li>Developed an automatic data delivery application backed by JavaScript that connects with Bluetooth low
+                energy beacons and IoT gateways </li>
+              <li>Optimized pallet tracking procedure by eliminating manual labor and human errors using the automated
+                IoT tracking system
+              </li>
+              <li>Performed on-site tests and proposed to the logistics department leads with approval for further
+                integration</li>
+            </ul>
           </div>
           <div class="resume-date text-md-right">
             <span class="text-primary">Janurary 2019 - April 2019</span>
@@ -149,84 +196,17 @@
 
         <div class="resume-item d-flex flex-column flex-md-row justify-content-between mb-5">
           <div class="resume-content">
-           
-            <h3 class="mb-0"><span> </span>Rack Dimension Recognition</h3>
-            <div class="subheading mb-0">Loblaw Companies Limited</div>
-            <h5 class="mb-0"><em>Jupyter Notebook, Python, OpenCV, Tesseract</em></h5>
-            <ul>
-              <li>Programmed a&nbsp;<strong>computer vision program</strong>&nbsp;that takes in CAD drawings of warehouse racks and outputs its realistic dimensions.</li>
-              <li>Used alternative image processing or dimension recognition logic for different types of CAD drawings.</li>
-            </ul>
-          </div>
-          <div class="resume-date text-md-right">
-            <span class="text-primary">March 2019 - April 2019</span>
-          </div>
-        </div>
 
-        <div class="resume-item d-flex flex-column flex-md-row justify-content-between mb-5">
-          <div class="resume-content">
-           
-            <h3 class="mb-0"><span> </span>Transaction Sorting Tool</h3>
-            <div class="subheading mb-0">PureLiving China</div>
-            <h5 class="mb-0"><em>VBA</em></h5>
-            <ul>
-              <li>Developed an<strong>&nbsp;excel tool&nbsp;</strong>that automated business transaction sorting and processing.&nbsp;</li>
-              <li>Designed and created an easy to use&nbsp;<strong>UI</strong>&nbsp;for the tool with comprehensive validation rules.&nbsp;</li>
-              <li>Allowed the user to sort raw transaction datasheets&nbsp;<strong>1600%</strong>&nbsp;faster with minimal mistakes.</li>
-              </ul>
-          </div>
-          <div class="resume-date text-md-right">
-            <span class="text-primary">July 2018 - August 2018</span>
-          </div>
-        </div>
-
-        <div class="resume-item d-flex flex-column flex-md-row justify-content-between mb-5">
-          <div class="resume-content">
-           
-            <h3 class="mb-0"><span> </span>Rideshare Platform(Work in Progress)</h3>
-            <div class="subheading mb-0">Personal</div>
-            <h5 class="mb-0"><em>HTML 5, CSS 3, BootStrap 4 JS</em></h5>
-            <ul>
-              <li><strong>Co-founder</strong>&nbsp;and&nbsp;<strong>developer</strong>&nbsp;of UW Reach, a safe and easy to use rideshare posting platform.</li>
-              <li>Collaborating with a team of five to create a platform that aims to provide GTA students the best ride-share experience.&nbsp;</li>
-              <li>Providing ride-share services that are fairly priced, easy to find, and secure.&nbsp;</li>
-              <li>Working on the design and development of the&nbsp;<strong>landing page</strong>&nbsp;for the platform.&nbsp;</li>
-              </ul>
-          </div>
-          <div class="resume-date text-md-right">
-            <span class="text-primary">March 2019 - Present</span>
-          </div>
-        </div>
-
-        <div class="resume-item d-flex flex-column flex-md-row justify-content-between mb-5">
-          <div class="resume-content">
-           
-            <h3 class="mb-0"><span> </span>Personal Website(Work in Progress)</h3>
-            <div class="subheading mb-0">Personal</div>
-            <h5 class="mb-0"><em>Git, Visual Studio Code, HTML 5, CSS 3, Bootstrap 4 JS</em></h5>
-            <ul>
-              <li>A personal project started base on interest in full-stack web development.</li>
-              <li>Learning&nbsp;<strong>web development&nbsp;</strong>while building a place to showcase personal projects and achievements.&nbsp;</li>
-            </ul>
-          </div>
-          <div class="resume-date text-md-right">
-            <span class="text-primary">March 2019 - Present</span>
-          </div>
-        </div>
-
-        <div class="resume-item d-flex flex-column flex-md-row justify-content-between mb-5">
-          <div class="resume-content">
-           
             <h3 class="mb-0"><span> </span>Project Management Tool</h3>
-            <div class="subheading mb-0">School</div>
-            <h5 class="mb-0"><em>VBA</em></h5>
+            <div class="subheading mb-0">University of Waterloo</div>
             <ul>
-              <li>Created a&nbsp;<strong>decision support tool</strong>&nbsp;using&nbsp;<strong>excel</strong>&nbsp;and&nbsp;<strong>VBA</strong>&nbsp;to help managers better organize deadlines, deal with unexpected changes, and utilize the workforce effectively and efficiently.&nbsp;</li>
-              <li>Led the development of&nbsp;<strong>UI</strong>&nbsp;and button integrations for the tool.&nbsp;</li>
+              <li>Created a Decision Support Tool using Excel to help managers organize deadlines and utilize resources
+                efficiently</li>
+              <li>Designed and implemented UI/UX based on Agile and user-centric design methodologies</li>
             </ul>
           </div>
           <div class="resume-date text-md-right">
-            <span class="text-primary">August 2017 - Dec 2017</span>
+            <span class="text-primary">August 2018 - December 2018</span>
           </div>
         </div>
       </div>
@@ -242,31 +222,19 @@
         <div class="resume-item d-flex flex-column flex-md-row justify-content-between mb-5">
           <div class="resume-content">
             <h3 class="mb-0">University of Waterloo</h3>
-            <div class="subheading mb-3">Bachelor of Applied Science</div>
             <div>
-              Candidate for Bachelor of Applied Science in Management Engineering
+              Management Engineering with 3.7/4.0 GPA
             </div>
 
             <div>
-              Related content: Introduction to Excel and VBA, computing models, problem-solving systems.
+              Relevant Courses: Information Systems Analysis and Design, Organization Design and Technology
             </div>
 
           </div>
           <div class="resume-date text-md-right">
-            <span class="text-primary">September 2017 - Present</span>
+            <span class="text-primary">2017 - 2022</span>
           </div>
         </div>
-
-        <div class="resume-item d-flex flex-column flex-md-row justify-content-between">
-          <div class="resume-content">
-            <h3 class="mb-0">Fleetwood Park Secondary School</h3>
-            <div class="subheading mb-3">High school Diploma</div>
-          </div>
-          <div class="resume-date text-md-right">
-            <span class="text-primary">August 2015 - June 2017</span>
-          </div>
-        </div>
-
       </div>
     </section>
 
@@ -276,22 +244,26 @@
       <div class="w-100">
         <h2 class="mb-5">Skills</h2>
         <ul class="list-inline">
-          
-          <li class="mb-3"><h3>Languages</h3><font size="5">
-            Java, Python, JavaScript, VBA, C#, R, SQL
-          </font></li>
-          <li class="mb-3"><h3>Tools</h3><font size="5">
-           Unity, Node-RED, Visual Studio Code, Jupyter Notebook, Microsoft Office, Git
-          </font></li>
-          <li class="mb-3"><h3>Computer Vision</h3><font size="5">
-              Tesseract, OpenCV
-          </font></li>
-          <li class="mb-3"><h3>Front-End</h3><font size="5">
-              Bootstrap 4 JS, HTML5, CSS3
-          </font></li>
-          <li class="mb-3"><h3>Back-End</h3><font size="5">
-              MySQL, PHP
-          </font></li>
+
+          <li class="mb-3">
+            <h3>PM</h3>
+            <font size="5">
+              Analyzing & Visualizing Data, Managing Stakeholders, Product Road-mapping , Creating User Stories,
+              Performing Cost Analysis
+            </font>
+          </li>
+          <li class="mb-3">
+            <h3>Software</h3>
+            <font size="5">
+              JIRA, Git, AWS, VBA, Java, Python, JavaScript, SQL, Android Studio, Unity, Node-RED, Jupyter Notebook
+            </font>
+          </li>
+          <li class="mb-3">
+            <h3>Certifications</h3>
+            <font size="5">
+              AWS Certified Cloud Practitioner
+            </font>
+          </li>
         </ul>
     </section>
 
@@ -301,15 +273,18 @@
       <div class="w-100">
         <h2 class="mb-5">Interests</h2>
         <h3>Tennis Player</h3>
-        <ul><li>I enjoy playing tennis recreationally. It's both a stress reliever in my busy student life and a great social tool that helps me build connections.</li></ul>
-        
+        <ul>
+          <li>I enjoy playing tennis recreationally. It's both a stress reliever in my busy student life and a great
+            social tool that helps me build connections.</li>
+        </ul>
+
         </h3>
         <p class="mb-0"> </p>
         <h3>Live Performer</h3>
         <ul>
-            <li>Perform Kuai Ban in festival celebrations.</li>
-            <li>Competed internationally and awarded 4th place among forty contestants.&nbsp;</li>
-            </ul>
+          <li>Perform Kuai Ban in festival celebrations.</li>
+          <li>Competed internationally and awarded 4th place among forty contestants.&nbsp;</li>
+        </ul>
       </div>
     </section>
 
@@ -326,21 +301,17 @@
 
   <!-- Custom scripts for this template -->
   <script src="js/resume.min.js"></script>
-  <script> 
-   $("#monitorList").hide();
-  $("#monitor").on('click',function(){
-  if(document.getElementById("monitorList").style.display == "none"){
-    $("#monitorList").slideDown(1000);
-    $("#monitor").text("Hide Details")
-  }
-    else{
-    $("#monitorList").slideUp(1000);
-    $("#monitor").text("Show Details")
-  }
-  })
-  
-  
-  
+  <script>
+    $("#monitorList").hide();
+    $("#monitor").on('click', function () {
+      if (document.getElementById("monitorList").style.display == "none") {
+        $("#monitorList").slideDown(1000);
+        $("#monitor").text("Hide Details")
+      } else {
+        $("#monitorList").slideUp(1000);
+        $("#monitor").text("Show Details")
+      }
+    })
   </script>
 
 </body>
