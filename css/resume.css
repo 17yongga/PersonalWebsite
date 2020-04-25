@@ -18,7 +18,7 @@ body {
   padding: 5px;
   */
   width: 100%;
-
+  z-index: 1;
   /* border: 2px solid red;*/
 }
 
@@ -87,7 +87,7 @@ p.lead {
 }
 
 .social-icons a:hover {
-  background-color: #BD5D38;
+  background-color: rgb(112, 112, 112);
 }
 
 .dev-icons {
@@ -105,7 +105,7 @@ p.lead {
 }
 
 #sideNav .navbar-toggler:focus {
-  outline-color: #d48a6e;
+  outline-color: #ffffff;
 }
 
 @media (min-width: 992px) {
@@ -180,9 +180,14 @@ div.vm {
 }
 
 div.about-text {
-  padding-bottom: 15%;
+  padding-top: 10%;
   padding-left: 15%;
-  /*border: 2px solid BLACK;*/
+  z-index: 2;
+}
+
+section.resume-section-about {
+  vertical-align: middle;
+  padding-bottom: 5rem !important;
 }
 
 section.resume-section {
