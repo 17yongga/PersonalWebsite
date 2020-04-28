@@ -17,7 +17,9 @@
   <link href="https://fonts.googleapis.com/css?family=Saira+Extra+Condensed:500,700" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css?family=Muli:400,400i,800,800i" rel="stylesheet">
   <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
-
+  <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <!-- Custom styles for this template -->
   <link href="css/resume.css" rel="stylesheet">
 </head>
@@ -55,8 +57,8 @@
   </nav>
 
   <div class="vm container-fluid justify-content-center">
-    <section class=" resume-section-about d-flex justify-content-center" id="about">
-      <div class="about-text w-50">
+    <section class=" resume-section-about d-flex" id="about">
+      <div class="about-text w-50 ">
 
         <h1 class="mb-0">Gary
           <span class="text-primary">Yong</span>
@@ -79,14 +81,196 @@
           </a>
         </div>
       </div>
-      <div class="w-50">
+      <div class="w-50 img-shadow">
         <img src='img/profile.png' class="bg"> </img>
       </div>
     </section>
 
     <hr class="m-0">
 
-    <section class="resume-section p-3 p-lg-5 d-flex justify-content-center" id="experience">
+    <!-- Experience Box -->
+    <div id="experience">
+
+
+      <section id="team" class="pb-5 resume-section">
+        <div class="container vm" id="experience">
+          <h5 class="section-title h1">Experience</h5>
+          <div class=" vm justify-content-center">
+            <!-- Experience-->
+            <div class="image-flip" id="trigger" tabindex="0">
+              <div class="mainflip flip-0 vm">
+                <div class="frontside vm">
+                  <div class="card vm">
+                    <div class="card-body card-body-row">
+                      <div class="card-body-col1 text-center">
+                        <img class="company_logo" src="img/accenture_logo.png" alt="card image">
+                        <h4 class="card-title">Accenture</h4>
+                      </div>
+                      <div class="card-body-col2  text-left">
+                        <div class="input_title">
+                          <h3 class="description">position:</h3>
+                          <h4 class="description">Software Engineering Analyst</h4>
+                        </div>
+                        <div class="input_title">
+                          <h3 class="description">Team:</h3>
+                          <h4 class="description">Liquid Studio Toronto</h4>
+                        </div>
+                        <div class="input_title">
+                          <h3 class="description">Type:</h3>
+                          <h4 class="description">Internship</h4>
+                        </div>
+                        <div class="input_title">
+                          <h3 class="description">Duration:</h3>
+                          <h4 class="description">September 2019-December 2019</h4>
+                        </div>
+                      </div>
+                      <a class="cursor-btn" for="trigger"><span>Learn more</span></a>
+                    </div>
+                  </div>
+                </div>
+                <div class="backside" tabindex="0">
+                  <div class="card">
+                    <div class="card-body text-left mt-4">
+                      <ul class="job-des">
+                        <li>Defined product requirements and scope by working collaboratively with industry experts in
+                          fashion,
+                          retail and blockchain technology </li>
+                        <li>Developed a product authentication blockchain platform to reduce annual billion-dollar loss
+                          in
+                          high-end fashion counterfeiting industry</li>
+                        <li>Conducted user research to implement user-friendly UI/UX designs that maximize usability and
+                          user
+                          satisfaction</li>
+                        <li>Maintained a 12-week roadmap for delivery in an Agile Scrum environment with user testing
+                          and
+                          continuous integration on AWS </li>
+                      </ul>
+                      <a class="cursor-btn" for="trigger"><span>Back</span></a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- ./Team member -->
+            <!-- Experience-->
+            <div class="image-flip" id="trigger" tabindex="0">
+              <div class="mainflip flip-0 vm">
+                <div class="frontside vm">
+                  <div class="card vm">
+                    <div class="card-body card-body-row">
+                      <div class="card-body-col1 text-center">
+                        <img class="company_logo_lcl" src="img/lcl_logo.png" alt="card image">
+                        <h4 class="card-title">Loblaw Companies Limited</h4>
+                      </div>
+                      <div class="card-body-col2  text-left">
+                        <div class="input_title">
+                          <h3 class="description">position:</h3>
+                          <h4 class="description">Logistics Project Analyst</h4>
+                        </div>
+                        <div class="input_title">
+                          <h3 class="description">Team:</h3>
+                          <h4 class="description">Supply Chain, Logistics Team</h4>
+                        </div>
+                        <div class="input_title">
+                          <h3 class="description">Type:</h3>
+                          <h4 class="description">Internship</h4>
+                        </div>
+                        <div class="input_title">
+                          <h3 class="description">Duration:</h3>
+                          <h4 class="description">Janurary 2019-April 2019</h4>
+                        </div>
+                      </div>
+                      <a class="cursor-btn" for="trigger"><span>Learn more</span></a>
+                    </div>
+                  </div>
+                </div>
+                <div class="backside" tabindex="0">
+                  <div class="card">
+                    <div class="card-body text-left mt-4">
+                      <ul class="job-des">
+                        <li>Conducted process analysis of the pallet tracking procedures and proposed data delivery
+                          automation
+                          using IoT system</li>
+                        <li>Defined system requirements from stakeholder interviews and proposed a product roadmap from
+                          design to
+                          implementation</li>
+                        <li>Analyzed warehouse labor time study and logistics expense report to gain $1M annual savings
+                          after
+                          system automation</li>
+                        <li>Translated stakeholder vision into developer-ready functional stories with acceptance
+                          criteria
+                        </li>
+                      </ul>
+                      <a class="cursor-btn" for="trigger"><span>Back</span></a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- ./Team member -->
+            <!-- Experience-->
+            <div class="image-flip" id="trigger" tabindex="0">
+              <div class="mainflip flip-0 vm">
+                <div class="frontside vm">
+                  <div class="card vm">
+                    <div class="card-body card-body-row">
+                      <div class="card-body-col1 text-center">
+                        <img class="company_logo_pl" src="img/pl_logo.png" alt="card image">
+                        <h4 class="card-title">PureLiving China</h4>
+                      </div>
+                      <div class="card-body-col2  text-left">
+                        <div class="input_title">
+                          <h3 class="description">position:</h3>
+                          <h4 class="description">Monitoring Associate</h4>
+                        </div>
+                        <div class="input_title">
+                          <h3 class="description">Team:</h3>
+                          <h4 class="description">Air Quality Monitoring Team</h4>
+                        </div>
+                        <div class="input_title">
+                          <h3 class="description">Type:</h3>
+                          <h4 class="description">Internship</h4>
+                        </div>
+                        <div class="input_title">
+                          <h3 class="description">Duration:</h3>
+                          <h4 class="description">May 2018-August 2018</h4>
+                        </div>
+                      </div>
+                      <a class="cursor-btn" for="trigger"><span>Learn more</span></a>
+                    </div>
+                  </div>
+                </div>
+                <div class="backside" tabindex="0">
+                  <div class="card">
+                    <div class="card-body text-left mt-4">
+                      <ul class="job-des">
+                        <li>Analyzed and identified inefficient transaction processing procedure founded by project
+                          analysis and
+                          time study report</li>
+                        <li>Developed an Excel VBA tool that reduced weekly business transaction processing time from 4
+                          hours to
+                          15 minutes</li>
+                        <li>Designed and iterated on user feedback to create a user-centric UI/UX for the tool with
+                          comprehensive
+                          validation rules</li>
+                        <li>Performed 30+ onsite interviews to collect client information and propose tailored product
+                          services</li>
+                      </ul>
+                      <a class="cursor-btn" for="trigger"><span>Back</span></a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- ./Team member -->
+
+          </div>
+        </div>
+      </section>
+    </div>
+    <!-- Team -->
+
+    <section class="resume-section p-3 p-lg-5 d-flex justify-content-center">
       <div class="w-100">
         <h2 class="mb-5">Experience</h2>
         <div class="resume-item d-flex flex-column flex-md-row justify-content-between mb-5">
