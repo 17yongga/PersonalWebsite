@@ -516,19 +516,20 @@ section .section-title {
 }
 
 .how-section1 {
-  margin-top: -15%;
+  margin-top: -10%;
   padding: 10%;
+  margin-bottom: -10%;
 }
 
 .how-section1 h4 {
-  color: #ffa500;
+  color: #89cdd3;
   font-weight: bold;
-  font-size: 30px;
+  font-size: 35px;
 }
 
 .how-section1 .subheading {
-  color: #3931af;
-  font-size: 20px;
+  color: black;
+  font-size: 25px;
 }
 
 .how-section1 .row {
@@ -540,5 +541,102 @@ section .section-title {
 }
 
 .how-img img {
-  width: 40%;
+  width: 80%;
+  -webkit-box-shadow: 5px 7px 9px 4px rgb(158, 158, 158);
+  -moz-box-shadow: 5px 7px 9px 4px rgb(34, 26, 26);
+  box-shadow: 5px 7px 9px 4px rgb(158, 158, 158);
+}
+
+#what-we-do {
+  background: #ffffff;
+}
+
+#what-we-do .card {
+  padding: 1rem !important;
+  border: none;
+  margin-bottom: 1rem;
+  -webkit-transition: .5s all ease;
+  -moz-transition: .5s all ease;
+  transition: .5s all ease;
+}
+
+#what-we-do .card:hover {
+  -webkit-box-shadow: 5px 7px 9px -4px rgb(158, 158, 158);
+  -moz-box-shadow: 5px 7px 9px -4px rgb(158, 158, 158);
+  box-shadow: 5px 7px 9px -4px rgb(158, 158, 158);
+}
+
+#what-we-do .card .card-block {
+  padding-left: 50px;
+  position: relative;
+}
+
+#what-we-do .card .card-block a {
+  color: #89cdd3 !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+#what-we-do .card .card-block a i {
+  display: none;
+
+}
+
+#what-we-do .card:hover .card-block a i {
+  display: inline-block;
+  font-weight: 700;
+
+}
+
+#what-we-do .card .card-block:before {
+  font-family: FontAwesome;
+  position: absolute;
+  font-size: 39px;
+  color: #89cdd3;
+  left: 0;
+  -webkit-transition: -webkit-transform .2s ease-in-out;
+  transition: transform .2s ease-in-out;
+}
+
+#what-we-do .card .block-1:before {
+  content: "\f181";
+}
+
+#what-we-do .card .block-2:before {
+  content: "\f121";
+}
+
+#what-we-do .card .block-3:before {
+  content: "\f080";
+}
+
+#what-we-do .card .block-4:before {
+  content: "\f0a3";
+}
+
+#what-we-do .card .block-5:before {
+  content: "\f0ac";
+}
+
+#what-we-do .card .block-6:before {
+  content: "\f233";
+}
+
+#what-we-do .card:hover .card-block:before {
+  -webkit-transform: rotate(360deg);
+  transform: rotate(360deg);
+  -webkit-transition: .5s all ease;
+  -moz-transition: .5s all ease;
+  transition: .5s all ease;
+}
+
+.interests-img {
+  text-align: center;
+}
+
+.interests-img img {
+  width: 100%;
+  -webkit-box-shadow: 5px 7px 9px 4px rgb(158, 158, 158);
+  -moz-box-shadow: 5px 7px 9px 4px rgb(34, 26, 26);
+  box-shadow: 5px 7px 9px 4px rgb(158, 158, 158);
 }
