@@ -139,20 +139,17 @@ p.lead {
     -ms-flex-direction: row;
     flex-direction: row;
     width: 100%;
-    height: 13vh;
+    height: 10%;
   }
 
   #sideNav .navbar-brand {
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-
-
+    padding: 0px;
+    height: 100%;
   }
 
-  #sideNav .navbar-brand .img-profile {
-    max-width: 13vh;
-    max-height: 13vh;
+  .img-profile {
+    height: 100%;
+    width: auto;
   }
 
   #sideNav .navbar-collapse {
@@ -176,6 +173,17 @@ p.lead {
     width: 100%;
   }
 
+  #sideNav .navbar-collapse .navbar-brand {
+    padding: 0px;
+    height: 0%;
+  }
+
+
+  #sideNav .navbar-collapse .img-profile {
+    height: 100%;
+    width: auto;
+  }
+
   #sideNav .navbar-collapse .navbar-nav .nav-item {
     padding-right: 10px;
     display: block;
@@ -185,6 +193,21 @@ p.lead {
     display: block;
   }
 }
+
+@media(max-width:992px) {
+  .navbar-brand {
+    padding: 0px;
+    width: 50%;
+  }
+
+
+  .img-profile {
+    height: 20%;
+    width: 20%;
+  }
+}
+
+
 
 div.vm {
   align-items: center;
@@ -219,7 +242,7 @@ section.resume-section .resume-item .resume-date {
   /*border: 2px solid green;*/
 }
 
-@media (min-width: 768px) {
+@media (min-width: 992px) {
   /*section.resume-section {
     min-height: 100vh;
   }*/
