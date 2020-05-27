@@ -42,90 +42,106 @@ body {
     padding-top: 0;
     padding-left: 0 rem;
   }
-}
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  /*border: 2px solid red;*/
-  font-family: 'Saira Extra Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  font-weight: 700;
-  text-transform: capitalize;
-  color: #343a40;
-}
 
-h1 {
-  font-size: 6rem;
-  line-height: 5.5rem;
-  text-transform: uppercase;
-}
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    /*border: 2px solid red;*/
+    font-family: 'Saira Extra Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    font-weight: 700;
+    text-transform: capitalize;
+    color: #343a40;
+  }
 
-h2 {
-  font-size: 3.5rem;
-  text-transform: uppercase;
-}
+  h1 {
+    font-size: 6rem;
+    line-height: 5.5rem;
+    text-transform: uppercase;
+  }
 
-h3 {
-  font-size: 2rem;
-}
+  h2 {
+    font-size: 3.5rem;
+    text-transform: uppercase;
+  }
 
-p.lead {
-  font-size: 1.15rem;
-  font-weight: 400;
-}
+  h3 {
+    font-size: 2rem;
+  }
 
-.subheading {
-  /*border: 2px solid red;*/
-  text-transform: uppercase;
-  font-weight: 500;
-  font-family: 'Saira Extra Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  font-size: 1.5rem;
-}
+  p.lead {
+    font-size: 1.15rem;
+    font-weight: 400;
+  }
 
-.social-icons a {
-  /*border: 2px solid red;*/
-  display: inline-block;
-  height: 3.5rem;
-  width: 3.5rem;
-  background-color: #495057;
-  color: rgb(255, 255, 255) !important;
-  border-radius: 100%;
-  text-align: center;
-  font-size: 1.5rem;
-  line-height: 3.5rem;
-  margin-right: 1rem;
-}
+  .subheading {
+    /*border: 2px solid red;*/
+    text-transform: uppercase;
+    font-weight: 500;
+    font-family: 'Saira Extra Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    font-size: 1.5rem;
+  }
 
-.social-icons a:last-child {
-  margin-right: 0;
-}
+  .social-icons a {
+    /*border: 2px solid red;*/
+    display: inline-block;
+    height: 3.5rem;
+    width: 3.5rem;
+    background-color: #495057;
+    color: rgb(255, 255, 255) !important;
+    border-radius: 100%;
+    text-align: center;
+    font-size: 1.5rem;
+    line-height: 3.5rem;
+    margin-right: 1rem;
+  }
 
-.social-icons a:hover {
-  background-color: rgb(112, 112, 112);
-}
+  .social-icons a:last-child {
+    margin-right: 0;
+  }
 
-.dev-icons {
-  font-size: 3rem;
-}
+  .social-icons a:hover {
+    background-color: rgb(112, 112, 112);
+  }
 
-.dev-icons .list-inline-item i:hover {
-  color: #BD5D38;
-}
+  .dev-icons {
+    font-size: 3rem;
+  }
 
-#sideNav .navbar-nav .nav-item .nav-link {
-  font-weight: 800;
-  letter-spacing: 0.05rem;
-  text-transform: uppercase;
-}
+  .dev-icons .list-inline-item i:hover {
+    color: #BD5D38;
+  }
 
-#sideNav .navbar-toggler:focus {
-  outline-color: #000000;
-}
+  div.about-text {
+    padding-top: 10%;
+    padding-left: 15%;
+    z-index: 2;
+  }
 
-@media (min-width: 992px) {
+  section.resume-section-about {
+    padding-top: 5rem !important;
+    vertical-align: middle;
+  }
+
+  section.resume-section {
+    /*border: 2px solid blue;*/
+    vertical-align: middle;
+    padding-top: 6rem !important;
+    padding-bottom: 5rem !important;
+    /*max-width: 75rem;*/
+    ;
+  }
+
+
+  section.resume-section .resume-item .resume-date {
+    min-width: none;
+    /*border: 2px solid green;*/
+  }
+
+
   #sideNav {
     text-align: center;
     position: fixed;
@@ -145,6 +161,7 @@ p.lead {
   #sideNav .navbar-brand {
     padding: 0px;
     height: 100%;
+    width: auto;
   }
 
   .img-profile {
@@ -192,9 +209,181 @@ p.lead {
   #sideNav .navbar-collapse .navbar-nav .nav-item .nav-link {
     display: block;
   }
+
+  section {
+    padding: 60px 0;
+  }
+
+  .frontside .card .card-title {
+    margin-top: 1rem;
+    font-size: 3rem;
+  }
+
+  .input-title {
+    text-align: left;
+    margin: 5;
+  }
+
+  .card-body {
+    width: 100%;
+  }
+
+  .card-body-col2 {
+    float: left;
+    padding-top: 3%;
+    padding-left: 6%;
+    margin-bottom: 3.5%;
+    width: 50%;
+  }
+
+  .cursor-btn {
+    float: right;
+
+    background-color: none !important;
+    border: none;
+    color: #89cdd3 !important;
+    text-align: right;
+    font-weight: 500;
+    font-size: 1.5rem;
+    width: 45%;
+    transition: all 0.5s;
+    cursor: pointer;
+    box-shadow: none;
+    outline: none;
+  }
+
+  .frontside .card,
+  .backside .card {
+
+    min-height: 312px;
+  }
+
+  .margin-top-4 {
+    margin-top: 1rem;
+  }
+
+  .backside .card a {
+    font-size: 18px;
+    color: #89cdd3 !important;
+  }
+
+  .how-section1 {
+    margin-top: -10%;
+    padding: 10%;
+    margin-bottom: -10%;
+  }
+
+  .margin-bottom5 {
+    margin-bottom: 3rem;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
-@media(max-width:992px) {
+@media (max-width: 992px) {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    /*border: 2px solid red;*/
+    font-family: 'Saira Extra Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    font-weight: 700;
+    text-transform: capitalize;
+    color: #343a40;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    font-size: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    font-size: 0.45rem;
+    margin: 0;
+  }
+
+  h4 {
+    font-size: 0.5rem;
+    margin: 0;
+  }
+
+  h5 {
+    font-size: 2rem !important;
+  }
+
+  p.lead {
+    font-size: 0.5rem;
+    font-weight: 400;
+  }
+
+  .subheading {
+    /*border: 2px solid red;*/
+    text-transform: uppercase;
+    font-weight: 500;
+    font-family: 'Saira Extra Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    font-size: 0.75rem;
+  }
+
+  .social-icons a {
+    /*border: 2px solid red;*/
+    display: inline-block;
+    height: 1.5rem;
+    width: 1.5rem;
+    background-color: #495057;
+    color: rgb(255, 255, 255) !important;
+    border-radius: 100%;
+    text-align: center;
+    margin-right: 0.7rem;
+  }
+
+  .social-icons a:last-child {
+    margin-right: 0;
+  }
+
+  .social-icons a:hover {
+    background-color: rgb(112, 112, 112);
+  }
+
+  .dev-icons {
+    font-size: 0.5rem;
+  }
+
+  .dev-icons .list-inline-item i:hover {
+    color: #BD5D38;
+  }
+
   .navbar-brand {
     padding: 0px;
     width: 50%;
@@ -203,10 +392,128 @@ p.lead {
 
   .img-profile {
     height: 20%;
-    width: 20%;
+    width: 5rem;
   }
+
+
+  div.about-text {
+    padding-top: 5%;
+    padding-left: 10%;
+    z-index: 2;
+  }
+
+  section.resume-section-about {
+    vertical-align: middle;
+    padding-top: 6rem !important;
+    padding-bottom: 1rem;
+  }
+
+  section.resume-section {
+    /*border: 2px solid blue;*/
+    vertical-align: middle;
+    padding-top: 6rem !important;
+    padding-bottom: 1rem !important;
+    /*max-width: 75rem;*/
+    ;
+  }
+
+  .frontside .card .card-title {
+    margin-top: 1rem;
+    font-size: 1rem;
+  }
+
+  .input-title {
+    text-align: left;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 11px;
+
+  }
+
+  .card-body {
+    width: 100%;
+    padding: 0.5rem;
+  }
+
+  .card-body-col2 {
+    float: left;
+    padding-left: 6%;
+    margin-bottom: 3.5%;
+    width: 50%;
+  }
+
+  .cursor-btn {
+    float: right;
+
+    background-color: none !important;
+    border: none;
+    color: #89cdd3 !important;
+    text-align: right;
+    font-weight: 500;
+    font-size: 0.5rem;
+    width: 45%;
+    transition: all 0.5s;
+    cursor: pointer;
+    box-shadow: none;
+    outline: none;
+  }
+
+  .job-des {
+    margin: 1.5%;
+    font-size: 0.5rem;
+    padding: 0;
+  }
+
+  .backside .card a {
+    font-size: 0.5rem;
+    color: #89cdd3 !important;
+  }
+
+  .how-section1 {
+    padding: 0%;
+  }
+
+  .subheading-skills {
+    font-size: 1.5rem;
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
+#sideNav .navbar-nav .nav-item .nav-link {
+  font-weight: 800;
+  letter-spacing: 0.05rem;
+  text-transform: uppercase;
+}
+
+#sideNav .navbar-toggler:focus {
+  outline-color: #000000;
+}
 
 
 div.vm {
@@ -216,46 +523,12 @@ div.vm {
   /*border: 2px solid yellow;*/
 }
 
-div.about-text {
-  padding-top: 10%;
-  padding-left: 15%;
-  z-index: 2;
-}
 
-section.resume-section-about {
-  padding-top: 5rem !important;
-  vertical-align: middle;
-}
-
-section.resume-section {
-  /*border: 2px solid blue;*/
-  vertical-align: middle;
-  padding-top: 6rem !important;
-  padding-bottom: 5rem !important;
-  /*max-width: 75rem;*/
-  ;
-}
 
 
 section.resume-section .resume-item .resume-date {
   min-width: none;
   /*border: 2px solid green;*/
-}
-
-@media (min-width: 992px) {
-  /*section.resume-section {
-    min-height: 100vh;
-  }*/
-
-  section.resume-section .resume-item .resume-date {
-    min-width: 18rem;
-  }
-}
-
-@media (min-width: 992px) {
-  section.resume-section {
-    padding-bottom: 3rem !important;
-  }
 }
 
 .bg-primary {
@@ -297,9 +570,6 @@ a:active {
   border-color: #89cdd3;
 }
 
-section {
-  padding: 60px 0;
-}
 
 section .section-title {
   text-align: center;
@@ -411,26 +681,12 @@ section .section-title {
   transform-style: preserve-3d;
 }
 
-.frontside .card,
-.backside .card {
-
-  min-height: 312px;
-}
-
-.backside .card a {
-  font-size: 18px;
-  color: #89cdd3 !important;
-}
 
 .backside .card .card-title {
   border: 2px solid green;
   color: #89cdd3 !important;
 }
 
-.frontside .card .card-title {
-  margin-top: 1rem;
-  font-size: 3rem;
-}
 
 
 
@@ -450,9 +706,6 @@ section .section-title {
   width: 80%;
 }
 
-.card-body {
-  width: 100%;
-}
 
 .card-body-row {
   content: "";
@@ -466,13 +719,6 @@ section .section-title {
 
 }
 
-.card-body-col2 {
-  float: left;
-  padding-top: 3%;
-  padding-left: 6%;
-  margin-bottom: 3.5%;
-  width: 50%;
-}
 
 .card-content {
   font-size: 23;
@@ -482,30 +728,10 @@ section .section-title {
   border: 3px solid peru;
 }
 
-.input-title {
-  text-align: left;
-  margin: 5;
-}
-
 .description {
   display: inline-block;
 }
 
-.cursor-btn {
-  float: right;
-
-  background-color: none !important;
-  border: none;
-  color: #89cdd3 !important;
-  text-align: right;
-  font-weight: 500;
-  font-size: 1.5rem;
-  width: 45%;
-  transition: all 0.5s;
-  cursor: pointer;
-  box-shadow: none;
-  outline: none;
-}
 
 .cursor-btn span {
   cursor: pointer;
@@ -538,11 +764,6 @@ section .section-title {
   margin: 1.5%;
 }
 
-.how-section1 {
-  margin-top: -10%;
-  padding: 10%;
-  margin-bottom: -10%;
-}
 
 .how-section1 h4 {
   color: #89cdd3;
