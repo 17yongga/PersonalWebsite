@@ -274,7 +274,14 @@ body {
   }
 
   .margin-bottom5 {
-    margin-bottom: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-title-seek {
+    color: black;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2rem;
   }
 
 
@@ -344,7 +351,7 @@ body {
   }
 
   p.lead {
-    font-size: 0.5rem;
+    font-size: 1rem;
     font-weight: 400;
   }
 
@@ -356,16 +363,25 @@ body {
     font-size: 0.75rem;
   }
 
+  .fp-subheading {
+    text-transform: capitalize;
+    /*border: 2px solid red;*/
+    font-weight: 500;
+    font-family: 'Saira Extra Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    font-size: 1.25rem;
+  }
+
   .social-icons a {
     /*border: 2px solid red;*/
     display: inline-block;
-    height: 1.5rem;
-    width: 1.5rem;
+    height: 2rem;
+    width: 2rem;
     background-color: #495057;
     color: rgb(255, 255, 255) !important;
     border-radius: 100%;
     text-align: center;
-    margin-right: 0.7rem;
+    padding-top: 0.25rem;
+    margin-right: 1rem;
   }
 
   .social-icons a:last-child {
@@ -397,14 +413,13 @@ body {
 
 
   div.about-text {
-    padding-top: 5%;
     padding-left: 10%;
     z-index: 2;
   }
 
   section.resume-section-about {
     vertical-align: middle;
-    padding-top: 6rem !important;
+    padding-top: 5rem !important;
     padding-bottom: 1rem;
   }
 
@@ -479,6 +494,15 @@ body {
 
   }
 
+  .section-title-seek {
+    color: black;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .fp-h1 {
+    font-size: 4.5rem;
+  }
 
 
 
@@ -570,13 +594,13 @@ a:active {
   border-color: #89cdd3;
 }
 
-
 section .section-title {
   text-align: center;
   color: #89cdd3;
-  font-weight: 800;
-  margin-bottom: 50px;
+  font-weight: 800 !important;
+  margin-bottom: 40px;
   text-transform: uppercase;
+  font-size: 4rem !important;
 }
 
 #team .card {
