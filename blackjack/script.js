@@ -33,10 +33,10 @@ function calculateScore(hand) {
     let score = 0;
     let aces = 0;
     hand.forEach(card => {
-        if (card.value === "Ace") {
+        if (card.value === "ace") {
             aces++;
             score += 11;
-        } else if (["King", "Queen", "Jack"].includes(card.value)) {
+        } else if (["king", "queen", "jack"].includes(card.value)) {
             score += 10;
         } else {
             score += parseInt(card.value);
