@@ -1,0 +1,56 @@
+/* Style for the body element */
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: #f0f8ff;
+  color: #333;
+}
+
+/* Style for the game container */
+#game-container {
+  margin: 50px auto;
+  max-width: 500px;
+  padding: 20px;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  background-color: #fff;
+}
+
+/* Style for buttons */
+button {
+  margin: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Hover effect for buttons */
+button:hover {
+  background-color: #ddd;
+}
+
+/* Style for the coin element */
+#coin {
+  width: 100px;
+  height: 100px;
+  margin: 20px auto;
+}
+
+/* Animation for the coin element */
+#coin.animate {
+  animation: flip 2s;
+}
+
+/* Style for the coin image */
+#coin img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Keyframes for the flip animation */
+@keyframes flip {
+  0% { transform: rotateY(0); }
+  50% { transform: rotateY(180deg); }
+  100% { transform: rotateY(360deg); }
+}
