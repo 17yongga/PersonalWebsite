@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ask Gary – AI Career Agent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-card: #020617;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --border-subtle: #1f2937;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e293b, #020617 55%);
+      color: var(--text-main);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 16px;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 980px;
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        padding-top: 96px;
+      }
+      .shell {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .panel {
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 55%);
+      border-radius: 18px;
+      padding: 20px 20px 16px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(10px);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .panel-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid var(--accent-soft);
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--accent);
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px #22c55e;
+    }
+
+    /* Chat area */
+
+    .chat {
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.95));
+      display: flex;
+      flex-direction: column;
+      height: 540px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 14px 14px 4px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+
+    .chat-message {
+      max-width: 85%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .chat-message.user {
+      margin-left: auto;
+      background: #1e293b;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-message.bot {
+      margin-right: auto;
+      background: #020617;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .chat-meta span.sources {
+      opacity: 0.9;
+    }
+
+    .chat-input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 10px;
+      border-top: 1px solid var(--border-subtle);
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.95));
+    }
+
+    .chat-input {
+      flex: 1;
+      background: #020617;
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid #1f2937;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      resize: none;
+      min-height: 40px;
+      max-height: 120px;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35);
+    }
+
+    .send-button {
+      padding: 9px 16px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(to right, #38bdf8, #0ea5e9);
+      color: #0b1120;
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.05s ease, box-shadow 0.05s ease, opacity 0.1s ease;
+      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.35);
+      white-space: nowrap;
+    }
+
+    .send-button[disabled] {
+      opacity: 0.6;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .send-button:not([disabled]):active {
+      transform: translateY(1px);
+      box-shadow: 0 6px 16px rgba(56, 189, 248, 0.35);
+    }
+
+    .send-icon {
+      font-size: 0.9rem;
+    }
+
+    /* Right panel */
+
+    .sidebar-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    .sidebar-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.8);
+    }
+
+    .sidebar-list li:last-child {
+      border-bottom: none;
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <!-- If you have a shared header/nav include, keep using it.
+       Otherwise this can be your main content. -->
+
+  <main>
+    <div class="shell">
+      <!-- Left: chat panel -->
+      <section class="panel">
+        <header class="panel-header">
+          <div>
+            <div class="panel-title">Ask Gary</div>
+            <div class="panel-subtitle">Personal AI career agent on top of your own documents</div>
+          </div>
+          <div class="pill">
+            <span class="pill-dot"></span>
+            Live demo
+          </div>
+        </header>
+
+        <div class="chat">
+          <div id="messages" class="chat-messages">
+            <div class="chat-message bot">
+              Hi, I’m Ask Gary. Ask anything about Gary’s experience, skills, or projects—for example:
+              “What did Gary do at Capco?” or “Summarize Gary’s experience with AI and automation.”
+              <div class="chat-meta">
+                <span>Ask Gary</span>
+                <span class="sources">Sources: resume_2025.txt</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-row">
+            <textarea
+              id="user-input"
+              class="chat-input"
+              placeholder="Ask something about Gary’s experience, skills, or projects…"
+            ></textarea>
+            <button id="send-button" class="send-button">
+              <span>Send</span>
+              <span class="send-icon">➤</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: context / instructions -->
+      <aside class="panel">
+        <div class="sidebar-title">Good questions to try</div>
+        <ul class="sidebar-list">
+          <li>“What did Gary do at Capco?”</li>
+          <li>“Summarize Gary’s experience with AI and automation.”</li>
+          <li>“What projects show Gary’s leadership?”</li>
+          <li>“Draft a short intro email as Gary to a Cresta hiring manager.”</li>
+        </ul>
+
+        <div class="sidebar-title" style="margin-top: 16px;">How it works</div>
+        <ul class="sidebar-list">
+          <li>Answers are grounded only in Gary’s resumes and career docs.</li>
+          <li>Top‑K relevant chunks are retrieved for each question.</li>
+          <li>The model is instructed to say “I don’t know” when context is missing.</li>
+        </ul>
+
+        <p class="hint">
+          This page is backed by a FastAPI service and a retrieval‑augmented generation pipeline using OpenAI embeddings and a
+          lightweight in‑memory index.
+        </p>
+      </aside>
+    </div>
+  </main>
+
+  <script src="ask-gary.js"></script>
+</body>
+</html>

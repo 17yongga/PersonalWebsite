@@ -54,3 +54,24 @@ button:hover {
   50% { transform: rotateY(180deg); }
   100% { transform: rotateY(360deg); }
 }
+
+/* Style for the red text */
+.red-text {
+  color: red;
+}
+
+/* Style for the room item box */
+.room-item {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 10px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f9f9f9;
+}
+
+.room-info {
+  text-align: left;
+}

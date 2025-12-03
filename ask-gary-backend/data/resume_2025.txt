@@ -1,0 +1,87 @@
+Gary Yong
+Consultant @ Capco
+Email: yonggary329@gmail.com
+Website: gary-yong.com
+Phone: +1 (226) 868-6208
+LinkedIn: gary-yong-66a9ba164
+
+WORK EXPERIENCE
+
+Capco – Consultant – Toronto, ON
+Sep. 2021 – Present
+
+Engagement 1: Business Analyst @ Tier‑1 Global Bank – CCaaS Migration
+
+Conducted a detailed current state analysis of the legacy contact center solution through workshops to identify key operational and customer experience pain points.
+
+Led the requirement gathering process for a CCaaS migration program, collaborating with stakeholders to define business needs and technical specifications.
+
+Created 10+ future state user journeys to illustrate the desired customer experience and seamless contact interaction management.
+
+Engagement 2: Business Analyst @ Leading Canadian Bank – Digital Transformation
+
+Performed capability analysis to support the digital transformation of the client’s front, middle, and back‑office systems.
+
+Led 30+ workshops with SMEs across multiple lines of business to document current‑state system architecture in a diagram highlighting available capabilities, system limitations, and integration points between critical applications.
+
+Collaborated with technical and business stakeholders to develop a future‑state system architecture diagram.
+
+Directed a team of three in Agile sprints to create user stories in JIRA, aligning requirements with business needs and refining them based on feedback.
+
+Engagement 3: Cutover Team @ Tier‑1 Global Bank – Major Bank Merger
+
+Spearheaded end‑to‑end requirement gathering for cutover runbooks across 13 workstreams, facilitating workshops with senior stakeholders and SMEs to ensure alignment on deliverables and timelines.
+
+Orchestrated cross‑functional team discussions to map out customer‑impact scenarios, addressing potential risks and increasing operational readiness of edge cases for a successful migration.
+
+Conducted three live rehearsals to iteratively strengthen business team readiness and incident response.
+
+Engagement 4: Business Analyst @ Tier‑1 Canadian Commercial Bank – Reconciliation Automation
+
+Analyzed 15 reconciliation processes and proposed automated solutions that would generate 5k+ hours of annual time savings.
+
+Facilitated client workshops to develop comprehensive reconciliation process diagrams that highlighted bottlenecks.
+
+Compiled business requirement documents for the tech implementation team to develop the proposed automated solutions.
+
+PepsiCo Foods Canada – Project Management Intern – Mississauga, ON
+Jan. 2021 – Apr. 2021
+
+Coordinated updates and feedback with 10+ stakeholders for 3 cross‑functional projects in an agile environment.
+
+Pioneered strategic UI changes for the marketing team, resulting in a monthly sales boost of about 30% for the e‑commerce store.
+
+Collaborated with the consumer insights team to improve data clustering logic, increasing productivity by about 200%.
+
+Led causal impact analysis for a social media campaign, proposing a data‑driven strategy with a measurable sales lift.
+
+Accenture – Software Engineering Intern – Toronto, ON
+Sep. 2019 – Dec. 2019
+
+Developed an application backed by HyperLedger Fabric Blockchain that authenticated luxury apparel through RFID.
+
+Incorporated intuitive UI/UX designs with React Native to maximize usability and user satisfaction.
+
+Architected an authentication framework using AWS Cognito and IAM to maintain application security.
+
+EDUCATION
+
+University of Waterloo – Waterloo, ON
+2017 – 2022
+Bachelor of Applied Science in Management Engineering (Co‑op) – GPA 3.7 / 4.0
+Relevant Courses: Project Management; Database and Software Design; Introduction to Machine Learning.
+
+PROJECTS
+
+Lunar – Crypto Portfolio Builder – 4th Year Design Project
+Jan. 2021 – Apr. 2022
+
+Led a team of 5 as project manager to deliver a deployed working crypto portfolio management platform.
+
+Managed 7 stakeholders through design revisions, feedback sessions, and bi‑weekly retrospective meetings.
+
+Performed needs analysis through user surveys and interviews and designed user journeys for the product.
+
+Ask Gary – Personal AI Career Agent (2025)
+Built a RAG-based AI agent that ingests my resumes, LinkedIn data, and portfolio notes to answer open-ended questions about my experience, skills, and interests in natural language.​
+Implemented a Python/FastAPI backend with vector search and an OpenAI-powered LLM to retrieve relevant context at query time and generate grounded responses, exposed through a web chat interface on gary-yong.com

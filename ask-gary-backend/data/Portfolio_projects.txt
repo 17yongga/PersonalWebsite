@@ -1,0 +1,10 @@
+Ask Gary – Personal AI Career Agent (2025)
+- Built a RAG-based AI agent that ingests my resumes, LinkedIn profile text, and hobby notes to answer questions about my career, skills, and interests.
+- Implemented a Python/FastAPI backend with OpenAI embeddings and a custom retrieval layer over my own documents.
+- Logged interactions and evaluation questions to iterate on prompts, retrieval parameters, and answer quality.
+- Deployed a web chat UI as a subpage on gary-yong.com, backed by an EC2-hosted API.
+
+Lunar – Crypto Portfolio Builder (2021–2022)
+- 4th year design project: deployed crypto portfolio management platform.
+- Led a team of 5 as project manager; managed 7 stakeholders through multiple design revisions and feedback sessions.
+- Designed surveys and user journeys to understand investor behaviour and optimize the product experience.

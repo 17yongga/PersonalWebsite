@@ -17,7 +17,6 @@
   <!-- Room Selection Screen -->
   <div id="roomSelection" style="display: none;">
     <h1>Welcome to CoinFlip!</h1>
-    <p id="status">Connecting to the server...</p>
     <div id="roomList"></div> <!-- List of available rooms -->
     <button onclick="createRoom()">Create Room</button> <!-- Button to create a new room -->
   </div>
@@ -44,6 +43,10 @@
 
     <div id="nextRound" style="display: none;">
       <button onclick="playAgain()">Play Again</button> <!-- Button to play again -->
+      <button onclick="leaveGame()">Leave Game</button> <!-- Button to leave the game -->
+    </div>
+
+    <div id="leaveGameContainer" style="display: none;">
       <button onclick="leaveGame()">Leave Game</button> <!-- Button to leave the game -->
     </div>
   </div>
