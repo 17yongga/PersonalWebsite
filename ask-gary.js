@@ -1,5 +1,5 @@
 // Configuration
-const API_BASE_URL = "http://ec2-98-82-129-231.compute-1.amazonaws.com:8000"; // Change to your backend URL after deployment
+const API_BASE_URL = "https://ec2-98-82-129-231.compute-1.amazonaws.com:8000"; // Change to your backend URL after deployment
 
 // DOM elements
 const chatWindow = document.getElementById("messages");
