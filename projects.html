@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <title>Gary Yong – Projects</title>
+    <meta
+      name="description"
+      content="Selected projects by Gary Yong showcasing practical experience and problem solving."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">
+  <img src="img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
+  <img src="img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
+  <!--<span class="logo-text">YourName</span>-->
+</a>
+
+    <!-- Desktop navigation -->
+    <nav class="nav nav-desktop">
+      <a href="index.html">Home</a>
+      <a href="projects.html">Projects</a>
+      <a href="experience.html">Experience</a>
+      <a href="about.html">About</a>
+      <a href="skills.html">Skills</a>
+      <a href="blog.html">Blog</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+
+    <!-- Right controls: theme + mobile toggle -->
+    <div class="header-actions">
+      <button
+        id="theme-toggle"
+        class="btn btn-ghost theme-toggle"
+        aria-label="Toggle theme"
+      >
+        ☀️
+      </button>
+
+      <!-- Mobile menu button -->
+      <button
+        class="icon-button mobile-menu-toggle"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+      >
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile navigation panel -->
+  <nav class="nav-mobile" aria-label="Mobile navigation">
+    <div class="nav-mobile-inner">
+      <a href="index.html">Home</a>
+      <a href="projects.html">Projects</a>
+      <a href="experience.html">Experience</a>
+      <a href="about.html">About</a>
+      <a href="skills.html">Skills</a>
+      <a href="blog.html">Blog</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </nav>
+</header>
+
+  <main>
+    <section class="section">
+    <div class="container">
+      <header class="section-header animate-fade-up">
+      <h2>Projects</h2>
+      <p>Highlight your best work aligned with your target roles.</p>
+      </header>
+      <div class="grid grid-3">
+      <article class="card project-card project-card-split animate-fade-up">
+  <header class="project-card-header">
+    <div class="project-card-heading">
+      <h3>Ask Gary – Personal AI Career Chatbot</h3>
+      <p class="meta">
+        Tech: FastAPI · Python · OpenAI · Vanilla JS · AWS EC2/S3
+      </p>
+    </div>
+    <div class="project-actions">
+      <a href="https://gary-yong.com/ask-gary.html" class="btn btn-primary btn-pill">Live demo</a>
+      <a href="https://github.com/17yongga/PersonalWebsite" class="btn btn-secondary btn-pill">Source code</a>
+</a>
+    </div>
+  </header>
+
+  <!-- LEFT SIDE: text -->
+  <div class="project-card-main">
+    <ul class="bullets">
+      <li>Built Ask Gary, a retrieval‑augmented AI chatbot that answers career questions from my resume, LinkedIn, hobbies, and projects.</li>
+      <li>Uses a FastAPI backend with vector search and OpenAI models.</li>
+      <li>Integrated as a dedicated page on my personal website with a lightweight JavaScript frontend.</li>
+      <li>Deployed on AWS (EC2 for backend, S3 for static site) with logging, evaluation, and troubleshooting workflows.</li>
+    </ul>
+
+    <ul class="tags">
+      <li>AI chatbot</li>
+      <li>Retrieval‑augmented generation (RAG)</li>
+      <li>Python</li>
+      <li>OpenAI API</li>
+      <li>AWS EC2</li>
+      <li>AWS S3</li>
+    </ul>
+  </div>
+
+  <!-- RIGHT SIDE: image -->
+  <div class="project-card-media">
+    <img src="img/ask-gary-1.png" alt="Ask Gary chat interface" />
+  </div>
+</article>
+<article class="card project-card project-card-split animate-fade-up">
+  <header class="project-card-header">
+    <div class="project-card-heading">
+      <h3>Personal Website &amp; Portfolio Platform</h3>
+      <p class="meta">
+        Tech: HTML · CSS · JavaScript · Responsive Design · AWS S3/Route 53
+      </p>
+    </div>
+    <div class="project-actions">
+      <a href="https://gary-yong.com" class="btn btn-primary btn-pill">Live demo</a>
+      <a href="https://github.com/17yongga/PersonalWebsite" class="btn btn-secondary btn-pill">Source code</a>
+    </div>
+  </header>
+
+  <div class="project-card-main">
+    <ul class="bullets">
+      <li>Designed and built a multi‑page personal website with dedicated sections for projects, experience, skills, blog, and contact, tailored for recruiters and hiring managers.</li>
+      <li>Implemented dark/light theme support, scroll‑reveal animations, and a mobile navigation drawer for a modern, app‑like user experience.</li>
+      <li>Deployed the site on AWS S3 with a custom domain and HTTPS, and structured content so new projects and posts can be added with minimal changes.</li>
+    </ul>
+
+    <ul class="tags">
+      <li>Portfolio website</li>
+      <li>Responsive UI</li>
+      <li>Dark / light mode</li>
+      <li>CSS animations</li>
+      <li>Front‑end architecture</li>
+      <li>AWS S3</li>
+    </ul>
+  </div>
+
+  <div class="project-card-media">
+    <img src="img/personalWebsite.png" alt="Screenshot of personal website homepage" />
+  </div>
+</article>
+<article class="card project-card project-card-split animate-fade-up">
+  <header class="project-card-header">
+    <div class="project-card-heading">
+      <h3>Rideshare Service Platform</h3>
+      <p class="meta">
+        
+      </p>
+    </div>
+    <div class="project-actions">
+  
+    </div>
+  </header>
+
+  <div class="project-card-main">
+    <ul class="bullets">
+      <li>Developed a ridesharing app that allows students to find safe and cheap rides fast with cost-savings up to 600%</li>
+      <li>Interviewed drivers and riders to define system requirements and minimum viable product</li>
+      <li>Identified cost, safety, and efficiency issues with the existing rideshare solutions available through market research</li>
+    </ul>
+
+    <ul class="tags">
+      <li>Project Management</li>
+      <li>Market Analysis</li>
+      <li>User Research</li>
+      <li>Product Ideation</li>
+    </ul>
+  </div>
+
+  <div class="project-card-media">
+    <img src="img/rych.png" alt="Screenshot of personal website homepage" />
+  </div>
+</article>
+<article class="card project-card project-card-split animate-fade-up">
+  <header class="project-card-header">
+    <div class="project-card-heading">
+      <h3>Pallet Tracking Automation Project</h3>
+      <p class="meta">Loblaw Companies Limited · JavaScript · Bluetooth LE · IoT</p>
+    </div>
+  </header>
+
+  <div class="project-card-main">
+    <ul class="bullets">
+      <li>Developed an automatic data delivery application in JavaScript that connects to Bluetooth Low Energy beacons and IoT gateways.</li>
+      <li>Optimized pallet tracking by eliminating manual data entry and reducing human errors through an automated IoT tracking system.</li>
+      <li>Ran on‑site tests and presented results to logistics leadership, gaining approval for further integration into operations.</li>
+    </ul>
+
+    <ul class="tags">
+      <li>IoT</li>
+      <li>Bluetooth LE</li>
+      <li>JavaScript</li>
+      <li>Automation</li>
+      <li>Logistics</li>
+    </ul>
+  </div>
+
+  <div class="project-card-media">
+    <img src="img/pallettracking.png"
+         alt="Pallet tracking automation dashboard mockup" />
+  </div>
+</article>
+
+      </div>
+    </div>
+    </section>
+  </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>©2025 Gary Yong · Built with love ❤️.</p>
+      </div>
+    </footer>
+
+    <script src="main.js"></script>
+  </body>
+</html>
