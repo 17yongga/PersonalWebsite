@@ -1,0 +1,184 @@
+Engagement 6: E2E Process Analyst @ Tier‑1 Global Bank – Wealth Management Platform Transformation
+Client
+In my current project, I have been instrumental in developing and maintaining strong
+relationships with the client. Through regular workshop-style meetings, I present the
+process flows I created, ensuring that the client has a clear understanding of each step.
+I engage actively with the client across multiple channels, including Teams and email, to
+promptly address any questions or concerns. This proactive approach has helped
+strengthen trust with the client, ensuring that any feedback is quickly incorporated into
+the process flows. Additionally, I identified and highlighted gaps in user stories during
+these workshops, which led to the creation of new requirements. My actions have
+consistently influenced the client’s decision-making process and contributed to positive
+project outcomes.
+People
+As a collaborative team member, I took a leadership role by assisting my colleagues in
+reconciling outstanding clarifications in their respective pods, helping to provide the
+client with a clear view of unresolved questions. Additionally, I proactively engaged with
+other pods, such as the Tax pod, to explain our process flow methodology and assist
+them in kick-starting their own flow creation. This effort fostered stronger collaboration
+between different teams. My mentoring of junior colleagues, such as Stephen and Brian
+has contributed to a more aligned and productive team environment. I’ve actively
+supported both the team’s and my own development, applying feedback to continuously
+improve our performance.
+Delivery
+I led the creation of over 10 detailed process flows that outline the future state of wealth
+account and customer information management on the new advisor portal. Each flow
+included comprehensive annotations linking user stories, regulatory controls, and
+capabilities. Throughout this process, I identified and addressed gaps in user stories by
+driving the creation of new requirements. Furthermore, when an issue arose with
+uploading process flows into the IS tool, I not only troubleshooted the problem and
+found a solution, but I also went a step further by creating a tool that enabled the rest of
+the team to upload their flows seamlessly. My contributions have improved the project’s
+delivery process, increased team efficiency, and ensured that all outputs met the high
+standards expected by both the client and Capco.
+Lessons Learned
+From this engagement, I’ve learned the importance of proactively managing client
+relationships, influencing their decisions through detailed analysis, and delivering
+solutions that address gaps in project requirements. I’ve also developed leadership
+skills by mentoring team members and fostering collaboration across different pods,
+
+while enhancing my problem-solving abilities by not only resolving technical issues but
+also creating tools to streamline processes for the team. Moving forward, I will apply
+these skills to take on more advisory roles with clients, lead larger teams, and
+positioning myself for greater responsibility and growth within Capco.
+
+
+
+Summary
+Reflecting on my performance so far as an associate, I think I am performing at an above-expected
+level, consistently exceeding expectations in delivery quality and client management as a BA on both
+the Tier-1 Canadian Commercial Bank - Reconciliation Automation Reconciliation project and the on-going Tier-1 Global Bank - Major Bank Merger Deveron Project
+
+Delivery
+On the Tier-1 Canadian Commercial Bank - Reconciliation Automation Reconciliation Project, I have delivered outstanding artefacts that were recognized by
+both my manager, the client, as well as the client’s manager (VP level executive). There were three
+main deliverables that I took part in:
+1. Automated Reconciliation Status Checker:
+a. This tool checks the completion status of 300+ daily reconciliation processes across 5
+different LOBs. It can do the task in less than 5 minutes with one click of a button in
+excel, which used to take one senior manager a whole day to complete.
+b. I led the entire solution, from problem discovery through workshops, to
+development, then all the way to delivery with detailed documentation
+c. The excellent solution quality is recognized by my manager, the client, as well as the
+client’s manager at the VP level.
+2. Automated Reconciliation Solutions:
+a. I built solutions that automated 3 reconciliation processes in Tier-1 Canadian Commercial Bank - Reconciliation Automation’s FinOps team,
+turning processes that initially took 3-4 hours daily to tasks that takes less than 10
+minutes to complete.
+b. I led 2 of the 3 solutions from initiation to completion with significant contribution
+to the other one.
+c. Clients were delighted and spoke highly about my contribution, as it saved them
+from hours of manual labour daily.
+3. Business Requirement Documents:
+a. I led the process discovery of 10+ reconciliation processes through multiple client
+workshops, where I identified over 5k+ hours of annual time savings through
+automation. What also came out of the workshops were process diagrams that
+helped the FinOps team realize bottle necks easily.
+b. The Tier-1 Canadian Commercial Bank - Reconciliation Automation FinOps Automation Team (WE Squad) was very appreciative of my
+contribution in defining requirements for these automation solutions.
+On the Tier-1 Global Bank - Major Bank Merger Deveron Project so far, I have already delivered impactful artefacts that helped the
+team effectively align objectives with various client teams, who are at different readiness levels for
+the conversion. My draft cutover runbook was shared with the rest of the team as an example to
+follow when reaching out to different client teams.
+Client
+On the Tier-1 Canadian Commercial Bank - Reconciliation Automation Reconciliation project, I led 8+ stakeholders independently, guiding them through series
+of workshops to understand their reconciliation process, validate pain points, then translating them
+to requirements for a proposed automated solution.
+I also managed 4 other stakeholders throughout the creation of the 4 automated solutions discussed
+above. I created effective feedback loops through all communication channels that resulted in timely
+
+completion of the deliverables. I received positive feedback and appreciation from all stakeholders
+for my contributions.
+On the Tier-1 Global Bank - Major Bank Merger Deveron Project so far, I have established solid relationship already with 2 of the main
+workstream leads, having weekly meetings and connects scheduled to keep things moving. I was
+also able to effectively bring the stakeholders onto the same page quickly through well planned out
+workshops, clear answers to concerns/questions, and detailed artefact drafts.
+People
+On the Tier-1 Canadian Commercial Bank - Reconciliation Automation project, I played key roles in other member’s deliverables. 2 examples:
+1. I led the development of an automated solution proposed by my team member to the client,
+collaborating closely throughout development and testing phases, ensuring that feedbacks
+from the client is reflected in the final deliverable.
+2. I assisted a senior member on the team to perform intercompany reconciliation analysis that
+was then presented to senior executives on the client side.
+On the Tier-1 Global Bank - Major Bank Merger project, while managing my own workstreams and stakeholders, I am also collaborating
+with my team member on managing his workstreams, exchanging learnings and easing the workload
+on his shoulders.
+On both projects, my deliverables were always being referenced by other team members and my
+manager as the example to follow.
+Community
+I took part in the Knowledge Management Tool project, where as a BA, I created user stories for the
+product and refined them through conversations with the design and development team.
+I co-organized a boulders and beers community event, where I took 20+ Capco employees to my
+favourite bouldering gym in Toronto. Everyone had a blast.
+Learnings
+I learned that being confident in front of clients and know your objective heading into
+meetings/engagements are game changers. I’ve always thought that the client would always be
+more knowledgeable than me and that they know exactly how best they can help us. The clients may
+be SMEs for their business and operations, but they may not know how best to assist us with our
+goals/objectives. I need to provide guidance in the most effective way possible for them to
+understand our scope and our intention. I need to have the courage to steer conversions back on
+track even when the stakeholder is more senior than me. I realized that workshops are not just one-
+sided information gathering, it should be an active conversation where I am fully engaged in keeping
+the client focused on providing the exact information that I am looking for.
+
+
+Engagement 1: Business Systems Analyst @ Tier-1 Global Bank - CCaaS Migration
+1. Client
+ Proactively engaged in client discussions, capturing key deliverables and decisions to
+ensure alignment and drive project momentum.
+ Provided strategic guidance on the Business Requirements Gathering Approach,
+developing a structured slide deck for the client’s BA team while collaborating closely
+with them to define a resourcing plan and mitigate risks related to resource constraints
+and timeline pressures.
+ Designed a structured approach for evaluating technology intakes, ensuring that new
+developments/upgrades were assessed effectively to mitigate their impact on the CCaaS
+program.
+ Earned recognition from the intake team and Technology BA team for effectively
+driving and assisting in the above initiatives.
+ Played a key role in advocating for a stronger Capco presence, influencing the decision
+to embed additional resources to support the Technology BA team in their business
+requirements gathering efforts.
+ Fostered collaboration with the client’s Technology BA team, incorporating lessons
+learned from past internal projects into the business requirements gathering approach
+to enhance efficiency and effectiveness.
+2. People &amp; Leadership
+ Despite being the most junior team member, demonstrated strong initiative by actively
+supporting colleagues and contributing meaningfully to the team’s success.
+ Assisted the Program Manager in building a detailed POD structure for the program
+and developing a granular activity timeline for FY25, ensuring clarity on resource
+allocation and milestones.
+ Partnered with SMEs to drive the creation of current-state design artifacts and
+contributed to the assessment and feedback process for RFP questionnaires.
+ Quickly developed expertise in contact center operations, leveraging current-state
+analysis to enhance understanding and contribute more effectively to the program.
+ Gained a deep understanding of the complexities of a large-scale contact center
+migration program, including its structure, resource requirements, critical artifacts,
+timeline, and implementation approach.
+3. Delivery
+ Independently executed straightforward tasks with minimal oversight while collaborating
+effectively with the team on more complex deliverables.
+ Maintained agility in delivering high-quality outputs under vague expectations and
+aggressive timelines, ensuring team objectives were met.
+ Took ownership in developing initial drafts of key artifacts, enabling the team to iterate
+and refine based on feedback (e.g., Design Council Framework, Impact Review
+Board, Business Requirements Gathering Approach).
+
+ Proactively documented key action items and facilitated the development of initial drafts
+for client-proposed ideas, ensuring alignment with project goals.
+ Established a reputation as the go-to resource for quick-turnaround deliverables and
+meeting support, contributing significantly to various initiatives such as Vendor vs. SI
+analysis, timeline refinement, POD structure development, and business
+requirements approach.
+Key Artifacts Delivered:
+ Vendor vs. SI Deck
+ Resourcing Plan
+ Design Council Framework
+ Impact Review Board
+ Current-State Design
+ Wave 1 Capability Rollout Approach
+ Business Requirements Gathering Approach Deck
+
+
+
+
+

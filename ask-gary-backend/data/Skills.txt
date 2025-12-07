@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <title>Gary Yong – Skills</title>
+    <meta
+      name="description"
+      content="Technical skills and tools used by Gary Yong."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">
+  <img src="img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
+  <img src="img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
+  <!--<span class="logo-text">YourName</span>-->
+</a>
+
+    <!-- Desktop navigation -->
+    <nav class="nav nav-desktop">
+      <a href="index.html">Home</a>
+      <a href="projects.html">Projects</a>
+      <a href="experience.html">Experience</a>
+      <a href="about.html">About</a>
+      <a href="skills.html">Skills</a>
+      <a href="blog.html">Blog</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+
+    <!-- Right controls: theme + mobile toggle -->
+    <div class="header-actions">
+      <button
+        id="theme-toggle"
+        class="btn btn-ghost theme-toggle"
+        aria-label="Toggle theme"
+      >
+       ☀️
+      </button>
+
+      <!-- Mobile menu button -->
+      <button
+        class="icon-button mobile-menu-toggle"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+      >
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile navigation panel -->
+  <nav class="nav-mobile" aria-label="Mobile navigation">
+    <div class="nav-mobile-inner">
+      <a href="index.html">Home</a>
+      <a href="projects.html">Projects</a>
+      <a href="experience.html">Experience</a>
+      <a href="about.html">About</a>
+      <a href="skills.html">Skills</a>
+      <a href="blog.html">Blog</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </nav>
+</header>
+
+
+    <main>
+      <section class="section section-alt">
+  <div class="container">
+    <header class="section-header animate-fade-up">
+      <h2>Skills</h2>
+      <p>A blend of consulting, product, and technical skills for AI and digital initiatives.</p>
+    </header>
+
+    <div class="grid grid-3 animate-fade-up">
+      <div>
+        <h3>Technical</h3>
+        <ul class="bullets">
+          <li>JavaScript, TypeScript, HTML, CSS</li>
+          <li>Python for scripting and data analysis</li>
+          <li>SQL for querying and reporting</li>
+          <li>AWS (EC2, S3, Cognito, IAM)</li>
+          <li>APIs, web integrations, and IoT (BLE beacons, gateways)</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Product &amp; Delivery</h3>
+        <ul class="bullets">
+          <li>Requirements gathering and user journey design</li>
+          <li>Business process mapping and capability modeling</li>
+          <li>Agile delivery, workshop facilitation, and stakeholder management</li>
+          <li>Cutover planning and runbook design for large programs</li>
+          <li>Experiment design and A/B or causal impact analysis</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Consulting &amp; Domain</h3>
+        <ul class="bullets">
+          <li>Contact center and CCaaS transformations</li>
+          <li>Banking and financial services (retail, commercial, wealth)</li>
+          <li>Digital transformation across front, middle, and back office</li>
+          <li>Reconciliation automation and operations optimization</li>
+          <li>Cross-functional communication with technical and business teams</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>©2025 Gary Yong · Built with love ❤️.</p>
+      </div>
+    </footer>
+
+    <script src="main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gary Yong – Experience</title>
+    <meta
+      name="description"
+      content="Professional experience of Gary Yong: roles, achievements, and impact."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="logo">
+          <img src="img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
+          <img src="img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
+        </a>
+
+        <nav class="nav nav-desktop">
+          <a href="index.html">Home</a>
+          <a href="projects.html">Projects</a>
+          <a href="experience.html">Experience</a>
+          <a href="about.html">About</a>
+          <a href="skills.html">Skills</a>
+          <a href="blog.html">Blog</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+
+        <div class="header-actions">
+          <button id="theme-toggle" class="btn btn-ghost theme-toggle" aria-label="Toggle theme">
+            ☀️
+          </button>
+          <button class="icon-button mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+      </div>
+
+      <nav class="nav-mobile" aria-label="Mobile navigation">
+        <div class="nav-mobile-inner">
+          <a href="index.html">Home</a>
+          <a href="projects.html">Projects</a>
+          <a href="experience.html">Experience</a>
+          <a href="about.html">About</a>
+          <a href="skills.html">Skills</a>
+          <a href="blog.html">Blog</a>
+          <a href="contact.html">Contact</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="section section-alt">
+        <div class="container">
+          <header class="section-header animate-fade-up">
+            <h2>Experience</h2>
+            <p>Roles, internships, and notable work.</p>
+          </header>
+          <div class="timeline">
+            <article class="timeline-item animate-fade-up">
+              <div class="experience-card">
+                <header class="experience-card-header">
+                  <div>
+                    <h3>Capco</h3>
+                    <p class="experience-subtitle">Implementation Consultant</p>
+                  </div>
+                  <div class="experience-meta">
+                    <span class="experience-dates">Sept 2021 – Present</span>
+                    <span class="experience-location">Toronto, ON</span>
+                  </div>
+                </header>
+
+                <div class="experience-body">
+                  <div class="experience-block">
+                    <h4>Engagement 1: Business Systems Analyst @ Tier‑1 Global Bank – CCaaS Migration</h4>
+                    <ul>
+                      <li>Conducted detailed current‑state analysis of the legacy contact center solution through workshops to identify key operational and customer experience pain points.</li>
+                      <li>Led requirements gathering for a CCaaS migration program, collaborating with stakeholders to define business needs and technical specifications.</li>
+                      <li>Created 10+ future‑state user journeys to illustrate the desired customer experience and seamless contact interaction management.</li>
+                    </ul>
+                  </div>
+                  <div class="experience-block">
+                    <h4>Engagement 2: Business Analyst @ Leading Canadian Bank – Digital Transformation</h4>
+                    <ul>
+                      <li>Performed capability analysis to support digital transformation across front, middle, and back‑office systems.</li>
+                      <li>Led 30+ workshops with SMEs across multiple lines of business to document current‑state system architecture, highlighting capabilities, limitations, and critical integration points.</li>
+                      <li>Collaborated with technical and business stakeholders to develop a future‑state system architecture diagram.</li>
+                    </ul>
+                  </div>
+                  <div class="experience-block">
+                    <h4>Engagement 3: Cutover Team @ Tier‑1 Global Bank – Major Bank Merger</h4>
+                    <ul>
+                      <li>Spearheaded end‑to‑end requirements gathering for cutover runbooks across 13 workstreams, facilitating workshops with senior stakeholders and SMEs to align on deliverables and timelines.</li>
+                      <li>Orchestrated cross‑functional discussions to map customer‑impact scenarios, address potential risks, and increase operational readiness for edge cases.</li>
+                      <li>Conducted three live rehearsals to iteratively strengthen business‑team readiness and incident response.</li>
+                    </ul>
+                  </div>
+                  <div class="experience-block">
+                    <h4>Engagement 4: Business Analyst @ Tier‑1 Canadian Commercial Bank – Reconciliation Automation</h4>
+                    <ul>
+                      <li>Analyzed 15 reconciliation processes and proposed automation solutions projected to save 5k+ hours annually.</li>
+                      <li>Facilitated client workshops to develop reconciliation process diagrams that highlighted bottlenecks.</li>
+                      <li>Compiled business requirements for the technology implementation team to build the proposed automations.</li>
+                    </ul>
+                  </div>
+                  <section class="experience-block">
+  <h4>Engagement 5: Business Systems Analyst @ Leading Canadian Wealth Management Firm - Middle Office Digitization</h4>
+  <ul>
+    <li>Reviewed 3k+ defect resolution records and led process improvement work across five teams to optimize defect reporting.</li>
+    <li>Analyzed release defects and prepared client‑facing presentations to keep stakeholders informed on risks and progress.</li>
+    <li>Streamlined the release defect review and reporting process by building JIRA dashboards and documenting details in Confluence.</li>
+  </ul>
+</section>
+
+<section class="experience-engagement">
+  <h4>Engagement 6: E2E Process Analyst @ Tier‑1 Global Bank – Wealth Management Platform Transformation</h4>
+  <ul>
+    <li>Developed detailed business process flows in Visio to illustrate future‑state system capabilities and surface requirement gaps.</li>
+    <li>Led requirements definition between client and vendor through workshops and review sessions, refining 10+ customer and account maintenance process flows.</li>
+  </ul>
+</section>
+
+                </div>
+              </div>
+            </article>
+
+            <article class="timeline-item animate-fade-up">
+              <div class="experience-card">
+                <header class="experience-card-header">
+                  <div>
+                    <h3>PepsiCo Foods Canada</h3>
+                    <p class="experience-subtitle">Project Management Intern</p>
+                  </div>
+                  <div class="experience-meta">
+                    <span class="experience-dates">Jan 2021 – April 2021</span>
+                    <span class="experience-location">Toronto, ON</span>
+                  </div>
+                </header>
+
+                <div class="experience-body">
+                  <div class="experience-block">
+                    <ul>
+                      <li>Coordinated updates and feedback with 10+ stakeholders across three cross‑functional projects in an agile environment.</li>
+                      <li>Pioneered strategic UI changes for the marketing team, contributing to a 30% monthly sales increase for the e‑commerce store.</li>
+                      <li>Led causal impact analysis for a social media campaign and proposed a new data‑driven strategy that delivered a 20% sales lift.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="timeline-item animate-fade-up">
+  <div class="experience-card">
+    <header class="experience-card-header">
+      <div>
+        <h3>Electro Source Inc.</h3>
+        <p class="experience-subtitle">Product Management Intern</p>
+      </div>
+      <div class="experience-meta">
+        <span class="experience-dates">June 2020 – Aug 2020</span>
+        <span class="experience-location">Toronto, ON</span>
+      </div>
+    </header>
+
+    <div class="experience-body">
+      <ul>
+        <li>Owned the MVP of a remote work collaboration platform for software/hardware hybrid design teams.</li>
+        <li>Roadmapped the MVP, prioritized features, and proposed a delivery timeline to turn the concept into a demonstrable product.</li>
+        <li>Interviewed and demoed to 10+ clients to keep core product features aligned with user needs.</li>
+        <li>Implemented Scrum ceremonies (stand‑ups, planning, retros) that kept a fully remote team moving consistently.</li>
+        <li>Led a cross‑functional team to complete MVP functionality in four two‑week sprints with high‑quality deliverables.</li>
+      </ul>
+    </div>
+  </div>
+</article>
+            <article class="timeline-item animate-fade-up">
+              <div class="experience-card">
+                <header class="experience-card-header">
+                  <div>
+                    <h3>Accenture</h3>
+                    <p class="experience-subtitle">Software Engineering Intern</p>
+                  </div>
+                  <div class="experience-meta">
+                    <span class="experience-dates">Sept 2019 – Dec 2019</span>
+                    <span class="experience-location">Toronto, ON</span>
+                  </div>
+                </header>
+
+                <div class="experience-body">
+                  <div class="experience-block">
+                    <ul>
+                      <li>Developed an application backed by Hyperledger Fabric blockchain to authenticate luxury apparel using RFID.</li>
+                      <li>Designed and implemented intuitive UI/UX with React Native to maximize usability and user satisfaction.</li>
+                      <li>Architected an authentication framework with AWS Cognito and IAM to maintain application security.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="timeline-item animate-fade-up">
+  <div class="experience-card">
+    <header class="experience-card-header">
+      <div>
+        <h3>Loblaw Companies Limited</h3>
+        <p class="experience-subtitle">Supply Chain Logistics Analyst</p>
+      </div>
+      <div class="experience-meta">
+        <span class="experience-dates">Jan 2019 – Apr 2019</span>
+        <span class="experience-location">Brampton, ON</span>
+      </div>
+    </header>
+
+    <div class="experience-body">
+      <ul>
+        <li>Analyzed time studies and logistics expense reports to uncover a recurring million‑dollar loss in pallet tracking procedures.</li>
+        <li>Proposed an automated data delivery system using IoT devices that could save over $1M annually in logistics costs.</li>
+        <li>Defined system requirements through stakeholder interviews and outlined a roadmap from design to implementation.</li>
+        <li>Delivered an on‑site tested prototype to senior managers in under three months, earning approval for further integration.</li>
+      </ul>
+    </div>
+  </div>
+</article>
+<article class="timeline-item animate-fade-up">
+  <div class="experience-card">
+    <header class="experience-card-header">
+      <div>
+        <h3>PureLiving China</h3>
+        <p class="experience-subtitle">Automation Specialist</p>
+      </div>
+      <div class="experience-meta">
+        <span class="experience-dates">May 2018 – Aug 2018</span>
+        <span class="experience-location">Shanghai, China</span>
+      </div>
+    </header>
+
+    <div class="experience-body">
+      <ul>
+        <li>Analyzed inefficient transaction sorting procedures and proposed an automation solution to the department lead.</li>
+        <li>Built an Excel widget using VBA that improved business transaction processing and sorting efficiency by roughly 1600%.</li>
+        <li>Partnered with the sales team to help complete sales orders totaling about $800K.</li>
+      </ul>
+    </div>
+  </div>
+</article>
+
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>©2025 Gary Yong · Built with love ❤️.</p>
+      </div>
+    </footer>
+
+    <script src="main.js"></script>
+  </body>
+</html>

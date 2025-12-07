@@ -1,0 +1,869 @@
+MSCI 391 WORK TERM 
+REPORT 
+ 
+Zhenghan Yong 
+Student ID: 20704765
+
+1 
+ 
+ 
+Pregraduation Experience Record Form 
+ 
+ 
+Instructions 
+ 
+a - If you are using a word processing software such as “Word” or ‘WordPerfect”, simply enter 
+the information in the shaded fields (These fields will expand; you can type as much information 
+as you wish in each section.)  Otherwise, print the form and provide the information on separate 
+sheets. 
+b - Print the completed form and ask your supervisor to review the information, complete the 
+last portion and sign the document. 
+c - Retain the completed and signed form until you’re ready to apply for your P.Eng. licence.  
+PEO will only determine the eligibility of your pre-graduation experience when you apply for your 
+licence. 
+ 
+Section to be completed by the student 
+ 
+Name of student: Zhenghan Yong  
+ 
+University: University of Waterloo  
+ 
+Program of study: Management Engineering  
+ 
+Expected graduation date: April 2022 (month and year) 
+ 
+Work period: From: 09/09/2019  (DD/MM/YY)   To: 20/12/2019  (DD/MM/YY) 
+ 
+ 
+ 
+ 
+Job title: Advanced App Engineering Sr Analyst 
+ 
+Company name: Accenture 
+ 
+ 
+Job Description 
+Please describe the engineering component of your position in 3 to 5 sentences. 
+  As a full-stack developer, I developed technological solutions in a rapid 
+prototyping environment. I built a product authentication blockchain platform 
+using Hyperledger Fabric and Amazon Web Services following AWS cloud 
+architectural principles. I collaborated with a team of eight and completed the 
+project early with high standards. As a team, we created a mobile application 
+using React Native that demonstrated features of the technological solution 
+effectively.
+
+2 
+Application of Theory                                                      Enter the percent of time : 100% 
+The application of theory is a mandatory requirement. Therefore it is expected that each 
+position will provide some exposure to this criterion.  Clearly outline your contribution to the 
+work that was undertaken. 
+As a full-stack developer in the team, I applied good design principles and theories for 
+application development. In order to make a fault-tolerant application, I designed the 
+backend and frontend to handle errors and give actionable error messages. This allows 
+us to troubleshoot the application easily when errors occur instead of application 
+crashes without giving any clue to what the problem was. I needed to create test cases 
+and perform functional testing for newly developed functions of a mobile application in 
+a development environment to ensure its reliability. Then, once the feature is tested and 
+proven to be stable, it will then be updated on the production build of the application. 
+Other Experience 
+Please describe how your work experience addressed the other four criteria - (practical 
+experience, engineering management, communication skills and social implications) 
+  In order to make our solution practical, we created a demonstration that has a full 
+fashion product supply chain with our solution implemented. The purpose of this is to 
+show how our digital identity management system can be included seamlessly in an 
+existing streamlined system, as well, it shows how the solution can eliminate 
+counterfeit goods from entering the high-end fashion market. The project is done in a 
+fully agile environment with 2-week sprints. We have a product owner, scrum master 
+and tech lead to facilitate the project. Every sprint we have planned tasks pre-assigned, 
+and we have daily stand-ups where we need to report progress on tasks. At the end of 
+each 2-week sprint, we were also required to present all work done this sprint to tech 
+lead and product owner. When the project was finished, we have done countless 
+demonstrations across departments that showcase our solution and its capability. 
+ 
+ 
+Name of Supervisor: Christopher Flora 
+Title of Supervisor: Advanced App Engineering Manager 
+Mailing Address: 
+      
+ 
+ 
+ 
+      
+ 
+ 
+ 
+      
+ 
+ 
+ 
+      
+Phone number: 
+ 416-641-3019 
+E-mail address: 
+ christopher.a.flora@accenture.com  
+ 
+Supervisor’s Signature: 
+__ 
+ 
+ 
+_____________________________ 
+Professional Engineer:    Yes    No 
+Licence/Registration Number:
+
+3 
+Date:  
+ 
+________ 
+_______________________ 
+ 
+December 13, 2019
+
+4 
+Job details: 
+ 
+I worked as a member of a developer team for a technological solution development project at 
+Accenture’s innovation hub, Liquid Studio. As a developer, I worked on the frontend, as well as 
+backend development work for the final solution. As well, being the member that has the most 
+business-savvy mindset in the developer team, I helped the team organize and present our 
+deliverables to tech lead and product owner on a bi-weekly basis. 
+ 
+Our backend work mostly consisted of creating functions that perform a set of actions to the 
+ledger in our Hyperledger Fabric blockchain network. Other tasks that I did include setting up 
+and testing API endpoints, writing chaincode that include sets of validation rules for each and 
+every action done on the blockchain, as well as creating, managing and securing user login and 
+access credentials. Most of these tasks were made easy using Amazon Web Services (AWS). We 
+ran our express server that managed API calls as well as the blockchain network on an EC2 
+instance, a computing service provided by AWS. This saved us a lot of money for not having to 
+invest in physical equipment and sped up the development process by eliminating setup work 
+for physical hardware. Since we are using cloud services, we only had to pay for the computing 
+power and storage we used. We also used AWS Cognito and Identity and Access Management 
+service to manage user credentials for application login. Postman was also used to test APIs to 
+make sure that they are giving correct responses. Once these APIs were tested, they were then 
+attached to a component in the frontend. 
+ 
+In order to fully showcase the capability of our technological solution, we decided that we 
+would build a mobile application that has user-friendly UI to make complicated blockchain 
+operations easy to perform and understand. After our UI/UX designer came up with mock 
+designs of the user-facing application, I started building the frontend interfaces using React 
+Native. The application was built to be used by users with three different personas: brand, 
+retailer and customer. I mainly worked on the frontend interfaces for the retailer as well as the 
+customer. Once the cross-ponding backend features have been finished, I linked the frontend 
+components with the backend APIs. I would test the functionality of each and every feature. I 
+first came up with test cases that cover all use cases of the feature. Then, I implemented error 
+handlers into our application so that when we encounter errors or bugs, we would know what 
+went wrong at which part of our code. This process can be time-consuming, but it is one of the 
+most important steps for a production-grade application.  
+  
+Since the whole project was done in a fully agile environment, we had 2-week sprints for the 
+project. By the end of each sprint, we need to present our technical work to the product owner 
+and tech lead in a clear and concise manner. Among the members of the development team, I 
+had the most business background. So, I led the creation, organization, and presentation of our 
+end of sprint demonstrations. I connected the technical tasks we have done with real-life use 
+cases so that people can easily understand what we did without understanding tools, 
+languages, and modules we used to build these features. As well, once the project was finished,
+
+5 
+I created a demonstration guide and script for our solution presentations. I made this technical 
+solution demo easy to set up, present and understand from a businessperson’s perspective. 
+ 
+Coursework: 
+ 
+Since this is a developer role with software development tasks, I was able to use many of the 
+knowledge learned in programming courses such as MSCI 240. Many of the coding best 
+practices that I learned were used during this work term despite the fact that I did not use the 
+same programming language. I realized that a lot of the same coding best practices apply to 
+different coding languages. 
+ 
+Many of the theories that I learned from MSCI 211, organizational behavior, came in handy 
+while working with collogues in the workplace. For example, when I first started my work term, 
+I could quickly gain insights into the atmosphere of the team I was working just by analyzing 
+their individual behaviors. I learned in MSCI211 that the overall atmosphere of the workplace is 
+closely connected to how each of the individuals behaves in it. I was able to use the behavior I 
+see in the workplace to quickly get on track and start my work. 
+ 
+In terms of other courses that I have done, I can’t relate to them as much as the two above. I 
+really did use what learned in the above two courses since I am working in a corporate technical 
+team. 
+ 
+Self-Reflection: 
+ 
+Expectations: 
+ 
+I came into my work term with two expectations for myself: get to know the inside out about 
+the software development cycle and process by being a part of it, connect with consulting 
+department employees and seek guidance on how to become a technology consultant, my ideal 
+career after graduation. 
+ 
+I have met my first expectation since I did get the software development experience that I 
+expected. Working along with senior software solution architects really widened my view on 
+software development. I definitely learned a lot of software development skills as well as the 
+process of how tech solutions are produced and proposed to clients. 
+ 
+I did not, however, had enough time to connect to consultants in the company since I spent 
+most of my time working on my project. I failed to network with others and get to know about 
+my dream future career. Although it is an opportunity missed, I would still continue to look for 
+opportunities to do so.
+
+6 
+Improvement: 
+ 
+Since the project we worked on involved a lot of cloud services on Amazon Web Services 
+Platform, I find myself struggling to understand and know these features provided by AWS, and 
+without these basic understanding, I was inefficient at performing my tasks. I discovered that 
+AWS provides training for people to quickly get on board with development using their cloud-
+based services. I was able to take a functional level training from AWS, which helped me 
+understand AWS cloud architecture, the services it provides, as well as good practices and 
+design choices when using cloud services. I worked much more effectively after taking the 
+course, and I was able to take a certification test and become an AWS Certified Cloud 
+Practitioner. I can now confidently say that I know what cloud computing is, why we use cloud 
+services, and how to use cloud services to benefit businesses and projects. 
+ 
+Impact: 
+ 
+Before this work term, I am a person that did not care too much about product branding, I 
+thought that it is simply made to encourage the growth of consumerism. However, while 
+working on this project about using technology to prevent counterfeit products from entering 
+consumer markets, I realized the negative impact of counterfeits on the environment, 
+businesses, and lives of people. I realized how useful our solution could become and how much 
+impact will it make once it gets introduced to all sorts of industries. 
+ 
+Year after year, luxury brands, for the sake of preventing real, slightly outdated fashion 
+products falling into counterfeiter’s hands, burn all products in their inventory. However, with 
+our digital identity management solution, bags can be kept for years, and will still have digital 
+identity attached that will prove its authenticity permanently. This gives these bags value that 
+no other counterfeits can replace, thus, brands won’t need to burn their products anymore.  
+  
+Many drug companies produce life-saving drugs that are under invasion by counterfeit drug 
+products. These products look the same as the real ones, however, they are produced in a no-
+name factory with tweaked ingredients. They are either less effective, not effective, or even 
+cause death. With our solution, we can prevent counterfeit drugs from entering the market by 
+assigning non-replicable digital identities to these real drugs and ensure the customers that 
+they are buying real authentic products. 
+ 
+Next CO-OP: 
+ 
+I would like to continue working in technology solution development teams because I truly 
+believe that emerging technologies can be used to solve some of the world’s biggest problems. 
+I want to be part of a team that innovates and develops these solutions and makes a difference 
+in whatever industry it gets applied to.
+
+7 
+I would also like to gain more business analytics skills so that I will be able to suggest these 
+advanced solutions to companies and solve their most head aching problems. 
+ 
+Resume Description of CO-OP: 
+ 
+-      Developed technological solutions in a rapid prototyping environment at Accenture Liquid 
+Studio 
+-      Built a product authentication blockchain platform using Hyperledger Fabric and Amazon 
+Web Services  
+-      Worked effectively as a full-stack developer in an agile software development team with 2-
+week sprints  
+-      Collaborated with a team of eight and completed the project early with high standards 
+-      Received formal training and socially accredited as an AWS Certified Cloud Practitioner
+
+
+-------------------------------------------------------------------------------
+
+Work Term Report 
+Course Number: MSCI 491 
+Student ID: 20704765 
+Student Name: Gary Yong 
+Date: April 24, 2021
+
+1 
+ 
+ 
+Pregraduation Experience Record Form 
+ 
+ 
+Instructions 
+ 
+a - If you are using a word processing software such as “Word” or ‘WordPerfect”, simply enter 
+the information in the shaded fields (These fields will expand; you can type as much information 
+as you wish in each section.)  Otherwise, print the form and provide the information on separate 
+sheets. 
+b - Print the completed form and ask your supervisor to review the information, complete the 
+last portion and sign the document. 
+c - Retain the completed and signed form until you’re ready to apply for your P.Eng. licence.  
+PEO will only determine the eligibility of your pre-graduation experience when you apply for your 
+licence. 
+ 
+Section to be completed by the student 
+ 
+Name of student: Zhenghan (Gary) Yong  
+ 
+University: University of Waterloo  
+ 
+Program of study: Management Engineering 
+ 
+Expected graduation date: May 2022 (month and year) 
+ 
+Work period: From: 06/01/21 (DD/MM/YY)   To: 30/04/21  (DD/MM/YY) 
+ 
+ 
+ 
+ 
+Job title: Project Management Intern 
+ 
+Company name: PepsiCo Foods Canada 
+ 
+ 
+Job Description 
+Please describe the engineering component of your position in 3 to 5 sentences. 
+For my work term at PepsiCo Foods Canada, I was able to engage in three initiatives as 
+a member of the business innovation team.  
+ 
+The first initiative is to perform Causal Impact analysis for the media team. Using 
+techniques such as data aggregation, test-control group analysis, I was able to derive 
+data-driven insights regarding the performance of our social media campaigns. The 
+results were presented to all stakeholders including an overview of the data used, our 
+findings, and what we think are the executable next steps given the results. 
+ 
+The second initiative is to improve the user experience of an internal dashboarding tool. 
+I was able to satisfy stakeholder’s requirements by improving the usability of an
+
+2 
+inefficient and outdated data visualization dashboard using Tableau. This initiative was 
+completed in an agile environment involving twice-a-week stakeholder meetings. Each 
+milestone is saved and tracked, and each feature is tested with sample use cases. 
+ 
+The third initiative is to improve customer-facing e-com website based on stakeholder’s 
+requirements. Through use case study and stakeholder interviews, I planned and 
+initiated the desired updates and provided the stakeholders with constant updates.  
+Application of Theory                                                      Enter the percent of time : 80% 
+The application of theory is a mandatory requirement. Therefore it is expected that each 
+position will provide some exposure to this criterion.  Clearly outline your contribution to the 
+work that was undertaken. 
+The majority of my duties involve dealing with large datasets. Ensuring the accuracy 
+and inclusiveness of the finalized dataset is key. I needed to make sure that when 
+aggregating or filtering my datasets, it manipulates the data as intended. Data 
+verification and assessment is performed after each data-wrangling procedure to 
+ensure no unintended data manipulations exist. 
+ 
+While analyzing the dataset, it was important to isolate external variables in the data. 
+Using test - control group analysis ensures that the measured difference is caused by a 
+specific factor instead of multiple, which helped us increase the accuracy and 
+confidence of our findings. 
+ 
+Progress is always tracked and timestamped for long and complex data manipulation 
+processes, this is so that if we identify a potential problem in the process, we can 
+restart from the most recent timestamped milestone.  
+Other Experience 
+Please describe how your work experience addressed the other four criteria - (practical 
+experience, engineering management, communication skills and social implications) 
+Considering implementation options and finding best one was important and a 
+consistent part of my work. During the work revolving around improving the data 
+visualization dashboard on Tableau, I came up with two improvement methods and 
+compared their strength and weaknesses for a major data filtering improvement. Both 
+methods would achieve the same major objective, however, they both have their 
+constraints. With the addition of new stakeholder requirements later on from our weekly 
+stakeholder meetings, one of the methods became a better choice as the other would 
+now restrict the development of the new requirement.  
+ 
+Throughout the work term on all my projects, I am committed to staying updated with all 
+my stakeholders. Meetings for each project will occur at least once per week, where 
+updates, new requirements, and roadblocks are discussed. Throughout these meetings, 
+I would also make sure that I understood the intention behind the stakeholder’s 
+suggestions, which would help me in providing improvements that fit their needs 
+perfectly.  
+ 
+Presentations were a large part of my work revolving around the causal impact 
+initiative. Since the stakeholders were not experts in data analysis, the findings and 
+details of the results had to be presented in a more visualized and simplified manner. I 
+was able to compress complex data results into one-liners that the average person 
+would understand. This also applies to my mid-term and final coop presentations, 
+where I presented complex topics in my work in front of supply chain senior managers, 
+who aren’t familiar with these data analytic concepts. By providing animations and 
+visualizations, I was able to easily explain my work to the audience.... 3 
+ 
+ 
+Name of Supervisor: Hamad Akram 
+Title of Supervisor: 
+Data Scientist 
+Mailing Address: 
+3154 Gladish Grove 
+ 
+ 
+Mississauga, ON 
+ 
+L5M 0C3 
+ 
+ 
+Phone number: 
+2894569330 
+E-mail address: 
+hamadakram@outlook.com 
+ 
+Supervisor’s Signature: 
+ 
+Professional Engineer:    Yes    No 
+Licence/Registration Number: N/A 
+Date:  
+ 
+28-APR-2021
+
+Expanded Report 
+ 
+Job Details 
+For my work term at PepsiCo Foods Canada, I was able to engage in three projects as a member 
+of the business innovation team. Throughout the term, I managed 3 projects, each with a 
+separate team, the media team, the consumer insights team, and the marketing team. 
+ 
+The first project is to perform a Causal Impact analysis for the media team. Each causal impact 
+analysis contains 3 major processes, test-control store pool formation, causal impact analysis, 
+and at last, result-analysis and reporting. I was responsible for the results analysis and reporting 
+stage of one of the causal impact analyses we were in the process of finishing. I was responsible 
+to take the outputted datasets from a causal impact Knime workflow, analyze it and extract 
+valuable data insights that could tell us whether the campaign was successful and why. Using 
+techniques such as data aggregation, I was able to determine where did the campaign work, 
+which store banners were impacted more, which population was buying into the 
+advertisements. The results were presented to all stakeholders including an overview of the 
+data used, our findings, and what we think are the executable next steps for our next media 
+campaign given the results. 
+ 
+The second project is to improve the user experience of an internal dashboarding tool for the 
+consumer insights team. The tool initially has not been updated in a long time, some functions 
+were not working as intended, and the working features suffer from long loading times. The 
+consumer insight team members understand how to use the tool but are not technical experts 
+on how to improve the usability of the tool. I took the initiative to meet with them and identify 
+any requirements and desired features that they are looking for and started working on the 
+changes. Using Tableau, I was able to build all features as requested by the consumer insight 
+team and improving the efficiency of the tool. Because of the size of the backend dataset, the 
+tool would initially take about 1 minute to filter through a user-selected item. I was able to 
+speed up this process and cut the 1-minute load time down to as low as 2 seconds. This 
+initiative was completed in an agile environment involving twice-a-week stakeholder meetings. 
+Each milestone is saved and tracked, and each feature is tested with sample use cases. 
+ 
+The third project is to improve a customer-facing e-com website based on stakeholder’s 
+requirements. The project started as a simple website update and refresh to make sure 
+products on there are our most up-to-date product offerings. As I was performing the product 
+list updates, I identified a few other potential opportunities for improvement for the e-com site. 
+After writing them down and proposing the ideas to my supervisor, I was given the project of 
+improving the user experience of the e-com site. I was able to initiate 3 main UI changes to the 
+site, first is to change the sequencing logic of our products on the site, the second is to refine 
+product photos to make important info pop out and eliminate unnecessary labels that were 
+unreadable on the packaging photo anyways, the third change was to improve the 
+categorization logic for our products on the site.... After a great amount of communication with stakeholders across the marketing team and 
+salesforce team, I was able to execute the first change and boost the monthly sales volume of 
+selected underperforming products by 30%+ on average. The rest of the changes aren’t 
+executed but are well underway and are awaiting execution. 
+ 
+Course Work 
+Relating to the course works I have done at the University of Waterloo, I was able to use a lot of 
+what I learned from my courses in this coop. 
+ 
+First, I was able to apply the Agile Scrum methodology I learned from MSCI 444 in this 
+internship at PepsiCo as a project manager. To be more specific, I applied my knowledge of the 
+agile way of organizing updates and feedbacks, connecting with stakeholders at least twice a 
+week for all three of my projects. Alongside that, I knew how to prepare and perform 
+stakeholder interviews so that I knew exactly what the stakeholders are looking for. All of these 
+are thanks to the content that I have learned from MSCI 444. 
+ 
+Secondly, since a lot of projects during this internship were data-focused, it was very handy to 
+know database structure and SQL-related knowledge, which I learned from MSCI 346. I was 
+able to easily come up with simple to intermediate SQL queries that retrieved the dataset that I 
+needed from the database. PepsiCo Canada has a large and complex database to store their 
+data, but because I knew the database structure, I was able to quickly understand the overall 
+layout of the database and find exactly where the needed schema and tables were located.   
+ 
+Another course that helped me immensely was the organizational design and technology 
+course, with the course code MSCI 311. With a deep understanding of the theories behind the 
+organizational structure and how technologies are used within an organization to increase its 
+productivity at different scales, I was able to quickly understand and identify the needs of each 
+team that reached out to me for the respective technical projects. I was able to quickly identify 
+underlying user needs and start developing the features each team is looking for. 
+ 
+Self-Reflection: 
+Expectations: 
+This is the first term that I was able to land a project manager position. Although in the past, I 
+have had experience managing technical projects, it is way more formal this time, and I was 
+able to fully take advantage of all the learnings from previous coops in this coop. 
+ 
+I was able to handle 3 projects simultaneously, meeting and organizing 14 stakeholders with 
+their requirements and feedback. It felt easier than I expected, partially thanks to the past 
+management experience I gained from previous coops. In many ways, this coop is one of my 
+best coops, I was able to handle the required tasks and duties with ease, and our team was 
+extremely friendly and welcoming.
+
+Additionally, I was able to learn a lot about data analysis and how to wrangle and manipulate 
+large datasets. I was able to fluently use Tableau to present complex datasets in a very visual 
+and easy-to-understand way. Toward the end of my internship, I was able to quickly retrieve 
+needed datasets requested by other members of the team using DB Visualizer and SQL queries. 
+ 
+In conclusion, I have met my learning goals for this term, and I would rate this term as one of 
+my best internships so far. 
+ 
+Improvement: 
+After my first official project management work experience, I think I should continue to 
+improve on my ability to set the proper project scope and stick to it. 
+ 
+During two of the projects that I have done this term, there were instances where because of a 
+few minor bugs and issues with the deliverable, I had to delay the schedule of the project. 
+Later, in a 1 on 1 feedback session with my manager, I was told that although seeking 
+perfection is good, I should work on focusing on the bigger picture and not let minor issues 
+affect the overall progress of the project. 
+ 
+I have great attention to detail, while it helps me deliver high-quality work, it sometimes also 
+distracts me from the main objective. Like most issues, I think I need to try to improve on this 
+through more experience. I should try to always think about the bigger picture, always asking 
+myself: “is this feature going to impact/contribute to the MVP?”. I will also be more conscious 
+about this issue that I have and monitor it in my future projects. 
+ 
+Teamwork 
+Same as the last coop term, this coop term was also remote. This means it is a challenge to 
+work with others as every way of communication will be virtual. As a Project Manager, I must 
+constantly connect with my stakeholders, while emails are sufficient for basic information 
+transfer, frequent meetings are required for items as small as a 5-minute discussion. 
+ 
+To have good teamwork, I needed to establish great communication with my stakeholders. 
+Different from last coop term, I am now connecting with 3 external teams in the company 
+instead of members from the same team. This makes it so much harder to start each meeting 
+as we rarely knew what each other is working on or going through. I am not a person that is 
+good at small talks, so I struggled to fully connect with my stakeholders at the beginning.  
+ 
+However, my manager on my team is very good at small talks, so I decided to learn from him. 
+Every time we have a meeting together, I would keep mental notes about how he started our 
+meeting. Sometimes the “ice breaker” at the start would be team-specific, but most of the 
+time, he would often start with something very causal and general, so I was about to learn a lot 
+of the opening phrase from him.
+
+At the same time, I tried to make sure that I kept track of some of the items my stakeholders 
+told me about their life or their work. Next time we meet, I would start by asking about the 
+status of whatever they mentioned during our last meeting. 
+ 
+I was able to use the above two methods to quickly get closer with my stakeholders, making 
+virtual meetings way easier to organize and execute, which helped me make sure what I was 
+working on was consistently aligned with stakeholder’s requirements. 
+ 
+Next CO-OP 
+Although I have learned a lot from this internship, my future career goal stays the same as last 
+term, which was to take on roles that focus more on product management instead of project 
+management. I still plan to find a product manager position at a tech-focused company. This 
+term’s learnings won’t go to waste, as I was able to explore the data analytic industry at a 
+deeper level and learn to make data-driven decisions. As a product manager, I could use this to 
+make sure my future product design decisions are backed by data insights. Furthermore, I have 
+met and connected with many mentors and talented individuals, which can potentially 
+contribute to my career in the future. Lastly, I learned lots of valuable soft skills that could be 
+applied to a product management position. 
+ 
+For next term, I will explore all PM roles, including program, project and product management, 
+all of which will be a great experience for me, but I will put major emphasis on product 
+management as that is the direction that I would like to head toward. 
+ 
+Resume Description of CO-OP 
+- 
+Actively coordinated updates and feedback with 10+ stakeholders for 3 cross-functional 
+projects in an agile environment  
+- 
+Consulted the consumer insights team to transform their data clustering process, 
+increasing productivity by 200%+ 
+- 
+Led media campaign causal impact analysis for the media team, proposing a new data-
+driven strategy with a 20%+ sales lift  
+- 
+Proposed and executed e-com store UI/UX changes for the marketing team that 
+increased monthly sales by 30%+
+
+
+-------------------------------------------------------------------------------
+
+Work Term Report 
+Course Number: MSCI 392 
+Student ID:20704765 
+Student Name: Gary Yong 
+Date: September 15, 2020
+
+1 
+ 
+ 
+Pregraduation Experience Record Form 
+ 
+ 
+Instructions 
+ 
+a - If you are using a word processing software such as “Word” or ‘WordPerfect”, simply enter 
+the information in the shaded fields (These fields will expand; you can type as much information 
+as you wish in each section.)  Otherwise, print the form and provide the information on separate 
+sheets. 
+b - Print the completed form and ask your supervisor to review the information, complete the 
+last portion and sign the document. 
+c - Retain the completed and signed form until you’re ready to apply for your P.Eng. licence.  
+PEO will only determine the eligibility of your pre-graduation experience when you apply for your 
+licence. 
+ 
+Section to be completed by the student 
+ 
+Name of student: Zhenghan (Gary) Yong  
+ 
+University: University of Waterloo  
+ 
+Program of study: Management Engineering 
+ 
+Expected graduation date: May 2022 (month and year) 
+ 
+Work period: From: 15/06/2020 (DD/MM/YY) To: 28/08/2020 (DD/MM/YY) 
+ 
+ 
+ 
+ 
+Job title: Product Manager and Software Project Developer 
+ 
+Company name: Electro Source 
+ 
+ 
+Job Description 
+Please describe the engineering component of your position in 3 to 5 sentences. 
+For my work term at Electro Source, I was able to fulfill duties as a product manager as 
+well as a software project developer for a proof of concept of a remote working platform 
+built to increase the hardware/software hybrid design team’s productivity. 
+ 
+As a product manager, I focused on four main duties: performing research and analysis 
+on the project idea, outline objectives and keep track of the development of the MVP for 
+the project, lead development following Agile Scrum methodology to make sure 
+features developed to align with user’s needs, translate technical achievements of the 
+prototype into user-facing stories and present to the sales team.  
+ 
+As a software project developer, I focused on these main duties: complete tickets
+
+2 
+assigned on JIRA for the development team, testing and revising new features, design 
+UI/UX such that interfaces are user friendly.  
+ 
+I worked with a team of six, consisting of two COOP students including me, and four 
+full-time employees who assisted us with support when roadblocks appear. Two weekly 
+meetings were set up to update the full-time employees on our progress on the project. I 
+also led our development team’s bi-weekly sprint retrospective and planning meetings, 
+as well as a daily stand-up meeting to make sure problems can be reported as soon as 
+they are discovered.  
+Application of Theory                                                      Enter the percent of time : 80% 
+The application of theory is a mandatory requirement. Therefore it is expected that each 
+position will provide some exposure to this criterion.  Clearly outline your contribution to the 
+work that was undertaken. 
+A large part of my duty was to perform research and analysis on the market our product 
+is targeting. It was important for me to extensively perform competitive analysis 
+between existing solutions in the market with what we are planning to build. Once we 
+found a place in the market for our product, we as a team discussed and determined the 
+prioritization of features to be built for the MVP of this product. I was able to compile 
+our findings and come up with a timeline for each product milestone, then discuss and 
+revise it with our team. Furthermore, along with the team, we interviewed clients on their 
+needs and struggles on the existing workflow of the hardware/software hybrid design 
+process and summarized our findings into our objectives of the product.  
+ 
+With the objectives in mind, I was able to come up with technical user stories on our 
+JIRA board with actionable sub-tasks that our developers can get started working on. It 
+was important to make sure that stories are categorized into epics and have acceptance 
+criteria attached.  
+ 
+Other Experience 
+Please describe how your work experience addressed the other four criteria - (practical 
+experience, engineering management, communication skills and social implications) 
+Since it is a relatively small team, we were required to wear multiple hats at the same 
+time. I took on the role of a Scrum Master in the team, who led Scrum related meetings 
+such as daily stand-up with developers. Organizing the bi-weekly retrospective and 
+planning meetings was also important as it maintained team productivity in the time of 
+disconnection and remote working during the pandemic. 
+ 
+The presentation was also the responsibility that I took on for the team. I led weekly 
+update presentations for the project to managers and president of the company, making 
+sure that our technical accomplishments were easily understood by people like the 
+sales team.  
+ 
+At the end of my internship, I compiled written documentation for our progress on the 
+product. Along with those documents, I have also organized other research resources 
+and PowerPoints into folders and shared with the upcoming interns that will take over 
+this project.    
+ 
+ 
+ 
+ 
+Name of Supervisor: Michael Nykoluk 
+Title of Supervisor: 
+President
+
+3 
+Mailing Address: 
+      
+ 
+ 
+ 
+      
+ 
+ 
+ 
+      
+ 
+ 
+ 
+      
+Phone number: 
+ 416-417-8671 
+E-mail address: 
+ nykoluk@electrosource.com 
+ 
+Supervisor’s Signature: 
+__ 
+ 
+ 
+_____________________________ 
+Professional Engineer:    Yes    No 
+Licence/Registration Number:  
+ 
+ 
+Date:  
+ 
+________ 
+_______________________ 
+ 
+No
+September 15, 2020
+
+Expanded Report 
+ 
+Job Details 
+For my work term at Electro Source, I was able to fulfill duties as a product manager as well as a 
+software project developer for a proof of concept of a remote working platform built to 
+increase the hardware/software hybrid design team's productivity. 
+ 
+As a product manager, I focused on four main duties: performing research and analysis on the 
+project idea, outline objectives and keep track of the development of the MVP for the project, 
+lead development following Agile Scrum methodology to make sure features developed to align 
+with user's needs, translate technical achievements of the prototype into user-facing stories 
+and present to the sales team.  
+ 
+A large part of my duty was to perform research and analysis on the market our product is 
+targeting. It was important for me to extensively perform competitive analysis between existing 
+solutions in the market with what we are planning to build. Once we found a place in the 
+market for our product, we as a team discussed and determined the prioritization of features to 
+be built for the MVP of this product. I was able to compile our findings and come up with a 
+timeline for each product milestone, then discuss and revise it with our team. Furthermore, 
+along with the team, we interviewed clients on their needs and struggles on the existing 
+workflow of the hardware/software hybrid design process and summarized our findings into 
+our objectives of the product. With the objectives in mind, I was able to come up with technical 
+user stories on our JIRA board with actionable sub-tasks that our developers can get started 
+working on. It was important to make sure that stories are categorized into epics and have 
+acceptance criteria attached. 
+ 
+I worked with a team of six, consisting of two COOP students including me, and four full-time 
+employees who assisted us with support when roadblocks appear. Two weekly meetings were 
+set up to update the full-time employees on our progress on the project. I also led our 
+development team's bi-weekly sprint retrospective and planning meetings, as well as a daily 
+stand-up meeting to make sure problems can be reported as soon as they are discovered. 
+ 
+Since it is a relatively small team, we were required to wear multiple hats at the same time. I 
+took on the role of a Scrum Master in the team, who led Scrum related meetings such as daily 
+stand-up with developers. Organizing the bi-weekly retrospective and planning meetings was 
+also important as it maintained team productivity in the time of disconnection and remote 
+working during the pandemic. 
+ 
+The presentation was also the responsibility that I took on for the team. I led weekly update 
+presentations for the project to managers and president of the company, making sure that our 
+technical accomplishments were easily understood by people like the sales team.... At the end of my internship, I compiled written documentation for our progress on the product. 
+Along with those documents, I have also organized other research resources and PowerPoints 
+into folders and shared with the upcoming interns that will take over this project.    
+ 
+Course Work 
+Relating to the course works I have done at the University of Waterloo; I find myself taking 
+advantage of a lot of the knowledge I have learned at school in my internship. 
+ 
+First of all, I was able to apply the Agile Scrum methodology I learned from MSCI 444 in this 
+internship at Electro Source as a Scrum Master. To be more specific, I applied my knowledge of 
+creating user stories, hosting sprint retrospective meetings, and planning for development 
+sprints. I was also leading a development team that is new to agile through the concept of a 
+sprint as well as how to use JIRA to keep track of development work. Alongside that, I knew 
+how to prepare and perform user interviews so that our product can be more user friendly and 
+easy to use. All of these are thanks to the content that I have learned from MSCI 444. 
+ 
+Another course that helped me immensely was the organizational design and technology 
+course, with the course code MSCI 311. With a deep understanding of the theories behind the 
+organizational structure and how technologies are used within an organization to increase its 
+productivity at different scales, I was able to quickly identify our remote working platform's 
+clients and determine their needs for internal communication methods between hybrid design 
+teams. The fact that I knew about the psychology and logistics behind communication in an 
+organization helped me to quickly identify underlying user needs and start developing.  
+ 
+Self-Reflection: 
+Expectations: 
+Ever since my first internship, I have always aimed to become an aspiring product manager, and 
+this term is the very first term that I was able to land a product manager position. In many 
+ways, this term is an important milestone for me on my career journey. 
+ 
+I took ownership of a technical product at Electro Source, officially, as a product manager. 
+Although over the past internships, I have always partially owned my own product that I was 
+working on, this time is different in that I was able to fully take control and use all the 
+experience I gained previously and apply them to this product at Electro Source. I applied a lot 
+of the techniques I observed from previous product owners and project managers that I 
+thought really contributed to the product's success at Electro Source, and it worked out quite 
+nicely. For example, I followed the Agile Scrum approach that one of my previous product 
+owners implemented to our project, it not only increased the organization of tasks and 
+productivity but also made sure that our team stayed close during times of physical isolation. 
+Overall, I am satisfied with what I have accomplished at Electro Source.
+
+Improvement: 
+After my first official product management work experience, I found that I should improve on 
+my communication skills.  
+Communication has always been a weakness of mine, although it has been improving over 
+time, I realized that I need to become much better soon since it is a crucial skill that a good 
+product manager should possess. Before our weekly meetings, I find myself prepping a lot to 
+ensure the smoothness of the discussion. The fact that communicating my ideas to others 
+doesn't come naturally is a big problem in terms of increasing efficiency of work, and it may 
+become a much bigger problem as the size of the team I deal with grows.  
+ 
+I think the only way to make this better is to practice. I have a lot of group projects for school 
+coming up and I decided to take lead on meetings and discussions. This may include going 
+through team members' ideas during a brainstorming session or leading a discussion of a 
+roadblock in our project with the rest of the team. I think this can help me get better at 
+communicating.  
+ 
+Teamwork 
+ 
+Teamwork during this challenging time at work cannot get harder. Throughout the entire work 
+term, I did not meet with my employer nor any of my teammates. It made me realize the 
+importance of face-to-face social interaction, even when it's as little as a 'good morning' as your 
+teammate walk past your desk in the morning.  
+ 
+As the product manager, I had to have a close relationship with my teammates to be able to 
+share and discuss product ideas with them. It started off with very stiff meetings as I was not 
+experienced with remote working either. Having a bad start wasn't a very good sign, however, I 
+managed to save the day with Agile Scrum methodologies. I set up daily stand-up meetings, 
+sprint retro meetings as well as a JIRA board so our software team could keep track of tasks 
+more clearly. For the meetings, I implemented a routine where we would start every meeting 
+by talking about something interesting that's is happening in our lives, this could be the 
+weather( since we were in different cities, across Canada), the COVID situation, or the new TV 
+show they have been watching. I found that just these 5 minutes of small talk before very stiff 
+meetings can really work wonders. A previously quiet and slow meeting turned to a more 
+natural conversation between colleagues, which increased the productivity of these meetings 
+dramatically.  
+ 
+Moving forward, I am prepared to deal with similar issues at my next internship, as the 
+pandemic may likely stick around, and we may have to work from home again. However, this 
+time, I will be prepared. 
+ 
+Next CO-OP
+
+As I mentioned, this was my first product management internship. For the next internship, I 
+plan to find another product manager position at a bigger company. I think it is important for 
+me to explore the differences between PM at a different scale of companies because it can 
+enable an opportunity for me to learn even more about what it means to be a product 
+manager. At the same time, I am excited to meet new people that could inspire me and become 
+my mentors. CO-OP to me means a valuable opportunity to learn from people, all kinds of 
+people from different disciplines. And my goal for the next term is to do just that while 
+solidifying my skills as a product manager. What better way to do both than going into one of 
+the big 5 tech companies and learn how things are done there. 
+ 
+Resume Description of CO-OP 
+ 
+Conceived of and owned an MVP of a remote work collaboration platform for 
+software/hardware hybrid design teams  
+Road mapped the MVP, prioritized features, and proposed the timeline for transforming the 
+idea into a demonstrable product  
+Interacted with 10+ clients through interviews and demos to continuously align key product 
+features with user's needs  
+Implemented Scrum and led stand-up, planning, and retro meetings that maintained remote 
+team momentum  
+Led a cross-functional team to finish MVP features in just 4 two-week sprints with high-quality 
+deliverables
+
+[1](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/69750194/59585b92-4ed1-46c7-88c4-6c978499f8f3/MSCI391-Work-Term-Report-z2yong-3B.pdf)
+[2](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/69750194/bbf0ccfc-6add-4ea8-a724-d35ac419d629/4A-Work-Term-Report.pdf)
+[3](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/69750194/ecab6bfa-5711-45cb-bf31-3cdbbdb5955e/3A.pdf)
