@@ -1,333 +1,86 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1"
-    />
-    <title>Gary Yong – Projects</title>
-    <meta
-      name="description"
-      content="Selected projects by Gary Yong showcasing practical experience and problem solving."
-    />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <header class="site-header">
-  <div class="container header-inner">
-    <a href="index.html" class="logo">
-  <img src="img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
-  <img src="img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
-  <!--<span class="logo-text">YourName</span>-->
-</a>
+Page Title: Gary Yong – Projects
+Description: Selected projects by Gary Yong showcasing practical experience and problem solving.​
 
-    <!-- Desktop navigation -->
-    <nav class="nav nav-desktop">
-      <a href="index.html">Home</a>
-      <a href="projects.html">Projects</a>
-      <a href="experience.html">Experience</a>
-      <a href="about.html">About</a>
-      <a href="skills.html">Skills</a>
-      <a href="blog.html">Blog</a>
-      <a href="contact.html">Contact</a>
-    </nav>
+Section: Projects
+Title: Projects
 
-    <!-- Right controls: theme + mobile toggle -->
-    <div class="header-actions">
-      <button
-        id="theme-toggle"
-        class="btn btn-ghost theme-toggle"
-        aria-label="Toggle theme"
-      >
-        ☀️
-      </button>
+Summary: Highlight your best work aligned with your target roles.
 
-      <!-- Mobile menu button -->
-      <button
-        class="icon-button mobile-menu-toggle"
-        aria-label="Toggle navigation"
-        aria-expanded="false"
-      >
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    </div>
-  </div>
+Project: Ask Gary – Personal AI Career Chatbot
+Tech stack: FastAPI, Python, OpenAI, Vanilla JavaScript, AWS EC2, AWS S3.
 
-  <!-- Mobile navigation panel -->
-  <nav class="nav-mobile" aria-label="Mobile navigation">
-    <div class="nav-mobile-inner">
-      <a href="index.html">Home</a>
-      <a href="projects.html">Projects</a>
-      <a href="experience.html">Experience</a>
-      <a href="about.html">About</a>
-      <a href="skills.html">Skills</a>
-      <a href="blog.html">Blog</a>
-      <a href="contact.html">Contact</a>
-    </div>
-  </nav>
-</header>
+Built a retrieval‑augmented AI chatbot, Ask Gary, that answers career questions using information from resume, LinkedIn, hobbies, and projects.​
 
-  <main>
-    <section class="section">
-    <div class="container">
-      <header class="section-header animate-fade-up">
-      <h2>Projects</h2>
-      <p>Highlight your best work aligned with your target roles.</p>
-      </header>
-      <div class="grid grid-3">
-      <article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>Ask Gary – Personal AI Career Chatbot</h3>
-      <p class="meta">
-        Tech: FastAPI · Python · OpenAI · Vanilla JS · AWS EC2/S3
-      </p>
-    </div>
-    <div class="project-actions">
-      <a href="https://gary-yong.com/ask-gary.html" class="btn btn-primary btn-pill">Live demo</a>
-      <a href="https://github.com/17yongga/PersonalWebsite" class="btn btn-secondary btn-pill">Source code</a>
-</a>
-    </div>
-  </header>
+Uses a FastAPI backend with vector search and OpenAI models.​
 
-  <!-- LEFT SIDE: text -->
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Built Ask Gary, a retrieval‑augmented AI chatbot that answers career questions from my resume, LinkedIn, hobbies, and projects.</li>
-      <li>Uses a FastAPI backend with vector search and OpenAI models.</li>
-      <li>Integrated as a dedicated page on my personal website with a lightweight JavaScript frontend.</li>
-      <li>Deployed on AWS (EC2 for backend, S3 for static site) with logging, evaluation, and troubleshooting workflows.</li>
-    </ul>
+Integrated as a dedicated page on a personal website with a lightweight JavaScript frontend.​
 
-    <ul class="tags">
-      <li>AI chatbot</li>
-      <li>Retrieval‑augmented generation (RAG)</li>
-      <li>Python</li>
-      <li>OpenAI API</li>
-      <li>AWS EC2</li>
-      <li>AWS S3</li>
-    </ul>
-  </div>
+Deployed on AWS (EC2 for backend, S3 for static site) with logging, evaluation, and troubleshooting workflows.​
 
-  <!-- RIGHT SIDE: image -->
-  <div class="project-card-media">
-    <img src="img/ask-gary-1.png" alt="Ask Gary chat interface" />
-  </div>
-</article>
-<article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>Lunar – Crypto Portfolio Builder</h3>
-      <p class="meta">
-        4th Year Design Project
-      </p>
-    </div>
-    <div class="project-actions">
-      <!-- Replace # with real links if available -->
-      <a href="https://lunar.alan-wu.com/landing" class="btn btn-primary btn-pill">Live demo</a>
-      <a href="Lunar_Proposal_Deck.pdf" class="btn btn-secondary btn-pill">Proposal Deck</a>
-      <a href="LunarProjectReport.pdf" class="btn btn-secondary btn-pill">Project Report</a>
-    </div>
-  </header>
+Tags: AI chatbot, retrieval‑augmented generation (RAG), Python, OpenAI API, AWS EC2, AWS S3.
 
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Led a team of five as Project manager/UIUX Designer to deliver a deployed crypto portfolio management web platform.</li>
-      <li>Managed seven stakeholders through three design revisions, seven feedback sessions, and bi‑weekly retros.</li>
-      <li>Conducted needs analysis via user surveys and interviews, then designed end‑to‑end user journeys for the product.</li>
-    </ul>
+Project: Lunar – Crypto Portfolio Builder
+Context: 4th year design (capstone) project.​
 
-    <ul class="tags">
-      <li>Capstone Project</li>
-      <li>Product management</li>
-      <li>Team leadership</li>
-      <li>User research</li>
-      <li>Crypto</li>
-    </ul>
-  </div>
+Led a team of five as project manager and UI/UX designer to deliver a deployed crypto portfolio management web platform.​
 
-  <div class="project-card-media">
-    <img src="img/lunarRefPic.png"
-         alt="Lunar crypto portfolio builder interface" />
-  </div>
-</article>
-<article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>Personal Website &amp; Portfolio Platform</h3>
-      <p class="meta">
-        Tech: HTML · CSS · JavaScript · Responsive Design · AWS S3/Route 53
-      </p>
-    </div>
-    <div class="project-actions">
-      <a href="https://gary-yong.com" class="btn btn-primary btn-pill">Live demo</a>
-      <a href="https://github.com/17yongga/PersonalWebsite" class="btn btn-secondary btn-pill">Source code</a>
-    </div>
-  </header>
+Managed seven stakeholders through three design revisions, seven feedback sessions, and bi‑weekly retrospectives.​
 
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Designed and built a multi‑page personal website with dedicated sections for projects, experience, skills, blog, and contact</li>
-      <li>Implemented dark/light theme support, scroll‑reveal animations, and a mobile navigation drawer for a modern, app‑like user experience.</li>
-      <li>Deployed the site on AWS S3 with a custom domain and HTTPS, and structured content so new projects and posts can be added with minimal changes.</li>
-    </ul>
+Conducted needs analysis via user surveys and interviews, and designed end‑to‑end user journeys.​
 
-    <ul class="tags">
-      <li>Portfolio website</li>
-      <li>Responsive UI</li>
-      <li>Dark / light mode</li>
-      <li>CSS animations</li>
-      <li>Front‑end architecture</li>
-      <li>AWS S3</li>
-    </ul>
-  </div>
+Assets: live demo, proposal deck, and project report linked from the project card.​
 
-  <div class="project-card-media">
-    <img src="img/personalWebsite.png" alt="Screenshot of personal website homepage" />
-  </div>
-</article>
-<article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>Rideshare Service Platform</h3>
-      <p class="meta">
-        
-      </p>
-    </div>
-    <div class="project-actions">
-  
-    </div>
-  </header>
+Tags: capstone project, product management, team leadership, user research, crypto.
 
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Developed a ridesharing app that allows students to find safe and cheap rides fast with cost-savings up to 600%</li>
-      <li>Interviewed drivers and riders to define system requirements and minimum viable product</li>
-      <li>Identified cost, safety, and efficiency issues with the existing rideshare solutions available through market research</li>
-    </ul>
+Project: Personal Website & Portfolio Platform
+Tech stack: HTML, CSS, JavaScript, responsive design, AWS S3, Route 53.​
 
-    <ul class="tags">
-      <li>Project Management</li>
-      <li>Market Analysis</li>
-      <li>User Research</li>
-      <li>Product Ideation</li>
-    </ul>
-  </div>
+Designed and built a multi‑page personal website with sections for projects, experience, skills, blog, and contact.​
 
-  <div class="project-card-media">
-    <img src="img/rych.png" alt="Screenshot of personal website homepage" />
-  </div>
-</article>
-<article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>Pallet Tracking Automation Project</h3>
-      <p class="meta">Loblaw Companies Limited · JavaScript · Bluetooth LE · IoT</p>
-    </div>
-  </header>
+Implemented dark/light theme, scroll‑reveal animations, and mobile navigation drawer for an app‑like experience.​
 
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Developed an automatic data delivery application in JavaScript that connects to Bluetooth Low Energy beacons and IoT gateways.</li>
-      <li>Optimized pallet tracking by eliminating manual data entry and reducing human errors through an automated IoT tracking system.</li>
-      <li>Ran on‑site tests and presented results to logistics leadership, gaining approval for further integration into operations.</li>
-    </ul>
+Deployed on AWS S3 with a custom domain and HTTPS; content is structured so new projects and posts are easy to add.​
 
-    <ul class="tags">
-      <li>IoT</li>
-      <li>Bluetooth LE</li>
-      <li>JavaScript</li>
-      <li>Automation</li>
-      <li>Logistics</li>
-    </ul>
-  </div>
+Tags: portfolio website, responsive UI, dark/light mode, CSS animations, front‑end architecture, AWS S3.
 
-  <div class="project-card-media">
-    <img src="img/pallettracking.png"
-         alt="Pallet tracking automation dashboard mockup" />
-  </div>
-</article>
-<article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>Product Authentication Blockchain Platform</h3>
-      <p class="meta">
-        Accenture Liquid Studio · Sept 2019 – Dec 2019 · Blockchain · AWS
-      </p>
-    </div>
-  </header>
+Project: Rideshare Service Platform
+Built a ridesharing app for students to find safe, low‑cost rides with potential cost savings up to 600 percent.​
 
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Contributed to a blockchain-based platform that authenticated products and surfaced project milestones in clear, business-focused language for senior leadership.</li>
-      <li>Worked within a 12‑week Agile Scrum roadmap that included user testing and continuous integration pipelines on AWS.</li>
-      <li>Delivered a client‑ready product with detailed documentation used by senior consultants and industry leaders across multiple regions.</li>
-    </ul>
+Interviewed drivers and riders to define system requirements and the minimum viable product.​
 
-    <ul class="tags">
-      <li>Blockchain</li>
-      <li>AWS</li>
-      <li>Agile / Scrum</li>
-      <li>Product delivery</li>
-      <li>Consulting</li>
-    </ul>
-  </div>
+Identified cost, safety, and efficiency issues in existing rideshare solutions through market research.​
 
-  <div class="project-card-media">
-    <img src="img/luxeSamplePic.jpg"
-         alt="Product authentication blockchain platform interface" />
-  </div>
-</article>
+Tags: project management, market analysis, user research, product ideation.
 
-<article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>ERP Process Automation Tool</h3>
-      <p class="meta">
-        Internship Project · July 2017 – Aug 2017 · Excel VBA · Process Automation
-      </p>
-    </div>
-    <div class="project-actions">
-      <!-- Replace # with real links if available -->
-      <a href="Project_Plan.pdf" class="btn btn-secondary btn-pill">Project Plan</a>
-    </div>
-  </header>
+Project: Pallet Tracking Automation Project
+Organization context: Loblaw Companies Limited; tech: JavaScript, Bluetooth Low Energy, IoT.​
 
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Analyzed transaction processing workflows using process analysis and time studies to identify major inefficiencies.</li>
-      <li>Built an Excel VBA automation tool that reduced weekly business transaction processing time from 4 hours to about 15 minutes.</li>
-      <li>Designed and iterated on a user‑centric UI with validation rules, incorporating feedback to make the tool reliable and easy to use.</li>
-    </ul>
+Built an automatic data delivery application in JavaScript that connects to Bluetooth LE beacons and IoT gateways.​
 
-    <ul class="tags">
-      <li>Process automation</li>
-      <li>Excel VBA</li>
-      <li>Operations</li>
-      <li>UI/UX</li>
-    </ul>
-  </div>
+Improved pallet tracking by removing manual data entry and reducing human error via an automated IoT tracking system.​
 
-  <div class="project-card-media">
-    <img src="img/erp_automation.png"
-         alt="ERP process automation tool interface" />
-  </div>
-</article>
+Performed on‑site tests and presented results to logistics leadership, earning approval for further integration.​
 
-      </div>
-    </div>
-    </section>
-  </main>
+Tags: IoT, Bluetooth LE, JavaScript, automation, logistics.
 
-    <footer class="site-footer">
-      <div class="container">
-        <p>©2025 Gary Yong · Built with love ❤️.</p>
-      </div>
-    </footer>
+Project: Product Authentication Blockchain Platform
+Context: Accenture Liquid Studio; timeframe Sept 2019 – Dec 2019; tech: blockchain, AWS.​
 
-    <script src="main.js"></script>
-  </body>
-</html>
+Worked on a blockchain‑based platform that authenticated products and communicated project milestones in clear, business‑oriented language for senior leaders.​
+
+Operated within a 12‑week Agile Scrum roadmap with user testing and continuous integration pipelines on AWS.​
+
+Delivered a client‑ready product with documentation used by senior consultants and industry leaders across multiple regions.​
+
+Tags: blockchain, AWS, Agile/Scrum, product delivery, consulting.
+
+Project: ERP Process Automation Tool
+Context: internship project, July 2017 – Aug 2017; tech: Excel VBA, process automation.​
+
+Analyzed transaction processing workflows using process analysis and time studies to find major inefficiencies.​
+
+Built an Excel VBA automation tool that reduced weekly transaction processing from about 4 hours to roughly 15 minutes.​
+
+Designed a user‑centric UI with validation rules and iterated using feedback to improve reliability and ease of use.​
+
+Tags: process automation, Excel VBA, operations, UI/UX.

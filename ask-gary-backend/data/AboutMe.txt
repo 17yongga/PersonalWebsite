@@ -1,155 +1,19 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1"
-    />
-    <title>Gary Yong – About</title>
-    <meta
-      name="description"
-      content="Learn more about Gary Yong: background, strengths, and interests."
-    />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <header class="site-header">
-  <div class="container header-inner">
-    <a href="index.html" class="logo">
-  <img src="img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
-  <img src="img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
-  <!--<span class="logo-text">YourName</span>-->
-</a>
+Introduction:
+Gary Yong is a technology consultant who enjoys turning ambiguous problems into clear, user‑centered solutions. He has worked across banking and retail, helping teams modernize systems, improve customer experiences, and deliver reliable products.
+His expertise lies at the intersection of business analysis, product thinking, and engineering — from mapping future‑state architectures to building lightweight tools that automate repetitive work.
 
-    <!-- Desktop navigation -->
-    <nav class="nav nav-desktop">
-      <a href="index.html">Home</a>
-      <a href="projects.html">Projects</a>
-      <a href="experience.html">Experience</a>
-      <a href="about.html">About</a>
-      <a href="skills.html">Skills</a>
-      <a href="blog.html">Blog</a>
-      <a href="contact.html">Contact</a>
-    </nav>
+Snapshot:
 
-    <!-- Right controls: theme + mobile toggle -->
-    <div class="header-actions">
-      <button
-        id="theme-toggle"
-        class="btn btn-ghost theme-toggle"
-        aria-label="Toggle theme"
-      >
-       ☀️
-      </button>
+What I do: Bridge business needs and technical teams to design and deliver practical digital solutions.
 
-      <!-- Mobile menu button -->
-      <button
-        class="icon-button mobile-menu-toggle"
-        aria-label="Toggle navigation"
-        aria-expanded="false"
-      >
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    </div>
-  </div>
+What I care about: Clear communication, thoughtful systems, and experiences that truly help end users.
 
-  <!-- Mobile navigation panel -->
-  <nav class="nav-mobile" aria-label="Mobile navigation">
-    <div class="nav-mobile-inner">
-      <a href="index.html">Home</a>
-      <a href="projects.html">Projects</a>
-      <a href="experience.html">Experience</a>
-      <a href="about.html">About</a>
-      <a href="skills.html">Skills</a>
-      <a href="blog.html">Blog</a>
-      <a href="contact.html">Contact</a>
-    </div>
-  </nav>
-</header>
+Hobbies:
 
+Rock climbing 🧗‍♂️ – Finds new routes, solves movement puzzles, and enjoys time on the wall.
 
-    <main>
-  <section class="section">
-    <div class="container">
-      <header class="section-header animate-fade-up">
-        <h2>About</h2>
-        <p>A bit about who I am and what I enjoy working on.</p>
-      </header>
+Capturing moments 📷 – Takes photos of everyday scenes, friends, and travels to document life.
 
-      <!-- Top: narrative about section full width -->
-      <div class="about-intro animate-fade-up">
-        <p>
-          I’m a technology consultant who enjoys turning ambiguous problems into clear,
-          user‑centered solutions. Over the past few years, I’ve worked across banking and
-          retail, helping teams modernize their systems, improve customer experiences, and
-          ship reliable products.
-        </p>
-        <p>
-          My work usually sits at the intersection of business analysis, product thinking,
-          and engineering — from mapping out future‑state architectures to building
-          lightweight tools that automate away repetitive work.
-        </p>
-      </div>
+Running 🏃‍♂️ – Enjoys short city runs to reset, think through ideas, and stay active.
 
-      <!-- Middle: quick snapshot card -->
-      <div class="about-snapshot animate-fade-up">
-        <h3>Snapshot</h3>
-        <div class="about-snapshot-grid">
-          <div>
-            <h4>What I do</h4>
-            <p>Bridge business needs and technical teams to design and deliver practical digital solutions.</p>
-          </div>
-          <div>
-            <h4>What I care about</h4>
-            <p>Clear communication, thoughtful systems, and experiences that actually help the people using them.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bottom: hobbies as cards -->
-      <div class="about-hobbies animate-fade-up">
-        <h3>Hobbies</h3>
-        <div class="hobby-grid">
-          <div class="hobby-card">
-            <div class="hobby-icon">🧗‍♂️</div>
-            <h4>Rock climbing</h4>
-            <p>Finding new routes, solving movement puzzles, and enjoying time on the wall.</p>
-          </div>
-
-          <div class="hobby-card">
-            <div class="hobby-icon">📷</div>
-            <h4>Capturing moments</h4>
-            <p>Taking photos of everyday scenes, friends, and trips to document life as it happens.</p>
-          </div>
-
-          <div class="hobby-card">
-            <div class="hobby-icon">🏃‍♂️</div>
-            <h4>Running</h4>
-            <p>Short city runs to reset, think through ideas, and stay active between projects.</p>
-          </div>
-
-          <div class="hobby-card">
-            <div class="hobby-icon">👨🏻‍💻</div>
-            <h4>Building for fun</h4>
-            <p>Experimenting with small tools and prototypes to try new tech and ship ideas quickly.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-</main>
-
-
-
-    <footer class="site-footer">
-      <div class="container">
-        <p>©2025 Gary Yong · Built with love ❤️.</p>
-      </div>
-    </footer>
-
-    <script src="main.js"></script>
-  </body>
-</html>
+Building for fun 👨🏻‍💻 – Experiments with small tools and prototypes to test new technology and ship ideas quickly.
