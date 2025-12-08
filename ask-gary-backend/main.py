@@ -107,16 +107,19 @@ def chat(req: ChatRequest):
     context_text, sources = retrieve_context(req.message)
 
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {
-            "role": "user",
-            "content": (
-                "Use only the context below to answer the question.\n\n"
-                f"Context:\n{context_text}\n\n"
-                f"Question: {req.message}"
-            ),
-        },
-    ]
+    {"role": "system", "content": SYSTEM_PROMPT},
+    {
+        "role": "user",
+        "content": (
+            "Use only the context below to answer the question.\n\n"
+            "Make the answer easy to skim: start with a 1–2 sentence summary, "
+            "then 3–6 short bullet points. Be clear and personable.\n\n"
+            f"Context:\n{context_text}\n\n"
+            f"Question: {req.message}"
+        ),
+    },
+]
+
 
     completion = client.chat.completions.create(
         model=CHAT_MODEL,

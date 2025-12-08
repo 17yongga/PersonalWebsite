@@ -24,7 +24,15 @@ function addMessage(role, content, sources = []) {
   // create message bubble matching page styles (.chat-message .user/.bot)
   const msg = document.createElement("div");
   msg.className = `chat-message ${role === "user" ? "user" : "bot"}`;
-  msg.textContent = content;
+
+  if (role === "user") {
+    // plain text for user messages
+    msg.textContent = content;
+  } else {
+    // render assistant messages as Markdown
+    const html = window.marked ? window.marked.parse(content) : content;
+    msg.innerHTML = html;
+  }
 
   // Add meta (sources / author) inside the bubble for consistency with markup
   if (sources && sources.length > 0) {
