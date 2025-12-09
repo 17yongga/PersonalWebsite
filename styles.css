@@ -1330,24 +1330,32 @@ html[data-theme="light"] .hobby-card {
     width: 100%;
   }
 }
+
 .hero-agent-callout {
-  margin-top: 1.6rem;
-  max-width: 20rem;
-  padding: 0.85rem 1rem;
-  border-radius: 14px;
-  background: radial-gradient(circle at top left, rgba(56,189,248,0.16), transparent 55%),
-              rgba(15,23,42,0.96);
-  border: 1px solid rgba(148,163,184,0.6);
-  box-shadow: 0 14px 30px rgba(15,23,42,0.75);
-  transform: rotate(-1.5deg);
+  margin-top: 0;
+  max-width: 100%;
+  padding: 1.2rem 1.4rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
 }
 
 .hero-agent-text {
-  margin: 0 0 0.55rem;
-  font-size: 0.9rem;
-  font-family: var(--font-mono);
-  line-height: 1.5;
+  margin: 0 0 0.9rem;
+  font-size: 1.4rem;          /* much larger, easy to read */
+  line-height: 1.7;
+  font-weight: 500;
+  font-family: "Caveat", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+               sans-serif;
 }
+
+/* Put each sentence on its own line */
+.hero-agent-text br {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+
+
 
 .hero-agent-text span {
   display: inline-block;
@@ -1408,3 +1416,58 @@ html[data-theme="light"] .hero-agent-callout {
     transform: none;
   }
 }
+
+
+.hero-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(0, 2fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.hero-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+/* Existing hero-panel + hero-agent-callout styles can stay as-is */
+
+@media (max-width: 900px) {
+  .hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.8rem;
+  }
+
+  .hero-right {
+    order: 2;
+  }
+
+  .hero-agent-callout {
+    max-width: 100%;
+    transform: none;
+  }
+}
+
+.hero-highlight {
+  background: linear-gradient(135deg, #38bdf8, #22c55e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 600;
+}
+
+.hero-agent-text {
+  margin: 0 0 0.55rem;
+  font-size: 1rem;
+  font-family: "Caveat", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+               sans-serif;
+  line-height: 1.5;
+}
+
+.hero-agent-text span {
+  display: inline-block;
+  margin-top: 0.2rem;
+  font-weight: 600;
+}
+
