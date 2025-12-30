@@ -858,7 +858,6 @@ io.on("connection", (socket) => {
     emitAvailableCoinflipRooms();
   });
 });
-});
 
 // Helper function to emit available coinflip rooms
 function emitAvailableCoinflipRooms(targetSocket = null) {
