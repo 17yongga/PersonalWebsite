@@ -2,6 +2,8 @@
 
 This guide provides step-by-step instructions for deploying the casino games (Blackjack, Coinflip, and Roulette) to your EC2 instance at gary-yong.com.
 
+> **Note**: If you have Ask-Gary already deployed, see [DEPLOYMENT_WITH_ASK_GARY.md](./DEPLOYMENT_WITH_ASK_GARY.md) for instructions on deploying both services together without conflicts. The casino games will NOT affect your existing Ask-Gary deployment.
+
 ## Prerequisites
 
 - EC2 instance with Ubuntu (or similar Linux distribution)
