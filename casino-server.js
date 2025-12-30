@@ -91,7 +91,9 @@ let rouletteState = {
 };
 
 // Coinflip game state
-// Room data: { roomId: { creatorId, betAmount, creatorChoice, players: [socketId1, socketId2], confirmed: false, gameState: 'waiting'|'confirmed'|'flipping'|'finished', coinResult: null } }
+// NOTE: All coinflip server logic is consolidated here in casino-server.js
+// The separate coinflip/server.js file is not used - this is the single source of truth
+// Room data: { roomId: { creatorId, betAmount, creatorChoice, players: [socketId1, socketId2], confirmed: false, gameState: 'waiting'|'confirmed'|'flipping'|'finished', coinResult: null, botId: string } }
 const coinflipRooms = {};
 let coinflipRoomCounter = 1;
 
@@ -345,6 +347,11 @@ app.post("/api/login", async (req, res) => {
 
 io.on("connection", (socket) => {
   console.log(`Player connected: ${socket.id}`);
+
+  // Test connection handler (for debugging)
+  socket.on("testConnection", (data, callback) => {
+    if (callback) callback({ success: true, socketId: socket.id });
+  });
 
   // Send current roulette state
   socket.emit('rouletteState', {
@@ -809,6 +816,143 @@ io.on("connection", (socket) => {
 
     socket.emit("leftRoom");
     emitAvailableCoinflipRooms(socket);
+  });
+
+  socket.on("playWithBot", ({ roomId }, callback) => {
+    const room = coinflipRooms[roomId];
+    if (!room) {
+      socket.emit("error", "Room not found");
+      if (callback) callback({ error: "Room not found" });
+      return;
+    }
+
+    if (socket.id !== room.creatorId) {
+      socket.emit("error", "Only the room creator can add a bot");
+      if (callback) callback({ error: "Only the room creator can add a bot" });
+      return;
+    }
+
+    if (room.players.length >= 2) {
+      socket.emit("error", "Room is already full");
+      if (callback) callback({ error: "Room is already full" });
+      return;
+    }
+    if (callback) callback({ success: true });
+
+    // Create a bot player ID (using a special prefix)
+    const botId = `bot_${roomId}_${Date.now()}`;
+    
+    // Add bot to players list
+    players[botId] = {
+      username: "Bot",
+      credits: room.betAmount * 10, // Give bot enough credits
+      roomId: roomId,
+      userId: null,
+      isBot: true
+    };
+
+    // Add bot to room
+    room.players.push(botId);
+    room.botId = botId; // Track bot ID for cleanup
+
+    // Bot automatically chooses opposite of creator
+    const botChoice = room.creatorChoice === 'Heads' ? 'Tails' : 'Heads';
+
+    // Deduct credits from bot (they match the creator's bet)
+    players[botId].credits -= room.betAmount;
+
+    // Mark room as confirmed (bot auto-confirms)
+    room.confirmed = true;
+    room.gameState = 'confirmed';
+
+    // Notify creator about bot joining
+    io.to(roomId).emit("playersUpdate", {
+      player1: {
+        name: players[room.creatorId].username
+      },
+      player2: {
+        name: "Bot"
+      },
+      betAmount: room.betAmount,
+      creatorChoice: room.creatorChoice
+    });
+
+    // Start the coin flip immediately
+    setTimeout(() => {
+      const coinResult = Math.random() < 0.5 ? 'Heads' : 'Tails';
+      room.coinResult = coinResult;
+      room.gameState = 'finished';
+
+      const results = {};
+      const creatorId = room.creatorId;
+      const botId = room.botId;
+
+      if (coinResult === room.creatorChoice) {
+        // Creator wins - gets both bets
+        const winnings = room.betAmount * 2;
+        players[creatorId].credits += winnings;
+        
+        const creatorUserId = players[creatorId].userId;
+        if (creatorUserId && users[creatorUserId]) {
+          saveUserBalance(creatorUserId, players[creatorId].credits).catch(err => {
+            console.error("Error saving balance:", err);
+          });
+        }
+        
+        results[creatorId] = {
+          won: true,
+          winnings: winnings,
+          newCredits: players[creatorId].credits,
+          bet: { color: room.creatorChoice, amount: room.betAmount }
+        };
+        results[botId] = {
+          won: false,
+          winnings: 0,
+          newCredits: players[botId].credits,
+          bet: { color: botChoice, amount: room.betAmount }
+        };
+      } else {
+        // Bot wins - creator loses their bet (bot doesn't receive credits, it's just a virtual opponent)
+        results[creatorId] = {
+          won: false,
+          winnings: 0,
+          newCredits: players[creatorId].credits,
+          bet: { color: room.creatorChoice, amount: room.betAmount }
+        };
+        results[botId] = {
+          won: true,
+          winnings: 0, // Bot doesn't actually receive credits
+          newCredits: players[botId].credits,
+          bet: { color: botChoice, amount: room.betAmount }
+        };
+      }
+
+      // Emit results - use socket.id for creator, botId for bot
+      const resultsForClient = {
+        [creatorId]: results[creatorId],
+        [botId]: results[botId]
+      };
+      
+      io.to(roomId).emit("coinFlipResult", {
+        coinResult,
+        results: resultsForClient,
+        betAmount: room.betAmount,
+        creatorChoice: room.creatorChoice,
+        choices: {
+          [creatorId]: room.creatorChoice,
+          [botId]: botChoice
+        }
+      });
+
+      // Clean up bot after a delay
+      setTimeout(() => {
+        if (players[botId]) {
+          delete players[botId];
+        }
+      }, 5000);
+    }, 1000); // Small delay before flipping
+
+    emitAvailableCoinflipRooms();
   });
 
   socket.on("disconnect", async () => {

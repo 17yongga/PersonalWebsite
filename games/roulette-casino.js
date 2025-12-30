@@ -22,9 +22,6 @@ class RouletteGame {
         <div class="roulette-game-area">
           <div class="roulette-wheel-section">
             <div class="digital-roulette-display">
-              <div class="display-header">
-                <span class="display-label">🎰 ROULETTE</span>
-              </div>
               <div id="rouletteDisplay" class="roulette-display">
                 <div class="number-display" id="numberDisplay">--</div>
                 <div class="color-indicator" id="colorIndicator"></div>
@@ -383,24 +380,30 @@ class RouletteGame {
     
     let currentNumber = 0;
     let iteration = 0;
-    const totalIterations = 50 + Math.floor(Math.random() * 30); // 50-80 iterations
-    const baseSpeed = 50; // milliseconds between number changes
+    const totalIterations = 60 + Math.floor(Math.random() * 40); // 60-100 iterations for smoother animation
+    const baseSpeed = 40; // milliseconds between number changes (faster start)
+    const maxSpeed = 800; // maximum delay at the end (increased for more suspense)
     let currentSpeed = baseSpeed;
     
     const spinInterval = setInterval(() => {
       iteration++;
       
-      // Cycle through numbers rapidly
-      currentNumber = Math.floor(Math.random() * 37);
+      // Cycle through numbers rapidly - only show numbers 0-14
+      currentNumber = Math.floor(Math.random() * 15);
       numberDisplay.textContent = currentNumber;
       
       // Update color indicator
       const currentColor = this.getNumberColor(currentNumber);
       colorIndicator.className = `color-indicator ${currentColor}`;
       
-      // Gradually slow down as we approach the end
-      if (iteration > totalIterations * 0.7) {
-        currentSpeed = baseSpeed + (iteration - totalIterations * 0.7) * 10;
+      // Gradually slow down with smooth easing curve
+      // Start slowing down earlier (at 40% of iterations) for more dramatic slowdown
+      const progress = iteration / totalIterations;
+      if (progress > 0.4) {
+        // Use quintic easing (more aggressive than cubic) for dramatic slowdown
+        const slowdownProgress = (progress - 0.4) / 0.6; // 0 to 1 as we approach end
+        const easeOut = 1 - Math.pow(1 - slowdownProgress, 5); // Quintic ease-out for more dramatic effect
+        currentSpeed = baseSpeed + (maxSpeed - baseSpeed) * easeOut;
       }
       
       // Stop and reveal winning number

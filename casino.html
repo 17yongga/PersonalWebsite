@@ -100,12 +100,11 @@
           <div class="player-info">
             <span class="player-icon">👤</span>
             <span id="playerNameDisplay"></span>
-          </div>
-          <div class="credits-display">
+            <span class="credits-separator">•</span>
             <span class="credits-label">Credits:</span>
             <span id="creditsAmount" class="credit-amount">0</span>
           </div>
-          <button id="logoutBtn" class="btn btn-secondary btn-small">Logout</button>
+          <button id="logoutBtn" class="btn btn-secondary btn-small btn-logout">Logout</button>
         </div>
       </div>
 
@@ -154,6 +153,7 @@
 
   <script>
     // Use api.gary-yong.com for casino server (HTTPS)
+    // For local development, change to: window.CASINO_SERVER_URL = 'http://localhost:3001';
     window.CASINO_SERVER_URL = 'https://api.gary-yong.com';
   </script>
   <script src="main.js"></script>

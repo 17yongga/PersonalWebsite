@@ -9,6 +9,10 @@ class BlackjackGame {
     this.gameOver = false;
     this.betAmount = 0;
     this.currentBet = 0;
+    this.insuranceBet = 0;
+    this.hasDoubledDown = false;
+    this.hasTakenInsurance = false;
+    this.insuranceOffered = false;
     this.lastHideFirstStates = {};
     this.initialHandSize = 2; // Track initial hand size (2 cards)
     this.init();
@@ -49,9 +53,21 @@ class BlackjackGame {
             <div id="playerCards" class="cards-container"></div>
           </div>
 
+          <div id="insuranceSection" class="insurance-section hidden">
+            <div class="insurance-prompt">
+              <p>Dealer shows an Ace! Would you like insurance?</p>
+              <p class="insurance-info">Insurance costs half your bet. If dealer has blackjack, you win 2:1 on insurance.</p>
+              <div class="insurance-buttons">
+                <button id="takeInsuranceBtn" class="btn btn-primary">Take Insurance</button>
+                <button id="declineInsuranceBtn" class="btn btn-secondary">No Insurance</button>
+              </div>
+            </div>
+          </div>
+
           <div class="game-controls">
             <button id="hitBtn" class="btn btn-primary">Hit</button>
             <button id="standBtn" class="btn btn-secondary">Stand</button>
+            <button id="doubleDownBtn" class="btn btn-secondary hidden">Double Down</button>
             <button id="newGameBtn" class="btn btn-secondary">New Game</button>
           </div>
         </div>
@@ -74,7 +90,12 @@ class BlackjackGame {
     // Game controls
     document.getElementById('hitBtn')?.addEventListener('click', () => this.hit());
     document.getElementById('standBtn')?.addEventListener('click', () => this.stand());
+    document.getElementById('doubleDownBtn')?.addEventListener('click', () => this.doubleDown());
     document.getElementById('newGameBtn')?.addEventListener('click', () => this.resetGame());
+    
+    // Insurance controls
+    document.getElementById('takeInsuranceBtn')?.addEventListener('click', () => this.takeInsurance());
+    document.getElementById('declineInsuranceBtn')?.addEventListener('click', () => this.declineInsurance());
   }
 
   placeBet() {
@@ -128,7 +149,14 @@ class BlackjackGame {
     await this.delay(300);
     this.updateDisplay();
 
-    // Check for blackjack
+    // Check if dealer shows an Ace - offer insurance
+    if (this.dealerHand[1] && this.dealerHand[1].value === 'ace') {
+      this.insuranceOffered = true;
+      this.showInsuranceOption();
+      return; // Wait for insurance decision before proceeding
+    }
+
+    // Check for player blackjack
     const playerScoreInfo = this.calculateScoreWithAces(this.playerHand, true);
     if (playerScoreInfo.best === 21) {
       // Player gets blackjack - reveal dealer's first card before ending game
@@ -136,7 +164,11 @@ class BlackjackGame {
       this.updateDisplay(); // Reveal dealer's card
       await this.delay(500); // Brief delay to show revealed card
       this.endGame('blackjack');
+      return;
     }
+
+    // Show double down button if player has exactly 2 cards
+    this.updateGameControls();
   }
   
   delay(ms) {
@@ -244,8 +276,105 @@ class BlackjackGame {
     };
   }
 
+  showInsuranceOption() {
+    document.getElementById('insuranceSection').classList.remove('hidden');
+    document.getElementById('hitBtn').disabled = true;
+    document.getElementById('standBtn').disabled = true;
+    document.getElementById('doubleDownBtn').classList.add('hidden');
+  }
+
+  async takeInsurance() {
+    if (this.hasTakenInsurance) return;
+    
+    this.insuranceBet = Math.floor(this.currentBet / 2);
+    if (this.insuranceBet > this.casino.credits) {
+      alert('Insufficient credits for insurance');
+      this.declineInsurance();
+      return;
+    }
+    
+    this.hasTakenInsurance = true;
+    this.casino.updateCredits(-this.insuranceBet);
+    document.getElementById('insuranceSection').classList.add('hidden');
+    
+    // Check if dealer has blackjack
+    const dealerScoreInfo = this.calculateScoreWithAces(this.dealerHand, true);
+    if (dealerScoreInfo.best === 21) {
+      // Dealer has blackjack - pay insurance
+      const insuranceWinnings = this.insuranceBet * 2;
+      this.casino.updateCredits(insuranceWinnings);
+      
+      // Reveal dealer's card
+      this.gameOver = true;
+      this.updateDisplay();
+      await this.delay(500);
+      
+      // Check if player also has blackjack (push)
+      const playerScoreInfo = this.calculateScoreWithAces(this.playerHand, true);
+      if (playerScoreInfo.best === 21) {
+        this.endGame('push'); // Both have blackjack - push
+      } else {
+        this.endGame('dealer_blackjack'); // Dealer wins with blackjack
+      }
+      return;
+    }
+    
+    // Dealer doesn't have blackjack - continue game
+    this.updateGameControls();
+  }
+
+  declineInsurance() {
+    this.hasTakenInsurance = false;
+    this.insuranceBet = 0;
+    document.getElementById('insuranceSection').classList.add('hidden');
+    
+    // Check if dealer has blackjack (even without insurance)
+    const dealerScoreInfo = this.calculateScoreWithAces(this.dealerHand, true);
+    if (dealerScoreInfo.best === 21) {
+      // Dealer has blackjack - reveal and end game
+      this.gameOver = true;
+      this.updateDisplay();
+      setTimeout(() => {
+        const playerScoreInfo = this.calculateScoreWithAces(this.playerHand, true);
+        if (playerScoreInfo.best === 21) {
+          this.endGame('push');
+        } else {
+          this.endGame('dealer_blackjack');
+        }
+      }, 500);
+      return;
+    }
+    
+    // Continue game
+    this.updateGameControls();
+  }
+
+  updateGameControls() {
+    // Show double down button only if:
+    // - Player has exactly 2 cards
+    // - Game is not over
+    // - Player hasn't already doubled down
+    const canDoubleDown = !this.gameOver && 
+                         !this.hasDoubledDown && 
+                         this.playerHand.length === 2 &&
+                         this.casino.credits >= this.currentBet;
+    
+    const doubleDownBtn = document.getElementById('doubleDownBtn');
+    if (doubleDownBtn) {
+      if (canDoubleDown) {
+        doubleDownBtn.classList.remove('hidden');
+      } else {
+        doubleDownBtn.classList.add('hidden');
+      }
+    }
+    
+    // Enable/disable hit and stand
+    document.getElementById('hitBtn').disabled = this.gameOver || this.hasDoubledDown;
+    document.getElementById('standBtn').disabled = this.gameOver || this.hasDoubledDown;
+  }
+
   async hit() {
-    if (this.gameOver) return;
+    if (this.gameOver || this.hasDoubledDown) return;
 
     this.dealCard(this.playerHand);
     await this.delay(400); // Wait for card animation
@@ -265,7 +394,45 @@ class BlackjackGame {
       this.updateDisplay(); // Reveal dealer's card
       await this.delay(500); // Brief delay to show revealed card
       this.endGame('blackjack');
+    } else {
+      // Update controls (hide double down after hitting)
+      this.updateGameControls();
     }
+  }
+
+  async doubleDown() {
+    if (this.gameOver || this.hasDoubledDown || this.playerHand.length !== 2) return;
+    
+    // Check if player has enough credits
+    if (this.currentBet > this.casino.credits) {
+      alert('Insufficient credits to double down');
+      return;
+    }
+    
+    // Double the bet
+    this.casino.updateCredits(-this.currentBet);
+    this.currentBet *= 2;
+    this.hasDoubledDown = true;
+    
+    // Deal one card
+    this.dealCard(this.playerHand);
+    await this.delay(400);
+    this.updateDisplay();
+    
+    // Check if player busted after double down
+    const playerScoreInfo = this.calculateScoreWithAces(this.playerHand, false);
+    if (playerScoreInfo.best > 21) {
+      // Player busts - reveal dealer's first card before ending game
+      this.gameOver = true;
+      this.updateDisplay(); // Reveal dealer's card
+      await this.delay(500); // Brief delay to show revealed card
+      this.endGame('bust');
+      return;
+    }
+    
+    // If not busted, automatically stand after double down
+    await this.delay(500);
+    this.stand();
   }
 
   async stand() {
@@ -301,7 +468,13 @@ class BlackjackGame {
     let message = '';
     let winnings = 0;
 
-    if (reason === 'blackjack' && playerScore === 21) {
+    if (reason === 'dealer_blackjack') {
+      message = '😔 Dealer Blackjack! Dealer Wins';
+      winnings = 0; // Original bet already deducted, insurance already handled
+    } else if (reason === 'push') {
+      message = '🤝 Push! Both have Blackjack';
+      winnings = this.currentBet; // Return bet
+    } else if (reason === 'blackjack' && playerScore === 21 && this.playerHand.length === 2) {
       message = '🎉 Blackjack! You Win!';
       winnings = Math.floor(this.currentBet * 2.5); // 2.5x for blackjack
     } else if (reason === 'bust') {
@@ -331,6 +504,7 @@ class BlackjackGame {
     // Disable controls
     document.getElementById('hitBtn').disabled = true;
     document.getElementById('standBtn').disabled = true;
+    document.getElementById('doubleDownBtn').classList.add('hidden');
   }
 
   updateDisplay() {
@@ -368,14 +542,17 @@ class BlackjackGame {
         : dealerScoreInfo.best;
     } else {
       // Player's turn - show only visible card score
-      if (this.dealerHand.length > 1) {
+      // If dealer has only 1 card (first card, which will be hidden), don't show score
+      if (this.dealerHand.length === 1) {
+        dealerScoreDisplay = '?';
+      } else if (this.dealerHand.length > 1) {
+        // Dealer has 2+ cards, show only visible card(s) score (excluding first hidden card)
         dealerScoreDisplay = dealerVisibleScoreInfo.showBoth
           ? `${dealerVisibleScoreInfo.high}/${dealerVisibleScoreInfo.low}`
           : dealerVisibleScoreInfo.best;
       } else {
-        dealerScoreDisplay = dealerScoreInfo.showBoth
-          ? `${dealerScoreInfo.high}/${dealerScoreInfo.low}`
-          : dealerScoreInfo.best;
+        // No cards yet
+        dealerScoreDisplay = '?';
       }
     }
     this.animateScoreChange('dealerScore', dealerScoreDisplay);
@@ -499,13 +676,23 @@ class BlackjackGame {
   resetGame() {
     this.gameOver = false;
     this.currentBet = 0;
+    this.insuranceBet = 0;
+    this.hasDoubledDown = false;
+    this.hasTakenInsurance = false;
+    this.insuranceOffered = false;
     this.lastHideFirstStates = {};
     this.initialHandSize = 2; // Reset initial hand size
     document.querySelector('.betting-section').classList.remove('hidden');
     document.getElementById('gameArea').classList.add('hidden');
-    document.getElementById('resultDisplay').textContent = '';
+    document.getElementById('insuranceSection').classList.add('hidden');
+    const resultDisplay = document.getElementById('resultDisplay');
+    if (resultDisplay) {
+      resultDisplay.textContent = '';
+      resultDisplay.className = 'result-display'; // Reset className to remove win/lose/tie classes
+    }
     document.getElementById('hitBtn').disabled = false;
     document.getElementById('standBtn').disabled = false;
+    document.getElementById('doubleDownBtn').classList.add('hidden');
   }
 
   destroy() {

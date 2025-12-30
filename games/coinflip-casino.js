@@ -17,47 +17,64 @@ class CoinflipGame {
       <div class="coinflip-casino-container">
         <h2 class="game-title">🪙 Coinflip</h2>
         
-        <div id="connectionStatus" class="connection-status" style="margin-top: 15px; font-size: 0.9rem; color: var(--text-secondary); text-align: center;">
+        <div id="connectionStatus" class="connection-status hidden" style="margin-top: 15px; font-size: 0.9rem; color: var(--text-secondary); text-align: center;">
           <span id="statusIndicator">●</span> Connecting...
         </div>
 
         <!-- Room Selection Section -->
         <div id="roomSelection" class="game-section">
-          <h3>Available Rooms</h3>
-          
-          <!-- Bet Setup Section (for creating a room) -->
-          <div class="bet-setup-section">
-            <h4>Create a New Coin Flip Room</h4>
-            <p class="setup-description">Set your bet amount and choice, then create the room</p>
-            
-            <div class="bet-input-group">
-              <label for="createBetAmountInput">Bet Amount:</label>
-              <input type="number" id="createBetAmountInput" placeholder="Enter bet amount" min="1" step="1">
-              <div class="quick-bet-buttons">
-                <button class="btn-quick-bet" data-amount="50">50</button>
-                <button class="btn-quick-bet" data-amount="100">100</button>
-                <button class="btn-quick-bet" data-amount="250">250</button>
-                <button class="btn-quick-bet" data-amount="500">500</button>
-                <button class="btn-quick-bet" data-amount="0">All</button>
-              </div>
-            </div>
-            
-            <div class="choice-buttons">
-              <button id="createChooseHeadsBtn" class="btn-choice btn-heads">
-                <span class="choice-icon">🪙</span>
-                <span>Heads</span>
-              </button>
-              <button id="createChooseTailsBtn" class="btn-choice btn-tails">
-                <span class="choice-icon">🪙</span>
-                <span>Tails</span>
-              </button>
-            </div>
-            
-            <button id="createRoomBtn" class="btn btn-primary" disabled>Create Room</button>
+          <div class="room-selection-header">
+            <h3>Available Rooms</h3>
+            <button id="toggleCreateRoomBtn" class="btn btn-primary btn-create-room">
+              <i class="fas fa-plus"></i> Create Room
+            </button>
           </div>
 
           <!-- Available Rooms List -->
           <div id="roomList" class="room-list"></div>
+          
+          <!-- Bet Setup Section (for creating a room) - Modal Popup -->
+          <div id="betSetupSection" class="confirmation-modal hidden">
+            <div class="confirmation-overlay"></div>
+            <div class="bet-setup-section">
+              <div class="bet-setup-header">
+                <h4>Create New Room</h4>
+                <button id="closeCreateRoomBtn" class="btn-close" aria-label="Close">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              
+              <div class="bet-setup-content">
+                <div class="bet-input-group">
+                  <label for="createBetAmountInput">Bet Amount</label>
+                  <input type="number" id="createBetAmountInput" placeholder="Enter bet amount" min="1" step="1">
+                  <div class="quick-bet-buttons">
+                    <button class="btn-quick-bet" data-amount="50">50</button>
+                    <button class="btn-quick-bet" data-amount="100">100</button>
+                    <button class="btn-quick-bet" data-amount="250">250</button>
+                    <button class="btn-quick-bet" data-amount="500">500</button>
+                    <button class="btn-quick-bet" data-amount="0">All</button>
+                  </div>
+                </div>
+                
+                <div class="choice-section">
+                  <label>Your Choice</label>
+                  <div class="choice-buttons">
+                    <button id="createChooseHeadsBtn" class="btn-choice btn-heads">
+                      <span class="choice-icon">🪙</span>
+                      <span>Heads</span>
+                    </button>
+                    <button id="createChooseTailsBtn" class="btn-choice btn-tails">
+                      <span class="choice-icon">🪙</span>
+                      <span>Tails</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <button id="createRoomBtn" class="btn btn-primary btn-create-confirm" disabled>Create Room</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Game Room Section -->
@@ -75,8 +92,8 @@ class CoinflipGame {
             <div class="player-card" id="player1Card">
               <div class="player-card-header">
                 <span class="player-card-name" id="player1Name">You</span>
+                <span class="player-card-bet" id="player1Bet">No bet</span>
               </div>
-              <div class="player-card-bet" id="player1Bet">No bet</div>
               <div class="player-card-choice" id="player1Choice"></div>
             </div>
 
@@ -89,14 +106,13 @@ class CoinflipGame {
                   <span class="coin-text">T</span>
                 </div>
               </div>
-              <div id="coinResult" class="coin-result"></div>
             </div>
 
             <div class="player-card" id="player2Card">
               <div class="player-card-header">
                 <span class="player-card-name" id="player2Name">Opponent</span>
+                <span class="player-card-bet" id="player2Bet">No bet</span>
               </div>
-              <div class="player-card-bet" id="player2Bet">No bet</div>
               <div class="player-card-choice" id="player2Choice"></div>
             </div>
           </div>
@@ -104,28 +120,32 @@ class CoinflipGame {
           <!-- Game Status -->
           <div id="gameStatus" class="game-status">
             <p id="statusMessage" class="status-message">Waiting for opponent...</p>
+            <button id="playWithBotBtn" class="btn btn-secondary btn-play-bot hidden">Play with Bot</button>
           </div>
 
-          <!-- Confirmation Section (for joiner) -->
-          <div id="confirmationSection" class="confirmation-section hidden">
-            <div class="confirmation-info">
-              <h3>Coin Flip Details</h3>
-              <p><strong>Bet Amount:</strong> <span id="confirmBetAmount" class="credit-amount">0</span> credits</p>
-              <div class="choice-comparison">
-                <div class="choice-item">
-                  <p><strong>Creator's Choice:</strong></p>
-                  <div id="confirmCreatorChoice" class="choice-display"></div>
+          <!-- Confirmation Section (for joiner) - Modal Popup -->
+          <div id="confirmationSection" class="confirmation-modal hidden">
+            <div class="confirmation-overlay"></div>
+            <div class="confirmation-section">
+              <div class="confirmation-info">
+                <h3>Coin Flip Details</h3>
+                <p><strong>Bet Amount:</strong> <span id="confirmBetAmount" class="credit-amount">0</span> credits</p>
+                <div class="choice-comparison">
+                  <div class="choice-item">
+                    <p><strong>Creator's Choice:</strong></p>
+                    <div id="confirmCreatorChoice" class="choice-display"></div>
+                  </div>
+                  <div class="choice-item">
+                    <p><strong>Your Choice:</strong></p>
+                    <div id="confirmJoinerChoice" class="choice-display confirm-choice"></div>
+                  </div>
                 </div>
-                <div class="choice-item">
-                  <p><strong>Your Choice:</strong></p>
-                  <div id="confirmJoinerChoice" class="choice-display confirm-choice"></div>
-                </div>
+                <p class="confirm-description">You will match the bet amount and bet on the opposite side of the creator.</p>
               </div>
-              <p class="confirm-description">You will match the bet amount and bet on the opposite side of the creator.</p>
-            </div>
-            <div class="confirmation-buttons">
-              <button id="confirmParticipationBtn" class="btn btn-primary">Confirm Participation</button>
-              <button id="cancelParticipationBtn" class="btn btn-secondary">Leave Room</button>
+              <div class="confirmation-buttons">
+                <button id="confirmParticipationBtn" class="btn btn-primary">Confirm Participation</button>
+                <button id="cancelParticipationBtn" class="btn btn-secondary">Leave Room</button>
+              </div>
             </div>
           </div>
 
@@ -158,6 +178,7 @@ class CoinflipGame {
       if (!this.socket) {
         // Fallback: create own connection if casino manager doesn't have one
         const serverUrl = window.CASINO_SERVER_URL || window.location.origin;
+        console.log('Coinflip: Creating socket connection to:', serverUrl);
         this.socket = io(serverUrl, {
           reconnection: true,
           reconnectionDelay: 1000,
@@ -192,7 +213,6 @@ class CoinflipGame {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('Coinflip: Connected to server');
       // Clear connection timeout
       if (this.connectionTimeout) {
         clearTimeout(this.connectionTimeout);
@@ -292,6 +312,10 @@ class CoinflipGame {
         if (statusMessage) {
           statusMessage.textContent = 'Opponent left. Waiting for another player to join...';
         }
+        // Show bot button again for creator
+        if (this.isCreator) {
+          document.getElementById('playWithBotBtn').classList.remove('hidden');
+        }
         this.resetGameUI();
       }
     });
@@ -307,13 +331,35 @@ class CoinflipGame {
     const statusEl = document.getElementById('connectionStatus');
     const indicatorEl = document.getElementById('statusIndicator');
     if (statusEl && indicatorEl) {
-      statusEl.innerHTML = `<span id="statusIndicator">●</span> ${message}`;
-      statusEl.style.color = connected ? '#10b981' : '#ef4444';
-      indicatorEl.style.color = connected ? '#10b981' : '#ef4444';
+      // Keep connection status hidden - only show if there's an error
+      if (!connected && message.includes('failed') || message.includes('timeout') || message.includes('error')) {
+        statusEl.classList.remove('hidden');
+        statusEl.innerHTML = `<span id="statusIndicator">●</span> ${message}`;
+        statusEl.style.color = '#ef4444';
+        indicatorEl.style.color = '#ef4444';
+      } else {
+        statusEl.classList.add('hidden');
+      }
     }
   }
 
   attachEventListeners() {
+    // Toggle create room section
+    document.getElementById('toggleCreateRoomBtn')?.addEventListener('click', () => {
+      this.toggleCreateRoomSection();
+    });
+
+    document.getElementById('closeCreateRoomBtn')?.addEventListener('click', () => {
+      this.toggleCreateRoomSection();
+    });
+
+    // Close modal when clicking overlay
+    const betSetupSection = document.getElementById('betSetupSection');
+    const overlay = betSetupSection?.querySelector('.confirmation-overlay');
+    overlay?.addEventListener('click', () => {
+      this.toggleCreateRoomSection();
+    });
+
     // Quick bet buttons
     document.querySelectorAll('.btn-quick-bet').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -354,6 +400,40 @@ class CoinflipGame {
     document.getElementById('cancelParticipationBtn')?.addEventListener('click', () => {
       this.leaveRoom();
     });
+
+    // Play with bot
+    const playWithBotBtn = document.getElementById('playWithBotBtn');
+    if (playWithBotBtn) {
+      playWithBotBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Play with Bot button clicked');
+        this.playWithBot();
+      });
+    } else {
+      console.warn('playWithBotBtn not found in DOM');
+    }
+  }
+
+  toggleCreateRoomSection() {
+    const section = document.getElementById('betSetupSection');
+    const btn = document.getElementById('toggleCreateRoomBtn');
+    if (section && btn) {
+      const isHidden = section.classList.contains('hidden');
+      if (isHidden) {
+        section.classList.remove('hidden');
+        btn.classList.add('hidden');
+      } else {
+        section.classList.add('hidden');
+        btn.classList.remove('hidden');
+        // Reset form
+        document.getElementById('createBetAmountInput').value = '';
+        this.createChoice = null;
+        document.getElementById('createChooseHeadsBtn')?.classList.remove('selected');
+        document.getElementById('createChooseTailsBtn')?.classList.remove('selected');
+        this.updateCreateRoomButton();
+      }
+    }
   }
 
   selectCreateChoice(choice) {
@@ -376,6 +456,35 @@ class CoinflipGame {
       return;
     }
     this.socket.emit('createRoom', { betAmount: amount, choice: this.createChoice });
+    // Close the create room modal
+    this.toggleCreateRoomSection();
+  }
+
+  playWithBot() {
+    if (!this.currentRoomId || !this.isCreator) {
+      return;
+    }
+    if (!this.socket || !this.socket.connected) {
+      alert('Not connected to server. Please refresh the page.');
+      return;
+    }
+    
+    // Disable button to prevent multiple clicks
+    const botBtn = document.getElementById('playWithBotBtn');
+    if (botBtn) {
+      botBtn.disabled = true;
+      botBtn.textContent = 'Adding Bot...';
+    }
+    
+    this.socket.emit('playWithBot', { roomId: this.currentRoomId }, (response) => {
+      if (response && response.error) {
+        alert(response.error);
+        if (botBtn) {
+          botBtn.disabled = false;
+          botBtn.textContent = 'Play with Bot';
+        }
+      }
+    });
   }
 
   leaveRoom() {
@@ -422,15 +531,25 @@ class CoinflipGame {
     document.getElementById('roomSelection').classList.add('hidden');
     document.getElementById('gameRoom').classList.remove('hidden');
     document.getElementById('currentRoomId').textContent = roomId;
-    document.getElementById('player1Bet').textContent = `Bet: ${betAmount.toLocaleString()}`;
+    document.getElementById('player1Bet').textContent = `${betAmount.toLocaleString()}`;
     document.getElementById('player1Choice').textContent = choice;
     document.getElementById('player1Choice').className = `player-card-choice ${choice.toLowerCase()}`;
+    // Show status message for creator (player 1)
+    document.getElementById('gameStatus').classList.remove('hidden');
+    // Show bot button for creator when waiting
+    const botBtn = document.getElementById('playWithBotBtn');
+    if (this.isCreator && botBtn) {
+      botBtn.classList.remove('hidden');
+    }
     this.resetGameUI();
   }
 
   showConfirmation(roomId, betAmount, creatorChoice) {
     document.getElementById('roomSelection').classList.add('hidden');
     document.getElementById('gameRoom').classList.remove('hidden');
+    // Hide status message for joiner (player 2)
+    document.getElementById('gameStatus').classList.add('hidden');
+    // Show confirmation modal
     document.getElementById('confirmationSection').classList.remove('hidden');
     document.getElementById('currentRoomId').textContent = roomId;
     document.getElementById('confirmBetAmount').textContent = betAmount.toLocaleString();
@@ -444,19 +563,30 @@ class CoinflipGame {
   showRoomSelection() {
     document.getElementById('gameRoom').classList.add('hidden');
     document.getElementById('roomSelection').classList.remove('hidden');
+    // Hide create room section and show button
+    document.getElementById('betSetupSection')?.classList.add('hidden');
+    document.getElementById('toggleCreateRoomBtn')?.classList.remove('hidden');
     this.resetGameUI();
   }
 
   updatePlayersDisplay(player1, player2, betAmount, creatorChoice) {
     document.getElementById('player1Name').textContent = player1.name;
     document.getElementById('player2Name').textContent = player2.name;
-    document.getElementById('player1Bet').textContent = `Bet: ${betAmount.toLocaleString()}`;
-    document.getElementById('player2Bet').textContent = `Bet: ${betAmount.toLocaleString()}`;
+    document.getElementById('player1Bet').textContent = `${betAmount.toLocaleString()}`;
+    document.getElementById('player2Bet').textContent = `${betAmount.toLocaleString()}`;
     document.getElementById('player1Choice').textContent = creatorChoice;
     document.getElementById('player1Choice').className = `player-card-choice ${creatorChoice.toLowerCase()}`;
     const joinerChoice = creatorChoice === 'Heads' ? 'Tails' : 'Heads';
     document.getElementById('player2Choice').textContent = joinerChoice;
     document.getElementById('player2Choice').className = `player-card-choice ${joinerChoice.toLowerCase()}`;
+    
+    // Hide status message and confirmation section when both players are confirmed
+    if (player1.name && player2.name) {
+      document.getElementById('gameStatus').classList.add('hidden');
+      document.getElementById('confirmationSection').classList.add('hidden');
+      // Hide bot button when a real player joins
+      document.getElementById('playWithBotBtn').classList.add('hidden');
+    }
   }
 
   showCoinFlipResult(result, results, choices) {
@@ -501,7 +631,6 @@ class CoinflipGame {
     if (coin) {
       coin.classList.remove('flipping-heads', 'flipping-tails', 'show-heads', 'show-tails');
     }
-    document.getElementById('coinResult').textContent = '';
     document.getElementById('resultsSection').classList.add('hidden');
   }
 
