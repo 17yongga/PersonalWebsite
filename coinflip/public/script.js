@@ -1,243 +1,685 @@
-const socket = io(); // Initialize socket.io client
-let roomId = null; // Store the current room ID
-let playerId = null; // Store the current player ID
-let playerName = null; // Store the player's name
-let isChoosing = false; // Flag to track if the player is currently choosing
-let playAgainClicked = false; // Flag to track if the player has clicked play again
-let players = {}; // Store the players in the current room
+const socket = io();
 
-// Handle server messages
-socket.on("message", (message) => {
-  document.getElementById("result").textContent = message; // Display the message from the server
+// Socket connection handlers
+socket.on('connect', () => {
+  console.log('Connected to server');
+  const statusEl = document.getElementById('connectionStatus');
+  const indicatorEl = document.getElementById('statusIndicator');
+  if (statusEl && indicatorEl) {
+    statusEl.textContent = '● Connected';
+    statusEl.style.color = '#10b981';
+    indicatorEl.style.color = '#10b981';
+  }
 });
 
-// Display available rooms
-socket.on("availableRooms", (rooms) => {
-  const roomList = document.getElementById("roomList"); // Get the room list element
-  roomList.innerHTML = ""; // Clear the room list
+socket.on('disconnect', () => {
+  console.log('Disconnected from server');
+  const statusEl = document.getElementById('connectionStatus');
+  const indicatorEl = document.getElementById('statusIndicator');
+  if (statusEl && indicatorEl) {
+    statusEl.textContent = '● Disconnected - Please refresh';
+    statusEl.style.color = '#ef4444';
+    indicatorEl.style.color = '#ef4444';
+  }
+});
+
+socket.on('connect_error', (error) => {
+  console.error('Connection error:', error);
+  const statusEl = document.getElementById('connectionStatus');
+  const indicatorEl = document.getElementById('statusIndicator');
+  if (statusEl && indicatorEl) {
+    statusEl.textContent = '● Connection failed - Make sure server is running';
+    statusEl.style.color = '#ef4444';
+    indicatorEl.style.color = '#ef4444';
+  }
+});
+
+// Game state
+let playerData = {
+  name: '',
+  credits: 0
+};
+let currentRoomId = null;
+let isCreator = false;
+let joinTimeout = null;
+let createBetAmount = 0;
+let createChoice = null;
+let gameFinished = false;
+
+// DOM Elements
+const welcomeScreen = document.getElementById('welcomeScreen');
+const mainScreen = document.getElementById('mainScreen');
+const playerNameInput = document.getElementById('playerNameInput');
+const joinBtn = document.getElementById('joinBtn');
+const playerNameDisplay = document.getElementById('playerNameDisplay');
+const creditsAmount = document.getElementById('creditsAmount');
+const roomSelection = document.getElementById('roomSelection');
+const roomList = document.getElementById('roomList');
+const createRoomBtn = document.getElementById('createRoomBtn');
+const gameRoom = document.getElementById('gameRoom');
+const currentRoomIdDisplay = document.getElementById('currentRoomId');
+const leaveRoomBtn = document.getElementById('leaveRoomBtn');
+const player1Card = document.getElementById('player1Card');
+const player2Card = document.getElementById('player2Card');
+const player1Name = document.getElementById('player1Name');
+const player2Name = document.getElementById('player2Name');
+const player1Bet = document.getElementById('player1Bet');
+const player2Bet = document.getElementById('player2Bet');
+const player1Choice = document.getElementById('player1Choice');
+const player2Choice = document.getElementById('player2Choice');
+const coin = document.getElementById('coin');
+const coinResult = document.getElementById('coinResult');
+const gameStatus = document.getElementById('gameStatus');
+const statusMessage = document.getElementById('statusMessage');
+const confirmationSection = document.getElementById('confirmationSection');
+const confirmBetAmount = document.getElementById('confirmBetAmount');
+const confirmCreatorChoice = document.getElementById('confirmCreatorChoice');
+const confirmParticipationBtn = document.getElementById('confirmParticipationBtn');
+const resultsSection = document.getElementById('resultsSection');
+const resultMessage = document.getElementById('resultMessage');
+const errorToast = document.getElementById('errorToast');
+const errorMessage = document.getElementById('errorMessage');
+
+// Bet creation elements
+const createBetAmountInput = document.getElementById('createBetAmountInput');
+const createChooseHeadsBtn = document.getElementById('createChooseHeadsBtn');
+const createChooseTailsBtn = document.getElementById('createChooseTailsBtn');
+
+// Initialize
+if (joinBtn) {
+  joinBtn.addEventListener('click', joinGame);
+}
+if (playerNameInput) {
+  playerNameInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') joinGame();
+  });
+}
+
+if (createRoomBtn) {
+  createRoomBtn.addEventListener('click', createRoom);
+}
+if (leaveRoomBtn) {
+  leaveRoomBtn.addEventListener('click', leaveRoom);
+}
+if (confirmParticipationBtn) {
+  confirmParticipationBtn.addEventListener('click', confirmParticipation);
+}
+
+// Quick bet buttons for creating room
+if (createBetAmountInput) {
+  const quickBetButtons = document.querySelectorAll('.bet-setup-section .btn-quick-bet');
+  quickBetButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const amount = btn.dataset.amount === '0' ? playerData.credits : parseInt(btn.dataset.amount);
+      createBetAmountInput.value = amount;
+      updateCreateRoomButton();
+    });
+  });
+  createBetAmountInput.addEventListener('input', updateCreateRoomButton);
+}
+
+if (createChooseHeadsBtn) {
+  createChooseHeadsBtn.addEventListener('click', () => selectCreateChoice('Heads'));
+}
+if (createChooseTailsBtn) {
+  createChooseTailsBtn.addEventListener('click', () => selectCreateChoice('Tails'));
+}
+
+function selectCreateChoice(choice) {
+  createChoice = choice;
+  if (createChooseHeadsBtn && createChooseTailsBtn) {
+    createChooseHeadsBtn.classList.remove('selected');
+    createChooseTailsBtn.classList.remove('selected');
+    if (choice === 'Heads') {
+      createChooseHeadsBtn.classList.add('selected');
+    } else {
+      createChooseTailsBtn.classList.add('selected');
+    }
+  }
+  updateCreateRoomButton();
+}
+
+function updateCreateRoomButton() {
+  if (!createBetAmountInput || !createRoomBtn) return;
+  
+  const amount = parseInt(createBetAmountInput.value) || 0;
+  const isValid = amount > 0 && 
+                  amount <= playerData.credits && 
+                  createChoice !== null;
+  createRoomBtn.disabled = !isValid;
+}
+
+function joinGame() {
+  const name = playerNameInput ? playerNameInput.value.trim() : '';
+  if (!name) {
+    showError('Please enter your name');
+    return;
+  }
+  
+  if (!socket.connected) {
+    showError('Not connected to server. Please wait...');
+    return;
+  }
+  
+  console.log('Joining game with name:', name);
+  
+  if (joinTimeout) {
+    clearTimeout(joinTimeout);
+  }
+  
+  if (joinBtn) {
+    joinBtn.disabled = true;
+    joinBtn.textContent = 'Connecting...';
+  }
+  
+  joinTimeout = setTimeout(() => {
+    console.error('Timeout waiting for playerData response');
+    showError('Server did not respond. Please try again.');
+    if (joinBtn) {
+      joinBtn.disabled = false;
+      joinBtn.textContent = 'Join Game';
+    }
+  }, 5000);
+  
+  socket.emit('joinGame', name);
+}
+
+function createRoom() {
+  if (!playerData.name) {
+    showError('Please join the game first');
+    return;
+  }
+  
+  const amount = parseInt(createBetAmountInput.value);
+  if (!amount || amount <= 0 || amount > playerData.credits || !createChoice) {
+    showError('Please set a valid bet amount and choice');
+    return;
+  }
+  
+  socket.emit('createRoom', { betAmount: amount, choice: createChoice });
+}
+
+function leaveRoom() {
+  socket.emit('leaveRoom');
+}
+
+function confirmParticipation() {
+  if (!currentRoomId) {
+    showError('Not in a room');
+    return;
+  }
+  socket.emit('confirmParticipation', { roomId: currentRoomId });
+}
+
+// Socket event handlers
+socket.on('error', (message) => {
+  console.error('Socket error:', message);
+  showError(message);
+  if (joinTimeout) {
+    clearTimeout(joinTimeout);
+    joinTimeout = null;
+  }
+  if (joinBtn) {
+    joinBtn.disabled = false;
+    joinBtn.textContent = 'Join Game';
+  }
+});
+
+socket.on('playerData', (data) => {
+  console.log('Received playerData:', data);
+  
+  if (joinTimeout) {
+    clearTimeout(joinTimeout);
+    joinTimeout = null;
+  }
+  
+  playerData = data;
+  
+  if (playerNameDisplay) {
+    playerNameDisplay.textContent = data.name;
+  }
+  if (creditsAmount) {
+    creditsAmount.textContent = formatCredits(data.credits);
+  }
+  
+  if (welcomeScreen) {
+    welcomeScreen.classList.add('hidden');
+  }
+  if (mainScreen) {
+    mainScreen.classList.remove('hidden');
+  }
+  
+  if (joinBtn) {
+    joinBtn.disabled = false;
+    joinBtn.textContent = 'Join Game';
+  }
+  
+  console.log('Successfully joined game. Switched to main screen.');
+});
+
+socket.on('availableRooms', (rooms) => {
+  if (!roomList) return;
+  
+  roomList.innerHTML = '';
   if (rooms.length === 0) {
-    roomList.innerHTML = "<p>No rooms available. Create a new room.</p>"; // Display message if no rooms are available
+    roomList.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No rooms available. Create a new room to start playing!</p>';
   } else {
-    rooms.forEach(({ roomId, players, availableSpots }) => {
-      const roomItem = document.createElement("div"); // Create a div for each room
-      roomItem.classList.add("room-item"); // Add a class for styling
+    rooms.forEach(room => {
+      const roomItem = document.createElement('div');
+      roomItem.className = 'room-item';
       roomItem.innerHTML = `
-        <div class="room-info">
-          <p>Room ID: ${roomId}</p>
-          <p>Players: ${players.join(", ") || "None"}</p>
-          <p>Available Spots: <span style="color: ${availableSpots === 0 ? 'red' : 'black'};">${availableSpots}</span></p>
+        <div class="room-item-info">
+          <h3>${room.roomId}</h3>
+          <p><strong>Creator:</strong> ${room.creatorName}</p>
+          <p><strong>Bet Amount:</strong> <span class="credit-amount">${formatCredits(room.betAmount)}</span> credits</p>
+          <p><strong>Choice:</strong> ${room.creatorChoice}</p>
         </div>
-        <button onclick="joinRoom('${roomId}')" ${availableSpots === 0 ? 'disabled' : ''}>Join Room</button>
-      `; // Set the room information and join button
-      roomList.appendChild(roomItem); // Add the room item to the room list
+        <button class="btn btn-primary" onclick="window.joinRoom('${room.roomId}')">Join Room</button>
+      `;
+      roomList.appendChild(roomItem);
     });
   }
 });
 
-// Update room list when a new room is created
-socket.on("newRoom", (room) => {
-  const roomList = document.getElementById("roomList"); // Get the room list element
-  const roomItem = document.createElement("button"); // Create a button for the new room
-  roomItem.textContent = `Join Room ${room}`; // Set the button text
-  roomItem.onclick = () => joinRoom(room); // Set the button click handler
-  roomList.appendChild(roomItem); // Add the button to the room list
+window.joinRoom = function(roomId) {
+  socket.emit('joinRoom', { roomId });
+};
+
+socket.on('roomCreated', ({ roomId, betAmount, choice, credits }) => {
+  console.log('Room created:', roomId);
+  currentRoomId = roomId;
+  isCreator = true;
+  gameFinished = false; // Reset game finished state
+  playerData.credits = credits;
+  
+  if (creditsAmount) {
+    creditsAmount.textContent = formatCredits(credits);
+  }
+  if (currentRoomIdDisplay) {
+    currentRoomIdDisplay.textContent = roomId;
+  }
+  if (roomSelection) {
+    roomSelection.classList.add('hidden');
+  }
+  if (gameRoom) {
+    gameRoom.classList.remove('hidden');
+  }
+  if (confirmationSection) {
+    confirmationSection.classList.add('hidden');
+  }
+  if (resultsSection) {
+    resultsSection.classList.add('hidden');
+  }
+  
+  // Update player 1 (creator) info - don't show credits on card
+  if (player1Name) player1Name.textContent = playerData.name;
+  if (player1Bet) player1Bet.textContent = `Bet: ${formatCredits(betAmount)}`;
+  if (player1Choice) {
+    player1Choice.textContent = choice;
+    player1Choice.classList.add(choice.toLowerCase());
+  }
+  
+  if (gameStatus) {
+    gameStatus.classList.remove('hidden');
+  }
+  if (statusMessage) {
+    statusMessage.textContent = 'Room created! Waiting for opponent to join...';
+  }
+  
+  if (player1Card) player1Card.classList.add('active');
+  if (player2Card) player2Card.classList.remove('active');
+  
+  resetGameUI();
 });
 
-// Join a room
-function joinRoom(room) {
-  socket.emit("joinRoom", { room, playerName }); // Emit joinRoom event to the server with the room ID and player name
-}
+socket.on('joinedRoom', ({ roomId, betAmount, creatorChoice, creatorName }) => {
+  console.log('Joined room:', roomId);
+  currentRoomId = roomId;
+  isCreator = false;
+  gameFinished = false; // Reset game finished state
+  
+  // Calculate joiner's choice (opposite of creator)
+  const joinerChoice = creatorChoice === 'Heads' ? 'Tails' : 'Heads';
+  
+  if (currentRoomIdDisplay) {
+    currentRoomIdDisplay.textContent = roomId;
+  }
+  if (roomSelection) {
+    roomSelection.classList.add('hidden');
+  }
+  if (gameRoom) {
+    gameRoom.classList.remove('hidden');
+  }
+  if (confirmationSection) {
+    confirmationSection.classList.remove('hidden');
+  }
+  if (resultsSection) {
+    resultsSection.classList.add('hidden');
+  }
+  
+  if (confirmBetAmount) {
+    confirmBetAmount.textContent = formatCredits(betAmount);
+  }
+  if (confirmCreatorChoice) {
+    confirmCreatorChoice.textContent = creatorChoice;
+    confirmCreatorChoice.className = `choice-display ${creatorChoice.toLowerCase()}`;
+  }
+  
+  // Update joiner choice display in confirmation section
+  const confirmJoinerChoice = document.getElementById('confirmJoinerChoice');
+  if (confirmJoinerChoice) {
+    confirmJoinerChoice.textContent = joinerChoice;
+    confirmJoinerChoice.className = `choice-display confirm-choice ${joinerChoice.toLowerCase()}`;
+  }
+  
+  // Update player 2 choice display immediately
+  if (player2Choice) {
+    player2Choice.textContent = joinerChoice;
+    player2Choice.classList.add(joinerChoice.toLowerCase());
+  }
+  
+  if (gameStatus) {
+    gameStatus.classList.remove('hidden');
+  }
+  if (statusMessage) {
+    statusMessage.textContent = `Joined room created by ${creatorName}. Review details and confirm participation.`;
+  }
+  
+  resetGameUI();
+  
+  // Show player 2 choice even before confirmation
+  if (player2Choice) {
+    player2Choice.textContent = joinerChoice;
+    player2Choice.classList.add(joinerChoice.toLowerCase());
+  }
+});
 
-// Create a new room
-function createRoom() {
-  socket.emit("createRoom", playerName); // Emit createRoom event to the server with the player name
-}
+socket.on('opponentJoined', ({ opponentName }) => {
+  if (gameStatus) {
+    gameStatus.classList.remove('hidden');
+  }
+  if (statusMessage) {
+    statusMessage.textContent = `${opponentName} joined! Waiting for them to confirm participation...`;
+  }
+});
 
-// Start game and set player details
-socket.on("startGame", ({ roomId: id, players: roomPlayers }) => {
-  roomId = id; // Set the current room ID
-  playerId = socket.id; // Set the current player ID
-  players = roomPlayers; // Set the players in the current room
-  document.getElementById("roomId").textContent = `Room ID: ${roomId}`; // Display the room ID
-  document.getElementById("roomSelection").style.display = "none"; // Hide the room selection screen
-  document.getElementById("gameScreen").style.display = "block"; // Show the game screen
-  updatePlayerNames(); // Update player names on the screen
-  if (Object.keys(players).length < 2) {
-    disableButtons(); // Disable the buttons if both players are not in the room
-    document.getElementById("result").textContent = `A room is created! Waiting for an opponent to join.`; // Display game start message
-  } else {
-    document.getElementById("result").textContent = `The game has started! Make your choice of Heads or Tails`; // Display game start message
-    if (Object.keys(players)[0] === playerId) {
-      enableButtons(); // Enable the buttons if both players are in the room and that the player is the first player
-      document.getElementById("controls").style.display = "block"; // Show the controls
-      document.getElementById("result").textContent = `You can choose Heads or Tails first.`; // Notify the first player to choose first
+socket.on('playersUpdate', ({ player1, player2, betAmount, creatorChoice }) => {
+  if (player1Name) player1Name.textContent = player1.name;
+  // Don't display opponent credits - only show our own credits in header
+  if (player2Name) player2Name.textContent = player2.name;
+  
+  // Calculate joiner's choice (opposite of creator)
+  const joinerChoice = creatorChoice === 'Heads' ? 'Tails' : 'Heads';
+  
+  // Update bet info
+  if (player1Bet) player1Bet.textContent = `Bet: ${formatCredits(betAmount)}`;
+  if (player1Choice && creatorChoice) {
+    player1Choice.textContent = creatorChoice;
+    player1Choice.className = 'player-card-choice ' + creatorChoice.toLowerCase();
+  }
+  if (player2Bet) player2Bet.textContent = `Bet: ${formatCredits(betAmount)}`;
+  // Show joiner's choice (opposite of creator)
+  if (player2Choice) {
+    player2Choice.textContent = joinerChoice;
+    player2Choice.className = 'player-card-choice ' + joinerChoice.toLowerCase();
+  }
+  
+  // Update player cards based on who is you
+  const isPlayer1 = player1.name === playerData.name;
+  if (player1Card && player2Card) {
+    if (isPlayer1) {
+      player1Card.classList.add('active');
+      player2Card.classList.remove('active');
+    } else {
+      player2Card.classList.add('active');
+      player1Card.classList.remove('active');
     }
-  } 
+  }
 });
 
-// Update player names on the screen
-function updatePlayerNames() {
-  const player1Name = players[playerId];
-  const player2Id = Object.keys(players).find((id) => id !== playerId);
-  const player2Name = player2Id ? players[player2Id] : "TBD";
-  document.getElementById("player1Score").textContent = `${player1Name} Score: 0`;
-  document.getElementById("player2Score").textContent = `${player2Name} Score: 0`;
-}
-
-// Notify player when opponent leaves the room
-socket.on("opponentLeft", () => {
-  document.getElementById("result").textContent = "Your opponent has left the room. Waiting for a new player to join."; // Display opponent left message
-  document.getElementById("controls").style.display = "none"; // Hide the controls
-  enableButtons(); // Enable the buttons
-  document.getElementById("nextRound").style.display = "none"; // Hide the next round button
-  console.log("nextRound hidden by opponentleft"); // Log the player leaving the game
-  document.getElementById("leaveGameContainer").style.display = "block"; // Show the leave game button
-  // Reset scores locally
-  document.getElementById("player1Score").textContent = `${players[playerId]} Score: 0`;
-  const player2Id = Object.keys(players).find((id) => id !== playerId);
-  document.getElementById("player2Score").textContent = `${player2Id ? players[player2Id] : "TBD"} Score: 0`;
-});
-
-// Handle player choice
-function choose(choice) {
-  if (!roomId) {
-    document.getElementById("result").textContent = "Waiting for an opponent..."; // Display waiting message if no room ID
-    return;
+socket.on('coinFlipResult', ({ coinResult: result, results, betAmount, creatorChoice, choices }) => {
+  gameFinished = true; // Mark game as finished
+  
+  if (confirmationSection) {
+    confirmationSection.classList.add('hidden');
   }
-
-  if (Object.keys(players).length < 2) {
-    document.getElementById("result").textContent = "Waiting for an opponent to join before making a choice."; // Display waiting message if not both players have joined
-    return;
+  
+  // Hide status message once game starts
+  if (gameStatus) {
+    gameStatus.classList.add('hidden');
   }
-
-  const playerIds = Object.keys(players);
-  const firstPlayerId = playerIds[0];
-  const secondPlayerId = playerIds[1];
-  console.log("socketid is: ", socket.id, "first player socketid is: ", firstPlayerId, "second player socketid is: ", secondPlayerId);
-  console.log(`First player choice:`, choice);
-  if (socket.id === secondPlayerId && !choice) {
-    document.getElementById("result").textContent = "Waiting for the first player to make a choice."; // Display waiting message if the first player has not made a choice
-    console.log(`request getting bounced`); // Log the first player's choice
-    return;
+  
+  // Clear winner/loser classes from previous rounds
+  if (player1Card) {
+    player1Card.classList.remove('winner', 'loser');
   }
-
-  if (isChoosing) {
-    document.getElementById("result").textContent = "Waiting for opponent to choose..."; // Display waiting message if already choosing
-    return;
+  if (player2Card) {
+    player2Card.classList.remove('winner', 'loser');
   }
-
-  // Emit playerChoice event to the server with the room ID and choice
-  socket.emit("playerChoice", { roomId, choice });
-  document.getElementById("result").textContent = `You chose ${choice}. Waiting for opponent...`; // Display choice message
-  document.getElementById("controls").style.display = "none"; // Hide the controls
-  disableButtons(); // Disable the buttons
-  isChoosing = true; // Set the choosing flag to true
-  players[socket.id].choice = choice; // Save the player's choice
-}
-
-// Display opponent's choice
-socket.on("opponentChoice", ({ choice, playerId }) => {
-  players[playerId].choice = choice; // Save the first player's choice
-  document.getElementById("result").textContent = `check !!!Your opponent chose ${choice}. You must choose ${choice === 'Heads' ? 'Tails' : 'Heads'}.`; // Display opponent's choice message
-  document.getElementById("controls").style.display = "block"; // Show the controls
-  console.log(`First player choice: `,choice);
-  if (choice === 'Heads') {
-    document.querySelector("button[onclick=\"choose('Heads')\"]").disabled = true; // Disable the Heads button if opponent chose Heads
-  } else {
-    document.querySelector("button[onclick=\"choose('Tails')\"]").disabled = true; // Disable the Tails button if opponent chose Tails
+  
+  const playerId = socket.id;
+  
+  // Update choices display from server data IMMEDIATELY (before coin flip animation)
+  // This ensures choices are visible during the coin flip
+  if (choices && player1Name && player2Name) {
+    // Find which socket IDs correspond to player1 and player2
+    // Player1 is the first player in the room (usually creator)
+    // We need to match by checking the current player's position
+    const allPlayerIds = Object.keys(choices);
+    
+    // We'll update based on the player names we have displayed
+    // Check if current player is player1 (their name matches player1Name)
+    const isPlayer1 = player1Name.textContent === playerData.name;
+    
+    if (isPlayer1) {
+      // Current player is player1
+      if (player1Choice && choices[playerId]) {
+        player1Choice.textContent = choices[playerId];
+        player1Choice.className = 'player-card-choice ' + choices[playerId].toLowerCase();
+      }
+      const opponentId = allPlayerIds.find(id => id !== playerId);
+      if (player2Choice && opponentId && choices[opponentId]) {
+        player2Choice.textContent = choices[opponentId];
+        player2Choice.className = 'player-card-choice ' + choices[opponentId].toLowerCase();
+      }
+    } else {
+      // Current player is player2
+      if (player2Choice && choices[playerId]) {
+        player2Choice.textContent = choices[playerId];
+        player2Choice.className = 'player-card-choice ' + choices[playerId].toLowerCase();
+      }
+      const opponentId = allPlayerIds.find(id => id !== playerId);
+      if (player1Choice && opponentId && choices[opponentId]) {
+        player1Choice.textContent = choices[opponentId];
+        player1Choice.className = 'player-card-choice ' + choices[opponentId].toLowerCase();
+      }
+    }
   }
-  isChoosing = false; // Set the choosing flag to false
-});
-
-// Display coin flip results and scores
-socket.on("coinFlipResult", ({ coinResult, scores, messages }) => {
-  document.getElementById("controls").style.display = "none"; // Hide the controls after both players have made their choices
-  document.getElementById("leaveGameContainer").style.display = "none"; // Hide the leave game button
-  const coinElement = document.getElementById("coin"); // Get the coin element
-  coinElement.classList.add("animate"); // Start coin animation
-
+  
+  // Animate coin flip with appropriate animation
+  if (coin) {
+    coin.classList.remove('flipping-heads', 'flipping-tails', 'show-heads', 'show-tails');
+    if (result === 'Heads') {
+      coin.classList.add('flipping-heads');
+    } else {
+      coin.classList.add('flipping-tails');
+    }
+  }
+  
   setTimeout(() => {
-    coinElement.classList.remove("animate"); // Stop coin animation after 2 seconds
-    document.getElementById("result").textContent = `The coin landed on ${coinResult}. ${messages[playerId]}`; // Display coin flip result and win/lose message
-    document.getElementById("player1Score").textContent = `${players[playerId]} Score: ${scores[playerId] || 0}`; // Display player 1 score
-    document.getElementById("player2Score").textContent = `${players[Object.keys(players).find((id) => id !== playerId)]} Score: ${
-      scores[Object.keys(scores).find((id) => id !== playerId)] || 0
-    }`; // Display player 2 score
-
-    // Show the next round button only if both players are still in the room
-    if (Object.keys(players).length === 2) {
-      document.getElementById("nextRound").style.display = "block"; // Show the next round button
-      console.log("displaying nexctRound within coinFlipResult"); // Log the player leaving the game
+    if (coin) {
+      coin.classList.remove('flipping-heads', 'flipping-tails');
+      if (result === 'Heads') {
+        coin.classList.add('show-heads');
+      } else {
+        coin.classList.add('show-tails');
+      }
     }
-    enableButtons(); // Enable the buttons
-  }, 2000); // Delay result display to match coin animation
+    
+    // Show result
+    if (coinResult) {
+      coinResult.textContent = `Result: ${result}`;
+      coinResult.classList.add('show');
+    }
+    
+    // Update credits
+    playerData.credits = results[playerId].newCredits;
+    if (creditsAmount) {
+      creditsAmount.textContent = formatCredits(playerData.credits);
+    }
+    
+    // Don't update opponent credits - we don't share credit values
+    
+    // Mark winner and loser on player cards
+    const playerResult = results[playerId];
+    const opponentId = Object.keys(results).find(id => id !== playerId);
+    const isPlayer1 = player1Name && player1Name.textContent === playerData.name;
+    
+    if (playerResult.won) {
+      // Current player won
+      if (isPlayer1 && player1Card) {
+        player1Card.classList.add('winner');
+      } else if (!isPlayer1 && player2Card) {
+        player2Card.classList.add('winner');
+      }
+      // Mark opponent as loser
+      if (isPlayer1 && player2Card) {
+        player2Card.classList.add('loser');
+      } else if (!isPlayer1 && player1Card) {
+        player1Card.classList.add('loser');
+      }
+    } else {
+      // Current player lost
+      if (isPlayer1 && player1Card) {
+        player1Card.classList.add('loser');
+      } else if (!isPlayer1 && player2Card) {
+        player2Card.classList.add('loser');
+      }
+      // Mark opponent as winner
+      if (isPlayer1 && player2Card) {
+        player2Card.classList.add('winner');
+      } else if (!isPlayer1 && player1Card) {
+        player1Card.classList.add('winner');
+      }
+    }
+    
+    // Show result message
+    if (resultMessage) {
+      if (playerResult.won) {
+        resultMessage.textContent = `🎉 You Won! +${formatCredits(playerResult.winnings)} credits`;
+        resultMessage.className = 'result-message win';
+        if (coinResult) coinResult.classList.add('winner');
+      } else {
+        resultMessage.textContent = `😔 You Lost! -${formatCredits(betAmount)} credits`;
+        resultMessage.className = 'result-message lose';
+        if (coinResult) coinResult.classList.add('loser');
+      }
+    }
+    
+    if (resultsSection) {
+      resultsSection.classList.remove('hidden');
+    }
+    
+    // Players can now leave on their own by clicking the leave room button
+    
+  }, 2000);
 });
 
-// Start a new round
-function playAgain() {
-  if (roomId) {
-    playAgainClicked = true; // Set the play again flag to true
-    socket.emit("playAgain", roomId); // Emit playAgain event to the server with the room ID
-    document.getElementById("nextRound").style.display = "none"; // Hide the next round button
-    console.log("hidding nextRound within playagain"); // Log the player leaving the game
-    document.getElementById("controls").style.display = "none"; // Hide the controls
-    document.getElementById("result").textContent = "Waiting for opponent to play again..."; // Display waiting message
-    disableButtons(); // Disable the buttons
+socket.on('opponentLeft', () => {
+  // If game has finished, keep results visible and don't reset UI
+  if (gameFinished) {
+    // Game is over - just update player 2 display to show they left
+    if (player2Name) player2Name.textContent = 'Left';
+    // Keep results section visible
+    if (resultsSection) {
+      resultsSection.classList.remove('hidden');
+    }
+    // Keep status message hidden since game is over
+    if (gameStatus) {
+      gameStatus.classList.add('hidden');
+    }
+    return; // Don't reset anything else
   }
-}
-
-// Leave the game
-function leaveGame() {
-  if (roomId) {
-    socket.emit("leaveGame", roomId); // Emit leaveGame event to the server with the room ID
-    document.getElementById("result").textContent = "You left the game."; // Display leave game message
-    document.getElementById("controls").style.display = "none"; // Hide the controls
-    document.getElementById("nextRound").style.display = "none"; // Hide the next round button
-    document.getElementById("leaveGameContainer").style.display = "none"; // Hide the leave game button
-    console.log("nextRound hidden by leavegame"); // Log the player leaving the game
-    document.getElementById("gameScreen").style.display = "none"; // Hide the game screen
-    document.getElementById("roomSelection").style.display = "block"; // Show the room selection screen
-    enableButtons(); // Enable the buttons
-    playAgainClicked = false; // Reset the play again flag
-    document.getElementById("result").textContent = ""; // Reset result message
-    document.querySelector("button[onclick=\"playAgain()\"]").disabled = true; // Disable the Play Again button
-    // Reset scores locally
-    document.getElementById("player1Score").textContent = "Player 1 Score: 0";
-    document.getElementById("player2Score").textContent = "Player 2 Score: 0";
+  
+  // Game hasn't finished - normal behavior (waiting for another player)
+  if (gameStatus) {
+    gameStatus.classList.remove('hidden');
   }
-}
-
-// Reset UI for a new round
-socket.on("newRound", () => {
-  if (playAgainClicked) {
-    document.getElementById("nextRound").style.display = "none"; // Hide the next round button
-    document.getElementById("leaveGameContainer").style.display = "none"; // Hide the leave game button
-    console.log("nextRound hidden by new round"); // Log the player leaving the game
-    document.getElementById("controls").style.display = "block"; // Show the controls
-    document.getElementById("result").textContent = "Make your choice."; // Display make your choice message
-    enableButtons(); // Enable the buttons
-    isChoosing = false; // Set the choosing flag to false
-    playAgainClicked = false; // Reset the play again flag
+  if (statusMessage) {
+    statusMessage.textContent = 'Opponent left. Waiting for another player to join...';
+  }
+  // Reset game state - don't leave room, creator stays and waits
+  if (confirmationSection) {
+    confirmationSection.classList.add('hidden');
+  }
+  if (resultsSection) {
+    resultsSection.classList.add('hidden');
+  }
+  resetGameUI();
+  
+  // Update player 2 display to show waiting state
+  if (player2Name) player2Name.textContent = 'Waiting...';
+  if (player2Bet) player2Bet.textContent = 'No bet';
+  if (player2Choice) {
+    player2Choice.textContent = '';
+    player2Choice.className = 'player-card-choice';
   }
 });
 
-// Disable buttons
-function disableButtons() {
-  document.querySelectorAll("button").forEach(button => button.disabled = true); // Disable all buttons
-}
+socket.on('leftRoom', () => {
+  currentRoomId = null;
+  isCreator = false;
+  gameFinished = false; // Reset game finished state
+  createChoice = null;
+  if (createBetAmountInput) createBetAmountInput.value = '';
+  if (createChooseHeadsBtn) createChooseHeadsBtn.classList.remove('selected');
+  if (createChooseTailsBtn) createChooseTailsBtn.classList.remove('selected');
+  updateCreateRoomButton();
+  
+  if (gameRoom) gameRoom.classList.add('hidden');
+  if (roomSelection) roomSelection.classList.remove('hidden');
+  resetGameUI();
+});
 
-// Enable buttons
-function enableButtons() {
-  document.querySelectorAll("button").forEach(button => button.disabled = false); // Enable all buttons
-}
-
-// Handle player name submission
-function submitName() {
-  playerName = document.getElementById("playerName").value; // Get the player's name from the input field
-  if (playerName) {
-    document.getElementById("nameEntry").style.display = "none"; // Hide the name entry screen
-    document.getElementById("roomSelection").style.display = "block"; // Show the room selection screen
-  } else {
-    alert("Please enter your name."); // Alert the player to enter a name if the input is empty
+function resetGameUI() {
+  if (player1Bet) player1Bet.textContent = 'No bet';
+  if (player2Bet) player2Bet.textContent = 'No bet';
+  if (player1Choice) {
+    player1Choice.textContent = '';
+    player1Choice.className = 'player-card-choice';
   }
+  if (player2Choice) {
+    player2Choice.textContent = '';
+    player2Choice.className = 'player-card-choice';
+  }
+  if (coin) {
+    coin.classList.remove('flipping-heads', 'flipping-tails', 'show-heads', 'show-tails');
+  }
+  if (coinResult) {
+    coinResult.classList.remove('show', 'winner', 'loser');
+    coinResult.textContent = '';
+  }
+  // Clear winner/loser classes
+  if (player1Card) {
+    player1Card.classList.remove('winner', 'loser');
+  }
+  if (player2Card) {
+    player2Card.classList.remove('winner', 'loser');
+  }
+}
+
+function formatCredits(amount) {
+  return amount.toLocaleString();
+}
+
+function showError(message) {
+  if (!errorMessage || !errorToast) return;
+  
+  errorMessage.textContent = message;
+  errorToast.classList.remove('hidden');
+  setTimeout(() => {
+    if (errorToast) {
+      errorToast.classList.add('hidden');
+    }
+  }, 3000);
 }

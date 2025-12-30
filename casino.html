@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <link rel="icon" type="image/png" href="/img/logo-dark.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casino - Gary's Personal Website</title>
+  <meta name="description" content="Play Blackjack, Coinflip, and Roulette at Gary's Casino">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="casino.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo">
+        <img src="img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
+        <img src="img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
+      </a>
+
+      <nav class="nav nav-desktop">
+        <a href="index.html">Home</a>
+        <a href="projects.html">Projects</a>
+        <a href="experience.html">Experience</a>
+        <a href="about.html">About</a>
+        <a href="skills.html">Skills</a>
+        <a href="blog.html">Blog</a>
+        <a href="casino.html" class="active">Casino</a>
+      </nav>
+
+      <div class="header-actions">
+        <button id="theme-toggle" class="btn btn-ghost theme-toggle" aria-label="Toggle theme">☀️</button>
+        <button class="icon-button mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="nav-mobile" aria-label="Mobile navigation">
+      <div class="nav-mobile-inner">
+        <a href="index.html">Home</a>
+        <a href="projects.html">Projects</a>
+        <a href="experience.html">Experience</a>
+        <a href="about.html">About</a>
+        <a href="skills.html">Skills</a>
+        <a href="blog.html">Blog</a>
+        <a href="casino.html">Casino</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Sign In Screen -->
+    <div id="signInScreen" class="casino-screen">
+      <div class="casino-container">
+        <div class="casino-welcome">
+          <h1 class="casino-title">🎰 Welcome to the Casino</h1>
+          <p class="casino-subtitle">Login or create an account to start playing</p>
+          
+          <!-- Login/Register Toggle -->
+          <div class="auth-tabs">
+            <button id="loginTab" class="auth-tab active">Login</button>
+            <button id="registerTab" class="auth-tab">Register</button>
+          </div>
+
+          <!-- Login Form -->
+          <div id="loginForm" class="auth-form">
+            <div class="signin-form">
+              <input type="text" id="loginUsername" placeholder="Username" maxlength="20" autocomplete="username">
+              <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+              <button id="loginBtn" class="btn btn-primary">Login</button>
+            </div>
+            <p id="loginError" class="error-message hidden"></p>
+          </div>
+
+          <!-- Register Form -->
+          <div id="registerForm" class="auth-form hidden">
+            <div class="signin-form">
+              <input type="text" id="registerUsername" placeholder="Username (3-20 characters)" maxlength="20" autocomplete="username">
+              <input type="password" id="registerPassword" placeholder="Password (min 6 characters)" autocomplete="new-password">
+              <input type="password" id="registerPasswordConfirm" placeholder="Confirm Password" autocomplete="new-password">
+              <button id="registerBtn" class="btn btn-primary">Create Account</button>
+            </div>
+            <p id="registerError" class="error-message hidden"></p>
+            <p id="registerSuccess" class="success-message hidden"></p>
+          </div>
+
+          <p class="credits-info">Start with <span class="credit-amount">10,000</span> credits!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Casino Screen -->
+    <div id="mainCasinoScreen" class="casino-screen hidden">
+      <!-- Casino Header -->
+      <div class="casino-header">
+        <div class="casino-header-content">
+          <div class="player-info">
+            <span class="player-icon">👤</span>
+            <span id="playerNameDisplay"></span>
+          </div>
+          <div class="credits-display">
+            <span class="credits-label">Credits:</span>
+            <span id="creditsAmount" class="credit-amount">0</span>
+          </div>
+          <button id="logoutBtn" class="btn btn-secondary btn-small">Logout</button>
+        </div>
+      </div>
+
+      <!-- Game Selection -->
+      <div id="gameSelection" class="game-selection">
+        <h2 class="section-title">Choose Your Game</h2>
+        <div class="games-grid">
+          <div class="game-card" data-game="blackjack">
+            <div class="game-icon">🃏</div>
+            <h3>Blackjack</h3>
+            <p>Beat the dealer without going over 21</p>
+            <button class="btn btn-primary play-btn">Play Now</button>
+          </div>
+          <div class="game-card" data-game="coinflip">
+            <div class="game-icon">🪙</div>
+            <h3>Coinflip</h3>
+            <p>Heads or tails? Double your bet!</p>
+            <button class="btn btn-primary play-btn">Play Now</button>
+          </div>
+          <div class="game-card" data-game="roulette">
+            <div class="game-icon">🎲</div>
+            <h3>Roulette</h3>
+            <p>Spin the wheel and test your luck</p>
+            <button class="btn btn-primary play-btn">Play Now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Containers -->
+      <div id="gameContainer" class="game-container hidden">
+        <button id="backToLobbyBtn" class="back-btn">
+          <i class="fas fa-arrow-left"></i> Back to Lobby
+        </button>
+        <div id="blackjackGame" class="game-view hidden"></div>
+        <div id="coinflipGame" class="game-view hidden"></div>
+        <div id="rouletteGame" class="game-view hidden"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>©2025 Gary Yong · Built with love ❤️</p>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+  <script src="casino.js"></script>
+  <link rel="stylesheet" href="games/games.css">
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="games/blackjack.js"></script>
+  <script src="games/coinflip-casino.js"></script>
+  <script src="games/roulette-casino.js"></script>
+</body>
+</html>
+

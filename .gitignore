@@ -1,2 +1,5 @@
 node_modules
 ask-gary-backend/.env
+casino-users.json
+*.log
+logs/

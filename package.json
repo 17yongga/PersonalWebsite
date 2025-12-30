@@ -1,7 +1,8 @@
 {
   "dependencies": {
-    "express": "^4.21.2",
-    "socket.io": "^4.8.1"
+    "bcrypt": "^6.0.0",
+    "express": "^4.22.1",
+    "socket.io": "^4.8.3"
   },
   "name": "personalwebsite",
   "version": "1.0.0",
