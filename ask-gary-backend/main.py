@@ -112,8 +112,11 @@ def chat(req: ChatRequest):
         "role": "user",
         "content": (
             "Use only the context below to answer the question.\n\n"
-            "Make the answer easy to skim: start with a 1–2 sentence summary, "
-            "then 3–6 short bullet points. Be clear and personable.\n\n"
+            "Write your response as a natural, flowing narrative that tells a story. "
+            "Use paragraphs to connect Gary's experiences into a coherent, engaging narrative. "
+            "Avoid bullet points or lists—instead, weave the information together in a conversational, "
+            "human-like way that makes it easy and enjoyable to read. Focus on creating a narrative "
+            "that illustrates Gary's journey, experiences, and achievements.\n\n"
             f"Context:\n{context_text}\n\n"
             f"Question: {req.message}"
         ),
@@ -124,7 +127,7 @@ def chat(req: ChatRequest):
     completion = client.chat.completions.create(
         model=CHAT_MODEL,
         messages=messages,
-        temperature=0.0,
+        temperature=0.7,  # Increased for more natural, varied responses
     )
 
     answer = completion.choices[0].message.content

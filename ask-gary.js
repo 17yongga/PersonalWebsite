@@ -18,12 +18,14 @@ function generateSessionId() {
 }
 
 /**
- * Add a message to the chat window
+ * Add a message to the chat window with smooth animation
  */
 function addMessage(role, content, sources = []) {
   // create message bubble matching page styles (.chat-message .user/.bot)
   const msg = document.createElement("div");
   msg.className = `chat-message ${role === "user" ? "user" : "bot"}`;
+  msg.style.opacity = "0";
+  msg.style.transform = "translateY(10px) scale(0.95)";
 
   if (role === "user") {
     // plain text for user messages
@@ -52,20 +54,47 @@ function addMessage(role, content, sources = []) {
   }
 
   chatWindow.appendChild(msg);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
+  
+  // Trigger animation
+  requestAnimationFrame(() => {
+    msg.style.transition = "opacity 0.3s ease-out, transform 0.3s ease-out";
+    msg.style.opacity = "1";
+    msg.style.transform = "translateY(0) scale(1)";
+  });
+
+  // Smooth scroll to bottom
+  setTimeout(() => {
+    chatWindow.scrollTo({
+      top: chatWindow.scrollHeight,
+      behavior: "smooth"
+    });
+  }, 50);
 }
 
 /**
- * Show loading indicator
+ * Show loading indicator with typing animation
  */
 function showLoading() {
-  // create a bot-style loading message so the layout is consistent
   const loadingMsg = document.createElement("div");
   loadingMsg.className = "chat-message bot";
   loadingMsg.id = "loading-indicator";
-  loadingMsg.textContent = "Thinking...";
+  loadingMsg.style.opacity = "0";
+  loadingMsg.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
   chatWindow.appendChild(loadingMsg);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
+  
+  // Animate in
+  requestAnimationFrame(() => {
+    loadingMsg.style.transition = "opacity 0.3s ease-out";
+    loadingMsg.style.opacity = "1";
+  });
+  
+  // Smooth scroll
+  setTimeout(() => {
+    chatWindow.scrollTo({
+      top: chatWindow.scrollHeight,
+      behavior: "smooth"
+    });
+  }, 50);
 }
 
 /**
@@ -91,6 +120,7 @@ async function sendMessage() {
   // Add user message to chat
   addMessage("user", message);
   userInput.value = "";
+  userInput.style.height = "auto"; // Reset textarea height
   userInput.focus();
 
   // Show loading indicator
@@ -139,6 +169,12 @@ async function sendMessage() {
  */
 sendButton.addEventListener("click", sendMessage);
 
+// Auto-resize textarea
+userInput.addEventListener("input", () => {
+  userInput.style.height = "auto";
+  userInput.style.height = `${Math.min(userInput.scrollHeight, 140)}px`;
+});
+
 userInput.addEventListener("keypress", (event) => {
   if (event.key === "Enter" && !event.shiftKey && !isLoading) {
     event.preventDefault();
@@ -148,3 +184,43 @@ userInput.addEventListener("keypress", (event) => {
 
 // Focus on input on page load
 userInput.focus();
+
+// Add typing indicator styles
+const style = document.createElement("style");
+style.textContent = `
+  .typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 0;
+  }
+  
+  .typing-indicator span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    animation: typing 1.4s infinite ease-in-out;
+  }
+  
+  .typing-indicator span:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+  
+  .typing-indicator span:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+  
+  @keyframes typing {
+    0%, 80%, 100% {
+      transform: scale(0.8);
+      opacity: 0.5;
+    }
+    40% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+`;
+document.head.appendChild(style);
