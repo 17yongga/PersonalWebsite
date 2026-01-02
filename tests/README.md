@@ -127,3 +127,4 @@ For manual testing, verify the following:
 - Socket.IO tests check code structure, not actual connections
 - For full integration testing, servers should be running
 
+

@@ -198,10 +198,17 @@ class CoinflipGame {
         }
       }, 5000);
       
-      // If already connected, join game immediately
-      if (this.socket.connected && this.casino.username) {
-        this.socket.emit('joinGame', this.casino.username, this.casino.credits);
+      // Wait for connection to be established before joining
+      // If already connected, wait a bit to ensure socket is ready, then join
+      if (this.socket.connected) {
+        // Small delay to ensure socket is fully ready
+        setTimeout(() => {
+          if (this.socket && this.socket.connected && this.casino.username) {
+            this.socket.emit('joinGame', this.casino.username, this.casino.credits);
+          }
+        }, 100);
       }
+      // If not connected, the 'connect' event handler will join the game
       
     } catch (error) {
       console.error('Error connecting to coinflip server:', error);
@@ -211,6 +218,23 @@ class CoinflipGame {
 
   setupSocketListeners() {
     if (!this.socket) return;
+
+    // Remove all existing listeners to prevent duplicates
+    this.socket.removeAllListeners('connect');
+    this.socket.removeAllListeners('disconnect');
+    this.socket.removeAllListeners('connect_error');
+    this.socket.removeAllListeners('reconnect_attempt');
+    this.socket.removeAllListeners('reconnect_failed');
+    this.socket.removeAllListeners('error');
+    this.socket.removeAllListeners('playerData');
+    this.socket.removeAllListeners('availableRooms');
+    this.socket.removeAllListeners('roomCreated');
+    this.socket.removeAllListeners('joinedRoom');
+    this.socket.removeAllListeners('opponentJoined');
+    this.socket.removeAllListeners('playersUpdate');
+    this.socket.removeAllListeners('coinFlipResult');
+    this.socket.removeAllListeners('opponentLeft');
+    this.socket.removeAllListeners('leftRoom');
 
     this.socket.on('connect', () => {
       // Clear connection timeout
@@ -314,7 +338,13 @@ class CoinflipGame {
         }
         // Show bot button again for creator
         if (this.isCreator) {
-          document.getElementById('playWithBotBtn').classList.remove('hidden');
+          const botBtn = document.getElementById('playWithBotBtn');
+          if (botBtn) {
+            botBtn.classList.remove('hidden');
+            // Reset button state when opponent leaves
+            botBtn.disabled = false;
+            botBtn.textContent = 'Play with Bot';
+          }
         }
         this.resetGameUI();
       }
@@ -476,13 +506,34 @@ class CoinflipGame {
       botBtn.textContent = 'Adding Bot...';
     }
     
+    // Set a timeout to reset button if no response comes back
+    const resetTimeout = setTimeout(() => {
+      if (botBtn) {
+        botBtn.disabled = false;
+        botBtn.textContent = 'Play with Bot';
+      }
+    }, 10000); // 10 second timeout
+    
     this.socket.emit('playWithBot', { roomId: this.currentRoomId }, (response) => {
+      clearTimeout(resetTimeout);
       if (response && response.error) {
         alert(response.error);
         if (botBtn) {
           botBtn.disabled = false;
           botBtn.textContent = 'Play with Bot';
         }
+      }
+      // If successful, the button will be hidden by updatePlayersDisplay
+      // But reset it anyway in case something goes wrong
+      if (response && response.success && botBtn) {
+        // Button will be hidden when playersUpdate is received
+        // But set a fallback timeout just in case
+        setTimeout(() => {
+          if (botBtn && !botBtn.classList.contains('hidden')) {
+            botBtn.disabled = false;
+            botBtn.textContent = 'Play with Bot';
+          }
+        }, 2000);
       }
     });
   }
@@ -540,6 +591,9 @@ class CoinflipGame {
     const botBtn = document.getElementById('playWithBotBtn');
     if (this.isCreator && botBtn) {
       botBtn.classList.remove('hidden');
+      // Reset button state when entering a new room
+      botBtn.disabled = false;
+      botBtn.textContent = 'Play with Bot';
     }
     this.resetGameUI();
   }
@@ -566,6 +620,12 @@ class CoinflipGame {
     // Hide create room section and show button
     document.getElementById('betSetupSection')?.classList.add('hidden');
     document.getElementById('toggleCreateRoomBtn')?.classList.remove('hidden');
+    // Reset bot button state when leaving room
+    const botBtn = document.getElementById('playWithBotBtn');
+    if (botBtn) {
+      botBtn.disabled = false;
+      botBtn.textContent = 'Play with Bot';
+    }
     this.resetGameUI();
   }
 
@@ -584,8 +644,14 @@ class CoinflipGame {
     if (player1.name && player2.name) {
       document.getElementById('gameStatus').classList.add('hidden');
       document.getElementById('confirmationSection').classList.add('hidden');
-      // Hide bot button when a real player joins
-      document.getElementById('playWithBotBtn').classList.add('hidden');
+      // Hide bot button when a player joins (bot or real player)
+      const botBtn = document.getElementById('playWithBotBtn');
+      if (botBtn) {
+        botBtn.classList.add('hidden');
+        // Reset button state for next time
+        botBtn.disabled = false;
+        botBtn.textContent = 'Play with Bot';
+      }
     }
   }
 
@@ -635,8 +701,35 @@ class CoinflipGame {
   }
 
   destroy() {
+    // Clear connection timeout
+    if (this.connectionTimeout) {
+      clearTimeout(this.connectionTimeout);
+      this.connectionTimeout = null;
+    }
+    
+    // Remove all listeners but DON'T disconnect the shared socket
+    // The socket is shared with the casino manager and other games
     if (this.socket) {
-      this.socket.disconnect();
+      this.socket.removeAllListeners('connect');
+      this.socket.removeAllListeners('disconnect');
+      this.socket.removeAllListeners('connect_error');
+      this.socket.removeAllListeners('reconnect_attempt');
+      this.socket.removeAllListeners('reconnect_failed');
+      this.socket.removeAllListeners('error');
+      this.socket.removeAllListeners('playerData');
+      this.socket.removeAllListeners('availableRooms');
+      this.socket.removeAllListeners('roomCreated');
+      this.socket.removeAllListeners('joinedRoom');
+      this.socket.removeAllListeners('opponentJoined');
+      this.socket.removeAllListeners('playersUpdate');
+      this.socket.removeAllListeners('coinFlipResult');
+      this.socket.removeAllListeners('opponentLeft');
+      this.socket.removeAllListeners('leftRoom');
+    }
+    
+    // Leave room if in one
+    if (this.currentRoomId && this.socket && this.socket.connected) {
+      this.socket.emit('leaveRoom');
     }
   }
 }

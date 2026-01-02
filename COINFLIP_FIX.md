@@ -53,3 +53,4 @@ If connection still fails after restarting:
 3. Verify the casino page is accessing the coinflip game correctly
 4. Check firewall/antivirus isn't blocking port 3000
 
+

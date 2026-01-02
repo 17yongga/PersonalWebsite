@@ -377,8 +377,8 @@ html[data-theme="light"] .insurance-section {
 
 html[data-theme="light"] .choice-btn,
 html[data-theme="light"] .btn-choice {
-  background: rgba(15, 23, 42, 0.95);
-  border-color: rgba(148, 163, 184, 0.7);
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.5);
   color: var(--color-text);
 }
 
@@ -409,6 +409,14 @@ html[data-theme="dark"] .btn-choice {
   color: #22c55e;
 }
 
+html[data-theme="light"] .heads-btn.selected,
+html[data-theme="light"] .btn-heads.selected {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: #22c55e;
+  color: #16a34a;
+  box-shadow: 0 0 25px rgba(34, 197, 94, 0.3);
+}
+
 .tails-btn.selected,
 .btn-tails.selected {
   border-color: #38bdf8;
@@ -417,16 +425,36 @@ html[data-theme="dark"] .btn-choice {
   color: #38bdf8;
 }
 
+html[data-theme="light"] .tails-btn.selected,
+html[data-theme="light"] .btn-tails.selected {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #0284c7;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.3);
+}
+
 .btn-heads {
   border: 2px solid #22c55e;
   background: rgba(20, 83, 45, 0.9);
   color: #22c55e;
 }
 
+html[data-theme="light"] .btn-heads {
+  background: #ffffff;
+  border-color: #22c55e;
+  color: #16a34a;
+}
+
 .btn-heads:hover {
   border-color: #22c55e;
   background: rgba(20, 83, 45, 0.95);
   box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+}
+
+html[data-theme="light"] .btn-heads:hover {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: #22c55e;
+  color: #16a34a;
 }
 
 .btn-heads.selected {
@@ -436,10 +464,23 @@ html[data-theme="dark"] .btn-choice {
   color: #22c55e;
 }
 
+html[data-theme="light"] .btn-heads.selected {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: #22c55e;
+  color: #16a34a;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
 .btn-tails {
   border: 2px solid #38bdf8;
   background: rgba(30, 58, 138, 0.9);
   color: #38bdf8;
+}
+
+html[data-theme="light"] .btn-tails {
+  background: #ffffff;
+  border-color: #38bdf8;
+  color: #0284c7;
 }
 
 .btn-tails:hover {
@@ -448,11 +489,24 @@ html[data-theme="dark"] .btn-choice {
   box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
 }
 
+html[data-theme="light"] .btn-tails:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: #38bdf8;
+  color: #0284c7;
+}
+
 .btn-tails.selected {
   border-color: #38bdf8;
   background: rgba(30, 58, 138, 1);
   box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
   color: #38bdf8;
+}
+
+html[data-theme="light"] .btn-tails.selected {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #0284c7;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
 }
 
 .choice-icon {

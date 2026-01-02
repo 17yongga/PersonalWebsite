@@ -217,3 +217,4 @@ class CoinflipGame {
 
 window.CoinflipGame = CoinflipGame;
 
+

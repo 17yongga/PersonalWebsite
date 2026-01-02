@@ -209,3 +209,4 @@ Use this checklist to manually verify all bug fixes and functionality.
 - Test with different credit amounts
 - Test with different screen sizes
 
+

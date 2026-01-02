@@ -115,10 +115,17 @@ class RouletteGame {
     
     this.setupSocketListeners();
     
-    // Join casino if already connected
-    if (this.socket.connected && this.casino.username) {
-      this.socket.emit('joinCasino', { username: this.casino.username });
+    // Wait for connection to be established before joining
+    // If already connected, wait a bit to ensure socket is ready, then join
+    if (this.socket.connected) {
+      // Small delay to ensure socket is fully ready
+      setTimeout(() => {
+        if (this.socket && this.socket.connected && this.casino.username) {
+          this.socket.emit('joinCasino', { username: this.casino.username });
+        }
+      }, 100);
     }
+    // If not connected, the 'connect' event handler will join the casino
   }
 
   createWheel() {
@@ -137,6 +144,20 @@ class RouletteGame {
   }
 
   setupSocketListeners() {
+    if (!this.socket) return;
+
+    // Remove all existing listeners to prevent duplicates
+    this.socket.removeAllListeners('connect');
+    this.socket.removeAllListeners('disconnect');
+    this.socket.removeAllListeners('connect_error');
+    this.socket.removeAllListeners('error');
+    this.socket.removeAllListeners('playerData');
+    this.socket.removeAllListeners('rouletteState');
+    this.socket.removeAllListeners('rouletteBetsUpdate');
+    this.socket.removeAllListeners('rouletteSpinStart');
+    this.socket.removeAllListeners('rouletteSpinResult');
+    this.socket.removeAllListeners('nextSpinTime');
+
     this.socket.on('connect', () => {
       if (this.casino.username) {
         this.socket.emit('joinCasino', { username: this.casino.username });
@@ -548,8 +569,24 @@ class RouletteGame {
       this.timerInterval = null;
     }
     
+    // Remove all listeners but DON'T disconnect the shared socket
+    // The socket is shared with the casino manager and other games
     if (this.socket) {
-      this.socket.disconnect();
+      this.socket.removeAllListeners('connect');
+      this.socket.removeAllListeners('disconnect');
+      this.socket.removeAllListeners('connect_error');
+      this.socket.removeAllListeners('error');
+      this.socket.removeAllListeners('playerData');
+      this.socket.removeAllListeners('rouletteState');
+      this.socket.removeAllListeners('rouletteBetsUpdate');
+      this.socket.removeAllListeners('rouletteSpinStart');
+      this.socket.removeAllListeners('rouletteSpinResult');
+      this.socket.removeAllListeners('nextSpinTime');
+    }
+    
+    // Clear any pending bet
+    if (this.currentBet && this.socket && this.socket.connected) {
+      this.socket.emit('clearRouletteBet');
     }
   }
 }
