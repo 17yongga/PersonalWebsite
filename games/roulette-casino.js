@@ -29,6 +29,14 @@ class RouletteGame {
               <div id="winningNumber" class="winning-number"></div>
               <div id="nextSpinTimer" class="next-spin-timer"></div>
             </div>
+
+            <!-- History Section -->
+            <div class="roulette-history-section">
+              <h3>Recent Results (Last 50)</h3>
+              <div id="rouletteHistory" class="roulette-history">
+                <p class="no-history">No history yet</p>
+              </div>
+            </div>
           </div>
 
           <div class="betting-section-roulette">
@@ -66,14 +74,6 @@ class RouletteGame {
                 <p class="no-bets">No bets placed yet</p>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- History Section -->
-        <div class="roulette-history-section">
-          <h3>Recent Results (Last 50)</h3>
-          <div id="rouletteHistory" class="roulette-history">
-            <p class="no-history">No history yet</p>
           </div>
         </div>
       </div>

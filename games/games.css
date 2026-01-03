@@ -625,6 +625,9 @@ html[data-theme="light"] .btn-tails.selected {
 .roulette-display-container,
 .roulette-wheel-section {
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 /* Digital Roulette Display */
@@ -1325,7 +1328,7 @@ html[data-theme="light"] .bet-item {
 
 /* Roulette History Section */
 .roulette-history-section {
-  margin-top: 2rem;
+  margin-top: 0;
   background: rgba(15, 23, 42, 0.5);
   padding: 2rem;
   border-radius: 15px;
@@ -2050,7 +2053,7 @@ html[data-theme="light"] .bet-input-group input[type="number"] {
   }
 
   .roulette-history-section {
-    margin-top: 1.5rem;
+    margin-top: 0;
     padding: 1.5rem 1.25rem;
   }
 
@@ -2579,7 +2582,7 @@ html[data-theme="light"] .bet-input-group input[type="number"] {
   }
 
   .roulette-history-section {
-    margin-top: clamp(1rem, 3vw, 1.5rem);
+    margin-top: 0;
     padding: clamp(1rem, 3vw, 1.5rem) clamp(0.75rem, 2vw, 1rem);
     border-radius: 12px;
   }
