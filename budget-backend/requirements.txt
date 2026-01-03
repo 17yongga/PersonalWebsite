@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+openai
+python-dotenv
+pydantic
+sqlalchemy
+aiosqlite
+python-multipart
+pillow
+pandas
+numpy
+aiofiles
+aiosmtplib
+email-validator
+

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Assistant - AI-Powered Personal Finance</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="budget.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <img src="img/logo-dark.png" alt="GY logo" class="logo-mark logo-dark">
+                <img src="img/logo-light.png" alt="GY logo" class="logo-mark logo-light">
+            </a>
+            <nav class="nav nav-desktop">
+                <a href="index.html">Home</a>
+                <a href="projects.html">Projects</a>
+                <a href="experience.html">Experience</a>
+                <a href="about.html">About</a>
+                <a href="budget.html" class="active">Budget</a>
+            </nav>
+            <div class="header-actions">
+                <button id="theme-toggle" class="btn btn-ghost theme-toggle" aria-label="Toggle theme">☀️</button>
+                <button class="icon-button mobile-menu-toggle" aria-label="Toggle navigation">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+        </div>
+        <nav class="nav-mobile" aria-label="Mobile navigation">
+            <div class="nav-mobile-inner">
+                <a href="index.html">Home</a>
+                <a href="projects.html">Projects</a>
+                <a href="experience.html">Experience</a>
+                <a href="about.html">About</a>
+                <a href="budget.html" class="active">Budget</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="budget-main">
+        <!-- Setup Modal -->
+        <div id="setupModal" class="modal">
+            <div class="modal-content">
+                <h2>Welcome to Budget Assistant</h2>
+                <p>Let's get started by setting up your profile.</p>
+                <form id="setupForm">
+                    <div class="form-group">
+                        <label for="userEmail">Email Address</label>
+                        <input type="email" id="userEmail" required placeholder="your@email.com">
+                        <small>We'll send weekly budget reports to this email</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="monthlyIncome">Monthly Income</label>
+                        <input type="number" id="monthlyIncome" required min="0" step="0.01" placeholder="5000.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="currency">Currency</label>
+                        <select id="currency" required>
+                            <option value="USD">USD ($)</option>
+                            <option value="CAD">CAD (C$)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Get Started</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="container budget-container">
+            <!-- Dashboard Header -->
+            <div class="budget-header">
+                <h1>Budget Assistant</h1>
+                <div class="budget-actions">
+                    <button id="uploadReceiptBtn" class="btn btn-primary">
+                        <i class="fas fa-camera"></i> Scan Receipt
+                    </button>
+                    <button id="viewRecommendationsBtn" class="btn btn-secondary">
+                        <i class="fas fa-lightbulb"></i> Recommendations
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <div class="card-icon income">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Monthly Budget</h3>
+                        <p class="card-value" id="totalBudget">$0.00</p>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-icon spent">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Spent This Month</h3>
+                        <p class="card-value" id="totalSpent">$0.00</p>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-icon remaining">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Remaining</h3>
+                        <p class="card-value" id="remainingBudget">$0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <div class="chart-card">
+                    <h2>Spending by Category</h2>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h2>Budget vs Spending</h2>
+                    <canvas id="budgetChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div class="category-section">
+                <h2>Budget Breakdown</h2>
+                <div id="categoryList" class="category-list">
+                    <!-- Categories will be populated here -->
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="transactions-section">
+                <div class="section-header">
+                    <h2>Recent Transactions</h2>
+                    <button id="addTransactionBtn" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-plus"></i> Add Manual
+                    </button>
+                </div>
+                <div id="transactionsList" class="transactions-list">
+                    <!-- Transactions will be populated here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Receipt Upload Modal -->
+    <div id="receiptModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Upload Receipt</h2>
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Drag and drop your receipt here or click to browse</p>
+                <input type="file" id="receiptFile" accept="image/*" capture="environment">
+            </div>
+            <div id="uploadPreview" class="upload-preview" style="display: none;">
+                <img id="previewImage" src="" alt="Receipt preview">
+                <button id="processReceiptBtn" class="btn btn-primary">Process Receipt</button>
+            </div>
+            <div id="uploadProgress" class="upload-progress" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <p>Processing receipt...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add Transaction</h2>
+            <form id="transactionForm">
+                <div class="form-group">
+                    <label for="txnAmount">Amount</label>
+                    <input type="number" id="txnAmount" required min="0" step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="txnMerchant">Merchant</label>
+                    <input type="text" id="txnMerchant" placeholder="Store name">
+                </div>
+                <div class="form-group">
+                    <label for="txnCategory">Category</label>
+                    <select id="txnCategory" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="txnDescription">Description</label>
+                    <textarea id="txnDescription" rows="3" placeholder="Optional description"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Add Transaction</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recommendations Modal -->
+    <div id="recommendationsModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close">&times;</span>
+            <h2>Budget Recommendations</h2>
+            <div id="recommendationsContent">
+                <p>Loading recommendations...</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>©2025 Gary Yong · Built with love ❤️.</p>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+    <script src="budget.js"></script>
+</body>
+</html>
+
