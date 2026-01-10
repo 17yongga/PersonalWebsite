@@ -5,6 +5,25 @@ const path = require("path");
 const fs = require("fs").promises;
 const bcrypt = require("bcrypt");
 
+// CS2 Betting API client (optional - only load if module exists)
+let cs2ApiClient = null;
+try {
+  cs2ApiClient = require("./cs2-api-client");
+  console.log("CS2 API client loaded successfully");
+} catch (error) {
+  console.warn("CS2 API client not available:", error.message);
+  console.warn("CS2 betting features will be limited without API client");
+}
+
+// Scheduled tasks for CS2 betting (using node-cron if available)
+let cron = null;
+try {
+  cron = require("node-cron");
+  console.log("node-cron loaded successfully for scheduled tasks");
+} catch (error) {
+  console.warn("node-cron not available. Scheduled tasks will use setInterval instead");
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -96,6 +115,50 @@ let rouletteState = {
 // Room data: { roomId: { creatorId, betAmount, creatorChoice, players: [socketId1, socketId2], confirmed: false, gameState: 'waiting'|'confirmed'|'flipping'|'finished', coinResult: null, botId: string } }
 const coinflipRooms = {};
 let coinflipRoomCounter = 1;
+
+// ========== CS2 BETTING STATE ==========
+// CS2 betting data file path
+const CS2_BETTING_FILE = path.join(__dirname, "cs2-betting-data.json");
+
+// CS2 betting state: { events: {}, bets: {}, lastApiSync: null }
+let cs2BettingState = {
+  events: {},  // { eventId: { id, teams, startTime, status, odds, ... } }
+  bets: {},    // { betId: { id, userId, matchId, selection, amount, odds, status, ... } }
+  lastApiSync: null
+};
+
+// Load CS2 betting data from file
+async function loadCS2BettingData() {
+  try {
+    const data = await fs.readFile(CS2_BETTING_FILE, "utf8");
+    cs2BettingState = JSON.parse(data);
+    console.log(`Loaded CS2 betting data: ${Object.keys(cs2BettingState.events).length} events, ${Object.keys(cs2BettingState.bets).length} bets`);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      // File doesn't exist, create empty state
+      await saveCS2BettingData();
+      console.log("Created new CS2 betting data file");
+    } else {
+      console.error("Error loading CS2 betting data:", error);
+    }
+  }
+}
+
+// Save CS2 betting data to file
+async function saveCS2BettingData() {
+  try {
+    await fs.writeFile(CS2_BETTING_FILE, JSON.stringify(cs2BettingState, null, 2), "utf8");
+  } catch (error) {
+    console.error("Error saving CS2 betting data:", error);
+  }
+}
+
+// Initialize CS2 betting data on startup
+loadCS2BettingData().catch(err => {
+  console.error("Error initializing CS2 betting data:", err);
+});
+
+// ========== END CS2 BETTING STATE ==========
 
 // Roulette numbers: 0-14, 0=green, 1-14 alternating red/black
 const rouletteNumbers = [
@@ -1045,10 +1108,787 @@ function emitAvailableCoinflipRooms(targetSocket = null) {
 // Start roulette timer
 startRouletteTimer();
 
+// ========== CS2 BETTING REST API ENDPOINTS ==========
+
+// GET /api/cs2/events - Get all CS2 events/matches
+app.get("/api/cs2/events", async (req, res) => {
+  try {
+    // Return events from in-memory state
+    const allEvents = Object.values(cs2BettingState.events);
+    console.log(`[CS2 API] Total events in state: ${allEvents.length}`);
+    
+    // Deduplicate by fixtureId (safety check)
+    const seenIds = new Set();
+    const uniqueEvents = allEvents.filter(event => {
+      const id = event.fixtureId || event.id;
+      if (seenIds.has(id)) {
+        return false;
+      }
+      seenIds.add(id);
+      return true;
+    });
+    
+    const eventsArray = uniqueEvents.filter(event => {
+      // Only return upcoming or live matches (not finished)
+      const status = event.status || 'scheduled';
+      const isActive = status === 'scheduled' || status === 'live';
+      
+      if (!isActive) {
+        console.log(`[CS2 API] Filtering out event ${event.id} with status: ${status}`);
+      }
+      
+      return isActive;
+    });
+    
+    // Sort chronologically (next upcoming match first - earliest scheduled time)
+    eventsArray.sort((a, b) => {
+      const timeA = new Date(a.commenceTime || a.startTime || 0).getTime();
+      const timeB = new Date(b.commenceTime || b.startTime || 0).getTime();
+      return timeA - timeB; // Ascending: earliest first (next match to happen at the top)
+    });
+    
+    console.log(`[CS2 API] Returning ${eventsArray.length} active events (${allEvents.length - uniqueEvents.length} duplicates removed)`);
+    
+    // Log first event structure for debugging
+    if (eventsArray.length > 0) {
+      const firstEvent = eventsArray[0];
+      console.log(`[CS2 API] Sample event structure:`, JSON.stringify({
+        id: firstEvent.id,
+        homeTeam: firstEvent.homeTeam,
+        awayTeam: firstEvent.awayTeam,
+        commenceTime: firstEvent.commenceTime,
+        status: firstEvent.status,
+        hasOdds: !!firstEvent.odds,
+        odds: firstEvent.odds
+      }, null, 2));
+    }
+    
+    res.json({
+      success: true,
+      events: eventsArray,
+      count: eventsArray.length,
+      lastSync: cs2BettingState.lastApiSync
+    });
+  } catch (error) {
+    console.error("Error fetching CS2 events:", error);
+    res.status(500).json({ success: false, error: "Failed to fetch events" });
+  }
+});
+
+// GET /api/cs2/events/:eventId - Get specific event details
+app.get("/api/cs2/events/:eventId", async (req, res) => {
+  try {
+    const eventId = req.params.eventId;
+    let event = cs2BettingState.events[eventId];
+    
+    if (!event) {
+      return res.status(404).json({ success: false, error: "Event not found" });
+    }
+    
+    // If odds are not available, try to fetch them from API
+    if ((!event.odds || !event.odds.team1) && cs2ApiClient && event.hasOdds !== false) {
+      try {
+        console.log(`Fetching odds for event ${eventId} from API...`);
+        const oddsData = await cs2ApiClient.fetchMatchOdds(eventId);
+        if (oddsData && oddsData.odds) {
+          // Update event with fresh odds
+          event.odds = oddsData.odds;
+          event.hasOdds = true;
+          cs2BettingState.events[eventId] = event;
+          await saveCS2BettingData();
+        }
+      } catch (error) {
+        console.error(`Error fetching odds for event ${eventId}:`, error.message);
+        // Continue with existing event data even if odds fetch fails
+      }
+    }
+    
+    res.json({ success: true, event });
+  } catch (error) {
+    console.error("Error fetching CS2 event:", error);
+    res.status(500).json({ success: false, error: "Failed to fetch event" });
+  }
+});
+
+// GET /api/cs2/events/:eventId/odds - Fetch odds for a specific event (on-demand)
+app.get("/api/cs2/events/:eventId/odds", async (req, res) => {
+  try {
+    const eventId = req.params.eventId;
+    let event = cs2BettingState.events[eventId];
+    
+    if (!event) {
+      return res.status(404).json({ success: false, error: "Event not found" });
+    }
+    
+    // If odds are not available, try to fetch them from API
+    if ((!event.odds || !event.odds.team1 || !event.odds.team2) && cs2ApiClient && event.hasOdds !== false) {
+      try {
+        console.log(`[CS2 API] Fetching odds for event ${eventId} from API...`);
+        const oddsData = await cs2ApiClient.fetchMatchOdds(eventId);
+        if (oddsData && oddsData.odds) {
+          // Update event with fresh odds
+          event.odds = oddsData.odds;
+          event.hasOdds = true;
+          cs2BettingState.events[eventId] = event;
+          await saveCS2BettingData();
+          console.log(`[CS2 API] Successfully fetched and updated odds for event ${eventId}:`, event.odds);
+        } else {
+          console.warn(`[CS2 API] No odds data returned from API for event ${eventId}`);
+        }
+      } catch (error) {
+        console.error(`[CS2 API] Error fetching odds for event ${eventId}:`, error.message);
+        // Continue with existing event data even if odds fetch fails
+      }
+    }
+    
+    res.json({ success: true, event });
+  } catch (error) {
+    console.error("Error fetching CS2 event odds:", error);
+    res.status(500).json({ success: false, error: "Failed to fetch event odds" });
+  }
+});
+
+// GET /api/cs2/bets - Get bets for a session/user
+app.get("/api/cs2/bets", async (req, res) => {
+  try {
+    const userId = req.query.userId || req.query.sessionId;
+    
+    if (!userId) {
+      return res.status(400).json({ success: false, error: "userId or sessionId required" });
+    }
+    
+    // Filter bets by userId
+    const userBets = Object.values(cs2BettingState.bets).filter(bet => bet.userId === userId);
+    
+    res.json({
+      success: true,
+      bets: userBets,
+      count: userBets.length
+    });
+  } catch (error) {
+    console.error("Error fetching CS2 bets:", error);
+    res.status(500).json({ success: false, error: "Failed to fetch bets" });
+  }
+});
+
+// GET /api/cs2/balance - Get credit balance for a session/user
+app.get("/api/cs2/balance", async (req, res) => {
+  try {
+    const userId = req.query.userId || req.query.sessionId;
+    
+    if (!userId) {
+      return res.status(400).json({ success: false, error: "userId or sessionId required" });
+    }
+    
+    // Use existing casino user credits (shared with casino games)
+    const user = users[userId];
+    if (user) {
+      res.json({ success: true, balance: user.credits || 0 });
+    } else {
+      // If user doesn't exist, return initial credits (they'll be created on first bet)
+      res.json({ success: true, balance: INITIAL_CREDITS });
+    }
+  } catch (error) {
+    console.error("Error fetching CS2 balance:", error);
+    res.status(500).json({ success: false, error: "Failed to fetch balance" });
+  }
+});
+
+// POST /api/cs2/bets - Place a new bet
+app.post("/api/cs2/bets", async (req, res) => {
+  try {
+    const { userId, eventId, selection, amount } = req.body;
+    
+    // Validation
+    if (!userId || !eventId || !selection || !amount) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Missing required fields: userId, eventId, selection, amount" 
+      });
+    }
+    
+    if (typeof amount !== 'number' || amount < 1) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Invalid bet amount. Must be a number >= 1" 
+      });
+    }
+    
+    // Check if event exists and is open for betting
+    const event = cs2BettingState.events[eventId];
+    if (!event) {
+      return res.status(404).json({ success: false, error: "Event not found" });
+    }
+    
+    if (event.status !== 'scheduled') {
+      return res.status(400).json({ 
+        success: false, 
+        error: `Cannot place bet on event with status: ${event.status}` 
+      });
+    }
+    
+    // Validate selection (must be team1, team2, or draw)
+    if (!['team1', 'team2', 'draw'].includes(selection)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Invalid selection. Must be 'team1', 'team2', or 'draw'" 
+      });
+    }
+    
+    // Get user balance (use existing casino user system)
+    let user = users[userId];
+    if (!user) {
+      // Create new user with initial credits
+      user = {
+        username: userId,
+        credits: INITIAL_CREDITS,
+        created: new Date().toISOString()
+      };
+      users[userId] = user;
+      await saveUsers(users);
+    }
+    
+    // Check sufficient credits
+    if (user.credits < amount) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Insufficient credits", 
+        balance: user.credits 
+      });
+    }
+    
+    // Get odds for the selection
+    const odds = event.odds && event.odds[selection];
+    if (!odds || odds <= 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: `Odds not available for selection: ${selection}` 
+      });
+    }
+    
+    // Deduct credits
+    user.credits -= amount;
+    await saveUserBalance(userId, user.credits);
+    
+    // Create bet record
+    const betId = `bet_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const bet = {
+      id: betId,
+      userId: userId,
+      eventId: eventId,
+      selection: selection,
+      amount: amount,
+      odds: odds,
+      potentialPayout: amount * odds,
+      status: 'pending',
+      placedAt: new Date().toISOString(),
+      settledAt: null
+    };
+    
+    cs2BettingState.bets[betId] = bet;
+    await saveCS2BettingData();
+    
+    res.json({
+      success: true,
+      bet: bet,
+      newBalance: user.credits
+    });
+  } catch (error) {
+    console.error("Error placing CS2 bet:", error);
+    res.status(500).json({ success: false, error: "Failed to place bet" });
+  }
+});
+
+// Sync CS2 events/odds from API (used by scheduled tasks and manual sync)
+async function syncCS2Events() {
+  if (!cs2ApiClient) {
+    console.warn("CS2 API client not available, skipping sync");
+    return;
+  }
+  
+  try {
+    console.log("Syncing CS2 events from API...");
+    
+    // Fetch upcoming matches
+    const matches = await cs2ApiClient.fetchUpcomingMatches({ limit: 50 });
+    
+    // Deduplicate matches by fixtureId (in case API returns duplicates)
+    const uniqueMatches = [];
+    const seenIds = new Set();
+    
+    for (const match of matches) {
+      const eventId = match.fixtureId || match.id;
+      if (!eventId || seenIds.has(eventId)) {
+        if (seenIds.has(eventId)) {
+          console.log(`[CS2 Sync] Skipping duplicate match: ${eventId}`);
+        }
+        continue;
+      }
+      seenIds.add(eventId);
+      uniqueMatches.push(match);
+    }
+    
+    console.log(`[CS2 Sync] Processing ${uniqueMatches.length} unique matches (${matches.length - uniqueMatches.length} duplicates removed)`);
+    
+    // Update events in state
+    let updatedCount = 0;
+    let newCount = 0;
+    const oddsFetchPromises = []; // Batch odds fetching
+    
+    for (const match of uniqueMatches) {
+      // Use fixtureId as the key since that's what OddsPapi uses
+      const eventId = match.fixtureId || match.id;
+      if (!eventId) {
+        console.warn(`[CS2 Sync] Skipping match without ID:`, match);
+        continue;
+      }
+      
+      const existingEvent = cs2BettingState.events[eventId];
+      
+      // Determine status based on start time and API status
+      const commenceTime = match.commenceTime || match.startTime;
+      const startTimeObj = commenceTime ? new Date(commenceTime) : null;
+      const now = new Date();
+      
+      let finalStatus = match.status;
+      let finalCompleted = match.completed;
+      
+      // Override status if event is in the future (should be scheduled)
+      if (startTimeObj && startTimeObj > now) {
+        finalStatus = 'scheduled';
+        finalCompleted = false;
+      } else if (finalStatus === 'finished' || finalCompleted === true) {
+        // Keep finished status if explicitly set
+        finalStatus = 'finished';
+        finalCompleted = true;
+      } else if (match.statusId === 1 || finalStatus === 'live') {
+        finalStatus = 'live';
+        finalCompleted = false;
+      } else if (!finalStatus) {
+        // Default to scheduled if no status provided
+        finalStatus = 'scheduled';
+        finalCompleted = false;
+      }
+      
+      // Use existing odds if available, otherwise initialize as null
+      const existingOdds = existingEvent?.odds || match.odds || { team1: null, team2: null, draw: null };
+      const needsOdds = (!existingOdds.team1 || !existingOdds.team2) && 
+                        (finalStatus === 'scheduled' || finalStatus === 'live') &&
+                        match.hasOdds !== false &&
+                        cs2ApiClient;
+      
+      if (needsOdds && oddsFetchPromises.length < 5) {
+        // Queue odds fetch (limit to 5 to respect rate limits - will process sequentially)
+        oddsFetchPromises.push({ eventId, status: finalStatus });
+      }
+      
+      // Map to internal event format (handles both old and new API formats)
+      cs2BettingState.events[eventId] = {
+        id: eventId, // Use fixtureId as the primary ID
+        fixtureId: eventId,
+        sportId: match.sportId,
+        sportName: match.sportName || match.sportTitle || match.sportKey,
+        sportKey: match.sportKey || match.sportName,
+        sportTitle: match.sportTitle || match.sportName,
+        tournamentId: match.tournamentId,
+        tournamentName: match.tournamentName,
+        commenceTime: commenceTime,
+        startTime: match.startTime || commenceTime,
+        homeTeam: match.homeTeam || match.participant1Name || 'Team 1',
+        awayTeam: match.awayTeam || match.participant2Name || 'Team 2',
+        participant1Name: match.participant1Name || match.homeTeam || 'Team 1',
+        participant2Name: match.participant2Name || match.awayTeam || 'Team 2',
+        odds: existingOdds,
+        status: finalStatus,
+        statusId: match.statusId || (finalStatus === 'live' ? 1 : (finalStatus === 'finished' ? 2 : 0)),
+        completed: finalCompleted,
+        hasOdds: match.hasOdds !== false,
+        lastUpdate: match.lastUpdate || match.updatedAt || new Date().toISOString()
+      };
+      
+      // Debug: Log first new event structure
+      if (!existingEvent && newCount === 0) {
+        console.log(`[CS2 Sync] First new event structure:`, JSON.stringify(cs2BettingState.events[eventId], null, 2));
+      }
+      
+      if (existingEvent) {
+        updatedCount++;
+      } else {
+        newCount++;
+      }
+    }
+    
+    // Fetch odds sequentially with delays to respect rate limits (500ms cooldown per OddsPapi docs)
+    if (oddsFetchPromises.length > 0) {
+      console.log(`[CS2 Sync] Fetching odds for ${oddsFetchPromises.length} matches sequentially...`);
+      
+      for (let i = 0; i < oddsFetchPromises.length; i++) {
+        const { eventId } = oddsFetchPromises[i];
+        
+        try {
+          // Respect rate limit: 500ms cooldown between requests
+          if (i > 0) {
+            await new Promise(resolve => setTimeout(resolve, 600)); // 600ms delay (500ms + buffer)
+          }
+          
+          console.log(`[CS2 Sync] Fetching odds for event ${eventId} (${i + 1}/${oddsFetchPromises.length})...`);
+          const oddsData = await cs2ApiClient.fetchMatchOdds(eventId);
+          
+          if (oddsData && oddsData.odds && cs2BettingState.events[eventId]) {
+            cs2BettingState.events[eventId].odds = oddsData.odds;
+            cs2BettingState.events[eventId].hasOdds = true;
+            console.log(`[CS2 Sync] ✓ Successfully updated odds for event ${eventId}:`, oddsData.odds);
+          } else {
+            console.log(`[CS2 Sync] ✗ No odds available for event ${eventId}`);
+            if (cs2BettingState.events[eventId]) {
+              cs2BettingState.events[eventId].hasOdds = false;
+            }
+          }
+        } catch (error) {
+          console.error(`[CS2 Sync] Error fetching odds for event ${eventId}:`, error.message);
+          if (cs2BettingState.events[eventId]) {
+            cs2BettingState.events[eventId].hasOdds = false;
+          }
+        }
+      }
+    }
+    
+    cs2BettingState.lastApiSync = new Date().toISOString();
+    await saveCS2BettingData();
+    
+    console.log(`CS2 sync complete: ${newCount} new, ${updatedCount} updated`);
+    return { newCount, updatedCount, total: matches.length };
+  } catch (error) {
+    console.error("Error syncing CS2 events:", error);
+    return null;
+  }
+}
+
+// Settle CS2 bets based on match results
+async function settleCS2Bets() {
+  if (!cs2ApiClient) {
+    console.warn("CS2 API client not available, skipping settlement");
+    return;
+  }
+  
+  try {
+    console.log("Settling CS2 bets...");
+    
+    // Get all pending bets
+    const pendingBets = Object.values(cs2BettingState.bets).filter(bet => bet.status === 'pending');
+    
+    if (pendingBets.length === 0) {
+      console.log("No pending bets to settle");
+      return { settled: 0, won: 0, lost: 0 };
+    }
+    
+    let settledCount = 0;
+    let wonCount = 0;
+    let lostCount = 0;
+    
+    // Group bets by eventId to minimize API calls
+    const betsByEvent = {};
+    for (const bet of pendingBets) {
+      if (!betsByEvent[bet.eventId]) {
+        betsByEvent[bet.eventId] = [];
+      }
+      betsByEvent[bet.eventId].push(bet);
+    }
+    
+    // Check each event for results
+    for (const eventId of Object.keys(betsByEvent)) {
+      const event = cs2BettingState.events[eventId];
+      
+      if (!event) {
+        console.warn(`Event ${eventId} not found in state, skipping bets`);
+        continue;
+      }
+      
+      // If event is not finished, check API for results
+      if (event.status !== 'finished') {
+        try {
+          const result = await cs2ApiClient.fetchMatchResults(eventId);
+          if (result && result.completed) {
+            // Update event status
+            event.status = 'finished';
+            event.statusId = result.statusId;
+            event.completed = true;
+            event.result = {
+              winner: result.winner,
+              participant1Score: result.participant1Score || result.homeScore,
+              participant2Score: result.participant2Score || result.awayScore,
+              homeScore: result.homeScore || result.participant1Score,
+              awayScore: result.awayScore || result.participant2Score
+            };
+            cs2BettingState.events[eventId] = event;
+          } else {
+            // Event not finished yet, skip
+            continue;
+          }
+        } catch (error) {
+          console.error(`Error fetching results for event ${eventId}:`, error.message);
+          // Continue with next event
+          continue;
+        }
+      }
+      
+      // Settle bets for this event
+      const eventBets = betsByEvent[eventId];
+      for (const bet of eventBets) {
+        if (bet.status !== 'pending') {
+          continue;
+        }
+        
+        const winner = event.result?.winner;
+        
+        if (!winner) {
+          // No result available, check if event was cancelled
+          if (event.status === 'cancelled') {
+            // Void bet - return stake
+            bet.status = 'void';
+            bet.result = 'void';
+            
+            // Return credits to user
+            const user = users[bet.userId];
+            if (user) {
+              user.credits += bet.amount;
+              await saveUserBalance(bet.userId, user.credits);
+            }
+          }
+          // Otherwise, keep as pending (event might be in progress)
+          continue;
+        }
+        
+        // Determine if bet won
+        const betWon = (bet.selection === 'team1' && winner === 'team1') ||
+                       (bet.selection === 'team2' && winner === 'team2') ||
+                       (bet.selection === 'draw' && winner === 'draw');
+        
+        if (betWon) {
+          // Bet won - pay out
+          bet.status = 'won';
+          bet.result = 'win';
+          const payout = bet.potentialPayout;
+          
+          const user = users[bet.userId];
+          if (user) {
+            user.credits += payout;
+            await saveUserBalance(bet.userId, user.credits);
+          }
+          
+          wonCount++;
+        } else {
+          // Bet lost
+          bet.status = 'lost';
+          bet.result = 'loss';
+          lostCount++;
+        }
+        
+        bet.settledAt = new Date().toISOString();
+        cs2BettingState.bets[bet.id] = bet;
+        settledCount++;
+      }
+    }
+    
+    if (settledCount > 0) {
+      await saveCS2BettingData();
+      console.log(`Settled ${settledCount} bets: ${wonCount} won, ${lostCount} lost`);
+    }
+    
+    return { settled: settledCount, won: wonCount, lost: lostCount };
+  } catch (error) {
+    console.error("Error settling CS2 bets:", error);
+    return null;
+  }
+}
+
+// GET /api/cs2/admin/sports - List available sports (for debugging)
+app.get("/api/cs2/admin/sports", async (req, res) => {
+  try {
+    if (!cs2ApiClient) {
+      return res.status(503).json({ 
+        success: false, 
+        error: "CS2 API client not available" 
+      });
+    }
+
+    const relatedSports = await cs2ApiClient.listRelatedSports();
+    
+    res.json({
+      success: true,
+      sports: relatedSports,
+      count: relatedSports.length,
+      currentSportId: cs2ApiClient.findCS2SportId ? await cs2ApiClient.findCS2SportId() : null
+    });
+  } catch (error) {
+    console.error("Error listing sports:", error);
+    res.status(500).json({ success: false, error: "Failed to list sports" });
+  }
+});
+
+// POST /api/cs2/admin/sync - Force refresh of events/odds from API
+app.post("/api/cs2/admin/sync", async (req, res) => {
+  try {
+    const result = await syncCS2Events();
+    if (result) {
+      res.json({
+        success: true,
+        message: `Synced ${result.total} matches`,
+        ...result,
+        lastSync: cs2BettingState.lastApiSync
+      });
+    } else {
+      res.status(503).json({ 
+        success: false, 
+        error: "Failed to sync or API client not available" 
+      });
+    }
+  } catch (error) {
+    console.error("Error in sync endpoint:", error);
+    res.status(500).json({ success: false, error: "Failed to sync data" });
+  }
+});
+
+// POST /api/cs2/admin/settle - Manually trigger bet settlement
+app.post("/api/cs2/admin/settle", async (req, res) => {
+  try {
+    const result = await settleCS2Bets();
+    if (result) {
+      res.json({
+        success: true,
+        message: `Settled ${result.settled} bets`,
+        ...result
+      });
+    } else {
+      res.status(503).json({ 
+        success: false, 
+        error: "Failed to settle bets or API client not available" 
+      });
+    }
+  } catch (error) {
+    console.error("Error in settle endpoint:", error);
+    res.status(500).json({ success: false, error: "Failed to settle bets" });
+  }
+});
+
+// ========== END CS2 BETTING REST API ENDPOINTS ==========
+
+// ========== CS2 BETTING SCHEDULED TASKS ==========
+
+// Configuration for scheduled tasks
+const CS2_SYNC_INTERVAL_MS = parseInt(process.env.CS2_SYNC_INTERVAL_MS || "1800000", 10); // 30 minutes default
+const CS2_SETTLEMENT_INTERVAL_MS = parseInt(process.env.CS2_SETTLEMENT_INTERVAL_MS || "300000", 10); // 5 minutes default
+
+let cs2SyncInterval = null;
+let cs2SettlementInterval = null;
+
+// Start scheduled tasks for CS2 betting
+function startCS2ScheduledTasks() {
+  if (!cs2ApiClient) {
+    console.log("CS2 API client not available, skipping scheduled tasks");
+    return;
+  }
+  
+  // Use node-cron if available, otherwise use setInterval
+  if (cron) {
+    // Sync events every 30 minutes (using cron syntax)
+    // "*/30 * * * *" means every 30 minutes
+    cs2SyncInterval = cron.schedule("*/30 * * * *", async () => {
+      await syncCS2Events();
+    }, {
+      scheduled: true,
+      timezone: "UTC"
+    });
+    
+    // Check for settlement every 5 minutes
+    cs2SettlementInterval = cron.schedule("*/5 * * * *", async () => {
+      await settleCS2Bets();
+    }, {
+      scheduled: true,
+      timezone: "UTC"
+    });
+    
+    console.log("CS2 scheduled tasks started using node-cron:");
+    console.log(`  - Event sync: every 30 minutes`);
+    console.log(`  - Settlement check: every 5 minutes`);
+  } else {
+    // Fallback to setInterval
+    cs2SyncInterval = setInterval(async () => {
+      await syncCS2Events();
+    }, CS2_SYNC_INTERVAL_MS);
+    
+    cs2SettlementInterval = setInterval(async () => {
+      await settleCS2Bets();
+    }, CS2_SETTLEMENT_INTERVAL_MS);
+    
+    console.log("CS2 scheduled tasks started using setInterval:");
+    console.log(`  - Event sync: every ${CS2_SYNC_INTERVAL_MS / 1000 / 60} minutes`);
+    console.log(`  - Settlement check: every ${CS2_SETTLEMENT_INTERVAL_MS / 1000 / 60} minutes`);
+  }
+  
+  // Initial sync after server starts (wait 10 seconds to let server fully initialize)
+  setTimeout(async () => {
+    console.log("Performing initial CS2 event sync...");
+    await syncCS2Events();
+  }, 10000);
+}
+
+// Stop scheduled tasks (for graceful shutdown)
+function stopCS2ScheduledTasks() {
+  if (cs2SyncInterval) {
+    if (cron && cs2SyncInterval.stop) {
+      cs2SyncInterval.stop();
+    } else if (typeof cs2SyncInterval === 'number') {
+      clearInterval(cs2SyncInterval);
+    }
+    cs2SyncInterval = null;
+  }
+  
+  if (cs2SettlementInterval) {
+    if (cron && cs2SettlementInterval.stop) {
+      cs2SettlementInterval.stop();
+    } else if (typeof cs2SettlementInterval === 'number') {
+      clearInterval(cs2SettlementInterval);
+    }
+    cs2SettlementInterval = null;
+  }
+  
+  console.log("CS2 scheduled tasks stopped");
+}
+
+// Start CS2 scheduled tasks if API client is available
+if (cs2ApiClient) {
+  startCS2ScheduledTasks();
+}
+
+// ========== END CS2 BETTING SCHEDULED TASKS ==========
+
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Casino Server running on http://localhost:${PORT}`);
   console.log(`  - Roulette game available`);
   console.log(`  - Coinflip game available`);
+  if (cs2ApiClient) {
+    console.log(`  - CS2 Betting available (REST API: /api/cs2/*)`);
+  }
+});
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  stopCS2ScheduledTasks();
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully...');
+  stopCS2ScheduledTasks();
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });
 

@@ -130,6 +130,12 @@
             <p>Spin the wheel and test your luck</p>
             <button class="btn btn-primary play-btn">Play Now</button>
           </div>
+          <div class="game-card" data-game="cs2betting">
+            <div class="game-icon">🎮</div>
+            <h3>CS2 Betting</h3>
+            <p>Bet on Counter-Strike 2 matches</p>
+            <button class="btn btn-primary play-btn">Play Now</button>
+          </div>
         </div>
       </div>
 
@@ -141,6 +147,7 @@
         <div id="blackjackGame" class="game-view hidden"></div>
         <div id="coinflipGame" class="game-view hidden"></div>
         <div id="rouletteGame" class="game-view hidden"></div>
+        <div id="cs2BettingGame" class="game-view hidden"></div>
       </div>
     </div>
   </main>
@@ -152,9 +159,14 @@
   </footer>
 
   <script>
-    // Use api.gary-yong.com for casino server (HTTPS)
-    // For local development, change to: window.CASINO_SERVER_URL = 'http://localhost:3001';
-    window.CASINO_SERVER_URL = 'https://api.gary-yong.com';
+    // Auto-detect local vs production environment
+    // For local development, use http://localhost:3001
+    // For production, use https://api.gary-yong.com
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      window.CASINO_SERVER_URL = 'http://localhost:3001';
+    } else {
+      window.CASINO_SERVER_URL = 'https://api.gary-yong.com';
+    }
   </script>
   <script src="main.js"></script>
   <script src="casino.js"></script>
@@ -163,6 +175,7 @@
   <script src="games/blackjack.js"></script>
   <script src="games/coinflip-casino.js"></script>
   <script src="games/roulette-casino.js"></script>
+  <script src="games/cs2-betting-casino.js"></script>
 </body>
 </html>
 

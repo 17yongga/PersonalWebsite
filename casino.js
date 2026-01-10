@@ -54,13 +54,23 @@ class CasinoManager {
     // Game selection
     document.querySelectorAll('.play-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('[Casino] Play button clicked');
         const gameCard = e.target.closest('.game-card');
+        console.log('[Casino] Game card found:', gameCard);
         const gameName = gameCard?.dataset.game;
+        console.log('[Casino] Game name:', gameName);
         if (gameName) {
+          console.log(`[Casino] Starting game: ${gameName}`);
           this.startGame(gameName);
+        } else {
+          console.error('[Casino] No game name found for button click');
         }
       });
     });
+    
+    console.log(`[Casino] Attached ${document.querySelectorAll('.play-btn').length} play button listeners`);
   }
 
   showLoginForm() {
@@ -274,12 +284,23 @@ class CasinoManager {
   }
 
   startGame(gameName) {
+    console.log(`[Casino] startGame called with: ${gameName}`);
     this.currentGame = gameName;
-    document.getElementById('gameSelection').classList.add('hidden');
-    document.getElementById('gameContainer').classList.remove('hidden');
+    
+    const gameSelectionEl = document.getElementById('gameSelection');
+    const gameContainerEl = document.getElementById('gameContainer');
+    
+    if (!gameSelectionEl || !gameContainerEl) {
+      console.error('[Casino] Game selection or container element not found!');
+      return;
+    }
+    
+    gameSelectionEl.classList.add('hidden');
+    gameContainerEl.classList.remove('hidden');
 
     // Clean up previous game instance
     if (window.currentGameInstance) {
+      console.log('[Casino] Cleaning up previous game instance');
       window.currentGameInstance.destroy?.();
       window.currentGameInstance = null;
     }
@@ -289,30 +310,57 @@ class CasinoManager {
       view.classList.add('hidden');
     });
 
-    // Show selected game
-    const gameView = document.getElementById(`${gameName}Game`);
+    // Show selected game (handle camelCase for cs2betting)
+    const gameViewId = gameName === 'cs2betting' ? 'cs2BettingGame' : `${gameName}Game`;
+    console.log(`[Casino] Looking for game view with ID: ${gameViewId}`);
+    const gameView = document.getElementById(gameViewId);
     if (gameView) {
+      console.log(`[Casino] Game view found, showing: ${gameViewId}`);
       gameView.classList.remove('hidden');
+    } else {
+      console.error(`[Casino] Game view not found: ${gameViewId}`);
     }
 
     // Initialize game
     setTimeout(() => {
-      switch(gameName) {
-        case 'blackjack':
-          if (window.BlackjackGame) {
-            window.currentGameInstance = new window.BlackjackGame(this);
-          }
-          break;
-        case 'coinflip':
-          if (window.CoinflipGame) {
-            window.currentGameInstance = new window.CoinflipGame(this);
-          }
-          break;
-        case 'roulette':
-          if (window.RouletteGame) {
-            window.currentGameInstance = new window.RouletteGame(this);
-          }
-          break;
+      try {
+        switch(gameName) {
+          case 'blackjack':
+            if (window.BlackjackGame) {
+              window.currentGameInstance = new window.BlackjackGame(this);
+            } else {
+              console.error(`[Casino] BlackjackGame class not found`);
+            }
+            break;
+          case 'coinflip':
+            if (window.CoinflipGame) {
+              window.currentGameInstance = new window.CoinflipGame(this);
+            } else {
+              console.error(`[Casino] CoinflipGame class not found`);
+            }
+            break;
+          case 'roulette':
+            if (window.RouletteGame) {
+              window.currentGameInstance = new window.RouletteGame(this);
+            } else {
+              console.error(`[Casino] RouletteGame class not found`);
+            }
+            break;
+          case 'cs2betting':
+            if (window.CS2BettingGame) {
+              console.log('[Casino] Initializing CS2BettingGame...');
+              window.currentGameInstance = new window.CS2BettingGame(this);
+              console.log('[Casino] CS2BettingGame initialized successfully');
+            } else {
+              console.error('[Casino] CS2BettingGame class not found! Make sure games/cs2-betting-casino.js is loaded.');
+            }
+            break;
+          default:
+            console.error(`[Casino] Unknown game: ${gameName}`);
+        }
+      } catch (error) {
+        console.error(`[Casino] Error initializing game ${gameName}:`, error);
+        alert(`Failed to load game: ${error.message}`);
       }
     }, 100);
   }
