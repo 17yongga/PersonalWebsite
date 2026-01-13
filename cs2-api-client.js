@@ -23,6 +23,8 @@ if (!ODDSPAPI_API_KEY || ODDSPAPI_API_KEY.length < 10) {
 let currentSportId = null;
 let requestCount = 0;
 const REQUEST_LIMIT_PER_MONTH = 200; // Free plan limit per OddsPapi docs
+const ENDPOINT_COOLDOWN_MS = 500; // 500ms cooldown between requests (per API docs)
+let lastRequestTime = 0; // Track last request time for rate limiting
 
 // Market IDs for OddsPapi:
 // 101 = Moneyline/1X2 (home/draw/away)
@@ -36,6 +38,16 @@ const MARKET_MONEYLINE = '101';
  */
 async function makeRequest(endpoint, params = {}) {
   try {
+    // Respect API cooldown (500ms between requests)
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    if (timeSinceLastRequest < ENDPOINT_COOLDOWN_MS) {
+      const waitTime = ENDPOINT_COOLDOWN_MS - timeSinceLastRequest;
+      console.log(`[OddsPapi] Rate limiting: waiting ${waitTime}ms before request...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    lastRequestTime = Date.now();
+
     const url = `${ODDSPAPI_BASE_URL}${endpoint}`;
     const queryParams = {
       ...params,
@@ -550,60 +562,87 @@ async function mapOddsPapiFixtureToInternal(fixture) {
   let drawOdds = null;
 
   if (fixture.bookmakerOdds && Object.keys(fixture.bookmakerOdds).length > 0) {
-    // Try multiple bookmakers to find odds (prefer first available)
+    // Try multiple bookmakers to find the most complete odds
+    // Check all bookmakers to ensure we get both team1 and team2 odds if available
+    const bookmakerNames = Object.keys(fixture.bookmakerOdds);
     const bookmakers = Object.values(fixture.bookmakerOdds);
     
-    for (const bookmaker of bookmakers) {
-      if (!bookmaker || !bookmaker.markets) continue;
+    console.log(`[OddsPapi] Found ${bookmakerNames.length} bookmaker(s): ${bookmakerNames.join(', ')}`);
+    
+    for (let i = 0; i < bookmakers.length; i++) {
+      const bookmaker = bookmakers[i];
+      const bookmakerName = bookmakerNames[i];
+      
+      if (!bookmaker || !bookmaker.markets) {
+        console.log(`[OddsPapi] Bookmaker ${bookmakerName} has no markets, skipping`);
+        continue;
+      }
       
       // Look for market 101 (Moneyline/1X2)
       const market = bookmaker.markets['101'] || bookmaker.markets[MARKET_MONEYLINE];
-      if (!market || !market.outcomes) continue;
+      if (!market || !market.outcomes) {
+        console.log(`[OddsPapi] Bookmaker ${bookmakerName} has no market 101, skipping`);
+        continue;
+      }
       
       // Extract team1 odds (outcome 101 = home)
-      if (market.outcomes['101'] && market.outcomes['101'].players) {
+      if (!team1Odds && market.outcomes['101'] && market.outcomes['101'].players) {
         const players = market.outcomes['101'].players;
         // Get first active player with price
         for (const playerId in players) {
           const player = players[playerId];
           if (player && player.active !== false && player.price) {
             team1Odds = parseFloat(player.price);
+            console.log(`[OddsPapi] Found team1 odds from ${bookmakerName}: ${team1Odds}`);
             break;
           }
         }
       }
       
       // Extract draw odds (outcome 102)
-      if (market.outcomes['102'] && market.outcomes['102'].players) {
+      if (!drawOdds && market.outcomes['102'] && market.outcomes['102'].players) {
         const players = market.outcomes['102'].players;
         for (const playerId in players) {
           const player = players[playerId];
           if (player && player.active !== false && player.price) {
             drawOdds = parseFloat(player.price);
+            console.log(`[OddsPapi] Found draw odds from ${bookmakerName}: ${drawOdds}`);
             break;
           }
         }
       }
       
       // Extract team2 odds (outcome 103 = away)
-      if (market.outcomes['103'] && market.outcomes['103'].players) {
+      if (!team2Odds && market.outcomes['103'] && market.outcomes['103'].players) {
         const players = market.outcomes['103'].players;
         for (const playerId in players) {
           const player = players[playerId];
           if (player && player.active !== false && player.price) {
             team2Odds = parseFloat(player.price);
+            console.log(`[OddsPapi] Found team2 odds from ${bookmakerName}: ${team2Odds}`);
             break;
           }
         }
       }
       
-      // If we found odds, break (don't need to check other bookmakers)
-      if (team1Odds !== null || team2Odds !== null) {
+      // If we have both team odds, we can stop (but continue if we only have one)
+      if (team1Odds !== null && team2Odds !== null) {
+        console.log(`[OddsPapi] Found complete odds from ${bookmakerName}, stopping search`);
         break;
       }
     }
     
-    console.log(`[OddsPapi] Extracted odds for fixture ${fixtureId}: team1=${team1Odds}, team2=${team2Odds}, draw=${drawOdds}`);
+    // Log final extracted odds
+    if (team1Odds !== null || team2Odds !== null) {
+      console.log(`[OddsPapi] ✓ Extracted odds for fixture ${fixtureId}: team1=${team1Odds}, team2=${team2Odds}, draw=${drawOdds}`);
+    } else {
+      console.log(`[OddsPapi] ⚠ No odds extracted from any bookmaker for fixture ${fixtureId}`);
+      // Debug: Log available markets for troubleshooting
+      if (bookmakers.length > 0 && bookmakers[0].markets) {
+        const availableMarkets = Object.keys(bookmakers[0].markets);
+        console.log(`[OddsPapi] Available markets: ${availableMarkets.join(', ')}`);
+      }
+    }
   } else {
     console.log(`[OddsPapi] No bookmakerOdds found for fixture ${fixtureId}`);
   }

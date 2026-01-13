@@ -2,9 +2,13 @@
   "dependencies": {
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
+    "cheerio": "^1.0.0",
     "express": "^4.22.1",
     "node-cron": "^3.0.3",
     "socket.io": "^4.8.3"
+  },
+  "optionalDependencies": {
+    "puppeteer": "^24.0.0"
   },
   "name": "personalwebsite",
   "version": "1.0.0",

@@ -1,5 +1,8 @@
 // Configuration
 const API_BASE_URL = "https://api.gary-yong.com"; // Change to your backend URL after deployment
+const REQUEST_TIMEOUT = 60000; // 60 seconds timeout
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000; // 2 seconds initial delay
 
 // DOM elements
 const chatWindow = document.getElementById("messages");
@@ -106,6 +109,76 @@ function removeLoading() {
 }
 
 /**
+ * Make a fetch request with timeout and retry logic
+ */
+async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    
+    // If response is not ok, check if we should retry
+    if (!response.ok) {
+      const status = response.status;
+      // Retry on 5xx server errors, but not on 4xx client errors
+      if (status >= 500 && retries > 0) {
+        throw new Error(`HTTP error! status: ${status}`);
+      }
+      // Don't retry on 4xx errors - these are client errors
+      throw new Error(`HTTP error! status: ${status}`);
+    }
+    
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    // Retry on network errors, timeouts, or 5xx server errors
+    const isNetworkError = 
+      error.name === 'AbortError' || 
+      error.message.includes('fetch') ||
+      error.message.includes('Failed to fetch') ||
+      error.message.includes('NetworkError');
+    
+    const isServerError = error.message.includes('HTTP error! status: 5');
+    
+    if ((isNetworkError || isServerError) && retries > 0) {
+      console.log(`Request failed, retrying... (${MAX_RETRIES - retries + 1}/${MAX_RETRIES})`);
+      // Exponential backoff: wait longer for each retry
+      const delay = RETRY_DELAY * Math.pow(2, MAX_RETRIES - retries);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return fetchWithRetry(url, options, retries - 1);
+    }
+    
+    throw error;
+  }
+}
+
+/**
+ * Wake up the backend by calling the health endpoint
+ */
+async function wakeUpBackend() {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for health check
+    
+    await fetch(`${API_BASE_URL}/health`, {
+      method: "GET",
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    console.log("Backend is awake");
+  } catch (error) {
+    console.warn("Health check failed (this is okay, backend may wake up on first request):", error);
+  }
+}
+
+/**
  * Send a message to the backend
  */
 async function sendMessage() {
@@ -127,7 +200,7 @@ async function sendMessage() {
   showLoading();
 
   try {
-    const response = await fetch(`${API_BASE_URL}/chat`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -137,10 +210,6 @@ async function sendMessage() {
         message: message,
       }),
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
 
     const data = await response.json();
 
@@ -181,6 +250,9 @@ userInput.addEventListener("keypress", (event) => {
     sendMessage();
   }
 });
+
+// Wake up backend on page load to prevent first-request failures
+wakeUpBackend();
 
 // Focus on input on page load
 userInput.focus();

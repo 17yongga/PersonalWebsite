@@ -2728,20 +2728,58 @@ html[data-theme="light"] .cs2-events-panel {
   background: rgba(148, 163, 184, 0.7);
 }
 
+/* Tournament Header */
+.tournament-header {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 6px;
+  padding: clamp(0.5rem, 1.3vw, 0.7rem) clamp(0.75rem, 1.8vw, 1rem);
+  margin-bottom: clamp(0.3rem, 1vw, 0.5rem);
+  margin-top: clamp(0.5rem, 1.3vw, 0.7rem);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tournament-header:first-child {
+  margin-top: 0;
+}
+
+html[data-theme="light"] .tournament-header {
+  background: rgba(51, 65, 85, 0.9);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+.tournament-icon {
+  font-size: clamp(0.9rem, 2vw, 1.05rem);
+  flex-shrink: 0;
+}
+
+.tournament-name {
+  font-size: clamp(0.85rem, 1.9vw, 1rem);
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
 /* Event Card */
 .cs2-event-card {
   background: rgba(15, 23, 42, 0.7);
-  border: 2px solid rgba(148, 163, 184, 0.4);
-  border-radius: 12px;
-  padding: clamp(1rem, 3vw, 1.5rem);
-  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 8px;
+  padding: clamp(0.6rem, 1.5vw, 0.85rem);
+  margin-bottom: clamp(0.4rem, 1.2vw, 0.6rem);
   transition: all 0.3s ease;
   position: relative;
-  overflow: hidden !important;
-  min-height: 250px !important;
+  overflow: visible !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: clamp(0.75rem, 2vw, 1rem);
+  gap: clamp(0.4rem, 1.2vw, 0.6rem);
   visibility: visible !important;
   opacity: 1 !important;
   box-sizing: border-box;
@@ -2775,6 +2813,195 @@ html[data-theme="light"] .cs2-event-card {
 .cs2-event-card.finished {
   opacity: 0.7;
   filter: grayscale(50%);
+}
+
+/* New Match Layout Styles */
+.event-match-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: clamp(0.3rem, 1vw, 0.5rem);
+  margin-bottom: clamp(0.3rem, 1vw, 0.5rem);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.match-time-status {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.5vw, 0.75rem);
+}
+
+.match-time {
+  font-size: clamp(0.8rem, 1.8vw, 0.95rem);
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.match-live-badge {
+  font-size: clamp(0.8rem, 1.8vw, 0.95rem);
+  color: #dc2626;
+  font-weight: 600;
+  padding: clamp(0.2rem, 0.8vw, 0.35rem) clamp(0.5rem, 1.2vw, 0.7rem);
+  background: rgba(220, 38, 38, 0.2);
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  border-radius: 12px;
+  animation: pulse 2s infinite;
+}
+
+.event-match-content {
+  display: grid;
+  grid-template-columns: 60% 40%;
+  gap: clamp(0.6rem, 1.5vw, 0.9rem);
+  align-items: start;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .event-match-content {
+    grid-template-columns: 1fr;
+    gap: clamp(0.75rem, 2vw, 1rem);
+    align-items: stretch;
+  }
+}
+
+.event-teams-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.4rem, 1.2vw, 0.6rem);
+  width: 100%;
+}
+
+.event-team-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.2vw, 0.7rem);
+  padding: clamp(0.25rem, 0.8vw, 0.4rem) 0;
+  width: 100%;
+}
+
+.event-team-row:first-child {
+  padding-top: 0;
+}
+
+.event-team-row .team-logo-container {
+  width: clamp(32px, 10vw, 44px);
+  height: clamp(32px, 10vw, 44px);
+  min-width: clamp(32px, 10vw, 44px);
+  min-height: clamp(32px, 10vw, 44px);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.event-team-row .team-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.event-team-row .team-name {
+  font-size: clamp(0.85rem, 1.9vw, 1rem);
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.25;
+}
+
+.event-odds-section {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.35rem, 1vw, 0.5rem);
+  width: 100%;
+}
+
+.odds-header {
+  font-size: clamp(0.75rem, 1.6vw, 0.9rem);
+  font-weight: 600;
+  color: var(--color-muted);
+  text-align: right;
+  padding-bottom: clamp(0.25rem, 0.8vw, 0.4rem);
+  margin: 0;
+  line-height: 1.2;
+}
+
+@media (max-width: 768px) {
+  .odds-header {
+    text-align: left;
+  }
+}
+
+.odds-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 6px;
+  padding: clamp(0.5rem, 1.3vw, 0.7rem);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.25rem, 0.7vw, 0.4rem);
+  text-align: right;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: fit-content;
+}
+
+@media (max-width: 768px) {
+  .odds-card {
+    text-align: left;
+  }
+}
+
+html[data-theme="light"] .odds-card {
+  background: rgba(51, 65, 85, 0.7);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+.odds-card:hover:not(.disabled) {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+}
+
+.odds-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: rgba(148, 163, 184, 0.2);
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.odds-team-name {
+  font-size: clamp(0.75rem, 1.6vw, 0.85rem);
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.2;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.odds-card .odds-value {
+  font-size: clamp(1rem, 2.3vw, 1.25rem);
+  font-weight: 700;
+  color: #a855f7;
+  line-height: 1.1;
+}
+
+html[data-theme="light"] .odds-card .odds-value {
+  color: #9333ea;
+}
+
+.odds-card:active:not(.disabled) {
+  transform: translateY(0);
 }
 
 .event-header-section {
@@ -3137,11 +3364,13 @@ html[data-theme="light"] .vs-divider {
 }
 
 .odds-btn.disabled {
-  opacity: 0.5;
+  opacity: 0.8;
   cursor: not-allowed;
-  border-color: rgba(148, 163, 184, 0.5);
-  background: rgba(148, 163, 184, 0.1);
+  border-color: rgba(148, 163, 184, 0.6);
+  background: rgba(148, 163, 184, 0.2);
   color: var(--color-muted);
+  display: inline-flex !important;
+  visibility: visible !important;
 }
 
 .odds-btn:active:not(.disabled) {
@@ -3620,6 +3849,63 @@ html[data-theme="light"] .betslip-selection {
     padding: clamp(0.875rem, 2.2vw, 1.125rem);
     margin-bottom: clamp(0.75rem, 2vw, 1rem);
     gap: clamp(0.75rem, 2vw, 1rem);
+    overflow: visible !important;
+    min-height: auto;
+  }
+
+  .event-match-content {
+    grid-template-columns: 1fr !important;
+    gap: clamp(0.875rem, 2.2vw, 1.125rem) !important;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .event-match-header {
+    margin-bottom: clamp(0.5rem, 1.5vw, 0.75rem);
+    padding-bottom: clamp(0.4rem, 1.2vw, 0.6rem);
+  }
+
+  .event-teams-list {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .event-odds-section {
+    width: 100% !important;
+    gap: clamp(0.5rem, 1.5vw, 0.75rem) !important;
+    margin-top: 0;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .odds-header {
+    text-align: left !important;
+    padding-bottom: clamp(0.25rem, 0.8vw, 0.4rem);
+    margin-bottom: 0;
+  }
+
+  .odds-card {
+    width: 100% !important;
+    padding: clamp(0.5rem, 1.3vw, 0.65rem) clamp(0.75rem, 1.8vw, 0.9rem) !important;
+    text-align: left !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: clamp(0.5rem, 1.2vw, 0.75rem) !important;
+    box-sizing: border-box !important;
+    min-height: auto !important;
+    flex-shrink: 0;
+  }
+
+  .odds-card .odds-team-name {
+    flex: 1;
+    margin: 0 !important;
+  }
+
+  .odds-card .odds-value {
+    flex-shrink: 0;
+    margin: 0 !important;
   }
 
   .event-header-section {

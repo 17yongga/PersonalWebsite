@@ -120,15 +120,19 @@
       "participant1Name": "777 eSports",
       "participant2Name": "Fut Academy",
       "odds": {
-        "team1": null,
-        "team2": null,
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
-      "hasOdds": false,
-      "lastUpdate": "2026-01-09T09:00:10.723Z"
+      "hasOdds": true,
+      "lastUpdate": "2026-01-09T09:00:10.723Z",
+      "oddsSources": [
+        "fallback"
+      ],
+      "oddsConfidence": 0.3
     },
     "id1704852967501712": {
       "id": "id1704852967501712",
@@ -146,15 +150,19 @@
       "participant1Name": "Japczany",
       "participant2Name": "Masonic",
       "odds": {
-        "team1": null,
-        "team2": null,
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
-      "hasOdds": false,
-      "lastUpdate": "2026-01-09T13:30:27.183Z"
+      "hasOdds": true,
+      "lastUpdate": "2026-01-09T13:30:27.183Z",
+      "oddsSources": [
+        "fallback"
+      ],
+      "oddsConfidence": 0.3
     },
     "id1704439167603590": {
       "id": "id1704439167603590",
@@ -172,15 +180,19 @@
       "participant1Name": "Genone",
       "participant2Name": "Csdiilit",
       "odds": {
-        "team1": null,
-        "team2": null,
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
-      "hasOdds": false,
-      "lastUpdate": "2026-01-09T16:34:50.521Z"
+      "hasOdds": true,
+      "lastUpdate": "2026-01-09T16:34:50.521Z",
+      "oddsSources": [
+        "fallback"
+      ],
+      "oddsConfidence": 0.3
     },
     "id1704439167603594": {
       "id": "id1704439167603594",
@@ -198,15 +210,19 @@
       "participant1Name": "Phantom eSports",
       "participant2Name": "Hyperspirit",
       "odds": {
-        "team1": null,
-        "team2": null,
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
-      "hasOdds": false,
-      "lastUpdate": "2026-01-10T05:00:55.613Z"
+      "hasOdds": true,
+      "lastUpdate": "2026-01-10T05:00:55.613Z",
+      "oddsSources": [
+        "fallback"
+      ],
+      "oddsConfidence": 0.3
     },
     "id1704852967541194": {
       "id": "id1704852967541194",
@@ -224,15 +240,19 @@
       "participant1Name": "Brute",
       "participant2Name": "Washington",
       "odds": {
-        "team1": null,
-        "team2": null,
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
-      "hasOdds": false,
-      "lastUpdate": "2026-01-08T08:13:18.575Z"
+      "hasOdds": true,
+      "lastUpdate": "2026-01-08T08:13:18.575Z",
+      "oddsSources": [
+        "fallback"
+      ],
+      "oddsConfidence": 0.3
     },
     "id1704460967542822": {
       "id": "id1704460967542822",
@@ -250,15 +270,19 @@
       "participant1Name": "Sangal Alters",
       "participant2Name": "Natus Vincere Junior",
       "odds": {
-        "team1": null,
-        "team2": null,
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
-      "hasOdds": false,
-      "lastUpdate": "2026-01-09T11:26:30.960Z"
+      "hasOdds": true,
+      "lastUpdate": "2026-01-09T11:26:30.960Z",
+      "oddsSources": [
+        "fallback"
+      ],
+      "oddsConfidence": 0.3
     },
     "id1704852967541196": {
       "id": "id1704852967541196",
@@ -276,15 +300,19 @@
       "participant1Name": "Hyperspirit",
       "participant2Name": "Csdiilit",
       "odds": {
-        "team1": null,
-        "team2": null,
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
-      "hasOdds": false,
-      "lastUpdate": "2026-01-08T08:13:18.612Z"
+      "hasOdds": true,
+      "lastUpdate": "2026-01-08T08:13:18.612Z",
+      "oddsSources": [
+        "fallback"
+      ],
+      "oddsConfidence": 0.3
     },
     "id1704852967572990": {
       "id": "id1704852967572990",
@@ -295,8 +323,8 @@
       "sportTitle": "ESport Counter-Strike",
       "tournamentId": 48529,
       "tournamentName": "European Pro League Series",
-      "commenceTime": "2026-01-12T09:00:00.000Z",
-      "startTime": "2026-01-12T09:00:00.000Z",
+      "commenceTime": "2026-01-12T11:30:00.000Z",
+      "startTime": "2026-01-12T11:30:00.000Z",
       "homeTeam": "Algo",
       "awayTeam": "Lilmix",
       "participant1Name": "Algo",
@@ -306,11 +334,11 @@
         "team2": null,
         "draw": null
       },
-      "status": "scheduled",
-      "statusId": 0,
-      "completed": false,
+      "status": "finished",
+      "statusId": 2,
+      "completed": true,
       "hasOdds": false,
-      "lastUpdate": "2026-01-08T21:21:43.956Z"
+      "lastUpdate": "2026-01-12T15:04:04.660Z"
     },
     "id1704956867573088": {
       "id": "id1704956867573088",
@@ -332,11 +360,11 @@
         "team2": null,
         "draw": null
       },
-      "status": "scheduled",
-      "statusId": 0,
-      "completed": false,
+      "status": "finished",
+      "statusId": 2,
+      "completed": true,
       "hasOdds": false,
-      "lastUpdate": "2026-01-09T03:00:24.381Z"
+      "lastUpdate": "2026-01-12T11:04:15.187Z"
     },
     "id1704852967572992": {
       "id": "id1704852967572992",
@@ -347,8 +375,8 @@
       "sportTitle": "ESport Counter-Strike",
       "tournamentId": 48529,
       "tournamentName": "European Pro League Series",
-      "commenceTime": "2026-01-12T11:30:00.000Z",
-      "startTime": "2026-01-12T11:30:00.000Z",
+      "commenceTime": "2026-01-12T09:00:00.000Z",
+      "startTime": "2026-01-12T09:00:00.000Z",
       "homeTeam": "Mana eSports",
       "awayTeam": "Bushido Wildcats",
       "participant1Name": "Mana eSports",
@@ -358,11 +386,11 @@
         "team2": null,
         "draw": null
       },
-      "status": "scheduled",
-      "statusId": 0,
-      "completed": false,
+      "status": "finished",
+      "statusId": 2,
+      "completed": true,
       "hasOdds": false,
-      "lastUpdate": "2026-01-08T21:21:43.996Z"
+      "lastUpdate": "2026-01-12T12:35:22.511Z"
     },
     "id1704353367573166": {
       "id": "id1704353367573166",
@@ -384,11 +412,11 @@
         "team2": null,
         "draw": null
       },
-      "status": "scheduled",
-      "statusId": 0,
-      "completed": false,
+      "status": "finished",
+      "statusId": 2,
+      "completed": true,
       "hasOdds": false,
-      "lastUpdate": "2026-01-09T06:56:41.762Z"
+      "lastUpdate": "2026-01-12T16:05:18.229Z"
     },
     "id1704956867573092": {
       "id": "id1704956867573092",
@@ -410,11 +438,11 @@
         "team2": null,
         "draw": null
       },
-      "status": "scheduled",
-      "statusId": 0,
-      "completed": false,
+      "status": "finished",
+      "statusId": 3,
+      "completed": true,
       "hasOdds": false,
-      "lastUpdate": "2026-01-09T03:00:24.403Z"
+      "lastUpdate": "2026-01-12T13:03:56.005Z"
     },
     "id1704353367573168": {
       "id": "id1704353367573168",
@@ -436,11 +464,11 @@
         "team2": null,
         "draw": null
       },
-      "status": "scheduled",
-      "statusId": 0,
-      "completed": false,
+      "status": "finished",
+      "statusId": 2,
+      "completed": true,
       "hasOdds": false,
-      "lastUpdate": "2026-01-08T21:15:12.181Z"
+      "lastUpdate": "2026-01-12T19:04:26.294Z"
     },
     "id1704956867573090": {
       "id": "id1704956867573090",
@@ -462,11 +490,11 @@
         "team2": null,
         "draw": null
       },
-      "status": "scheduled",
-      "statusId": 0,
-      "completed": false,
+      "status": "finished",
+      "statusId": 2,
+      "completed": true,
       "hasOdds": false,
-      "lastUpdate": "2026-01-09T07:08:15.161Z"
+      "lastUpdate": "2026-01-12T17:03:28.817Z"
     },
     "id1704353367573186": {
       "id": "id1704353367573186",
@@ -484,15 +512,15 @@
       "participant1Name": "Arcred",
       "participant2Name": "Minlate",
       "odds": {
-        "team1": null,
-        "team2": null,
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
       "hasOdds": false,
-      "lastUpdate": "2026-01-08T21:15:12.202Z"
+      "lastUpdate": "2026-01-12T10:00:28.479Z"
     },
     "id1704353367573242": {
       "id": "id1704353367573242",
@@ -510,15 +538,15 @@
       "participant1Name": "Unity eSports",
       "participant2Name": "Petardka",
       "odds": {
-        "team1": null,
-        "team2": null,
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
       "hasOdds": false,
-      "lastUpdate": "2026-01-08T21:15:12.221Z"
+      "lastUpdate": "2026-01-10T23:03:23.779Z"
     },
     "id1704353367573244": {
       "id": "id1704353367573244",
@@ -536,15 +564,15 @@
       "participant1Name": "Basement Boys",
       "participant2Name": "Illwill",
       "odds": {
-        "team1": null,
-        "team2": null,
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
       "hasOdds": false,
-      "lastUpdate": "2026-01-08T21:15:12.241Z"
+      "lastUpdate": "2026-01-11T10:28:26.816Z"
     },
     "id1704439167603580": {
       "id": "id1704439167603580",
@@ -588,15 +616,19 @@
       "participant1Name": "AaB eSport",
       "participant2Name": "Masonic",
       "odds": {
-        "team1": null,
-        "team2": null,
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
-      "hasOdds": false,
-      "lastUpdate": "2026-01-09T16:34:50.499Z"
+      "hasOdds": true,
+      "lastUpdate": "2026-01-09T16:34:50.499Z",
+      "oddsSources": [
+        "fallback"
+      ],
+      "oddsConfidence": 0.3
     },
     "id1704353367573170": {
       "id": "id1704353367573170",
@@ -618,11 +650,11 @@
         "team2": null,
         "draw": null
       },
-      "status": "scheduled",
-      "statusId": 0,
-      "completed": false,
+      "status": "finished",
+      "statusId": 2,
+      "completed": true,
       "hasOdds": false,
-      "lastUpdate": "2026-01-09T16:33:50.936Z"
+      "lastUpdate": "2026-01-12T21:03:17.589Z"
     },
     "id1704439167603584": {
       "id": "id1704439167603584",
@@ -670,11 +702,11 @@
         "team2": null,
         "draw": null
       },
-      "status": "scheduled",
-      "statusId": 0,
-      "completed": false,
+      "status": "finished",
+      "statusId": 2,
+      "completed": true,
       "hasOdds": false,
-      "lastUpdate": "2026-01-09T18:22:13.882Z"
+      "lastUpdate": "2026-01-12T17:35:31.329Z"
     },
     "id1704460967572906": {
       "id": "id1704460967572906",
@@ -696,11 +728,11 @@
         "team2": null,
         "draw": null
       },
-      "status": "scheduled",
-      "statusId": 0,
-      "completed": false,
+      "status": "finished",
+      "statusId": 2,
+      "completed": true,
       "hasOdds": false,
-      "lastUpdate": "2026-01-09T18:22:13.861Z"
+      "lastUpdate": "2026-01-12T12:06:56.300Z"
     },
     "id1704439167603606": {
       "id": "id1704439167603606",
@@ -718,15 +750,19 @@
       "participant1Name": "Fingers Crossed",
       "participant2Name": "777 eSports",
       "odds": {
-        "team1": null,
-        "team2": null,
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
-      "hasOdds": false,
-      "lastUpdate": "2026-01-10T00:18:24.471Z"
+      "hasOdds": true,
+      "lastUpdate": "2026-01-10T00:18:24.471Z",
+      "oddsSources": [
+        "fallback"
+      ],
+      "oddsConfidence": 0.3
     },
     "id1704460967502690": {
       "id": "id1704460967502690",
@@ -744,17 +780,1026 @@
       "participant1Name": "Shadows",
       "participant2Name": "Eternal Fire Academy",
       "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": true,
+      "lastUpdate": "2026-01-10T04:27:20.563Z",
+      "oddsSources": [
+        "fallback"
+      ],
+      "oddsConfidence": 0.3
+    },
+    "id1704353367573160": {
+      "id": "id1704353367573160",
+      "fixtureId": "id1704353367573160",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 43533,
+      "tournamentName": "CCT European Series",
+      "commenceTime": "2026-01-12T09:00:00.000Z",
+      "startTime": "2026-01-12T09:00:00.000Z",
+      "homeTeam": "Acend",
+      "awayTeam": "Ursa",
+      "participant1Name": "Acend",
+      "participant2Name": "Ursa",
+      "odds": {
         "team1": null,
         "team2": null,
+        "draw": null
+      },
+      "status": "finished",
+      "statusId": 2,
+      "completed": true,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T12:35:23.362Z"
+    },
+    "id1704956867573094": {
+      "id": "id1704956867573094",
+      "fixtureId": "id1704956867573094",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 49568,
+      "tournamentName": "NODWIN Clutch Series",
+      "commenceTime": "2026-01-12T18:00:00.000Z",
+      "startTime": "2026-01-12T18:00:00.000Z",
+      "homeTeam": "Basement Boys",
+      "awayTeam": "Hyperspirit",
+      "participant1Name": "Basement Boys",
+      "participant2Name": "Hyperspirit",
+      "odds": {
+        "team1": null,
+        "team2": null,
+        "draw": null
+      },
+      "status": "finished",
+      "statusId": 3,
+      "completed": true,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T15:02:23.188Z"
+    },
+    "id1704956867731756": {
+      "id": "id1704956867731756",
+      "fixtureId": "id1704956867731756",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 49568,
+      "tournamentName": "NODWIN Clutch Series",
+      "commenceTime": "2026-01-12T18:00:00.000Z",
+      "startTime": "2026-01-12T18:00:00.000Z",
+      "homeTeam": "Basement Boys",
+      "awayTeam": "777 eSports",
+      "participant1Name": "Basement Boys",
+      "participant2Name": "777 eSports",
+      "odds": {
+        "team1": null,
+        "team2": null,
+        "draw": null
+      },
+      "status": "finished",
+      "statusId": 2,
+      "completed": true,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T21:35:41.829Z"
+    },
+    "id1704852967690578": {
+      "id": "id1704852967690578",
+      "fixtureId": "id1704852967690578",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 48529,
+      "tournamentName": "European Pro League Series",
+      "commenceTime": "2026-01-13T09:00:00.000Z",
+      "startTime": "2026-01-13T09:00:00.000Z",
+      "homeTeam": "Washington",
+      "awayTeam": "Hyperspirit",
+      "participant1Name": "Washington",
+      "participant2Name": "Hyperspirit",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
         "draw": null
       },
       "status": "scheduled",
       "statusId": 0,
       "completed": false,
       "hasOdds": false,
-      "lastUpdate": "2026-01-10T04:27:20.563Z"
+      "lastUpdate": "2026-01-12T09:00:17.330Z"
+    },
+    "id1704956867573100": {
+      "id": "id1704956867573100",
+      "fixtureId": "id1704956867573100",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 49568,
+      "tournamentName": "NODWIN Clutch Series",
+      "commenceTime": "2026-01-13T09:00:00.000Z",
+      "startTime": "2026-01-13T09:00:00.000Z",
+      "homeTeam": "Los Kogutos",
+      "awayTeam": "Hindsight",
+      "participant1Name": "Los Kogutos",
+      "participant2Name": "Hindsight",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-11T22:11:41.080Z"
+    },
+    "id1704460967607656": {
+      "id": "id1704460967607656",
+      "fixtureId": "id1704460967607656",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 44609,
+      "tournamentName": "United21",
+      "commenceTime": "2026-01-13T09:00:00.000Z",
+      "startTime": "2026-01-13T09:00:00.000Z",
+      "homeTeam": "Imperial Academy",
+      "awayTeam": "Fut Academy",
+      "participant1Name": "Imperial Academy",
+      "participant2Name": "Fut Academy",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T09:00:11.256Z"
+    },
+    "id1704429367730974": {
+      "id": "id1704429367730974",
+      "fixtureId": "id1704429367730974",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 44293,
+      "tournamentName": "Exort Series",
+      "commenceTime": "2026-01-13T10:30:00.000Z",
+      "startTime": "2026-01-13T10:30:00.000Z",
+      "homeTeam": "Jumbo Team",
+      "awayTeam": "Endless Journey",
+      "participant1Name": "Jumbo Team",
+      "participant2Name": "Endless Journey",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T23:31:50.066Z"
+    },
+    "id1703162167643460": {
+      "id": "id1703162167643460",
+      "fixtureId": "id1703162167643460",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-13T11:00:00.000Z",
+      "startTime": "2026-01-13T11:00:00.000Z",
+      "homeTeam": "OG",
+      "awayTeam": "Fut eSports",
+      "participant1Name": "OG",
+      "participant2Name": "Fut eSports",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T11:00:10.312Z"
+    },
+    "id1704460967607658": {
+      "id": "id1704460967607658",
+      "fixtureId": "id1704460967607658",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 44609,
+      "tournamentName": "United21",
+      "commenceTime": "2026-01-13T11:30:00.000Z",
+      "startTime": "2026-01-13T11:30:00.000Z",
+      "homeTeam": "Misa eSports",
+      "awayTeam": "Midnight",
+      "participant1Name": "Misa eSports",
+      "participant2Name": "Midnight",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T11:30:09.027Z"
+    },
+    "id1704852967733472": {
+      "id": "id1704852967733472",
+      "fixtureId": "id1704852967733472",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 48529,
+      "tournamentName": "European Pro League Series",
+      "commenceTime": "2026-01-13T11:30:00.000Z",
+      "startTime": "2026-01-13T11:30:00.000Z",
+      "homeTeam": "Bushido Wildcats",
+      "awayTeam": "Algo",
+      "participant1Name": "Bushido Wildcats",
+      "participant2Name": "Algo",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T21:41:45.677Z"
+    },
+    "id1704956867573096": {
+      "id": "id1704956867573096",
+      "fixtureId": "id1704956867573096",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 49568,
+      "tournamentName": "NODWIN Clutch Series",
+      "commenceTime": "2026-01-13T12:00:00.000Z",
+      "startTime": "2026-01-13T12:00:00.000Z",
+      "homeTeam": "Bebop",
+      "awayTeam": "Wopa eSport",
+      "participant1Name": "Bebop",
+      "participant2Name": "Wopa eSport",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-11T22:11:41.080Z"
+    },
+    "id1703162167643462": {
+      "id": "id1703162167643462",
+      "fixtureId": "id1703162167643462",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-13T13:30:00.000Z",
+      "startTime": "2026-01-13T13:30:00.000Z",
+      "homeTeam": "Eyeballers",
+      "awayTeam": "Faze Clan",
+      "participant1Name": "Eyeballers",
+      "participant2Name": "Faze Clan",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T13:30:17.537Z"
+    },
+    "id1704956867573098": {
+      "id": "id1704956867573098",
+      "fixtureId": "id1704956867573098",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 49568,
+      "tournamentName": "NODWIN Clutch Series",
+      "commenceTime": "2026-01-13T15:00:00.000Z",
+      "startTime": "2026-01-13T15:00:00.000Z",
+      "homeTeam": "AaB eSport",
+      "awayTeam": "Lilmix",
+      "participant1Name": "AaB eSport",
+      "participant2Name": "Lilmix",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-11T22:11:41.080Z"
+    },
+    "id1704353367733680": {
+      "id": "id1704353367733680",
+      "fixtureId": "id1704353367733680",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 43533,
+      "tournamentName": "CCT European Series",
+      "commenceTime": "2026-01-13T15:00:00.000Z",
+      "startTime": "2026-01-13T15:00:00.000Z",
+      "homeTeam": "Ursa",
+      "awayTeam": "Bebop",
+      "participant1Name": "Ursa",
+      "participant2Name": "Bebop",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T21:33:44.893Z"
+    },
+    "id1703162167643464": {
+      "id": "id1703162167643464",
+      "fixtureId": "id1703162167643464",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-13T16:00:00.000Z",
+      "startTime": "2026-01-13T16:00:00.000Z",
+      "homeTeam": "Fnatic",
+      "awayTeam": "Astralis",
+      "participant1Name": "Fnatic",
+      "participant2Name": "Astralis",
+      "odds": {
+        "team1": 1.04,
+        "team2": 1.04,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T16:00:18.093Z"
+    },
+    "id1704956867573102": {
+      "id": "id1704956867573102",
+      "fixtureId": "id1704956867573102",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 49568,
+      "tournamentName": "NODWIN Clutch Series",
+      "commenceTime": "2026-01-13T18:00:00.000Z",
+      "startTime": "2026-01-13T18:00:00.000Z",
+      "homeTeam": "Imperial Female",
+      "awayTeam": "Brute",
+      "participant1Name": "Imperial Female",
+      "participant2Name": "Brute",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-11T22:11:41.080Z"
+    },
+    "id1703162167643466": {
+      "id": "id1703162167643466",
+      "fixtureId": "id1703162167643466",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-13T18:30:00.000Z",
+      "startTime": "2026-01-13T18:30:00.000Z",
+      "homeTeam": "Hotu",
+      "awayTeam": "Aurora Gaming",
+      "participant1Name": "Hotu",
+      "participant2Name": "Aurora Gaming",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-13T00:02:16.971Z"
+    },
+    "id1704460967650608": {
+      "id": "id1704460967650608",
+      "fixtureId": "id1704460967650608",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 44609,
+      "tournamentName": "United21",
+      "commenceTime": "2026-01-14T09:00:00.000Z",
+      "startTime": "2026-01-14T09:00:00.000Z",
+      "homeTeam": "Chickenburger",
+      "awayTeam": "Eternal Fire Academy",
+      "participant1Name": "Chickenburger",
+      "participant2Name": "Eternal Fire Academy",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T10:00:35.144Z"
+    },
+    "id1704852967607652": {
+      "id": "id1704852967607652",
+      "fixtureId": "id1704852967607652",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 48529,
+      "tournamentName": "European Pro League Series",
+      "commenceTime": "2026-01-14T09:00:00.000Z",
+      "startTime": "2026-01-14T09:00:00.000Z",
+      "homeTeam": "Los Kogutos",
+      "awayTeam": "Wopa eSport",
+      "participant1Name": "Los Kogutos",
+      "participant2Name": "Wopa eSport",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-11T19:00:51.181Z"
+    },
+    "id1704353367573172": {
+      "id": "id1704353367573172",
+      "fixtureId": "id1704353367573172",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 43533,
+      "tournamentName": "CCT European Series",
+      "commenceTime": "2026-01-14T09:00:00.000Z",
+      "startTime": "2026-01-14T09:00:00.000Z",
+      "homeTeam": "Forze Reload",
+      "awayTeam": "Wopa eSport",
+      "participant1Name": "Forze Reload",
+      "participant2Name": "Wopa eSport",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T10:00:28.457Z"
+    },
+    "id1703162167643468": {
+      "id": "id1703162167643468",
+      "fixtureId": "id1703162167643468",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-14T11:00:00.000Z",
+      "startTime": "2026-01-14T11:00:00.000Z",
+      "homeTeam": "Passion UA",
+      "awayTeam": "Team Gamerlegion",
+      "participant1Name": "Passion UA",
+      "participant2Name": "Team Gamerlegion",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-10T20:52:31.789Z"
+    },
+    "id1704460967682836": {
+      "id": "id1704460967682836",
+      "fixtureId": "id1704460967682836",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 44609,
+      "tournamentName": "United21",
+      "commenceTime": "2026-01-14T11:30:00.000Z",
+      "startTime": "2026-01-14T11:30:00.000Z",
+      "homeTeam": "Sangal Alters",
+      "awayTeam": "Truck Drivers",
+      "participant1Name": "Sangal Alters",
+      "participant2Name": "Truck Drivers",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T11:59:13.845Z"
+    },
+    "id1704852967650602": {
+      "id": "id1704852967650602",
+      "fixtureId": "id1704852967650602",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 48529,
+      "tournamentName": "European Pro League Series",
+      "commenceTime": "2026-01-14T11:30:00.000Z",
+      "startTime": "2026-01-14T11:30:00.000Z",
+      "homeTeam": "Fut Academy",
+      "awayTeam": "Japczany",
+      "participant1Name": "Fut Academy",
+      "participant2Name": "Japczany",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T08:24:08.371Z"
+    },
+    "id1703162167643470": {
+      "id": "id1703162167643470",
+      "fixtureId": "id1703162167643470",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-14T13:30:00.000Z",
+      "startTime": "2026-01-14T13:30:00.000Z",
+      "homeTeam": "NRG Esports",
+      "awayTeam": "Heroic",
+      "participant1Name": "NRG Esports",
+      "participant2Name": "Heroic",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-10T20:52:31.753Z"
+    },
+    "id1703162167643472": {
+      "id": "id1703162167643472",
+      "fixtureId": "id1703162167643472",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-14T16:00:00.000Z",
+      "startTime": "2026-01-14T16:00:00.000Z",
+      "homeTeam": "Monte",
+      "awayTeam": "Natus Vincere",
+      "participant1Name": "Monte",
+      "participant2Name": "Natus Vincere",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-10T20:52:31.680Z"
+    },
+    "id1703162167643474": {
+      "id": "id1703162167643474",
+      "fixtureId": "id1703162167643474",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-14T18:30:00.000Z",
+      "startTime": "2026-01-14T18:30:00.000Z",
+      "homeTeam": "Virtus.pro",
+      "awayTeam": "Team Vitality",
+      "participant1Name": "Virtus.pro",
+      "participant2Name": "Team Vitality",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-11T04:42:35.481Z"
+    },
+    "id1703162167643476": {
+      "id": "id1703162167643476",
+      "fixtureId": "id1703162167643476",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-15T11:00:00.000Z",
+      "startTime": "2026-01-15T11:00:00.000Z",
+      "homeTeam": "M80",
+      "awayTeam": "Gentle Mates",
+      "participant1Name": "M80",
+      "participant2Name": "Gentle Mates",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-11T21:42:20.737Z"
+    },
+    "id1703162167643478": {
+      "id": "id1703162167643478",
+      "fixtureId": "id1703162167643478",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-15T13:30:00.000Z",
+      "startTime": "2026-01-15T13:30:00.000Z",
+      "homeTeam": "Inner Circle eSports",
+      "awayTeam": "3Dmax",
+      "participant1Name": "Inner Circle eSports",
+      "participant2Name": "3Dmax",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-11T21:42:20.782Z"
+    },
+    "id1703162167643480": {
+      "id": "id1703162167643480",
+      "fixtureId": "id1703162167643480",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-15T16:00:00.000Z",
+      "startTime": "2026-01-15T16:00:00.000Z",
+      "homeTeam": "Ninjas In Pyjamas",
+      "awayTeam": "Team Liquid",
+      "participant1Name": "Ninjas In Pyjamas",
+      "participant2Name": "Team Liquid",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-11T21:42:20.761Z"
+    },
+    "id1703162167643482": {
+      "id": "id1703162167643482",
+      "fixtureId": "id1703162167643482",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-15T18:30:00.000Z",
+      "startTime": "2026-01-15T18:30:00.000Z",
+      "homeTeam": "Ecstatic",
+      "awayTeam": "Team Falcons",
+      "participant1Name": "Ecstatic",
+      "participant2Name": "Team Falcons",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T04:30:47.294Z"
+    },
+    "id1703162167643484": {
+      "id": "id1703162167643484",
+      "fixtureId": "id1703162167643484",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-16T10:00:00.000Z",
+      "startTime": "2026-01-16T10:00:00.000Z",
+      "homeTeam": "ENCE",
+      "awayTeam": "Parivision",
+      "participant1Name": "ENCE",
+      "participant2Name": "Parivision",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-10T14:26:23.198Z"
+    },
+    "id1703162167643486": {
+      "id": "id1703162167643486",
+      "fixtureId": "id1703162167643486",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-16T12:30:00.000Z",
+      "startTime": "2026-01-16T12:30:00.000Z",
+      "homeTeam": "Sinners eSports",
+      "awayTeam": "Team Spirit",
+      "participant1Name": "Sinners eSports",
+      "participant2Name": "Team Spirit",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-10T14:26:23.237Z"
+    },
+    "id1703162167643488": {
+      "id": "id1703162167643488",
+      "fixtureId": "id1703162167643488",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-16T15:00:00.000Z",
+      "startTime": "2026-01-16T15:00:00.000Z",
+      "homeTeam": "Betboom Team",
+      "awayTeam": "Pain Gaming",
+      "participant1Name": "Betboom Team",
+      "participant2Name": "Pain Gaming",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-10T14:26:23.276Z"
+    },
+    "id1703162167643490": {
+      "id": "id1703162167643490",
+      "fixtureId": "id1703162167643490",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 31621,
+      "tournamentName": "Blast Premier Series",
+      "commenceTime": "2026-01-16T17:30:00.000Z",
+      "startTime": "2026-01-16T17:30:00.000Z",
+      "homeTeam": "9Ine",
+      "awayTeam": "Furia Esports",
+      "participant1Name": "9Ine",
+      "participant2Name": "Furia Esports",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": true,
+      "lastUpdate": "2026-01-10T14:26:23.353Z",
+      "oddsSources": [
+        "fallback"
+      ],
+      "oddsConfidence": 0.3
+    },
+    "id1704353567736272": {
+      "id": "id1704353567736272",
+      "fixtureId": "id1704353567736272",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 43535,
+      "tournamentName": "CCT South American Series",
+      "commenceTime": "2026-01-14T22:00:00.000Z",
+      "startTime": "2026-01-14T22:00:00.000Z",
+      "homeTeam": "Players",
+      "awayTeam": "Internet Kings",
+      "participant1Name": "Players",
+      "participant2Name": "Internet Kings",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T21:00:58.508Z"
+    },
+    "id1704353567736224": {
+      "id": "id1704353567736224",
+      "fixtureId": "id1704353567736224",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 43535,
+      "tournamentName": "CCT South American Series",
+      "commenceTime": "2026-01-13T16:00:00.000Z",
+      "startTime": "2026-01-13T16:00:00.000Z",
+      "homeTeam": "Crashers",
+      "awayTeam": "Satriales",
+      "participant1Name": "Crashers",
+      "participant2Name": "Satriales",
+      "odds": {
+        "team1": 1.04,
+        "team2": 1.04,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T21:31:33.147Z"
+    },
+    "id1704353567736226": {
+      "id": "id1704353567736226",
+      "fixtureId": "id1704353567736226",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 43535,
+      "tournamentName": "CCT South American Series",
+      "commenceTime": "2026-01-13T19:00:00.000Z",
+      "startTime": "2026-01-13T19:00:00.000Z",
+      "homeTeam": "Pain Academy",
+      "awayTeam": "Magicos",
+      "participant1Name": "Pain Academy",
+      "participant2Name": "Magicos",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T23:07:18.446Z"
+    },
+    "id1704429367730982": {
+      "id": "id1704429367730982",
+      "fixtureId": "id1704429367730982",
+      "sportId": 17,
+      "sportName": "ESport Counter-Strike",
+      "sportKey": "ESport Counter-Strike",
+      "sportTitle": "ESport Counter-Strike",
+      "tournamentId": 44293,
+      "tournamentName": "Exort Series",
+      "commenceTime": "2026-01-13T13:30:00.000Z",
+      "startTime": "2026-01-13T13:30:00.000Z",
+      "homeTeam": "Watermel0N",
+      "awayTeam": "Gothboiclique",
+      "participant1Name": "Watermel0N",
+      "participant2Name": "Gothboiclique",
+      "odds": {
+        "team1": 1.85,
+        "team2": 1.85,
+        "draw": null
+      },
+      "status": "scheduled",
+      "statusId": 0,
+      "completed": false,
+      "hasOdds": false,
+      "lastUpdate": "2026-01-12T22:31:27.061Z"
     }
   },
-  "bets": {},
-  "lastApiSync": "2026-01-10T05:30:01.064Z"
+  "bets": {
+    "bet_1768264664546_qnhc3jr": {
+      "id": "bet_1768264664546_qnhc3jr",
+      "userId": "Gary1111",
+      "eventId": "id1703162167643460",
+      "selection": "team1",
+      "amount": 50,
+      "odds": 1.85,
+      "potentialPayout": 92.5,
+      "status": "pending",
+      "placedAt": "2026-01-13T00:37:44.546Z",
+      "settledAt": null
+    }
+  },
+  "lastApiSync": "2026-01-13T00:32:43.205Z"
 }

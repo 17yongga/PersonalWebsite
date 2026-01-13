@@ -15,6 +15,20 @@ try {
   console.warn("CS2 betting features will be limited without API client");
 }
 
+// CS2 Odds Provider - Multi-source aggregator (optional - only load if module exists)
+let cs2OddsProvider = null;
+try {
+  cs2OddsProvider = require("./cs2-odds-provider");
+  console.log("CS2 Odds Provider (multi-source) loaded successfully");
+  const availableSources = cs2OddsProvider.getAvailableSources();
+  console.log(`  Available odds sources: ${availableSources.join(", ")}`);
+} catch (error) {
+  console.warn("CS2 Odds Provider not available:", error.message);
+  console.warn("Falling back to single-source (OddsPapi only)");
+  // Fallback to using cs2ApiClient directly
+  cs2OddsProvider = cs2ApiClient;
+}
+
 // Scheduled tasks for CS2 betting (using node-cron if available)
 let cron = null;
 try {
@@ -84,10 +98,14 @@ async function saveUsers(users) {
 
 // Get users object
 let users = {};
-loadUsers().then(data => {
+let usersLoadedPromise = loadUsers().then(data => {
   users = data;
+  console.log(`Loaded ${Object.keys(users).length} users from file`);
+  return data;
 }).catch(err => {
   console.error("Error loading users:", err);
+  users = {};
+  return {};
 });
 
 // Save user balance
@@ -329,6 +347,9 @@ function getBetsSnapshot() {
 // Authentication endpoints
 app.post("/api/register", async (req, res) => {
   try {
+    // Ensure users are loaded before processing registration
+    await usersLoadedPromise;
+    
     const { username, password } = req.body;
 
     if (!username || !password) {
@@ -375,6 +396,9 @@ app.post("/api/register", async (req, res) => {
 
 app.post("/api/login", async (req, res) => {
   try {
+    // Ensure users are loaded before processing login
+    await usersLoadedPromise;
+    
     const { username, password } = req.body;
 
     if (!username || !password) {
@@ -384,14 +408,18 @@ app.post("/api/login", async (req, res) => {
     // Check if user exists
     const user = users[username];
     if (!user) {
+      console.log(`Login attempt failed: user '${username}' not found. Available users: ${Object.keys(users).join(', ')}`);
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
     // Verify password
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
+      console.log(`Login attempt failed: invalid password for user '${username}'`);
       return res.status(401).json({ error: "Invalid username or password" });
     }
+
+    console.log(`Login successful for user '${username}'`);
 
     // Update last played
     user.lastPlayed = new Date().toISOString();
@@ -1185,15 +1213,50 @@ app.get("/api/cs2/events/:eventId", async (req, res) => {
       return res.status(404).json({ success: false, error: "Event not found" });
     }
     
+    // Use odds provider (multi-source) if available, otherwise fallback to single source
+    const oddsClient = cs2OddsProvider || cs2ApiClient;
+    
     // If odds are not available, try to fetch them from API
-    if ((!event.odds || !event.odds.team1) && cs2ApiClient && event.hasOdds !== false) {
+    if ((!event.odds || !event.odds.team1) && oddsClient && event.hasOdds !== false) {
       try {
-        console.log(`Fetching odds for event ${eventId} from API...`);
-        const oddsData = await cs2ApiClient.fetchMatchOdds(eventId);
-        if (oddsData && oddsData.odds) {
-          // Update event with fresh odds
-          event.odds = oddsData.odds;
+        console.log(`Fetching odds for event ${eventId} from ${cs2OddsProvider ? 'multi-source provider' : 'single source'}...`);
+        
+        // Prepare match info for scrapers
+        const matchInfo = {
+          fixtureId: eventId,
+          team1: event.homeTeam || event.participant1Name,
+          team2: event.awayTeam || event.participant2Name,
+          homeTeam: event.homeTeam || event.participant1Name,
+          awayTeam: event.awayTeam || event.participant2Name
+        };
+        
+        const oddsData = cs2OddsProvider && cs2OddsProvider.fetchMatchOdds
+          ? await cs2OddsProvider.fetchMatchOdds(eventId, matchInfo)
+          : await oddsClient.fetchMatchOdds(eventId);
+        
+        // Handle both provider format and api-client format
+        let odds = null;
+        if (oddsData) {
+          if (oddsData.odds) {
+            odds = oddsData.odds;
+          } else if (oddsData.team1 || oddsData.team2) {
+            odds = {
+              team1: oddsData.team1,
+              team2: oddsData.team2,
+              draw: oddsData.draw || null
+            };
+          }
+        }
+        
+        if (odds && (odds.team1 || odds.team2)) {
+          event.odds = odds;
           event.hasOdds = true;
+          if (oddsData.sources) {
+            event.oddsSources = oddsData.sources;
+          }
+          if (oddsData.confidence) {
+            event.oddsConfidence = oddsData.confidence;
+          }
           cs2BettingState.events[eventId] = event;
           await saveCS2BettingData();
         }
@@ -1220,18 +1283,56 @@ app.get("/api/cs2/events/:eventId/odds", async (req, res) => {
       return res.status(404).json({ success: false, error: "Event not found" });
     }
     
+    // Use odds provider (multi-source) if available, otherwise fallback to single source
+    const oddsClient = cs2OddsProvider || cs2ApiClient;
+    
     // If odds are not available, try to fetch them from API
-    if ((!event.odds || !event.odds.team1 || !event.odds.team2) && cs2ApiClient && event.hasOdds !== false) {
+    if ((!event.odds || !event.odds.team1 || !event.odds.team2) && oddsClient && event.hasOdds !== false) {
       try {
-        console.log(`[CS2 API] Fetching odds for event ${eventId} from API...`);
-        const oddsData = await cs2ApiClient.fetchMatchOdds(eventId);
-        if (oddsData && oddsData.odds) {
-          // Update event with fresh odds
-          event.odds = oddsData.odds;
+        console.log(`[CS2 API] Fetching odds for event ${eventId} from ${cs2OddsProvider ? 'multi-source provider' : 'single source'}...`);
+        
+        // Prepare match info for scrapers
+        const matchInfo = {
+          fixtureId: eventId,
+          team1: event.homeTeam || event.participant1Name,
+          team2: event.awayTeam || event.participant2Name,
+          homeTeam: event.homeTeam || event.participant1Name,
+          awayTeam: event.awayTeam || event.participant2Name
+        };
+        
+        const oddsData = cs2OddsProvider && cs2OddsProvider.fetchMatchOdds
+          ? await cs2OddsProvider.fetchMatchOdds(eventId, matchInfo)
+          : await oddsClient.fetchMatchOdds(eventId);
+        
+        // Handle both provider format and api-client format
+        let odds = null;
+        if (oddsData) {
+          if (oddsData.odds) {
+            odds = oddsData.odds;
+          } else if (oddsData.team1 || oddsData.team2) {
+            odds = {
+              team1: oddsData.team1,
+              team2: oddsData.team2,
+              draw: oddsData.draw || null
+            };
+          }
+        }
+        
+        if (odds && (odds.team1 || odds.team2)) {
+          event.odds = odds;
           event.hasOdds = true;
+          if (oddsData.sources) {
+            event.oddsSources = oddsData.sources;
+          }
+          if (oddsData.confidence) {
+            event.oddsConfidence = oddsData.confidence;
+          }
           cs2BettingState.events[eventId] = event;
           await saveCS2BettingData();
           console.log(`[CS2 API] Successfully fetched and updated odds for event ${eventId}:`, event.odds);
+          if (oddsData.sources) {
+            console.log(`[CS2 API] Odds aggregated from sources: ${oddsData.sources.join(", ")}`);
+          }
         } else {
           console.warn(`[CS2 API] No odds data returned from API for event ${eventId}`);
         }
@@ -1401,7 +1502,13 @@ app.post("/api/cs2/bets", async (req, res) => {
 
 // Sync CS2 events/odds from API (used by scheduled tasks and manual sync)
 async function syncCS2Events() {
-  if (!cs2ApiClient) {
+  // Use odds provider for fetching matches (it re-exports from cs2ApiClient)
+  // Fallback to cs2ApiClient if provider not available
+  const matchClient = (cs2OddsProvider && cs2OddsProvider.fetchUpcomingMatches) 
+    ? cs2OddsProvider 
+    : cs2ApiClient;
+  
+  if (!matchClient) {
     console.warn("CS2 API client not available, skipping sync");
     return;
   }
@@ -1410,7 +1517,7 @@ async function syncCS2Events() {
     console.log("Syncing CS2 events from API...");
     
     // Fetch upcoming matches
-    const matches = await cs2ApiClient.fetchUpcomingMatches({ limit: 50 });
+    const matches = await matchClient.fetchUpcomingMatches({ limit: 50 });
     
     // Deduplicate matches by fixtureId (in case API returns duplicates)
     const uniqueMatches = [];
@@ -1474,11 +1581,11 @@ async function syncCS2Events() {
       const existingOdds = existingEvent?.odds || match.odds || { team1: null, team2: null, draw: null };
       const needsOdds = (!existingOdds.team1 || !existingOdds.team2) && 
                         (finalStatus === 'scheduled' || finalStatus === 'live') &&
-                        match.hasOdds !== false &&
-                        cs2ApiClient;
+                        match.hasOdds !== false;
       
-      if (needsOdds && oddsFetchPromises.length < 5) {
-        // Queue odds fetch (limit to 5 to respect rate limits - will process sequentially)
+      // Queue for odds aggregation (will be processed by scheduled aggregation task)
+      // No limit here since aggregation handles rate limiting
+      if (needsOdds && (match.homeTeam || match.participant1Name) && (match.awayTeam || match.participant2Name)) {
         oddsFetchPromises.push({ eventId, status: finalStatus });
       }
       
@@ -1532,12 +1639,46 @@ async function syncCS2Events() {
           }
           
           console.log(`[CS2 Sync] Fetching odds for event ${eventId} (${i + 1}/${oddsFetchPromises.length})...`);
-          const oddsData = await cs2ApiClient.fetchMatchOdds(eventId);
+          // Use odds provider (multi-source) if available
+          const oddsClient = cs2OddsProvider || cs2ApiClient;
+          const event = cs2BettingState.events[eventId];
           
-          if (oddsData && oddsData.odds && cs2BettingState.events[eventId]) {
-            cs2BettingState.events[eventId].odds = oddsData.odds;
+          // Prepare match info for scrapers
+          const matchInfo = {
+            fixtureId: eventId,
+            team1: event?.homeTeam || event?.participant1Name,
+            team2: event?.awayTeam || event?.participant2Name,
+            homeTeam: event?.homeTeam || event?.participant1Name,
+            awayTeam: event?.awayTeam || event?.participant2Name
+          };
+          
+          const oddsData = cs2OddsProvider && cs2OddsProvider.fetchMatchOdds
+            ? await cs2OddsProvider.fetchMatchOdds(eventId, matchInfo)
+            : await oddsClient.fetchMatchOdds(eventId);
+          
+          // Handle both provider format and api-client format
+          let odds = null;
+          if (oddsData) {
+            if (oddsData.odds) {
+              odds = oddsData.odds;
+            } else if (oddsData.team1 || oddsData.team2) {
+              odds = {
+                team1: oddsData.team1,
+                team2: oddsData.team2,
+                draw: oddsData.draw || null
+              };
+            }
+          }
+          
+          if (odds && (odds.team1 || odds.team2) && cs2BettingState.events[eventId]) {
+            cs2BettingState.events[eventId].odds = odds;
             cs2BettingState.events[eventId].hasOdds = true;
-            console.log(`[CS2 Sync] ✓ Successfully updated odds for event ${eventId}:`, oddsData.odds);
+            if (oddsData.sources) {
+              cs2BettingState.events[eventId].oddsSources = oddsData.sources;
+              console.log(`[CS2 Sync] ✓ Successfully updated odds for event ${eventId} from sources: ${oddsData.sources.join(", ")}`);
+            } else {
+              console.log(`[CS2 Sync] ✓ Successfully updated odds for event ${eventId}:`, odds);
+            }
           } else {
             console.log(`[CS2 Sync] ✗ No odds available for event ${eventId}`);
             if (cs2BettingState.events[eventId]) {
@@ -1607,7 +1748,7 @@ async function settleCS2Bets() {
       // If event is not finished, check API for results
       if (event.status !== 'finished') {
         try {
-          const result = await cs2ApiClient.fetchMatchResults(eventId);
+          const result = await resultClient.fetchMatchResults(eventId);
           if (result && result.completed) {
             // Update event status
             event.status = 'finished';
@@ -1702,12 +1843,111 @@ async function settleCS2Bets() {
   }
 }
 
+// Aggregate odds for all active CS2 events from HLTV and gambling scrapers
+async function aggregateCS2Odds() {
+  if (!cs2OddsProvider) {
+    console.warn("[CS2 Odds] Odds provider not available, skipping aggregation");
+    return null;
+  }
+  
+  try {
+    console.log("[CS2 Odds] Starting odds aggregation for active events...");
+    
+    // Get all active events (scheduled or live) that need odds
+    const activeEvents = Object.values(cs2BettingState.events).filter(event => {
+      const needsOdds = (!event.odds || !event.odds.team1 || !event.odds.team2);
+      const isActive = event.status === 'scheduled' || event.status === 'live';
+      const hasTeams = (event.homeTeam || event.participant1Name) && (event.awayTeam || event.participant2Name);
+      return needsOdds && isActive && hasTeams;
+    });
+    
+    if (activeEvents.length === 0) {
+      console.log("[CS2 Odds] No active events need odds aggregation");
+      return { processed: 0, updated: 0, failed: 0 };
+    }
+    
+    console.log(`[CS2 Odds] Processing ${activeEvents.length} events for odds aggregation...`);
+    
+    let updatedCount = 0;
+    let failedCount = 0;
+    
+    // Process events sequentially with delays to respect rate limits
+    for (let i = 0; i < activeEvents.length; i++) {
+      const event = activeEvents[i];
+      const eventId = event.fixtureId || event.id;
+      
+      try {
+        // Respect rate limits - delay between requests (3-4 seconds for scraping)
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 3500));
+        }
+        
+        console.log(`[CS2 Odds] Aggregating odds for event ${eventId} (${i + 1}/${activeEvents.length}): ${event.homeTeam || event.participant1Name} vs ${event.awayTeam || event.participant2Name}`);
+        
+        // Prepare match info for scrapers
+        const matchInfo = {
+          fixtureId: eventId,
+          team1: event.homeTeam || event.participant1Name,
+          team2: event.awayTeam || event.participant2Name,
+          homeTeam: event.homeTeam || event.participant1Name,
+          awayTeam: event.awayTeam || event.participant2Name
+        };
+        
+        // Fetch aggregated odds from primary sources (HLTV + gambling scrapers)
+        const oddsData = await cs2OddsProvider.fetchMatchOdds(eventId, matchInfo);
+        
+        if (oddsData && (oddsData.team1 || oddsData.team2)) {
+          // Update event with aggregated odds
+          event.odds = {
+            team1: oddsData.team1,
+            team2: oddsData.team2,
+            draw: oddsData.draw || null
+          };
+          event.hasOdds = true;
+          if (oddsData.sources) {
+            event.oddsSources = oddsData.sources;
+          }
+          if (oddsData.confidence) {
+            event.oddsConfidence = oddsData.confidence;
+          }
+          
+          cs2BettingState.events[eventId] = event;
+          updatedCount++;
+          
+          console.log(`[CS2 Odds] ✓ Updated odds for event ${eventId} from sources: ${oddsData.sources ? oddsData.sources.join(", ") : "unknown"}`);
+          console.log(`[CS2 Odds]   Odds: team1=${oddsData.team1}, team2=${oddsData.team2}`);
+        } else {
+          console.log(`[CS2 Odds] ⚠ No odds available for event ${eventId}`);
+          failedCount++;
+        }
+      } catch (error) {
+        console.error(`[CS2 Odds] Error aggregating odds for event ${eventId}:`, error.message);
+        failedCount++;
+        // Continue with next event
+      }
+    }
+    
+    // Save updated events
+    if (updatedCount > 0) {
+      await saveCS2BettingData();
+    }
+    
+    console.log(`[CS2 Odds] Aggregation complete: ${updatedCount} updated, ${failedCount} failed out of ${activeEvents.length} events`);
+    return { processed: activeEvents.length, updated: updatedCount, failed: failedCount };
+    
+  } catch (error) {
+    console.error("[CS2 Odds] Error during odds aggregation:", error);
+    return null;
+  }
+}
+
 // GET /api/cs2/admin/sports - List available sports (for debugging)
 app.get("/api/cs2/admin/sports", async (req, res) => {
   try {
+    // Use cs2ApiClient directly for admin endpoints (not available in provider)
     if (!cs2ApiClient) {
-      return res.status(503).json({ 
-        success: false, 
+      return res.status(503).json({
+        success: false,
         error: "CS2 API client not available" 
       });
     }
@@ -1718,7 +1958,9 @@ app.get("/api/cs2/admin/sports", async (req, res) => {
       success: true,
       sports: relatedSports,
       count: relatedSports.length,
-      currentSportId: cs2ApiClient.findCS2SportId ? await cs2ApiClient.findCS2SportId() : null
+      currentSportId: cs2ApiClient.findCS2SportId ? await cs2ApiClient.findCS2SportId() : null,
+      oddsProviderEnabled: !!cs2OddsProvider,
+      availableOddsSources: cs2OddsProvider ? cs2OddsProvider.getAvailableSources() : []
     });
   } catch (error) {
     console.error("Error listing sports:", error);
@@ -1730,22 +1972,51 @@ app.get("/api/cs2/admin/sports", async (req, res) => {
 app.post("/api/cs2/admin/sync", async (req, res) => {
   try {
     const result = await syncCS2Events();
+    
+    // Also trigger odds aggregation after syncing events
+    const oddsResult = await aggregateCS2Odds();
+    
     if (result) {
       res.json({
         success: true,
-        message: `Synced ${result.total} matches`,
+        message: `Synced ${result.total} matches and aggregated odds`,
         ...result,
+        oddsResult: oddsResult,
         lastSync: cs2BettingState.lastApiSync
       });
     } else {
       res.status(503).json({ 
         success: false, 
-        error: "Failed to sync or API client not available" 
+        error: "Failed to sync or API client not available",
+        oddsResult: oddsResult
       });
     }
   } catch (error) {
     console.error("Error in sync endpoint:", error);
     res.status(500).json({ success: false, error: "Failed to sync data" });
+  }
+});
+
+// POST /api/cs2/admin/aggregate - Manually trigger odds aggregation
+app.post("/api/cs2/admin/aggregate", async (req, res) => {
+  try {
+    const result = await aggregateCS2Odds();
+    
+    if (result !== null) {
+      res.json({
+        success: true,
+        message: "CS2 odds aggregation completed",
+        result: result
+      });
+    } else {
+      res.status(503).json({ 
+        success: false, 
+        error: "Failed to aggregate odds or odds provider not available" 
+      });
+    }
+  } catch (error) {
+    console.error("Error in aggregate endpoint:", error);
+    res.status(500).json({ success: false, error: "Failed to aggregate odds" });
   }
 });
 
@@ -1778,9 +2049,11 @@ app.post("/api/cs2/admin/settle", async (req, res) => {
 // Configuration for scheduled tasks
 const CS2_SYNC_INTERVAL_MS = parseInt(process.env.CS2_SYNC_INTERVAL_MS || "1800000", 10); // 30 minutes default
 const CS2_SETTLEMENT_INTERVAL_MS = parseInt(process.env.CS2_SETTLEMENT_INTERVAL_MS || "300000", 10); // 5 minutes default
+const CS2_ODDS_AGGREGATION_INTERVAL_MS = parseInt(process.env.CS2_ODDS_AGGREGATION_INTERVAL_MS || "600000", 10); // 10 minutes default for odds aggregation
 
 let cs2SyncInterval = null;
 let cs2SettlementInterval = null;
+let cs2OddsAggregationInterval = null;
 
 // Start scheduled tasks for CS2 betting
 function startCS2ScheduledTasks() {
@@ -1808,9 +2081,18 @@ function startCS2ScheduledTasks() {
       timezone: "UTC"
     });
     
+    // Schedule odds aggregation every 10 minutes
+    cs2OddsAggregationInterval = cron.schedule("*/10 * * * *", async () => {
+      await aggregateCS2Odds();
+    }, {
+      scheduled: true,
+      timezone: "UTC"
+    });
+    
     console.log("CS2 scheduled tasks started using node-cron:");
     console.log(`  - Event sync: every 30 minutes`);
     console.log(`  - Settlement check: every 5 minutes`);
+    console.log(`  - Odds aggregation: every 10 minutes`);
   } else {
     // Fallback to setInterval
     cs2SyncInterval = setInterval(async () => {
@@ -1821,15 +2103,25 @@ function startCS2ScheduledTasks() {
       await settleCS2Bets();
     }, CS2_SETTLEMENT_INTERVAL_MS);
     
+    // Schedule odds aggregation
+    cs2OddsAggregationInterval = setInterval(async () => {
+      await aggregateCS2Odds();
+    }, CS2_ODDS_AGGREGATION_INTERVAL_MS);
+    
     console.log("CS2 scheduled tasks started using setInterval:");
     console.log(`  - Event sync: every ${CS2_SYNC_INTERVAL_MS / 1000 / 60} minutes`);
     console.log(`  - Settlement check: every ${CS2_SETTLEMENT_INTERVAL_MS / 1000 / 60} minutes`);
+    console.log(`  - Odds aggregation: every ${CS2_ODDS_AGGREGATION_INTERVAL_MS / 1000 / 60} minutes`);
   }
   
   // Initial sync after server starts (wait 10 seconds to let server fully initialize)
   setTimeout(async () => {
     console.log("Performing initial CS2 event sync...");
     await syncCS2Events();
+    
+    // Also perform initial odds aggregation for events that need it
+    console.log("Performing initial CS2 odds aggregation...");
+    await aggregateCS2Odds();
   }, 10000);
 }
 
@@ -1851,6 +2143,15 @@ function stopCS2ScheduledTasks() {
       clearInterval(cs2SettlementInterval);
     }
     cs2SettlementInterval = null;
+  }
+  
+  if (cs2OddsAggregationInterval) {
+    if (cron && cs2OddsAggregationInterval.stop) {
+      cs2OddsAggregationInterval.stop();
+    } else if (typeof cs2OddsAggregationInterval === 'number') {
+      clearInterval(cs2OddsAggregationInterval);
+    }
+    cs2OddsAggregationInterval = null;
   }
   
   console.log("CS2 scheduled tasks stopped");

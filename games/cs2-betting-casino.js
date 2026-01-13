@@ -361,178 +361,184 @@ class CS2BettingGame {
       return;
     }
 
-    // Sort events chronologically (next upcoming match first - earliest scheduled time)
-    const sortedEvents = [...this.events].sort((a, b) => {
-      const timeA = new Date(a.commenceTime || a.startTime || 0).getTime();
-      const timeB = new Date(b.commenceTime || b.startTime || 0).getTime();
-      return timeA - timeB; // Ascending: earliest first (next match to happen at the top)
+    // Filter out past matches and finished matches
+    const now = new Date().getTime();
+    const upcomingEvents = this.events.filter(event => {
+      const eventTime = new Date(event.commenceTime || event.startTime || 0).getTime();
+      const isPast = eventTime < now;
+      const isFinished = event.status === 'finished';
+      return !isPast && !isFinished;
     });
 
-    eventsList.innerHTML = sortedEvents.map(event => {
-      const startTime = new Date(event.commenceTime || event.startTime);
-      const isLive = event.status === 'live';
-      const isFinished = event.status === 'finished';
-      const canBet = event.status === 'scheduled' || event.status === 'live';
-      const tournamentName = event.tournamentName || 'Tournament';
-      
-      // Format time - more readable format
-      const timeStr = startTime.toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
-      
-      // Format date separately for better mobile display
-      const dateStr = startTime.toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric'
-      });
-      const timeOnly = startTime.toLocaleString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
+    if (upcomingEvents.length === 0) {
+      eventsList.innerHTML = '<p class="no-events">No upcoming matches available. Check back later!</p>';
+      return;
+    }
 
-      // Get team logos (using placeholder for now - can be replaced with actual logos)
-      const getTeamLogo = (teamName) => {
-        // Placeholder logo URL - in production, you'd fetch from an API or use team logos
-        const encodedName = encodeURIComponent(teamName);
-        return `https://ui-avatars.com/api/?name=${encodedName}&size=64&background=random&color=fff&bold=true`;
-      };
+    // Helper function to get display odds (default to 2.0 if unavailable)
+    const getDisplayOdds = (odds) => {
+      return odds !== null && odds !== undefined ? odds : 2.0;
+    };
 
-      const homeTeamLogo = getTeamLogo(event.homeTeam || 'Team 1');
-      const awayTeamLogo = getTeamLogo(event.awayTeam || 'Team 2');
-      
-      // Escape HTML in team names and tournament name for safety
-      const escapeHtml = (text) => {
-        if (!text) return '';
-        const map = {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#039;'
-        };
-        return String(text).replace(/[&<>"']/g, m => map[m]);
-      };
-      
-      const safeTournamentName = escapeHtml(tournamentName);
-      // Get team names from various possible fields (try all possible field names)
-      const homeTeamName = event.homeTeam || event.participant1Name || event.team1 || event.teamHome || 'Team 1';
-      const awayTeamName = event.awayTeam || event.participant2Name || event.team2 || event.teamAway || 'Team 2';
-      const safeHomeTeam = escapeHtml(homeTeamName);
-      const safeAwayTeam = escapeHtml(awayTeamName);
-      
-      // Debug: Log team names to console for first event
-      if (sortedEvents.indexOf(event) === 0) {
-        console.log('[CS2 Frontend] First event full data:', event);
-        console.log('[CS2 Frontend] First event team data:', {
-          homeTeam: event.homeTeam,
-          awayTeam: event.awayTeam,
-          participant1Name: event.participant1Name,
-          participant2Name: event.participant2Name,
-          team1: event.team1,
-          team2: event.team2,
-          finalHomeTeam: safeHomeTeam,
-          finalAwayTeam: safeAwayTeam,
-          hasOdds: !!event.odds,
-          odds: event.odds
-        });
+    // Group events by tournament name
+    const groupedEvents = {};
+    upcomingEvents.forEach(event => {
+      const tournament = event.tournamentName || 'Other Events';
+      if (!groupedEvents[tournament]) {
+        groupedEvents[tournament] = [];
       }
+      groupedEvents[tournament].push(event);
+    });
 
-      return `
-        <div class="cs2-event-card ${isFinished ? 'finished' : ''} ${isLive ? 'live' : ''}" data-event-id="${event.id}">
-          <div class="event-header-section">
-            <div class="event-tournament">
-              <span class="tournament-badge">🏆 ${safeTournamentName}</span>
-            </div>
-            <div class="event-status-section">
-              <span class="event-date-mobile">${dateStr}</span>
-              <span class="event-status-badge ${event.status}">
-                ${isLive ? '🔴 LIVE' : isFinished ? '✓ Finished' : `<span class="event-time-desktop">📅 ${timeStr}</span><span class="event-time-mobile">📅 ${timeOnly}</span>`}
-              </span>
-            </div>
-          </div>
-          <div class="event-teams-container" style="display: grid; visibility: visible; opacity: 1; min-height: 180px;">
-            <div class="event-team" style="display: flex; visibility: visible; opacity: 1;">
-              <div class="team-logo-container" style="display: flex; visibility: visible; opacity: 1;">
-                <img src="${homeTeamLogo}" alt="${safeHomeTeam}" class="team-logo" 
-                     style="display: block; visibility: visible; opacity: 1;"
-                     onerror="this.onerror=null; this.style.display='block'; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'64\' height=\'64\'%3E%3Crect fill=\'%23333\' width=\'64\' height=\'64\'/%3E%3Ctext fill=\'%23fff\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' font-size=\'24\'%3E${safeHomeTeam.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E'">
-              </div>
-              <span class="team-name" title="${safeHomeTeam}" style="display: block; visibility: visible; opacity: 1;">${safeHomeTeam}</span>
-              <button class="odds-btn ${canBet && event.odds?.team1 ? '' : 'disabled'}" 
-                      data-event-id="${event.id}" 
-                      data-selection="team1"
-                      ${!canBet || !event.odds?.team1 ? 'disabled' : ''}
-                      style="display: inline-flex; visibility: visible; opacity: 1;"
-                      aria-label="${event.odds?.team1 ? `Bet on ${safeHomeTeam}` : 'Odds not available'}">
-                <span class="odds-value">${event.odds?.team1 ? event.odds.team1.toFixed(2) : 'N/A'}</span>
-              </button>
-            </div>
-            <div class="vs-divider" style="display: inline-flex; visibility: visible; opacity: 1;">
-              <span>VS</span>
-            </div>
-            <div class="event-team" style="display: flex; visibility: visible; opacity: 1;">
-              <div class="team-logo-container" style="display: flex; visibility: visible; opacity: 1;">
-                <img src="${awayTeamLogo}" alt="${safeAwayTeam}" class="team-logo" 
-                     style="display: block; visibility: visible; opacity: 1;"
-                     onerror="this.onerror=null; this.style.display='block'; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'64\' height=\'64\'%3E%3Crect fill=\'%23333\' width=\'64\' height=\'64\'/%3E%3Ctext fill=\'%23fff\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' font-size=\'24\'%3E${safeAwayTeam.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E'">
-              </div>
-              <span class="team-name" title="${safeAwayTeam}" style="display: block; visibility: visible; opacity: 1;">${safeAwayTeam}</span>
-              <button class="odds-btn ${canBet && event.odds?.team2 ? '' : 'disabled'}" 
-                      data-event-id="${event.id}" 
-                      data-selection="team2"
-                      ${!canBet || !event.odds?.team2 ? 'disabled' : ''}
-                      style="display: inline-flex; visibility: visible; opacity: 1;"
-                      aria-label="${event.odds?.team2 ? `Bet on ${safeAwayTeam}` : 'Odds not available'}">
-                <span class="odds-value">${event.odds?.team2 ? event.odds.team2.toFixed(2) : 'N/A'}</span>
-              </button>
-            </div>
-          </div>
+    // Sort tournaments alphabetically, then sort matches within each tournament by time
+    const sortedTournaments = Object.keys(groupedEvents).sort();
+    sortedTournaments.forEach(tournament => {
+      groupedEvents[tournament].sort((a, b) => {
+        const timeA = new Date(a.commenceTime || a.startTime || 0).getTime();
+        const timeB = new Date(b.commenceTime || b.startTime || 0).getTime();
+        return timeA - timeB; // Ascending: earliest first
+      });
+    });
+
+    // Build HTML with tournament headers and grouped matches
+    let htmlContent = '';
+    
+    sortedTournaments.forEach(tournament => {
+      const tournamentEvents = groupedEvents[tournament];
+      
+      // Render tournament header
+      const safeTournamentName = tournament.replace(/[&<>"']/g, m => {
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return map[m];
+      });
+      
+      htmlContent += `
+        <div class="tournament-header">
+          <span class="tournament-icon">🎮</span>
+          <span class="tournament-name">${safeTournamentName}</span>
         </div>
       `;
-    }).join('');
+      
+      // Render matches in this tournament
+      tournamentEvents.forEach(event => {
+        const startTime = new Date(event.commenceTime || event.startTime);
+        const isLive = event.status === 'live';
+        const isFinished = event.status === 'finished';
+        const canBet = event.status === 'scheduled' || event.status === 'live';
+        
+        // Format time - full date and time format (e.g., 'Jan 13, 04:00 AM')
+        const timeStr = startTime.toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
 
-    // Debug: Log rendered HTML structure
-    console.log('[CS2 Frontend] Rendered events HTML length:', eventsList.innerHTML.length);
-    console.log('[CS2 Frontend] Event cards found:', eventsList.querySelectorAll('.cs2-event-card').length);
-    console.log('[CS2 Frontend] Team containers found:', eventsList.querySelectorAll('.event-teams-container').length);
-    console.log('[CS2 Frontend] Team elements found:', eventsList.querySelectorAll('.event-team').length);
-    console.log('[CS2 Frontend] Team names found:', eventsList.querySelectorAll('.team-name').length);
-    console.log('[CS2 Frontend] Odds buttons found:', eventsList.querySelectorAll('.odds-btn').length);
+        // Get team logos
+        const getTeamLogo = (teamName) => {
+          const encodedName = encodeURIComponent(teamName);
+          return `https://ui-avatars.com/api/?name=${encodedName}&size=64&background=random&color=fff&bold=true`;
+        };
+
+        const homeTeamLogo = getTeamLogo(event.homeTeam || 'Team 1');
+        const awayTeamLogo = getTeamLogo(event.awayTeam || 'Team 2');
+        
+        // Escape HTML in team names for safety
+        const escapeHtml = (text) => {
+          if (!text) return '';
+          const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+          };
+          return String(text).replace(/[&<>"']/g, m => map[m]);
+        };
+        
+        // Get team names from various possible fields
+        const homeTeamName = event.homeTeam || event.participant1Name || event.team1 || event.teamHome || 'Team 1';
+        const awayTeamName = event.awayTeam || event.participant2Name || event.team2 || event.teamAway || 'Team 2';
+        const safeHomeTeam = escapeHtml(homeTeamName);
+        const safeAwayTeam = escapeHtml(awayTeamName);
+        
+        // Get display odds (default to 2.0 if unavailable)
+        const team1Odds = getDisplayOdds(event.odds?.team1);
+        const team2Odds = getDisplayOdds(event.odds?.team2);
+        
+        // Store default odds in event for selectOutcome to use
+        if (!event.odds) event.odds = {};
+        if (event.odds.team1 === null || event.odds.team1 === undefined) event.odds.team1 = 2.0;
+        if (event.odds.team2 === null || event.odds.team2 === undefined) event.odds.team2 = 2.0;
+
+        htmlContent += `
+          <div class="cs2-event-card ${isFinished ? 'finished' : ''} ${isLive ? 'live' : ''}" data-event-id="${event.id}">
+            <div class="event-match-header">
+              <div class="match-time-status">
+                <span class="match-time">${timeStr}</span>
+                ${isLive ? '<span class="match-live-badge">🔴 LIVE</span>' : ''}
+              </div>
+            </div>
+            <div class="event-match-content">
+              <div class="event-teams-list">
+                <div class="event-team-row">
+                  <div class="team-logo-container">
+                    <img src="${homeTeamLogo}" alt="${safeHomeTeam}" class="team-logo" 
+                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'64\' height=\'64\'%3E%3Crect fill=\'%23333\' width=\'64\' height=\'64\'/%3E%3Ctext fill=\'%23fff\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' font-size=\'24\'%3E${safeHomeTeam.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E'">
+                  </div>
+                  <span class="team-name">${safeHomeTeam}</span>
+                </div>
+                <div class="event-team-row">
+                  <div class="team-logo-container">
+                    <img src="${awayTeamLogo}" alt="${safeAwayTeam}" class="team-logo" 
+                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'64\' height=\'64\'%3E%3Crect fill=\'%23333\' width=\'64\' height=\'64\'/%3E%3Ctext fill=\'%23fff\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' font-size=\'24\'%3E${safeAwayTeam.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E'">
+                  </div>
+                  <span class="team-name">${safeAwayTeam}</span>
+                </div>
+              </div>
+              <div class="event-odds-section">
+                <div class="odds-header">Winner</div>
+                <button class="odds-card ${canBet ? '' : 'disabled'}" 
+                        data-event-id="${event.id}" 
+                        data-selection="team1"
+                        ${!canBet ? 'disabled' : ''}
+                        aria-label="Bet on ${safeHomeTeam}"
+                        type="button">
+                  <div class="odds-team-name">${safeHomeTeam}</div>
+                  <div class="odds-value">${team1Odds.toFixed(2)}</div>
+                </button>
+                <button class="odds-card ${canBet ? '' : 'disabled'}" 
+                        data-event-id="${event.id}" 
+                        data-selection="team2"
+                        ${!canBet ? 'disabled' : ''}
+                        aria-label="Bet on ${safeAwayTeam}"
+                        type="button">
+                  <div class="odds-team-name">${safeAwayTeam}</div>
+                  <div class="odds-value">${team2Odds.toFixed(2)}</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    });
     
-    // Attach event listeners to odds buttons
-    eventsList.querySelectorAll('.odds-btn:not(.disabled)').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+    eventsList.innerHTML = htmlContent;
+
+    // Attach event listeners to odds cards (entire card is clickable)
+    eventsList.querySelectorAll('.odds-card:not(.disabled)').forEach(card => {
+      card.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const eventId = btn.dataset.eventId;
-        const selection = btn.dataset.selection;
+        const eventId = card.dataset.eventId;
+        const selection = card.dataset.selection;
         
-        // Fetch odds if not available
+        // Fetch odds if not available (will use default 2x if unavailable)
         await this.fetchEventOddsIfNeeded(eventId);
         this.selectOutcome(eventId, selection);
       });
     });
-    
-    // Debug: Check if teams are actually in the DOM
-    const firstCard = eventsList.querySelector('.cs2-event-card');
-    if (firstCard) {
-      const teamsContainer = firstCard.querySelector('.event-teams-container');
-      const teamElements = firstCard.querySelectorAll('.event-team');
-      console.log('[CS2 Frontend] First card check:', {
-        hasCard: !!firstCard,
-        hasTeamsContainer: !!teamsContainer,
-        teamsContainerDisplay: teamsContainer ? window.getComputedStyle(teamsContainer).display : 'N/A',
-        teamsContainerVisibility: teamsContainer ? window.getComputedStyle(teamsContainer).visibility : 'N/A',
-        teamsContainerHeight: teamsContainer ? window.getComputedStyle(teamsContainer).height : 'N/A',
-        teamElementsCount: teamElements.length,
-        teamNames: Array.from(firstCard.querySelectorAll('.team-name')).map(el => el.textContent)
-      });
-    }
   }
 
   async fetchEventOddsIfNeeded(eventId, force = false) {
@@ -587,10 +593,12 @@ class CS2BettingGame {
       return;
     }
 
-    // Check if odds are available
-    if (!event.odds || !event.odds[selection]) {
-      alert('Odds are not available for this selection. Please try another match or refresh the page.');
-      return;
+    // Ensure odds exist (use default 2.0 if not available)
+    if (!event.odds) {
+      event.odds = {};
+    }
+    if (event.odds[selection] === null || event.odds[selection] === undefined) {
+      event.odds[selection] = 2.0; // Default 2x odds
     }
 
     this.selectedEvent = event;
