@@ -380,13 +380,23 @@ class CS2BettingGame {
       return;
     }
 
-    // Filter out past matches and finished matches
+    // Filter out past matches, finished matches, and matches without real odds
     const now = new Date().getTime();
     const upcomingEvents = this.events.filter(event => {
       const eventTime = new Date(event.commenceTime || event.startTime || 0).getTime();
       const isPast = eventTime < now;
       const isFinished = event.status === 'finished';
-      return !isPast && !isFinished;
+      
+      // Filter out matches without real odds
+      // A match has real odds if:
+      // 1. hasOdds is explicitly true, OR
+      // 2. odds object exists and has valid odds for BOTH teams (not null/undefined, not placeholder 2.0)
+      const hasRealOdds = event.hasOdds === true || 
+        (event.odds && 
+         event.odds.team1 !== null && event.odds.team1 !== undefined && event.odds.team1 !== 2.0 &&
+         event.odds.team2 !== null && event.odds.team2 !== undefined && event.odds.team2 !== 2.0);
+      
+      return !isPast && !isFinished && hasRealOdds;
     });
 
     if (upcomingEvents.length === 0) {
@@ -501,6 +511,7 @@ class CS2BettingGame {
             </div>
             <div class="event-match-content">
               <div class="event-teams-list">
+                <div class="teams-header">Teams</div>
                 <div class="event-team-row">
                   <div class="team-logo-container">
                     <img src="${homeTeamLogo}" alt="${safeHomeTeam}" class="team-logo" 

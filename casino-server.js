@@ -283,7 +283,30 @@ async function cacheMatches(matches) {
   console.log(`[CS2 Cache] Cached ${matches.length} matches`);
 }
 
-// Get cached odds for an event or null if expired/missing
+// Check if odds are real (not placeholder/default)
+function areOddsReal(oddsData) {
+  if (!oddsData || !oddsData.odds) {
+    return false;
+  }
+  
+  const odds = oddsData.odds;
+  // Real odds must have both team1 and team2 values that are:
+  // 1. Not null/undefined
+  // 2. Not exactly 2.0 (which is the default placeholder)
+  // 3. Valid numbers greater than 1.0 (decimal odds format)
+  const hasTeam1 = odds.team1 !== null && odds.team1 !== undefined && typeof odds.team1 === 'number' && odds.team1 > 1.0;
+  const hasTeam2 = odds.team2 !== null && odds.team2 !== undefined && typeof odds.team2 === 'number' && odds.team2 > 1.0;
+  
+  // Both teams must have real odds (not placeholder 2.0)
+  const team1IsReal = hasTeam1 && odds.team1 !== 2.0;
+  const team2IsReal = hasTeam2 && odds.team2 !== 2.0;
+  
+  // At least one team must have real odds (not 2.0)
+  // But ideally both should have real odds
+  return team1IsReal || team2IsReal;
+}
+
+// Get cached odds for an event or null if expired/missing/invalid
 function getCachedOdds(eventId) {
   // Ensure cache is initialized
   if (!cs2ApiCache || !cs2ApiCache.odds) {
@@ -292,10 +315,19 @@ function getCachedOdds(eventId) {
   
   const cached = cs2ApiCache.odds[eventId];
   if (cached && cached.data && isCacheValid(cached.timestamp)) {
-    const cacheAge = Date.now() - new Date(cached.timestamp).getTime();
-    const hoursOld = cacheAge / (1000 * 60 * 60);
-    console.log(`[CS2 Cache] ✓ Using cached odds for event ${eventId} (${hoursOld.toFixed(1)} hours old, ${(24 - hoursOld).toFixed(1)} hours remaining)`);
-    return cached.data;
+    // Validate that cached odds are real (not placeholder)
+    if (areOddsReal(cached.data)) {
+      const cacheAge = Date.now() - new Date(cached.timestamp).getTime();
+      const hoursOld = cacheAge / (1000 * 60 * 60);
+      console.log(`[CS2 Cache] ✓ Using cached REAL odds for event ${eventId} (${hoursOld.toFixed(1)} hours old, ${(24 - hoursOld).toFixed(1)} hours remaining)`);
+      return cached.data;
+    } else {
+      // Cached odds are placeholder - remove from cache and return null
+      console.log(`[CS2 Cache] ✗ Cached odds for event ${eventId} are placeholder/fake, removing from cache`);
+      delete cs2ApiCache.odds[eventId];
+      saveCS2ApiCache().catch(err => console.error('[CS2 Cache] Error saving cache after cleanup:', err));
+      return null;
+    }
   }
   
   if (cached && cached.data) {
@@ -308,8 +340,14 @@ function getCachedOdds(eventId) {
   return null;
 }
 
-// Cache odds data for an event
+// Cache odds data for an event (only if they are real, not placeholder)
 async function cacheOdds(eventId, oddsData) {
+  // Only cache real odds, not placeholder/default odds
+  if (!areOddsReal(oddsData)) {
+    console.log(`[CS2 Cache] ✗ Not caching odds for event ${eventId} - odds are placeholder/fake (team1=${oddsData?.odds?.team1}, team2=${oddsData?.odds?.team2})`);
+    return;
+  }
+  
   if (!cs2ApiCache.odds) {
     cs2ApiCache.odds = {};
   }
@@ -318,7 +356,7 @@ async function cacheOdds(eventId, oddsData) {
     timestamp: new Date().toISOString()
   };
   await saveCS2ApiCache();
-  console.log(`[CS2 Cache] Cached odds for event ${eventId}`);
+  console.log(`[CS2 Cache] ✓ Cached REAL odds for event ${eventId} (team1=${oddsData.odds.team1}, team2=${oddsData.odds.team2})`);
 }
 
 // Load CS2 team rankings from file
@@ -1913,11 +1951,12 @@ async function syncCS2Events() {
                         (finalStatus === 'scheduled' || finalStatus === 'live') &&
                         match.hasOdds !== false;
       
-      // IMPORTANT: For matches with both teams in top 250, we require odds to be available
-      // If odds are not available, skip adding this match to events
-      const hasValidOdds = existingOdds.team1 && existingOdds.team2;
+      // IMPORTANT: For matches with both teams in top 250, we require REAL odds to be available
+      // Check if existing odds are real (not placeholder 2.0)
+      const hasRealOdds = existingOdds.team1 && existingOdds.team2 && 
+                         existingOdds.team1 !== 2.0 && existingOdds.team2 !== 2.0;
       
-      if (!hasValidOdds && (finalStatus === 'scheduled' || finalStatus === 'live')) {
+      if (!hasRealOdds && (finalStatus === 'scheduled' || finalStatus === 'live')) {
         // Try to fetch odds immediately (if not already cached)
         // Check cache first
         let oddsData = getCachedOdds(eventId);
@@ -1934,17 +1973,33 @@ async function syncCS2Events() {
             oddsData = await cs2ApiClient.fetchMatchOdds(eventId);
             oddsFetchCount++;
             
-            if (oddsData && oddsData.odds) {
+            // Only cache if odds are real (not placeholder)
+            if (oddsData && oddsData.odds && areOddsReal(oddsData)) {
               await cacheOdds(eventId, oddsData);
+            } else if (oddsData && oddsData.odds) {
+              console.log(`[CS2 Sync] ⚠ Fetched odds for ${eventId} are placeholder/fake, NOT caching`);
             }
           } catch (error) {
             console.error(`[CS2 Sync] Error fetching odds for ${eventId}:`, error.message);
             oddsData = null;
           }
+        } else {
+          // Validate cached odds are real
+          if (!areOddsReal(oddsData)) {
+            console.log(`[CS2 Sync] ⚠ Cached odds for ${eventId} are placeholder, fetching fresh...`);
+            delete cs2ApiCache.odds[eventId];
+            await saveCS2ApiCache();
+            oddsData = await cs2ApiClient.fetchMatchOdds(eventId);
+            if (oddsData && oddsData.odds && areOddsReal(oddsData)) {
+              await cacheOdds(eventId, oddsData);
+            } else {
+              oddsData = null;
+            }
+          }
         }
         
-        // Check if we got valid odds
-        if (oddsData && oddsData.odds && oddsData.odds.team1 && oddsData.odds.team2) {
+        // Check if we got valid REAL odds (not placeholder)
+        if (oddsData && oddsData.odds && areOddsReal(oddsData)) {
           // Validate and correct odds
           let validatedOdds = {
             team1: oddsData.odds.team1,
@@ -2075,6 +2130,12 @@ async function settleCS2Bets() {
       // If event is not finished, check API for results
       if (event.status !== 'finished') {
         try {
+          // Use cs2ApiClient or cs2OddsProvider for fetching results
+          const resultClient = cs2OddsProvider || cs2ApiClient;
+          if (!resultClient) {
+            console.warn(`No API client available to fetch results for event ${eventId}`);
+            continue;
+          }
           const result = await resultClient.fetchMatchResults(eventId);
           if (result && result.completed) {
             // Update event status
@@ -2232,11 +2293,28 @@ async function updateAllMatchOdds(updateAll = false, force = false) {
     });
     
     // Filter to only those needing odds if updateAll is false
+    // An event needs odds if:
+    // 1. It has no odds at all, OR
+    // 2. It has placeholder/fake odds (2.0 default), OR
+    // 3. It's missing odds for one or both teams, OR
+    // 4. hasOdds is false (meaning it previously didn't have real odds)
     const eventsToUpdate = updateAll 
       ? activeEvents 
       : activeEvents.filter(event => {
-          const needsOdds = (!event.odds || !event.odds.team1 || !event.odds.team2);
-          return needsOdds;
+          // Always update if hasOdds is explicitly false (match without odds that might now have them)
+          if (event.hasOdds === false) {
+            return true;
+          }
+          
+          if (!event.odds || !event.odds.team1 || !event.odds.team2) {
+            return true; // Missing odds
+          }
+          
+          // Check if existing odds are placeholder (2.0 default)
+          const hasPlaceholderOdds = (event.odds.team1 === 2.0 && event.odds.team2 === 2.0) ||
+                                     (event.odds.team1 === null || event.odds.team1 === undefined) ||
+                                     (event.odds.team2 === null || event.odds.team2 === undefined);
+          return hasPlaceholderOdds;
         });
     
     if (eventsToUpdate.length === 0) {
@@ -2270,18 +2348,36 @@ async function updateAllMatchOdds(updateAll = false, force = false) {
           console.log(`[CS2 Odds] Cache miss for event ${eventId}, fetching from API...`);
           oddsData = await cs2ApiClient.fetchMatchOdds(eventId);
           
-          // Cache the odds if we got valid data (even if partial)
+          // Cache the odds ONLY if they are real (not placeholder)
           if (oddsData && oddsData.odds) {
-            await cacheOdds(eventId, oddsData);
-            console.log(`[CS2 Odds] ✓ Fetched and cached odds for event ${eventId}`);
+            if (areOddsReal(oddsData)) {
+              await cacheOdds(eventId, oddsData);
+              console.log(`[CS2 Odds] ✓ Fetched and cached REAL odds for event ${eventId}`);
+            } else {
+              console.log(`[CS2 Odds] ⚠ Fetched odds for event ${eventId} are placeholder/fake, NOT caching`);
+            }
           } else {
             console.log(`[CS2 Odds] ⚠ No odds data returned for event ${eventId}`);
           }
         } else {
-          console.log(`[CS2 Odds] ✓ Using cached odds for event ${eventId} (no API call needed)`);
+          // Validate cached odds are real before using
+          if (areOddsReal(oddsData)) {
+            console.log(`[CS2 Odds] ✓ Using cached REAL odds for event ${eventId} (no API call needed)`);
+          } else {
+            // Cached odds are placeholder - clear cache and fetch fresh
+            console.log(`[CS2 Odds] ⚠ Cached odds for event ${eventId} are placeholder, fetching fresh...`);
+            delete cs2ApiCache.odds[eventId];
+            await saveCS2ApiCache();
+            oddsData = await cs2ApiClient.fetchMatchOdds(eventId);
+            if (oddsData && oddsData.odds && areOddsReal(oddsData)) {
+              await cacheOdds(eventId, oddsData);
+              console.log(`[CS2 Odds] ✓ Fetched and cached REAL odds for event ${eventId}`);
+            }
+          }
         }
         
-        if (oddsData && oddsData.odds && (oddsData.odds.team1 || oddsData.odds.team2)) {
+        // Only process if we have real odds (not placeholder)
+        if (oddsData && oddsData.odds && areOddsReal(oddsData)) {
           // Validate and correct odds based on team rankings
           const team1Name = event.homeTeam || event.participant1Name || 'Team 1';
           const team2Name = event.awayTeam || event.participant2Name || 'Team 2';

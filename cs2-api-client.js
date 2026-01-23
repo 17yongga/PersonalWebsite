@@ -562,11 +562,13 @@ async function fetchMatchResults(fixtureId) {
     }
 
     // Use settlements endpoint to check if match is finished
+    // According to OddsPapi docs: https://oddspapi.io/en/docs/get-settlements
+    // Response structure: { fixtureId, markets: { marketId: { outcomes: { outcomeId: { players: { playerId: { result: "WIN"/"LOSE"/"PUSH" } } } } } } }
     const settlements = await makeRequest('/settlements', {
       fixtureId: fixtureId
     }, `Check match settlement/results for fixture ${fixtureId}`);
 
-    // Also try scores endpoint
+    // Also try scores endpoint for actual scores
     let scoresData = null;
     try {
       scoresData = await makeRequest('/scores', {
@@ -577,19 +579,59 @@ async function fetchMatchResults(fixtureId) {
       console.log('[OddsPapi] Scores endpoint not available, using settlements only');
     }
 
-    if (settlements && settlements.length > 0) {
-      const settlement = settlements[0];
-      return {
-        fixtureId: settlement.fixtureId || fixtureId,
-        completed: true,
-        statusId: settlement.statusId,
-        winner: determineWinnerFromSettlement(settlement),
-        participant1Score: settlement.participant1Score || null,
-        participant2Score: settlement.participant2Score || null
-      };
+    // Parse settlements response (object, not array)
+    if (settlements && settlements.fixtureId && settlements.markets) {
+      // Extract winner from market 101 (Moneyline) or 171 (Match Winner for esports)
+      const marketId = settlements.markets['171'] ? '171' : (settlements.markets['101'] ? '101' : null);
+      
+      if (marketId && settlements.markets[marketId] && settlements.markets[marketId].outcomes) {
+        const outcomes = settlements.markets[marketId].outcomes;
+        let winner = null;
+        
+        // Check outcomes: 101 = team1/home, 102 = team2/away, 103 = draw
+        // For market 171 (esports): similar structure
+        for (const [outcomeId, outcomeData] of Object.entries(outcomes)) {
+          // Check if any player has WIN result
+          if (outcomeData.players) {
+            for (const playerData of Object.values(outcomeData.players)) {
+              if (playerData.result === 'WIN') {
+                // Map outcome ID to winner
+                if (outcomeId === '101' || outcomeId === '171') {
+                  winner = 'team1';
+                } else if (outcomeId === '102' || outcomeId === '172') {
+                  winner = 'team2';
+                } else if (outcomeId === '103' || outcomeId === '173') {
+                  winner = 'draw';
+                }
+                break;
+              }
+            }
+            if (winner) break;
+          }
+        }
+        
+        // Get scores from scores endpoint if available
+        let participant1Score = null;
+        let participant2Score = null;
+        if (scoresData && scoresData.scores) {
+          participant1Score = scoresData.scores.participant1Score || null;
+          participant2Score = scoresData.scores.participant2Score || null;
+        }
+        
+        if (winner) {
+          return {
+            fixtureId: settlements.fixtureId || fixtureId,
+            completed: true,
+            statusId: scoresData?.statusId || 3, // 3 = finished
+            winner: winner,
+            participant1Score: participant1Score,
+            participant2Score: participant2Score
+          };
+        }
+      }
     }
 
-    // If no settlement, check scores data
+    // If no settlement, check scores data as fallback
     if (scoresData && scoresData.scores) {
       const scores = scoresData.scores;
       return {
