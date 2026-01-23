@@ -8,10 +8,12 @@
 
 const axios = require('axios');
 const https = require('https');
+const fs = require('fs');
+const path = require('path');
 
 // Configuration - can be overridden via environment variables
 const ODDSPAPI_BASE_URL = process.env.ODDSPAPI_BASE_URL || 'https://api.oddspapi.io/v4';
-const ODDSPAPI_API_KEY = process.env.ODDSPAPI_API_KEY || '2fc3c182-766b-4992-9729-f439efdac2ba';
+const ODDSPAPI_API_KEY = process.env.ODDSPAPI_API_KEY || '54e76406-74ee-4337-af07-85994db01523';
 const ODDSPAPI_LANGUAGE = process.env.ODDSPAPI_LANGUAGE || 'en';
 const ODDSPAPI_ODDS_FORMAT = process.env.ODDSPAPI_ODDS_FORMAT || 'decimal'; // decimal, fractional, american
 
@@ -26,17 +28,72 @@ const REQUEST_LIMIT_PER_MONTH = 200; // Free plan limit per OddsPapi docs
 const ENDPOINT_COOLDOWN_MS = 500; // 500ms cooldown between requests (per API docs)
 let lastRequestTime = 0; // Track last request time for rate limiting
 
+// API Call Logging
+const API_LOG_FILE = path.join(__dirname, 'oddspapi-api-calls.log');
+
+// Initialize log file with header on first run
+if (!fs.existsSync(API_LOG_FILE)) {
+  const header = `# OddsPapi API Call Log
+# Started: ${new Date().toISOString()}
+# API Key: ${ODDSPAPI_API_KEY.substring(0, 8)}...${ODDSPAPI_API_KEY.substring(ODDSPAPI_API_KEY.length - 4)}
+# Format: JSON Lines (one JSON object per line)
+#
+`;
+  fs.writeFileSync(API_LOG_FILE, header);
+  console.log(`[API Logger] Created new log file: ${API_LOG_FILE}`);
+}
+
+/**
+ * Log API call to file with timestamp
+ * @param {string} endpoint - API endpoint called
+ * @param {string} purpose - Purpose/reason for the API call
+ * @param {Object} params - Request parameters (excluding API key)
+ * @param {string} status - 'success' or 'error'
+ * @param {string} errorMessage - Error message if status is 'error'
+ * @param {number} responseTime - Response time in milliseconds
+ */
+function logApiCall(endpoint, purpose, params = {}, status = 'success', errorMessage = null, responseTime = null) {
+  const timestamp = new Date().toISOString();
+  const logEntry = {
+    timestamp,
+    endpoint,
+    purpose,
+    params: { ...params, apiKey: '[REDACTED]' }, // Don't log the actual API key
+    status,
+    errorMessage: errorMessage || null,
+    responseTime: responseTime || null,
+    requestCount: requestCount + 1
+  };
+  
+  const logLine = JSON.stringify(logEntry) + '\n';
+  
+  // Append to log file asynchronously
+  fs.appendFile(API_LOG_FILE, logLine, (err) => {
+    if (err) {
+      console.error('[API Logger] Failed to write to log file:', err.message);
+    }
+  });
+  
+  // Also log to console for immediate visibility
+  const statusIcon = status === 'success' ? '✓' : '✗';
+  console.log(`[API Logger] ${statusIcon} ${timestamp} | ${endpoint} | ${purpose} | Status: ${status}${responseTime ? ` | Time: ${responseTime}ms` : ''}`);
+}
+
 // Market IDs for OddsPapi:
-// 101 = Moneyline/1X2 (home/draw/away)
+// 101 = Moneyline/1X2 (home/draw/away) - for traditional sports
+// 171 = Match Winner - for esports (CS2 uses this)
 const MARKET_MONEYLINE = '101';
+const MARKET_MATCH_WINNER = '171';
 
 /**
  * Make authenticated request to OddsPapi API
  * @param {string} endpoint - API endpoint (e.g., '/sports', '/fixtures')
  * @param {Object} params - Query parameters
+ * @param {string} purpose - Purpose/reason for this API call (for logging)
  * @returns {Promise<Object>} API response
  */
-async function makeRequest(endpoint, params = {}) {
+async function makeRequest(endpoint, params = {}, purpose = 'API call') {
+  const startTime = Date.now();
   try {
     // Respect API cooldown (500ms between requests)
     const now = Date.now();
@@ -68,9 +125,20 @@ async function makeRequest(endpoint, params = {}) {
     });
 
     requestCount++;
+    const responseTime = Date.now() - startTime;
+    
+    // Log successful API call
+    logApiCall(endpoint, purpose, params, 'success', null, responseTime);
+    
     return response.data;
   } catch (error) {
-    console.error(`[OddsPapi] Error fetching ${endpoint}:`, error.message);
+    const responseTime = Date.now() - startTime;
+    const errorMessage = error.message || 'Unknown error';
+    
+    // Log failed API call
+    logApiCall(endpoint, purpose, params, 'error', errorMessage, responseTime);
+    
+    console.error(`[OddsPapi] Error fetching ${endpoint}:`, errorMessage);
     if (error.response) {
       console.error('[OddsPapi] Response status:', error.response.status);
       console.error('[OddsPapi] Response data:', JSON.stringify(error.response.data, null, 2));
@@ -96,7 +164,7 @@ async function makeRequest(endpoint, params = {}) {
  */
 async function getAvailableSports() {
   try {
-    const data = await makeRequest('/sports');
+    const data = await makeRequest('/sports', {}, 'Get available sports list to find CS2 sport ID');
     
     if (Array.isArray(data)) {
       console.log(`[OddsPapi] Successfully fetched sports list (${data.length} sports)`);
@@ -386,7 +454,7 @@ async function fetchUpcomingMatches(options = {}) {
     // Note: OddsPapi may have additional filters like tournamentId, statusId, etc.
     // We can add those later if needed
 
-    const data = await makeRequest('/fixtures', params);
+    const data = await makeRequest('/fixtures', params, 'Fetch upcoming CS2 fixtures/matches');
 
     // Handle different response structures
     let fixtures = [];
@@ -457,7 +525,7 @@ async function fetchMatchOdds(fixtureId) {
       fixtureId: fixtureId,
       oddsFormat: ODDSPAPI_ODDS_FORMAT,
       verbosity: 3 // Get detailed response
-    });
+    }, `Fetch odds for fixture ${fixtureId}`);
 
     if (data && data.fixtureId) {
       console.log(`[OddsPapi] Received odds data for fixture ${fixtureId}, hasOdds: ${data.hasOdds}`);
@@ -496,14 +564,14 @@ async function fetchMatchResults(fixtureId) {
     // Use settlements endpoint to check if match is finished
     const settlements = await makeRequest('/settlements', {
       fixtureId: fixtureId
-    });
+    }, `Check match settlement/results for fixture ${fixtureId}`);
 
     // Also try scores endpoint
     let scoresData = null;
     try {
       scoresData = await makeRequest('/scores', {
         fixtureId: fixtureId
-      });
+      }, `Get match scores for fixture ${fixtureId}`);
     } catch (error) {
       // Scores endpoint may not be available, that's OK
       console.log('[OddsPapi] Scores endpoint not available, using settlements only');
@@ -542,6 +610,389 @@ async function fetchMatchResults(fixtureId) {
 }
 
 /**
+ * Extract odds from all bookmakers and calculate common range
+ * Returns odds selected from the most common range across bookmakers
+ * @param {Object} fixture - Fixture object with bookmakerOdds
+ * @returns {Object} { team1Odds, team2Odds, drawOdds } with values from common range
+ */
+function extractOddsWithCommonRange(fixture) {
+  const fixtureId = fixture.fixtureId || fixture.id;
+  let team1Odds = null;
+  let team2Odds = null;
+  let drawOdds = null;
+
+  if (!fixture.bookmakerOdds || Object.keys(fixture.bookmakerOdds).length === 0) {
+    console.log(`[OddsPapi] No bookmakerOdds found for fixture ${fixtureId}`);
+    return { team1Odds, team2Odds, drawOdds };
+  }
+
+  const bookmakerNames = Object.keys(fixture.bookmakerOdds);
+  console.log(`[OddsPapi] Found ${bookmakerNames.length} bookmaker(s): ${bookmakerNames.join(', ')}`);
+
+  // Collect all odds from all bookmakers
+  const allTeam1Odds = [];
+  const allTeam2Odds = [];
+  const allDrawOdds = [];
+
+  // Try market 171 first (Match Winner for esports), then fallback to 101 (Moneyline)
+  for (const bookmakerName of bookmakerNames) {
+    const bookmaker = fixture.bookmakerOdds[bookmakerName];
+    if (!bookmaker || !bookmaker.markets) continue;
+
+    // Try market 171 (esports match winner)
+    let market = bookmaker.markets[MARKET_MATCH_WINNER];
+    let marketType = '171';
+    
+    // Fallback to market 101 (moneyline) if 171 not available
+    if (!market) {
+      market = bookmaker.markets[MARKET_MONEYLINE];
+      marketType = '101';
+    }
+
+    if (!market || !market.outcomes) continue;
+
+    // Extract odds from market 171 (outcomes 171 and 172) or 101 (outcomes 101, 102, 103)
+    if (marketType === '171') {
+      // Market 171: outcomes 171 and 172
+      // PROBLEM: Different bookmakers have these reversed!
+      // Some have: 171 = participant1, 172 = participant2
+      // Others have: 171 = participant2, 172 = participant1
+      // Solution: For each bookmaker, determine which outcome maps to which participant
+      // by checking the pattern: if 171 has lower odds, it's likely the favorite
+      // We'll use a majority-vote approach: determine which pattern is more common
+      let outcome171Price = null;
+      let outcome172Price = null;
+
+      if (market.outcomes['171'] && market.outcomes['171'].players) {
+        for (const playerId in market.outcomes['171'].players) {
+          const player = market.outcomes['171'].players[playerId];
+          if (player && player.active !== false && player.price) {
+            outcome171Price = parseFloat(player.price);
+            break;
+          }
+        }
+      }
+
+      if (market.outcomes['172'] && market.outcomes['172'].players) {
+        for (const playerId in market.outcomes['172'].players) {
+          const player = market.outcomes['172'].players[playerId];
+          if (player && player.active !== false && player.price) {
+            outcome172Price = parseFloat(player.price);
+            break;
+          }
+        }
+      }
+
+      if (outcome171Price && outcome172Price) {
+        // Store both outcomes with bookmaker name and determine mapping per bookmaker
+        if (!fixture._tempOutcomes) {
+          fixture._tempOutcomes = { 
+            outcome171: [], 
+            outcome172: [],
+            mappings: [] // Track which pattern each bookmaker uses
+          };
+        }
+        fixture._tempOutcomes.outcome171.push({ bookmaker: bookmakerName, price: outcome171Price });
+        fixture._tempOutcomes.outcome172.push({ bookmaker: bookmakerName, price: outcome172Price });
+        
+        // Determine this bookmaker's pattern: which outcome has lower odds (favorite)?
+        // We'll use this to determine the mapping later
+        const is171Favorite = outcome171Price < outcome172Price;
+        fixture._tempOutcomes.mappings.push({
+          bookmaker: bookmakerName,
+          is171Favorite: is171Favorite,
+          price171: outcome171Price,
+          price172: outcome172Price
+        });
+      }
+    } else {
+      // Market 101: outcomes 101=team1, 102=draw, 103=team2
+      if (market.outcomes['101'] && market.outcomes['101'].players) {
+        for (const playerId in market.outcomes['101'].players) {
+          const player = market.outcomes['101'].players[playerId];
+          if (player && player.active !== false && player.price) {
+            allTeam1Odds.push(parseFloat(player.price));
+            break;
+          }
+        }
+      }
+
+      if (market.outcomes['102'] && market.outcomes['102'].players) {
+        for (const playerId in market.outcomes['102'].players) {
+          const player = market.outcomes['102'].players[playerId];
+          if (player && player.active !== false && player.price) {
+            allDrawOdds.push(parseFloat(player.price));
+            break;
+          }
+        }
+      }
+
+      if (market.outcomes['103'] && market.outcomes['103'].players) {
+        for (const playerId in market.outcomes['103'].players) {
+          const player = market.outcomes['103'].players[playerId];
+          if (player && player.active !== false && player.price) {
+            allTeam2Odds.push(parseFloat(player.price));
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // For market 171, we need to determine which outcome maps to which participant
+  // by analyzing the pattern across all bookmakers
+  if (fixture._tempOutcomes && fixture._tempOutcomes.outcome171.length > 0) {
+    const mappings = fixture._tempOutcomes.mappings || [];
+    
+    // Count how many bookmakers have each pattern
+    let count171AsFavorite = 0; // Bookmakers where 171 has lower odds (favorite)
+    let count172AsFavorite = 0; // Bookmakers where 172 has lower odds (favorite)
+    
+    for (const mapping of mappings) {
+      if (mapping.is171Favorite) {
+        count171AsFavorite++;
+      } else {
+        count172AsFavorite++;
+      }
+    }
+    
+    // Determine the majority pattern
+    // If most bookmakers show 171 as favorite, then 171 likely maps to the favorite participant
+    // We need to determine which participant (1 or 2) is the favorite based on the odds pattern
+    const majority171IsFavorite = count171AsFavorite >= count172AsFavorite;
+    
+    // Strategy: We'll determine the mapping by checking which outcome consistently has lower odds
+    // If 171 is more commonly the favorite, we need to check if participant1 or participant2 should be favorite
+    // Since we can't know from the fixture alone, we'll use a different approach:
+    // For each bookmaker, map outcomes to participants based on their individual pattern
+    // Then aggregate correctly
+    
+    // Collect odds for participant1 and participant2 separately
+    // We'll use a two-pass approach:
+    // 1. First, determine which outcome (171 or 172) more commonly maps to participant1
+    // 2. Then, for each bookmaker, apply the correct mapping
+    
+    // Since we don't have team names in outcomes, we'll use a statistical approach:
+    // If most bookmakers show 171 as favorite, assume 171 maps to the favorite participant
+    // But we still need to know which participant is favorite...
+    
+    // Better approach: For each bookmaker, we have two outcomes with two prices
+    // We'll collect all "favorite" odds and all "underdog" odds separately
+    // Then determine which participant should be favorite based on the pattern
+    
+    // Actually, the simplest and most reliable approach:
+    // 1. For each bookmaker, determine which outcome is favorite (lower odds)
+    // 2. Collect all favorite odds and all underdog odds separately
+    // 3. Map favorite odds to the participant that should be favorite
+    // 4. But we still need to know which participant is favorite...
+    
+    // Final approach: Use the pattern where most bookmakers agree
+    // If majority show 171 as favorite, then:
+    //   - For bookmakers where 171 is favorite: 171→participant1, 172→participant2
+    //   - For bookmakers where 172 is favorite: 171→participant2, 172→participant1 (reversed)
+    // But we need to know which participant should be favorite...
+    
+    // Actually, let's use a simpler heuristic:
+    // Since we can't know which participant is favorite from fixture data alone,
+    // we'll assume the mapping is consistent for the majority of bookmakers
+    // If most bookmakers show 171 as favorite, assume 171→participant1 (or whichever is more common)
+    
+    // Collect odds correctly mapped to participants
+    for (let i = 0; i < mappings.length; i++) {
+      const mapping = mappings[i];
+      const price171 = mapping.price171;
+      const price172 = mapping.price172;
+      
+      // Determine mapping for this bookmaker
+      // If this bookmaker shows 171 as favorite and majority also shows 171 as favorite,
+      // then 171→participant1, 172→participant2
+      // If this bookmaker shows 172 as favorite but majority shows 171 as favorite,
+      // then this bookmaker is reversed: 171→participant2, 172→participant1
+      
+      if (majority171IsFavorite) {
+        // Majority pattern: 171 is favorite
+        if (mapping.is171Favorite) {
+          // This bookmaker matches majority: 171→participant1, 172→participant2
+          allTeam1Odds.push(price171);
+          allTeam2Odds.push(price172);
+        } else {
+          // This bookmaker is reversed: 171→participant2, 172→participant1
+          allTeam1Odds.push(price172);
+          allTeam2Odds.push(price171);
+        }
+      } else {
+        // Majority pattern: 172 is favorite
+        if (mapping.is171Favorite) {
+          // This bookmaker is reversed: 171→participant2, 172→participant1
+          allTeam1Odds.push(price172);
+          allTeam2Odds.push(price171);
+        } else {
+          // This bookmaker matches majority: 171→participant1, 172→participant2
+          allTeam1Odds.push(price171);
+          allTeam2Odds.push(price172);
+        }
+      }
+    }
+    
+    // Validate the mapping: if both averages are very low, something is wrong
+    if (allTeam1Odds.length > 0 && allTeam2Odds.length > 0) {
+      const avgTeam1 = allTeam1Odds.reduce((a, b) => a + b, 0) / allTeam1Odds.length;
+      const avgTeam2 = allTeam2Odds.reduce((a, b) => a + b, 0) / allTeam2Odds.length;
+      
+      // Validate the mapping: Check if odds make sense
+      // If both are very low (< 1.5), the entire mapping might be inverted
+      // Also check if the odds distribution suggests an inversion:
+      // - If one participant has consistently very low odds (< 1.2) and the other has high odds (> 3.0),
+      //   but the low odds participant has higher average than expected, we might be inverted
+      // - Better heuristic: If avgTeam1 < avgTeam2 but avgTeam1 > 2.0, something is likely wrong
+      //   (the favorite should have odds < 2.0 typically)
+      
+      const shouldInvert = (avgTeam1 < 1.5 && avgTeam2 < 1.5) || // Both very low
+                          (avgTeam1 > avgTeam2 && avgTeam1 > 2.5 && avgTeam2 < 2.0) || // Team1 has higher odds but Team2 is in favorite range
+                          (avgTeam2 > avgTeam1 && avgTeam2 > 2.5 && avgTeam1 < 2.0); // Team2 has higher odds but Team1 is in favorite range
+      
+      if (shouldInvert) {
+        console.warn(`[OddsPapi] Market 171: Odds distribution suggests inversion (${avgTeam1.toFixed(2)}, ${avgTeam2.toFixed(2)}), inverting all mappings`);
+        // Invert all mappings
+        const temp = [...allTeam1Odds];
+        allTeam1Odds.length = 0;
+        allTeam1Odds.push(...allTeam2Odds);
+        allTeam2Odds.length = 0;
+        allTeam2Odds.push(...temp);
+      }
+      
+      console.log(`[OddsPapi] Market 171 mapping: ${majority171IsFavorite ? '171=favorite (majority)' : '172=favorite (majority)'} (${count171AsFavorite} vs ${count172AsFavorite} bookmakers)`);
+      console.log(`[OddsPapi]   Participant1 avg: ${avgTeam1.toFixed(2)}, Participant2 avg: ${avgTeam2.toFixed(2)}`);
+    }
+    
+    // Clean up temp data
+    delete fixture._tempOutcomes;
+  }
+
+  // Calculate common range and select middle value
+  // IMPORTANT: For market 171, we've already mapped outcomes to participants correctly above
+  // For market 101, the mapping is standard (101=team1, 103=team2)
+  team1Odds = calculateCommonRangeOdds(allTeam1Odds);
+  team2Odds = calculateCommonRangeOdds(allTeam2Odds);
+  drawOdds = calculateCommonRangeOdds(allDrawOdds);
+
+  // Final validation: Check if the odds make sense
+  // A valid match should have:
+  // - One favorite with low odds (typically 1.0-2.0)
+  // - One underdog with higher odds (typically 2.0+)
+  // If both are very low (< 1.5), both are high (> 3.0), or the "favorite" has odds > 2.5,
+  // the mapping is likely incorrect
+  if (team1Odds && team2Odds) {
+    const bothLow = team1Odds < 1.5 && team2Odds < 1.5;
+    const bothHigh = team1Odds > 3.0 && team2Odds > 3.0;
+    const favoriteHasHighOdds = (team1Odds < team2Odds && team1Odds > 2.5) || 
+                                (team2Odds < team1Odds && team2Odds > 2.5);
+    
+    if (bothLow || bothHigh || favoriteHasHighOdds) {
+      console.warn(`[OddsPapi] ⚠ WARNING: Odds distribution suggests incorrect mapping (${team1Odds}, ${team2Odds}).`);
+      console.warn(`[OddsPapi]   Participant1: ${fixture.participant1Name}, Participant2: ${fixture.participant2Name}`);
+      console.warn(`[OddsPapi]   Both low: ${bothLow}, Both high: ${bothHigh}, Favorite has high odds: ${favoriteHasHighOdds}`);
+      
+      // Swap as a last resort - the mapping logic above should have caught this
+      const temp = team1Odds;
+      team1Odds = team2Odds;
+      team2Odds = temp;
+      console.log(`[OddsPapi]   Final swap applied: Participant1=${team1Odds}, Participant2=${team2Odds}`);
+    }
+  }
+  
+  // Additional validation: Check if odds are in a reasonable range
+  // One should be favorite (low odds, typically 1.0-2.0) and one should be underdog (higher odds, typically 2.0+)
+  // If both are in the middle range (1.5-3.0), that's also fine (close match)
+  // But if one is extremely high (> 10) and the other is also high (> 3), something might be wrong
+  if (team1Odds && team2Odds) {
+    const bothHigh = team1Odds > 3.0 && team2Odds > 3.0;
+    const oneExtreme = (team1Odds > 10 && team2Odds < 2.0) || (team2Odds > 10 && team1Odds < 2.0);
+    
+    if (bothHigh && !oneExtreme) {
+      console.warn(`[OddsPapi] ⚠ Both odds are relatively high (${team1Odds}, ${team2Odds}). This might indicate a mapping issue.`);
+    }
+  }
+
+  if (team1Odds !== null || team2Odds !== null) {
+    console.log(`[OddsPapi] ✓ Extracted odds for fixture ${fixtureId}: team1=${team1Odds}, team2=${team2Odds}, draw=${drawOdds}`);
+    console.log(`[OddsPapi]   Participant1 (${fixture.participant1Name}): ${team1Odds}`);
+    console.log(`[OddsPapi]   Participant2 (${fixture.participant2Name}): ${team2Odds}`);
+  } else {
+    console.log(`[OddsPapi] ⚠ No odds extracted from any bookmaker for fixture ${fixtureId}`);
+  }
+
+  return { team1Odds, team2Odds, drawOdds };
+}
+
+/**
+ * Calculate common range odds from array of odds values
+ * Finds the range where most bookmakers fall and selects middle value
+ * @param {Array<number>} oddsArray - Array of odds values from different bookmakers
+ * @returns {number|null} Selected odds value from common range, or null if no valid odds
+ */
+function calculateCommonRangeOdds(oddsArray) {
+  if (!oddsArray || oddsArray.length === 0) {
+    return null;
+  }
+
+  // Filter out invalid values
+  const validOdds = oddsArray.filter(odds => odds && odds > 0 && isFinite(odds));
+  if (validOdds.length === 0) {
+    return null;
+  }
+
+  // If only one or two values, return average
+  if (validOdds.length <= 2) {
+    const avg = validOdds.reduce((a, b) => a + b, 0) / validOdds.length;
+    return parseFloat(avg.toFixed(2));
+  }
+
+  // Sort odds
+  const sortedOdds = [...validOdds].sort((a, b) => a - b);
+  
+  // Find the most common range (where most values cluster)
+  // Use a sliding window approach to find the tightest cluster
+  let bestRange = null;
+  let maxCount = 0;
+  const rangeSize = 0.5; // Look for ranges of 0.5 (e.g., 1.06-1.1, 6.2-8.0)
+
+  for (let i = 0; i < sortedOdds.length; i++) {
+    const rangeStart = sortedOdds[i];
+    const rangeEnd = rangeStart + rangeSize;
+    
+    // Count how many odds fall in this range
+    const count = sortedOdds.filter(odds => odds >= rangeStart && odds <= rangeEnd).length;
+    
+    if (count > maxCount) {
+      maxCount = count;
+      bestRange = { start: rangeStart, end: rangeEnd, count };
+    }
+  }
+
+  // If we found a good cluster (at least 3 values or 50% of bookmakers)
+  if (bestRange && bestRange.count >= Math.max(3, Math.floor(validOdds.length * 0.5))) {
+    // Get all odds in the common range
+    const commonRangeOdds = sortedOdds.filter(odds => 
+      odds >= bestRange.start && odds <= bestRange.end
+    );
+    
+    // Calculate middle value (median) of the common range
+    const midIndex = Math.floor(commonRangeOdds.length / 2);
+    const selectedOdds = commonRangeOdds[midIndex];
+    
+    console.log(`[OddsPapi] Common range: ${bestRange.start.toFixed(2)}-${bestRange.end.toFixed(2)} (${bestRange.count} bookmakers), selected: ${selectedOdds.toFixed(2)}`);
+    return parseFloat(selectedOdds.toFixed(2));
+  }
+
+  // Fallback: use median of all odds
+  const midIndex = Math.floor(sortedOdds.length / 2);
+  const medianOdds = sortedOdds[midIndex];
+  console.log(`[OddsPapi] Using median odds: ${medianOdds.toFixed(2)} (from ${validOdds.length} bookmakers)`);
+  return parseFloat(medianOdds.toFixed(2));
+}
+
+/**
  * Map OddsPapi fixture format to internal format
  * @param {Object} fixture - Fixture object from OddsPapi
  * @returns {Promise<Object>} Internal match format
@@ -554,98 +1005,8 @@ async function mapOddsPapiFixtureToInternal(fixture) {
   const startTime = fixture.startTime || fixture.trueStartTime;
   const statusId = fixture.statusId || 0; // 0=scheduled, 1=live, others=finished/cancelled
 
-  // Extract odds from bookmakerOdds according to OddsPapi documentation
-  // Market 101 = Moneyline: outcomes 101=home/team1, 102=draw, 103=away/team2
-  // Structure: bookmakerOdds.{bookmaker}.markets.{marketId}.outcomes.{outcomeId}.players.{playerId}.price
-  let team1Odds = null;
-  let team2Odds = null;
-  let drawOdds = null;
-
-  if (fixture.bookmakerOdds && Object.keys(fixture.bookmakerOdds).length > 0) {
-    // Try multiple bookmakers to find the most complete odds
-    // Check all bookmakers to ensure we get both team1 and team2 odds if available
-    const bookmakerNames = Object.keys(fixture.bookmakerOdds);
-    const bookmakers = Object.values(fixture.bookmakerOdds);
-    
-    console.log(`[OddsPapi] Found ${bookmakerNames.length} bookmaker(s): ${bookmakerNames.join(', ')}`);
-    
-    for (let i = 0; i < bookmakers.length; i++) {
-      const bookmaker = bookmakers[i];
-      const bookmakerName = bookmakerNames[i];
-      
-      if (!bookmaker || !bookmaker.markets) {
-        console.log(`[OddsPapi] Bookmaker ${bookmakerName} has no markets, skipping`);
-        continue;
-      }
-      
-      // Look for market 101 (Moneyline/1X2)
-      const market = bookmaker.markets['101'] || bookmaker.markets[MARKET_MONEYLINE];
-      if (!market || !market.outcomes) {
-        console.log(`[OddsPapi] Bookmaker ${bookmakerName} has no market 101, skipping`);
-        continue;
-      }
-      
-      // Extract team1 odds (outcome 101 = home)
-      if (!team1Odds && market.outcomes['101'] && market.outcomes['101'].players) {
-        const players = market.outcomes['101'].players;
-        // Get first active player with price
-        for (const playerId in players) {
-          const player = players[playerId];
-          if (player && player.active !== false && player.price) {
-            team1Odds = parseFloat(player.price);
-            console.log(`[OddsPapi] Found team1 odds from ${bookmakerName}: ${team1Odds}`);
-            break;
-          }
-        }
-      }
-      
-      // Extract draw odds (outcome 102)
-      if (!drawOdds && market.outcomes['102'] && market.outcomes['102'].players) {
-        const players = market.outcomes['102'].players;
-        for (const playerId in players) {
-          const player = players[playerId];
-          if (player && player.active !== false && player.price) {
-            drawOdds = parseFloat(player.price);
-            console.log(`[OddsPapi] Found draw odds from ${bookmakerName}: ${drawOdds}`);
-            break;
-          }
-        }
-      }
-      
-      // Extract team2 odds (outcome 103 = away)
-      if (!team2Odds && market.outcomes['103'] && market.outcomes['103'].players) {
-        const players = market.outcomes['103'].players;
-        for (const playerId in players) {
-          const player = players[playerId];
-          if (player && player.active !== false && player.price) {
-            team2Odds = parseFloat(player.price);
-            console.log(`[OddsPapi] Found team2 odds from ${bookmakerName}: ${team2Odds}`);
-            break;
-          }
-        }
-      }
-      
-      // If we have both team odds, we can stop (but continue if we only have one)
-      if (team1Odds !== null && team2Odds !== null) {
-        console.log(`[OddsPapi] Found complete odds from ${bookmakerName}, stopping search`);
-        break;
-      }
-    }
-    
-    // Log final extracted odds
-    if (team1Odds !== null || team2Odds !== null) {
-      console.log(`[OddsPapi] ✓ Extracted odds for fixture ${fixtureId}: team1=${team1Odds}, team2=${team2Odds}, draw=${drawOdds}`);
-    } else {
-      console.log(`[OddsPapi] ⚠ No odds extracted from any bookmaker for fixture ${fixtureId}`);
-      // Debug: Log available markets for troubleshooting
-      if (bookmakers.length > 0 && bookmakers[0].markets) {
-        const availableMarkets = Object.keys(bookmakers[0].markets);
-        console.log(`[OddsPapi] Available markets: ${availableMarkets.join(', ')}`);
-      }
-    }
-  } else {
-    console.log(`[OddsPapi] No bookmakerOdds found for fixture ${fixtureId}`);
-  }
+  // Extract odds using common range approach
+  const { team1Odds, team2Odds, drawOdds } = extractOddsWithCommonRange(fixture);
 
   // Note: We don't fetch odds here to avoid rate limit issues
   // Odds will be fetched on-demand when a user wants to bet on a specific fixture

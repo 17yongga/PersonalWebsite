@@ -137,12 +137,26 @@ let coinflipRoomCounter = 1;
 // ========== CS2 BETTING STATE ==========
 // CS2 betting data file path
 const CS2_BETTING_FILE = path.join(__dirname, "cs2-betting-data.json");
+// CS2 team rankings file path
+const CS2_TEAM_RANKINGS_FILE = path.join(__dirname, "cs2-team-rankings.json");
+// CS2 API cache file path
+const CS2_API_CACHE_FILE = path.join(__dirname, "cs2-api-cache.json");
 
-// CS2 betting state: { events: {}, bets: {}, lastApiSync: null }
+// CS2 betting state: { events: {}, bets: {}, lastApiSync: null, lastApiQuery: null, lastSettlementCheck: null }
+// lastApiQuery: ISO timestamp of last API query (for daily check)
+// lastSettlementCheck: ISO timestamp of last settlement check (for daily check)
 let cs2BettingState = {
   events: {},  // { eventId: { id, teams, startTime, status, odds, ... } }
   bets: {},    // { betId: { id, userId, matchId, selection, amount, odds, status, ... } }
-  lastApiSync: null
+  lastApiSync: null,
+  lastApiQuery: null, // Timestamp of last API query (for daily check)
+  lastSettlementCheck: null // Timestamp of last settlement check (for daily check)
+};
+
+// CS2 team rankings: { teams: [], lastUpdated: null }
+let cs2TeamRankings = {
+  teams: [],
+  lastUpdated: null
 };
 
 // Load CS2 betting data from file
@@ -175,6 +189,346 @@ async function saveCS2BettingData() {
 loadCS2BettingData().catch(err => {
   console.error("Error initializing CS2 betting data:", err);
 });
+
+// CS2 API Cache: { matches: { data: [], timestamp: "ISO" }, odds: { [eventId]: { data: {}, timestamp: "ISO" } } }
+let cs2ApiCache = {
+  matches: { data: null, timestamp: null },
+  odds: {}
+};
+
+// Cache TTL: 24 hours in milliseconds
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+// Load CS2 API cache from file
+async function loadCS2ApiCache() {
+  try {
+    const data = await fs.readFile(CS2_API_CACHE_FILE, "utf8");
+    cs2ApiCache = JSON.parse(data);
+    console.log(`[CS2 Cache] Loaded API cache: ${cs2ApiCache.matches?.data?.length || 0} matches, ${Object.keys(cs2ApiCache.odds || {}).length} odds entries`);
+    
+    // Check if cache is still valid
+    if (cs2ApiCache.matches?.timestamp) {
+      const cacheAge = Date.now() - new Date(cs2ApiCache.matches.timestamp).getTime();
+      const hoursOld = cacheAge / (1000 * 60 * 60);
+      if (cacheAge < CACHE_TTL_MS) {
+        console.log(`[CS2 Cache] Matches cache is valid (${hoursOld.toFixed(1)} hours old, ${(24 - hoursOld).toFixed(1)} hours remaining)`);
+      } else {
+        console.log(`[CS2 Cache] Matches cache expired (${hoursOld.toFixed(1)} hours old, will fetch fresh data)`);
+        cs2ApiCache.matches = { data: null, timestamp: null };
+      }
+    }
+    
+    // Clean up expired odds entries
+    const now = Date.now();
+    let expiredOddsCount = 0;
+    for (const [eventId, entry] of Object.entries(cs2ApiCache.odds || {})) {
+      if (entry.timestamp) {
+        const cacheAge = now - new Date(entry.timestamp).getTime();
+        if (cacheAge >= CACHE_TTL_MS) {
+          delete cs2ApiCache.odds[eventId];
+          expiredOddsCount++;
+        }
+      }
+    }
+    if (expiredOddsCount > 0) {
+      console.log(`[CS2 Cache] Removed ${expiredOddsCount} expired odds entries`);
+    }
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      // File doesn't exist, create empty cache
+      cs2ApiCache = { matches: { data: null, timestamp: null }, odds: {} };
+      await saveCS2ApiCache();
+      console.log("[CS2 Cache] Created new API cache file");
+    } else {
+      console.error("[CS2 Cache] Error loading API cache:", error);
+      cs2ApiCache = { matches: { data: null, timestamp: null }, odds: {} };
+    }
+  }
+}
+
+// Save CS2 API cache to file
+async function saveCS2ApiCache() {
+  try {
+    await fs.writeFile(CS2_API_CACHE_FILE, JSON.stringify(cs2ApiCache, null, 2), "utf8");
+  } catch (error) {
+    console.error("[CS2 Cache] Error saving API cache:", error);
+  }
+}
+
+// Check if cache entry is still valid (less than 24 hours old)
+function isCacheValid(timestamp) {
+  if (!timestamp) return false;
+  const cacheAge = Date.now() - new Date(timestamp).getTime();
+  return cacheAge < CACHE_TTL_MS;
+}
+
+// Get cached matches or null if expired/missing
+function getCachedMatches() {
+  if (cs2ApiCache.matches?.data && isCacheValid(cs2ApiCache.matches.timestamp)) {
+    const cacheAge = Date.now() - new Date(cs2ApiCache.matches.timestamp).getTime();
+    const hoursOld = cacheAge / (1000 * 60 * 60);
+    console.log(`[CS2 Cache] Using cached matches (${hoursOld.toFixed(1)} hours old)`);
+    return cs2ApiCache.matches.data;
+  }
+  return null;
+}
+
+// Cache matches data
+async function cacheMatches(matches) {
+  cs2ApiCache.matches = {
+    data: matches,
+    timestamp: new Date().toISOString()
+  };
+  await saveCS2ApiCache();
+  console.log(`[CS2 Cache] Cached ${matches.length} matches`);
+}
+
+// Get cached odds for an event or null if expired/missing
+function getCachedOdds(eventId) {
+  // Ensure cache is initialized
+  if (!cs2ApiCache || !cs2ApiCache.odds) {
+    return null;
+  }
+  
+  const cached = cs2ApiCache.odds[eventId];
+  if (cached && cached.data && isCacheValid(cached.timestamp)) {
+    const cacheAge = Date.now() - new Date(cached.timestamp).getTime();
+    const hoursOld = cacheAge / (1000 * 60 * 60);
+    console.log(`[CS2 Cache] ✓ Using cached odds for event ${eventId} (${hoursOld.toFixed(1)} hours old, ${(24 - hoursOld).toFixed(1)} hours remaining)`);
+    return cached.data;
+  }
+  
+  if (cached && cached.data) {
+    // Cache exists but expired
+    const cacheAge = Date.now() - new Date(cached.timestamp).getTime();
+    const hoursOld = cacheAge / (1000 * 60 * 60);
+    console.log(`[CS2 Cache] ✗ Cache expired for event ${eventId} (${hoursOld.toFixed(1)} hours old, will fetch fresh)`);
+  }
+  
+  return null;
+}
+
+// Cache odds data for an event
+async function cacheOdds(eventId, oddsData) {
+  if (!cs2ApiCache.odds) {
+    cs2ApiCache.odds = {};
+  }
+  cs2ApiCache.odds[eventId] = {
+    data: oddsData,
+    timestamp: new Date().toISOString()
+  };
+  await saveCS2ApiCache();
+  console.log(`[CS2 Cache] Cached odds for event ${eventId}`);
+}
+
+// Load CS2 team rankings from file
+async function loadCS2TeamRankings() {
+  try {
+    const data = await fs.readFile(CS2_TEAM_RANKINGS_FILE, "utf8");
+    cs2TeamRankings = JSON.parse(data);
+    console.log(`Loaded CS2 team rankings: ${cs2TeamRankings.teams?.length || 0} teams`);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      // File doesn't exist, create empty rankings
+      cs2TeamRankings = { teams: [], lastUpdated: null };
+      console.warn("CS2 team rankings file not found. Create cs2-team-rankings.json with top 250 teams.");
+    } else {
+      console.error("Error loading CS2 team rankings:", error);
+      cs2TeamRankings = { teams: [], lastUpdated: null };
+    }
+  }
+}
+
+// Initialize team rankings on startup
+loadCS2TeamRankings().catch(err => {
+  console.error("Error initializing CS2 team rankings:", err);
+});
+
+// Initialize CS2 API cache on startup
+loadCS2ApiCache().catch(err => {
+  console.error("Error initializing CS2 API cache:", err);
+});
+
+/**
+ * Normalize team name for matching (lowercase, remove special chars, trim)
+ * @param {string} teamName - Team name to normalize
+ * @returns {string} Normalized team name
+ */
+function normalizeTeamName(teamName) {
+  if (!teamName) return '';
+  return teamName
+    .toLowerCase()
+    .trim()
+    .replace(/^team\s+/i, '') // Remove "Team" prefix (e.g., "Team Vitality" -> "Vitality")
+    .replace(/[^\w\s]/g, '') // Remove special characters
+    .replace(/\s+/g, ' '); // Normalize whitespace
+}
+
+/**
+ * Fuzzy match team name - tries multiple variations
+ * @param {string} teamName - Team name to match
+ * @returns {string[]} Array of normalized variations to try
+ */
+function getTeamNameVariations(teamName) {
+  if (!teamName) return [];
+  
+  const normalized = normalizeTeamName(teamName);
+  const variations = [normalized];
+  
+  // Add variation without "team" prefix if it was there
+  if (/^team\s+/i.test(teamName)) {
+    variations.push(normalizeTeamName(teamName.replace(/^team\s+/i, '')));
+  }
+  
+  // Add variation with "team" prefix if it wasn't there
+  if (!/^team\s+/i.test(teamName)) {
+    variations.push(normalizeTeamName(`Team ${teamName}`));
+  }
+  
+  // Remove duplicates
+  return [...new Set(variations)];
+}
+
+/**
+ * Find team ranking by name (checks name and aliases with fuzzy matching)
+ * @param {string} teamName - Team name to look up
+ * @returns {Object|null} Team ranking object or null if not found
+ */
+function getTeamRanking(teamName) {
+  if (!teamName || !cs2TeamRankings.teams || cs2TeamRankings.teams.length === 0) {
+    return null;
+  }
+  
+  // Try multiple variations of the team name
+  const variations = getTeamNameVariations(teamName);
+  
+  for (const variation of variations) {
+    for (const team of cs2TeamRankings.teams) {
+      // Check main name
+      if (normalizeTeamName(team.name) === variation) {
+        console.log(`[CS2 Team Matching] Found "${teamName}" as "${team.name}" (rank ${team.rank})`);
+        return team;
+      }
+      
+      // Check aliases
+      if (team.aliases && Array.isArray(team.aliases)) {
+        for (const alias of team.aliases) {
+          if (normalizeTeamName(alias) === variation) {
+            console.log(`[CS2 Team Matching] Found "${teamName}" via alias "${alias}" for "${team.name}" (rank ${team.rank})`);
+            return team;
+          }
+        }
+      }
+    }
+  }
+  
+  console.log(`[CS2 Team Matching] Could not find team: "${teamName}" (tried variations: ${variations.join(', ')})`);
+  return null;
+}
+
+/**
+ * Check if both teams in a match are in top 250
+ * @param {string} team1Name - First team name
+ * @param {string} team2Name - Second team name
+ * @returns {boolean} True if both teams are in top 250
+ */
+function areBothTeamsInTop250(team1Name, team2Name) {
+  const team1Ranking = getTeamRanking(team1Name);
+  const team2Ranking = getTeamRanking(team2Name);
+  
+  // Both teams must have rankings (meaning they're in the top 250)
+  return team1Ranking !== null && team2Ranking !== null;
+}
+
+/**
+ * Validate and correct odds based on team rankings
+ * Lower ranked team (higher rank number) should have higher odds (underdog)
+ * Higher ranked team (lower rank number) should have lower odds (favorite)
+ * If one team is not in top 250, assume they are the underdog
+ * @param {Object} odds - Odds object with team1 and team2
+ * @param {string} team1Name - First team name
+ * @param {string} team2Name - Second team name
+ * @returns {Object} Corrected odds object
+ */
+function validateAndCorrectOdds(odds, team1Name, team2Name) {
+  if (!odds || (!odds.team1 && !odds.team2)) {
+    return odds; // No odds to validate
+  }
+  
+  const team1Ranking = getTeamRanking(team1Name);
+  const team2Ranking = getTeamRanking(team2Name);
+  
+  // Handle case where one or both teams are not in top 250
+  let team1Rank = null;
+  let team2Rank = null;
+  
+  if (team1Ranking) {
+    team1Rank = team1Ranking.rank;
+  } else {
+    // Team not in top 250 - assume they are underdog (assign high rank number)
+    team1Rank = 999; // Use 999 to represent "not in top 250" (worse than any ranked team)
+    console.log(`[CS2 Odds Validation] ${team1Name} not found in top 250 - assuming underdog (rank 999)`);
+  }
+  
+  if (team2Ranking) {
+    team2Rank = team2Ranking.rank;
+  } else {
+    // Team not in top 250 - assume they are underdog (assign high rank number)
+    team2Rank = 999; // Use 999 to represent "not in top 250" (worse than any ranked team)
+    console.log(`[CS2 Odds Validation] ${team2Name} not found in top 250 - assuming underdog (rank 999)`);
+  }
+  
+  // If both teams are not in top 250, can't determine favorite
+  if (team1Rank === 999 && team2Rank === 999) {
+    console.log(`[CS2 Odds Validation] Both teams (${team1Name}, ${team2Name}) not in top 250 - cannot validate odds`);
+    return odds;
+  }
+  
+  // Determine which team should be favorite (lower rank number = better team = favorite)
+  const team1IsFavorite = team1Rank < team2Rank;
+  const team2IsFavorite = team2Rank < team1Rank;
+  
+  // If teams have same rank, can't determine favorite
+  if (team1Rank === team2Rank) {
+    console.log(`[CS2 Odds Validation] Teams have same rank (${team1Rank}), skipping validation`);
+    return odds;
+  }
+  
+  // Check if odds match expectations
+  // Favorite should have lower odds, underdog should have higher odds
+  const correctedOdds = { ...odds };
+  let needsCorrection = false;
+  
+  if (team1IsFavorite && odds.team1 && odds.team2) {
+    // Team1 is favorite, should have lower odds
+    if (odds.team1 > odds.team2) {
+      // Odds are reversed - swap them
+      console.warn(`[CS2 Odds Validation] Correcting odds: ${team1Name} (rank ${team1Rank}) should be favorite but has higher odds. Swapping.`);
+      correctedOdds.team1 = odds.team2;
+      correctedOdds.team2 = odds.team1;
+      needsCorrection = true;
+    }
+  } else if (team2IsFavorite && odds.team1 && odds.team2) {
+    // Team2 is favorite, should have lower odds
+    if (odds.team2 > odds.team1) {
+      // Odds are reversed - swap them
+      console.warn(`[CS2 Odds Validation] Correcting odds: ${team2Name} (rank ${team2Rank}) should be favorite but has higher odds. Swapping.`);
+      correctedOdds.team1 = odds.team2;
+      correctedOdds.team2 = odds.team1;
+      needsCorrection = true;
+    }
+  }
+  
+  if (needsCorrection) {
+    console.log(`[CS2 Odds Validation] Corrected odds: ${team1Name} (rank ${team1Rank}) = ${correctedOdds.team1}, ${team2Name} (rank ${team2Rank}) = ${correctedOdds.team2}`);
+  } else {
+    const rank1Display = team1Rank === 999 ? 'not in top 250' : `rank ${team1Rank}`;
+    const rank2Display = team2Rank === 999 ? 'not in top 250' : `rank ${team2Rank}`;
+    console.log(`[CS2 Odds Validation] Odds validated correctly: ${team1Name} (${rank1Display}) = ${odds.team1}, ${team2Name} (${rank2Display}) = ${odds.team2}`);
+  }
+  
+  return correctedOdds;
+}
 
 // ========== END CS2 BETTING STATE ==========
 
@@ -1163,9 +1517,23 @@ app.get("/api/cs2/events", async (req, res) => {
       
       if (!isActive) {
         console.log(`[CS2 API] Filtering out event ${event.id} with status: ${status}`);
+        return false;
       }
       
-      return isActive;
+      // IMPORTANT: For matches with both teams in top 250, only show if odds are available
+      const team1Name = event.homeTeam || event.participant1Name || 'Team 1';
+      const team2Name = event.awayTeam || event.participant2Name || 'Team 2';
+      const bothInTop250 = areBothTeamsInTop250(team1Name, team2Name);
+      
+      if (bothInTop250) {
+        const hasValidOdds = event.odds && event.odds.team1 && event.odds.team2;
+        if (!hasValidOdds) {
+          console.log(`[CS2 API] Filtering out event ${event.id} (${team1Name} vs ${team2Name}) - both in top 250 but no odds available`);
+          return false; // Filter out top 250 matches without odds
+        }
+      }
+      
+      return true;
     });
     
     // Sort chronologically (next upcoming match first - earliest scheduled time)
@@ -1213,58 +1581,9 @@ app.get("/api/cs2/events/:eventId", async (req, res) => {
       return res.status(404).json({ success: false, error: "Event not found" });
     }
     
-    // Use odds provider (multi-source) if available, otherwise fallback to single source
-    const oddsClient = cs2OddsProvider || cs2ApiClient;
-    
-    // If odds are not available, try to fetch them from API
-    if ((!event.odds || !event.odds.team1) && oddsClient && event.hasOdds !== false) {
-      try {
-        console.log(`Fetching odds for event ${eventId} from ${cs2OddsProvider ? 'multi-source provider' : 'single source'}...`);
-        
-        // Prepare match info for scrapers
-        const matchInfo = {
-          fixtureId: eventId,
-          team1: event.homeTeam || event.participant1Name,
-          team2: event.awayTeam || event.participant2Name,
-          homeTeam: event.homeTeam || event.participant1Name,
-          awayTeam: event.awayTeam || event.participant2Name
-        };
-        
-        const oddsData = cs2OddsProvider && cs2OddsProvider.fetchMatchOdds
-          ? await cs2OddsProvider.fetchMatchOdds(eventId, matchInfo)
-          : await oddsClient.fetchMatchOdds(eventId);
-        
-        // Handle both provider format and api-client format
-        let odds = null;
-        if (oddsData) {
-          if (oddsData.odds) {
-            odds = oddsData.odds;
-          } else if (oddsData.team1 || oddsData.team2) {
-            odds = {
-              team1: oddsData.team1,
-              team2: oddsData.team2,
-              draw: oddsData.draw || null
-            };
-          }
-        }
-        
-        if (odds && (odds.team1 || odds.team2)) {
-          event.odds = odds;
-          event.hasOdds = true;
-          if (oddsData.sources) {
-            event.oddsSources = oddsData.sources;
-          }
-          if (oddsData.confidence) {
-            event.oddsConfidence = oddsData.confidence;
-          }
-          cs2BettingState.events[eventId] = event;
-          await saveCS2BettingData();
-        }
-      } catch (error) {
-        console.error(`Error fetching odds for event ${eventId}:`, error.message);
-        // Continue with existing event data even if odds fetch fails
-      }
-    }
+    // NOTE: Do NOT fetch odds from API here
+    // API calls are restricted to: server start, refresh button, and daily updates
+    // Just return the cached event data
     
     res.json({ success: true, event });
   } catch (error) {
@@ -1274,6 +1593,8 @@ app.get("/api/cs2/events/:eventId", async (req, res) => {
 });
 
 // GET /api/cs2/events/:eventId/odds - Fetch odds for a specific event (on-demand)
+// NOTE: This endpoint does NOT call the API - it only returns cached odds
+// API calls are restricted to: server start, refresh button, and daily updates
 app.get("/api/cs2/events/:eventId/odds", async (req, res) => {
   try {
     const eventId = req.params.eventId;
@@ -1283,66 +1604,31 @@ app.get("/api/cs2/events/:eventId/odds", async (req, res) => {
       return res.status(404).json({ success: false, error: "Event not found" });
     }
     
-    // Use odds provider (multi-source) if available, otherwise fallback to single source
-    const oddsClient = cs2OddsProvider || cs2ApiClient;
-    
-    // If odds are not available, try to fetch them from API
-    if ((!event.odds || !event.odds.team1 || !event.odds.team2) && oddsClient && event.hasOdds !== false) {
-      try {
-        console.log(`[CS2 API] Fetching odds for event ${eventId} from ${cs2OddsProvider ? 'multi-source provider' : 'single source'}...`);
-        
-        // Prepare match info for scrapers
-        const matchInfo = {
-          fixtureId: eventId,
-          team1: event.homeTeam || event.participant1Name,
-          team2: event.awayTeam || event.participant2Name,
-          homeTeam: event.homeTeam || event.participant1Name,
-          awayTeam: event.awayTeam || event.participant2Name
-        };
-        
-        const oddsData = cs2OddsProvider && cs2OddsProvider.fetchMatchOdds
-          ? await cs2OddsProvider.fetchMatchOdds(eventId, matchInfo)
-          : await oddsClient.fetchMatchOdds(eventId);
-        
-        // Handle both provider format and api-client format
-        let odds = null;
-        if (oddsData) {
-          if (oddsData.odds) {
-            odds = oddsData.odds;
-          } else if (oddsData.team1 || oddsData.team2) {
-            odds = {
-              team1: oddsData.team1,
-              team2: oddsData.team2,
-              draw: oddsData.draw || null
-            };
-          }
+    // Return cached odds only - do NOT fetch from API
+    // API calls are restricted to: server start, refresh button, and daily updates
+    if (event.odds && (event.odds.team1 || event.odds.team2)) {
+      res.json({
+        success: true,
+        event: {
+          id: event.id,
+          fixtureId: event.fixtureId,
+          odds: event.odds,
+          hasOdds: true
         }
-        
-        if (odds && (odds.team1 || odds.team2)) {
-          event.odds = odds;
-          event.hasOdds = true;
-          if (oddsData.sources) {
-            event.oddsSources = oddsData.sources;
-          }
-          if (oddsData.confidence) {
-            event.oddsConfidence = oddsData.confidence;
-          }
-          cs2BettingState.events[eventId] = event;
-          await saveCS2BettingData();
-          console.log(`[CS2 API] Successfully fetched and updated odds for event ${eventId}:`, event.odds);
-          if (oddsData.sources) {
-            console.log(`[CS2 API] Odds aggregated from sources: ${oddsData.sources.join(", ")}`);
-          }
-        } else {
-          console.warn(`[CS2 API] No odds data returned from API for event ${eventId}`);
+      });
+    } else {
+      // No odds available - return what we have
+      res.json({
+        success: true,
+        event: {
+          id: event.id,
+          fixtureId: event.fixtureId,
+          odds: event.odds || { team1: null, team2: null, draw: null },
+          hasOdds: false,
+          message: "Odds not available. Use refresh button to update."
         }
-      } catch (error) {
-        console.error(`[CS2 API] Error fetching odds for event ${eventId}:`, error.message);
-        // Continue with existing event data even if odds fetch fails
-      }
+      });
     }
-    
-    res.json({ success: true, event });
   } catch (error) {
     console.error("Error fetching CS2 event odds:", error);
     res.status(500).json({ success: false, error: "Failed to fetch event odds" });
@@ -1514,10 +1800,20 @@ async function syncCS2Events() {
   }
   
   try {
-    console.log("Syncing CS2 events from API...");
+    // Check cache first
+    let matches = getCachedMatches();
     
-    // Fetch upcoming matches
-    const matches = await matchClient.fetchUpcomingMatches({ limit: 50 });
+    if (matches) {
+      console.log(`[CS2 Sync] Using cached matches (${matches.length} matches)`);
+    } else {
+      console.log("Syncing CS2 events from API...");
+      
+      // Fetch upcoming matches from API
+      matches = await matchClient.fetchUpcomingMatches({ limit: 50 });
+      
+      // Cache the matches
+      await cacheMatches(matches);
+    }
     
     // Deduplicate matches by fixtureId (in case API returns duplicates)
     const uniqueMatches = [];
@@ -1541,8 +1837,21 @@ async function syncCS2Events() {
     let updatedCount = 0;
     let newCount = 0;
     const oddsFetchPromises = []; // Batch odds fetching
+    let filteredCount = 0;
+    let oddsFetchCount = 0; // Track how many odds we fetch during sync
     
     for (const match of uniqueMatches) {
+      // Filter: Only include matches where both teams are in top 250
+      const matchTeam1 = match.homeTeam || match.participant1Name;
+      const matchTeam2 = match.awayTeam || match.participant2Name;
+      
+      if (!areBothTeamsInTop250(matchTeam1, matchTeam2)) {
+        filteredCount++;
+        const team1Ranking = getTeamRanking(matchTeam1);
+        const team2Ranking = getTeamRanking(matchTeam2);
+        console.log(`[CS2 Sync] Filtering out match: ${matchTeam1} vs ${matchTeam2} (team1 in top 250: ${team1Ranking !== null}, team2 in top 250: ${team2Ranking !== null})`);
+        continue;
+      }
       // Use fixtureId as the key since that's what OddsPapi uses
       const eventId = match.fixtureId || match.id;
       if (!eventId) {
@@ -1578,10 +1887,84 @@ async function syncCS2Events() {
       }
       
       // Use existing odds if available, otherwise initialize as null
-      const existingOdds = existingEvent?.odds || match.odds || { team1: null, team2: null, draw: null };
+      let existingOdds = existingEvent?.odds || match.odds || { team1: null, team2: null, draw: null };
+      
+      // Check if existing event should be removed (both teams in top 250 but no odds)
+      if (existingEvent && (finalStatus === 'scheduled' || finalStatus === 'live')) {
+        const team1Name = match.homeTeam || match.participant1Name || 'Team 1';
+        const team2Name = match.awayTeam || match.participant2Name || 'Team 2';
+        const bothInTop250 = areBothTeamsInTop250(team1Name, team2Name);
+        const hasValidOdds = existingOdds.team1 && existingOdds.team2;
+        
+        if (bothInTop250 && !hasValidOdds) {
+          // Existing event lost odds - will be handled below when we try to fetch
+          console.log(`[CS2 Sync] Existing event ${eventId} (${team1Name} vs ${team2Name}) has no odds - will attempt to fetch`);
+        }
+      }
+      
+      // Validate and correct odds based on team rankings
+      const team1Name = match.homeTeam || match.participant1Name || 'Team 1';
+      const team2Name = match.awayTeam || match.participant2Name || 'Team 2';
+      if (existingOdds.team1 && existingOdds.team2) {
+        existingOdds = validateAndCorrectOdds(existingOdds, team1Name, team2Name);
+      }
+      
       const needsOdds = (!existingOdds.team1 || !existingOdds.team2) && 
                         (finalStatus === 'scheduled' || finalStatus === 'live') &&
                         match.hasOdds !== false;
+      
+      // IMPORTANT: For matches with both teams in top 250, we require odds to be available
+      // If odds are not available, skip adding this match to events
+      const hasValidOdds = existingOdds.team1 && existingOdds.team2;
+      
+      if (!hasValidOdds && (finalStatus === 'scheduled' || finalStatus === 'live')) {
+        // Try to fetch odds immediately (if not already cached)
+        // Check cache first
+        let oddsData = getCachedOdds(eventId);
+        
+        if (!oddsData) {
+          // Cache miss - try to fetch from API (with rate limiting)
+          // Respect rate limits - 600ms delay between requests
+          if (oddsFetchCount > 0) {
+            await new Promise(resolve => setTimeout(resolve, 600));
+          }
+          
+          try {
+            console.log(`[CS2 Sync] Fetching odds for ${team1Name} vs ${team2Name} (required for top 250 match)...`);
+            oddsData = await cs2ApiClient.fetchMatchOdds(eventId);
+            oddsFetchCount++;
+            
+            if (oddsData && oddsData.odds) {
+              await cacheOdds(eventId, oddsData);
+            }
+          } catch (error) {
+            console.error(`[CS2 Sync] Error fetching odds for ${eventId}:`, error.message);
+            oddsData = null;
+          }
+        }
+        
+        // Check if we got valid odds
+        if (oddsData && oddsData.odds && oddsData.odds.team1 && oddsData.odds.team2) {
+          // Validate and correct odds
+          let validatedOdds = {
+            team1: oddsData.odds.team1,
+            team2: oddsData.odds.team2,
+            draw: oddsData.odds.draw || null
+          };
+          
+          if (validatedOdds.team1 && validatedOdds.team2) {
+            validatedOdds = validateAndCorrectOdds(validatedOdds, team1Name, team2Name);
+          }
+          
+          existingOdds = validatedOdds;
+          console.log(`[CS2 Sync] ✓ Got odds for ${team1Name} vs ${team2Name}: ${validatedOdds.team1}/${validatedOdds.team2}`);
+        } else {
+          // No odds available - skip this match (don't add to events)
+          console.log(`[CS2 Sync] ⚠ Skipping match ${team1Name} vs ${team2Name} - both teams in top 250 but no odds available`);
+          filteredCount++;
+          continue; // Skip adding this match to events
+        }
+      }
       
       // Queue for odds aggregation (will be processed by scheduled aggregation task)
       // No limit here since aggregation handles rate limiting
@@ -1625,80 +2008,21 @@ async function syncCS2Events() {
       }
     }
     
-    // Fetch odds sequentially with delays to respect rate limits (500ms cooldown per OddsPapi docs)
-    if (oddsFetchPromises.length > 0) {
-      console.log(`[CS2 Sync] Fetching odds for ${oddsFetchPromises.length} matches sequentially...`);
-      
-      for (let i = 0; i < oddsFetchPromises.length; i++) {
-        const { eventId } = oddsFetchPromises[i];
-        
-        try {
-          // Respect rate limit: 500ms cooldown between requests
-          if (i > 0) {
-            await new Promise(resolve => setTimeout(resolve, 600)); // 600ms delay (500ms + buffer)
-          }
-          
-          console.log(`[CS2 Sync] Fetching odds for event ${eventId} (${i + 1}/${oddsFetchPromises.length})...`);
-          // Use odds provider (multi-source) if available
-          const oddsClient = cs2OddsProvider || cs2ApiClient;
-          const event = cs2BettingState.events[eventId];
-          
-          // Prepare match info for scrapers
-          const matchInfo = {
-            fixtureId: eventId,
-            team1: event?.homeTeam || event?.participant1Name,
-            team2: event?.awayTeam || event?.participant2Name,
-            homeTeam: event?.homeTeam || event?.participant1Name,
-            awayTeam: event?.awayTeam || event?.participant2Name
-          };
-          
-          const oddsData = cs2OddsProvider && cs2OddsProvider.fetchMatchOdds
-            ? await cs2OddsProvider.fetchMatchOdds(eventId, matchInfo)
-            : await oddsClient.fetchMatchOdds(eventId);
-          
-          // Handle both provider format and api-client format
-          let odds = null;
-          if (oddsData) {
-            if (oddsData.odds) {
-              odds = oddsData.odds;
-            } else if (oddsData.team1 || oddsData.team2) {
-              odds = {
-                team1: oddsData.team1,
-                team2: oddsData.team2,
-                draw: oddsData.draw || null
-              };
-            }
-          }
-          
-          if (odds && (odds.team1 || odds.team2) && cs2BettingState.events[eventId]) {
-            cs2BettingState.events[eventId].odds = odds;
-            cs2BettingState.events[eventId].hasOdds = true;
-            if (oddsData.sources) {
-              cs2BettingState.events[eventId].oddsSources = oddsData.sources;
-              console.log(`[CS2 Sync] ✓ Successfully updated odds for event ${eventId} from sources: ${oddsData.sources.join(", ")}`);
-            } else {
-              console.log(`[CS2 Sync] ✓ Successfully updated odds for event ${eventId}:`, odds);
-            }
-          } else {
-            console.log(`[CS2 Sync] ✗ No odds available for event ${eventId}`);
-            if (cs2BettingState.events[eventId]) {
-              cs2BettingState.events[eventId].hasOdds = false;
-            }
-          }
-        } catch (error) {
-          console.error(`[CS2 Sync] Error fetching odds for event ${eventId}:`, error.message);
-          if (cs2BettingState.events[eventId]) {
-            cs2BettingState.events[eventId].hasOdds = false;
-          }
-        }
-      }
-    }
+    // NOTE: Odds fetching is now handled separately:
+    // - On server start (initial sync)
+    // - When refresh button is clicked
+    // - Once per day (daily check)
+    // We don't fetch odds automatically during sync to avoid excessive API calls
     
     cs2BettingState.lastApiSync = new Date().toISOString();
+    // Update lastApiQuery timestamp when syncing events (this counts as an API query)
+    if (!cs2BettingState.lastApiQuery) {
+      cs2BettingState.lastApiQuery = new Date().toISOString();
+    }
     await saveCS2BettingData();
     
-    console.log(`CS2 sync complete: ${newCount} new, ${updatedCount} updated`);
-    return { newCount, updatedCount, total: matches.length };
+    console.log(`CS2 sync complete: ${newCount} new, ${updatedCount} updated, ${filteredCount} filtered out (not in top 250)`);
+    return { newCount, updatedCount, filteredCount, total: matches.length };
   } catch (error) {
     console.error("Error syncing CS2 events:", error);
     return null;
@@ -1713,13 +2037,16 @@ async function settleCS2Bets() {
   }
   
   try {
-    console.log("Settling CS2 bets...");
+    console.log("[CS2 Settlement] Starting settlement check...");
     
     // Get all pending bets
     const pendingBets = Object.values(cs2BettingState.bets).filter(bet => bet.status === 'pending');
     
     if (pendingBets.length === 0) {
-      console.log("No pending bets to settle");
+      console.log("[CS2 Settlement] No pending bets to settle");
+      // Still update timestamp even if no bets to settle
+      cs2BettingState.lastSettlementCheck = new Date().toISOString();
+      await saveCS2BettingData();
       return { settled: 0, won: 0, lost: 0 };
     }
     
@@ -1833,8 +2160,14 @@ async function settleCS2Bets() {
     
     if (settledCount > 0) {
       await saveCS2BettingData();
-      console.log(`Settled ${settledCount} bets: ${wonCount} won, ${lostCount} lost`);
+      console.log(`[CS2 Settlement] Settled ${settledCount} bets: ${wonCount} won, ${lostCount} lost`);
+    } else {
+      console.log(`[CS2 Settlement] No bets to settle`);
     }
+    
+    // Update last settlement check timestamp (even if no bets were settled)
+    cs2BettingState.lastSettlementCheck = new Date().toISOString();
+    await saveCS2BettingData();
     
     return { settled: settledCount, won: wonCount, lost: lostCount };
   } catch (error) {
@@ -1844,101 +2177,194 @@ async function settleCS2Bets() {
 }
 
 // Aggregate odds for all active CS2 events from HLTV and gambling scrapers
-async function aggregateCS2Odds() {
-  if (!cs2OddsProvider) {
-    console.warn("[CS2 Odds] Odds provider not available, skipping aggregation");
+/**
+ * Check if it's been 24 hours since last API query
+ * @returns {boolean} True if 24 hours have passed or no previous query
+ */
+function shouldRunDailyUpdate() {
+  if (!cs2BettingState.lastApiQuery) {
+    return true; // No previous query, allow it
+  }
+  
+  const lastQuery = new Date(cs2BettingState.lastApiQuery);
+  const now = new Date();
+  const hoursSinceLastQuery = (now - lastQuery) / (1000 * 60 * 60);
+  
+  return hoursSinceLastQuery >= 24;
+}
+
+/**
+ * Update odds for all active matches using OddsPapi with common range approach
+ * This function fetches odds from OddsPapi and uses the common range logic
+ * @param {boolean} updateAll - If true, update all matches; if false, only update those missing odds
+ * @param {boolean} force - If true, bypass daily check (for manual refresh)
+ * @returns {Promise<Object>} Result with processed, updated, and failed counts
+ */
+async function updateAllMatchOdds(updateAll = false, force = false) {
+  if (!cs2ApiClient) {
+    console.warn("[CS2 Odds] CS2 API client not available, skipping odds update");
     return null;
   }
   
+  // Check daily limit unless forced (for manual refresh)
+  if (!force && !shouldRunDailyUpdate()) {
+    const lastQuery = new Date(cs2BettingState.lastApiQuery);
+    const now = new Date();
+    const hoursSinceLastQuery = (now - lastQuery) / (1000 * 60 * 60);
+    const hoursRemaining = 24 - hoursSinceLastQuery;
+    console.log(`[CS2 Odds] Daily API limit: ${hoursRemaining.toFixed(1)} hours remaining until next update`);
+    return { 
+      processed: 0, 
+      updated: 0, 
+      failed: 0,
+      message: `Daily API limit reached. Next update in ${hoursRemaining.toFixed(1)} hours. Use refresh button to force update.`
+    };
+  }
+  
   try {
-    console.log("[CS2 Odds] Starting odds aggregation for active events...");
+    console.log(`[CS2 Odds] Starting odds update for ${updateAll ? 'all' : 'missing'} active events...`);
     
-    // Get all active events (scheduled or live) that need odds
+    // Get all active events (scheduled or live)
     const activeEvents = Object.values(cs2BettingState.events).filter(event => {
-      const needsOdds = (!event.odds || !event.odds.team1 || !event.odds.team2);
       const isActive = event.status === 'scheduled' || event.status === 'live';
-      const hasTeams = (event.homeTeam || event.participant1Name) && (event.awayTeam || event.participant2Name);
-      return needsOdds && isActive && hasTeams;
+      const hasFixtureId = event.fixtureId || event.id;
+      return isActive && hasFixtureId;
     });
     
-    if (activeEvents.length === 0) {
-      console.log("[CS2 Odds] No active events need odds aggregation");
+    // Filter to only those needing odds if updateAll is false
+    const eventsToUpdate = updateAll 
+      ? activeEvents 
+      : activeEvents.filter(event => {
+          const needsOdds = (!event.odds || !event.odds.team1 || !event.odds.team2);
+          return needsOdds;
+        });
+    
+    if (eventsToUpdate.length === 0) {
+      console.log(`[CS2 Odds] No events need odds update`);
       return { processed: 0, updated: 0, failed: 0 };
     }
     
-    console.log(`[CS2 Odds] Processing ${activeEvents.length} events for odds aggregation...`);
+    console.log(`[CS2 Odds] Processing ${eventsToUpdate.length} events for odds update...`);
     
     let updatedCount = 0;
     let failedCount = 0;
     
-    // Process events sequentially with delays to respect rate limits
-    for (let i = 0; i < activeEvents.length; i++) {
-      const event = activeEvents[i];
+    // Process events sequentially with delays to respect rate limits (500ms cooldown per OddsPapi)
+    for (let i = 0; i < eventsToUpdate.length; i++) {
+      const event = eventsToUpdate[i];
       const eventId = event.fixtureId || event.id;
       
       try {
-        // Respect rate limits - delay between requests (3-4 seconds for scraping)
+        // Respect rate limits - 600ms delay between requests (500ms cooldown + buffer)
         if (i > 0) {
-          await new Promise(resolve => setTimeout(resolve, 3500));
+          await new Promise(resolve => setTimeout(resolve, 600));
         }
         
-        console.log(`[CS2 Odds] Aggregating odds for event ${eventId} (${i + 1}/${activeEvents.length}): ${event.homeTeam || event.participant1Name} vs ${event.awayTeam || event.participant2Name}`);
+        console.log(`[CS2 Odds] Processing event ${eventId} (${i + 1}/${eventsToUpdate.length}): ${event.homeTeam || event.participant1Name} vs ${event.awayTeam || event.participant2Name}`);
         
-        // Prepare match info for scrapers
-        const matchInfo = {
-          fixtureId: eventId,
-          team1: event.homeTeam || event.participant1Name,
-          team2: event.awayTeam || event.participant2Name,
-          homeTeam: event.homeTeam || event.participant1Name,
-          awayTeam: event.awayTeam || event.participant2Name
-        };
+        // ALWAYS check cache first - this prevents duplicate API calls
+        let oddsData = getCachedOdds(eventId);
         
-        // Fetch aggregated odds from primary sources (HLTV + gambling scrapers)
-        const oddsData = await cs2OddsProvider.fetchMatchOdds(eventId, matchInfo);
+        if (!oddsData) {
+          // Cache miss - fetch from API
+          console.log(`[CS2 Odds] Cache miss for event ${eventId}, fetching from API...`);
+          oddsData = await cs2ApiClient.fetchMatchOdds(eventId);
+          
+          // Cache the odds if we got valid data (even if partial)
+          if (oddsData && oddsData.odds) {
+            await cacheOdds(eventId, oddsData);
+            console.log(`[CS2 Odds] ✓ Fetched and cached odds for event ${eventId}`);
+          } else {
+            console.log(`[CS2 Odds] ⚠ No odds data returned for event ${eventId}`);
+          }
+        } else {
+          console.log(`[CS2 Odds] ✓ Using cached odds for event ${eventId} (no API call needed)`);
+        }
         
-        if (oddsData && (oddsData.team1 || oddsData.team2)) {
-          // Update event with aggregated odds
-          event.odds = {
-            team1: oddsData.team1,
-            team2: oddsData.team2,
-            draw: oddsData.draw || null
+        if (oddsData && oddsData.odds && (oddsData.odds.team1 || oddsData.odds.team2)) {
+          // Validate and correct odds based on team rankings
+          const team1Name = event.homeTeam || event.participant1Name || 'Team 1';
+          const team2Name = event.awayTeam || event.participant2Name || 'Team 2';
+          let validatedOdds = {
+            team1: oddsData.odds.team1,
+            team2: oddsData.odds.team2,
+            draw: oddsData.odds.draw || null
           };
+          
+          // Validate and correct odds if both teams have rankings
+          if (validatedOdds.team1 && validatedOdds.team2) {
+            validatedOdds = validateAndCorrectOdds(validatedOdds, team1Name, team2Name);
+          }
+          
+          // Update event with validated odds
+          event.odds = validatedOdds;
           event.hasOdds = true;
-          if (oddsData.sources) {
-            event.oddsSources = oddsData.sources;
-          }
-          if (oddsData.confidence) {
-            event.oddsConfidence = oddsData.confidence;
-          }
+          event.lastOddsUpdate = new Date().toISOString();
           
           cs2BettingState.events[eventId] = event;
           updatedCount++;
           
-          console.log(`[CS2 Odds] ✓ Updated odds for event ${eventId} from sources: ${oddsData.sources ? oddsData.sources.join(", ") : "unknown"}`);
-          console.log(`[CS2 Odds]   Odds: team1=${oddsData.team1}, team2=${oddsData.team2}`);
+          console.log(`[CS2 Odds] ✓ Updated odds for event ${eventId} (common range): team1=${validatedOdds.team1}, team2=${validatedOdds.team2}`);
         } else {
           console.log(`[CS2 Odds] ⚠ No odds available for event ${eventId}`);
+          
+          // For matches with both teams in top 250, remove from events if no odds available
+          const team1Name = event.homeTeam || event.participant1Name || 'Team 1';
+          const team2Name = event.awayTeam || event.participant2Name || 'Team 2';
+          const bothInTop250 = areBothTeamsInTop250(team1Name, team2Name);
+          
+          if (bothInTop250 && (event.status === 'scheduled' || event.status === 'live')) {
+            // Remove match from events since it doesn't have odds
+            console.log(`[CS2 Odds] Removing match ${team1Name} vs ${team2Name} from events - both in top 250 but no odds available`);
+            delete cs2BettingState.events[eventId];
+            await saveCS2BettingData();
+          } else {
+            // Keep the match but mark as no odds (for non-top-250 matches or finished matches)
+            if (event.hasOdds !== false) {
+              event.hasOdds = false;
+              cs2BettingState.events[eventId] = event;
+            }
+          }
           failedCount++;
         }
       } catch (error) {
-        console.error(`[CS2 Odds] Error aggregating odds for event ${eventId}:`, error.message);
+        console.error(`[CS2 Odds] Error updating odds for event ${eventId}:`, error.message);
+        if (event.hasOdds !== false) {
+          event.hasOdds = false;
+          cs2BettingState.events[eventId] = event;
+        }
         failedCount++;
         // Continue with next event
       }
     }
     
+    // Update last API query timestamp (only if we actually made API calls)
+    if (eventsToUpdate.length > 0) {
+      cs2BettingState.lastApiQuery = new Date().toISOString();
+    }
+    
     // Save updated events
-    if (updatedCount > 0) {
+    if (updatedCount > 0 || failedCount > 0) {
       await saveCS2BettingData();
     }
     
-    console.log(`[CS2 Odds] Aggregation complete: ${updatedCount} updated, ${failedCount} failed out of ${activeEvents.length} events`);
-    return { processed: activeEvents.length, updated: updatedCount, failed: failedCount };
+    console.log(`[CS2 Odds] Update complete: ${updatedCount} updated, ${failedCount} failed out of ${eventsToUpdate.length} events`);
+    return { processed: eventsToUpdate.length, updated: updatedCount, failed: failedCount };
     
   } catch (error) {
-    console.error("[CS2 Odds] Error during odds aggregation:", error);
+    console.error("[CS2 Odds] Error during odds update:", error);
     return null;
   }
+}
+
+async function aggregateCS2Odds() {
+  // This function is deprecated - odds are now updated via:
+  // 1. Server start (initial sync)
+  // 2. Refresh button (manual sync)
+  // 3. Daily check (once per 24 hours)
+  // Do NOT call API here automatically
+  console.log("[CS2 Odds] aggregateCS2Odds called but API calls are restricted. Use refresh button or wait for daily update.");
+  return { processed: 0, updated: 0, failed: 0, message: "API calls restricted. Use refresh button to update." };
 }
 
 // GET /api/cs2/admin/sports - List available sports (for debugging)
@@ -1969,20 +2395,54 @@ app.get("/api/cs2/admin/sports", async (req, res) => {
 });
 
 // POST /api/cs2/admin/sync - Force refresh of events/odds from API
+// This is called when refresh button is clicked on CS2 betting page
 app.post("/api/cs2/admin/sync", async (req, res) => {
   try {
+    console.log("[CS2 Sync] Manual refresh triggered via API");
     const result = await syncCS2Events();
     
-    // Also trigger odds aggregation after syncing events
-    const oddsResult = await aggregateCS2Odds();
+    // Also trigger odds update after syncing events (force=true to bypass daily limit for manual refresh)
+    const oddsResult = await updateAllMatchOdds(true, true); // Force update on manual refresh
     
     if (result) {
       res.json({
         success: true,
-        message: `Synced ${result.total} matches and aggregated odds`,
+        message: `Synced ${result.total} matches and updated odds`,
         ...result,
         oddsResult: oddsResult,
-        lastSync: cs2BettingState.lastApiSync
+        lastSync: cs2BettingState.lastApiSync,
+        lastApiQuery: cs2BettingState.lastApiQuery
+      });
+    } else {
+      res.status(503).json({ 
+        success: false, 
+        error: "Failed to sync or API client not available",
+        oddsResult: oddsResult
+      });
+    }
+  } catch (error) {
+    console.error("Error in sync endpoint:", error);
+    res.status(500).json({ success: false, error: "Failed to sync data" });
+  }
+});
+
+// GET /api/cs2/sync - Same as POST but for GET requests (for refresh button)
+app.get("/api/cs2/sync", async (req, res) => {
+  try {
+    console.log("[CS2 Sync] Manual refresh triggered via GET API");
+    const result = await syncCS2Events();
+    
+    // Also trigger odds update after syncing events (force=true to bypass daily limit for manual refresh)
+    const oddsResult = await updateAllMatchOdds(true, true); // Force update on manual refresh
+    
+    if (result) {
+      res.json({
+        success: true,
+        message: `Synced ${result.total} matches and updated odds`,
+        ...result,
+        oddsResult: oddsResult,
+        lastSync: cs2BettingState.lastApiSync,
+        lastApiQuery: cs2BettingState.lastApiQuery
       });
     } else {
       res.status(503).json({ 
@@ -2020,9 +2480,10 @@ app.post("/api/cs2/admin/aggregate", async (req, res) => {
   }
 });
 
-// POST /api/cs2/admin/settle - Manually trigger bet settlement
+// POST /api/cs2/admin/settle - Manually trigger bet settlement (bypasses daily limit)
 app.post("/api/cs2/admin/settle", async (req, res) => {
   try {
+    console.log("[CS2 Settlement] Manual settlement triggered via API");
     const result = await settleCS2Bets();
     if (result) {
       res.json({
@@ -2054,6 +2515,7 @@ const CS2_ODDS_AGGREGATION_INTERVAL_MS = parseInt(process.env.CS2_ODDS_AGGREGATI
 let cs2SyncInterval = null;
 let cs2SettlementInterval = null;
 let cs2OddsAggregationInterval = null;
+let cs2DailyOddsUpdateInterval = null;
 
 // Start scheduled tasks for CS2 betting
 function startCS2ScheduledTasks() {
@@ -2064,65 +2526,101 @@ function startCS2ScheduledTasks() {
   
   // Use node-cron if available, otherwise use setInterval
   if (cron) {
-    // Sync events every 30 minutes (using cron syntax)
-    // "*/30 * * * *" means every 30 minutes
-    cs2SyncInterval = cron.schedule("*/30 * * * *", async () => {
-      await syncCS2Events();
+    // NOTE: Event sync is DISABLED - API calls are restricted to:
+    // 1. Server start (initial sync)
+    // 2. Refresh button (manual sync)
+    // 3. Daily check (once per 24 hours)
+    // cs2SyncInterval is no longer used
+    cs2SyncInterval = null;
+    
+    // Schedule daily settlement check (runs once per day at midnight UTC, or checks if 24 hours passed)
+    // This ensures bets are settled once per day
+    cs2SettlementInterval = cron.schedule("0 0 * * *", async () => {
+      // Check if 24 hours have passed since last settlement check
+      if (shouldRunSettlementCheck()) {
+        console.log("[CS2 Settlement] Daily check: 24 hours passed, starting settlement check...");
+        await settleCS2Bets(); // Function will update lastSettlementCheck timestamp
+      } else {
+        const lastCheck = new Date(cs2BettingState.lastSettlementCheck);
+        const now = new Date();
+        const hoursSinceLastCheck = (now - lastCheck) / (1000 * 60 * 60);
+        const hoursRemaining = 24 - hoursSinceLastCheck;
+        console.log(`[CS2 Settlement] Daily check: ${hoursRemaining.toFixed(1)} hours remaining until next settlement check`);
+      }
     }, {
       scheduled: true,
       timezone: "UTC"
     });
     
-    // Check for settlement every 5 minutes
-    cs2SettlementInterval = cron.schedule("*/5 * * * *", async () => {
-      await settleCS2Bets();
-    }, {
-      scheduled: true,
-      timezone: "UTC"
-    });
-    
-    // Schedule odds aggregation every 10 minutes
-    cs2OddsAggregationInterval = cron.schedule("*/10 * * * *", async () => {
-      await aggregateCS2Odds();
+    // Schedule daily odds update (runs once per day at 1 AM UTC, or checks if 24 hours passed)
+    // This ensures all matches get fresh odds once per day using common range approach
+    cs2DailyOddsUpdateInterval = cron.schedule("0 1 * * *", async () => {
+      // Check if 24 hours have passed since last API query
+      if (shouldRunDailyUpdate()) {
+        console.log("[CS2 Odds] Daily check: 24 hours passed, starting odds update for all matches...");
+        await updateAllMatchOdds(true, false); // Update all matches, respect daily limit
+      } else {
+        const lastQuery = new Date(cs2BettingState.lastApiQuery);
+        const now = new Date();
+        const hoursSinceLastQuery = (now - lastQuery) / (1000 * 60 * 60);
+        const hoursRemaining = 24 - hoursSinceLastQuery;
+        console.log(`[CS2 Odds] Daily check: ${hoursRemaining.toFixed(1)} hours remaining until next update`);
+      }
     }, {
       scheduled: true,
       timezone: "UTC"
     });
     
     console.log("CS2 scheduled tasks started using node-cron:");
-    console.log(`  - Event sync: every 30 minutes`);
-    console.log(`  - Settlement check: every 5 minutes`);
-    console.log(`  - Odds aggregation: every 10 minutes`);
+    console.log(`  - Event sync: DISABLED (API calls restricted)`);
+    console.log(`  - Settlement check: once per day at midnight UTC (or if 24 hours passed)`);
+    console.log(`  - Odds aggregation: DISABLED (API calls restricted)`);
+    console.log(`  - Daily odds update: once per day at 1 AM UTC (or if 24 hours passed)`);
   } else {
     // Fallback to setInterval
-    cs2SyncInterval = setInterval(async () => {
-      await syncCS2Events();
-    }, CS2_SYNC_INTERVAL_MS);
+    // NOTE: Event sync is DISABLED - API calls are restricted
+    // cs2SyncInterval is no longer used
+    cs2SyncInterval = null;
     
+    // Schedule daily settlement check (runs once per day, checks if 24 hours passed)
+    // Check every hour to see if 24 hours have passed since last settlement
     cs2SettlementInterval = setInterval(async () => {
-      await settleCS2Bets();
-    }, CS2_SETTLEMENT_INTERVAL_MS);
+      if (shouldRunSettlementCheck()) {
+        console.log("[CS2 Settlement] Daily check: 24 hours passed, starting settlement check...");
+        await settleCS2Bets(); // Function will update lastSettlementCheck timestamp
+      } else {
+        const lastCheck = new Date(cs2BettingState.lastSettlementCheck);
+        const now = new Date();
+        const hoursSinceLastCheck = (now - lastCheck) / (1000 * 60 * 60);
+        const hoursRemaining = 24 - hoursSinceLastCheck;
+        console.log(`[CS2 Settlement] Daily check: ${hoursRemaining.toFixed(1)} hours remaining until next settlement check`);
+      }
+    }, 60 * 60 * 1000); // Check every hour
     
-    // Schedule odds aggregation
-    cs2OddsAggregationInterval = setInterval(async () => {
-      await aggregateCS2Odds();
-    }, CS2_ODDS_AGGREGATION_INTERVAL_MS);
+    // Schedule daily odds update (runs once per day, checks if 24 hours passed)
+    cs2DailyOddsUpdateInterval = setInterval(async () => {
+      // Check if 24 hours have passed since last API query
+      if (shouldRunDailyUpdate()) {
+        console.log("[CS2 Odds] Daily check: 24 hours passed, starting odds update for all matches...");
+        await updateAllMatchOdds(true, false); // Update all matches, respect daily limit
+      } else {
+        const lastQuery = new Date(cs2BettingState.lastApiQuery);
+        const now = new Date();
+        const hoursSinceLastQuery = (now - lastQuery) / (1000 * 60 * 60);
+        const hoursRemaining = 24 - hoursSinceLastQuery;
+        console.log(`[CS2 Odds] Daily check: ${hoursRemaining.toFixed(1)} hours remaining until next update`);
+      }
+    }, 60 * 60 * 1000); // Check every hour
     
     console.log("CS2 scheduled tasks started using setInterval:");
-    console.log(`  - Event sync: every ${CS2_SYNC_INTERVAL_MS / 1000 / 60} minutes`);
-    console.log(`  - Settlement check: every ${CS2_SETTLEMENT_INTERVAL_MS / 1000 / 60} minutes`);
-    console.log(`  - Odds aggregation: every ${CS2_ODDS_AGGREGATION_INTERVAL_MS / 1000 / 60} minutes`);
+    console.log(`  - Event sync: DISABLED (API calls restricted)`);
+    console.log(`  - Settlement check: once per day (checks hourly if 24 hours passed)`);
+    console.log(`  - Odds aggregation: DISABLED (API calls restricted)`);
+    console.log(`  - Daily odds update: once per day (checks hourly if 24 hours passed)`);
   }
   
-  // Initial sync after server starts (wait 10 seconds to let server fully initialize)
-  setTimeout(async () => {
-    console.log("Performing initial CS2 event sync...");
-    await syncCS2Events();
-    
-    // Also perform initial odds aggregation for events that need it
-    console.log("Performing initial CS2 odds aggregation...");
-    await aggregateCS2Odds();
-  }, 10000);
+  // NOTE: Initial sync is now handled separately after startCS2ScheduledTasks()
+  // to ensure it only runs once on server start
 }
 
 // Stop scheduled tasks (for graceful shutdown)
@@ -2154,12 +2652,37 @@ function stopCS2ScheduledTasks() {
     cs2OddsAggregationInterval = null;
   }
   
+  if (cs2DailyOddsUpdateInterval) {
+    if (cron && cs2DailyOddsUpdateInterval.stop) {
+      cs2DailyOddsUpdateInterval.stop();
+    } else if (typeof cs2DailyOddsUpdateInterval === 'number') {
+      clearInterval(cs2DailyOddsUpdateInterval);
+    }
+    cs2DailyOddsUpdateInterval = null;
+  }
+  
   console.log("CS2 scheduled tasks stopped");
 }
 
 // Start CS2 scheduled tasks if API client is available
 if (cs2ApiClient) {
   startCS2ScheduledTasks();
+  
+  // Perform initial sync on server start (only time API is called automatically)
+  // Ensure cache is loaded before syncing
+  setTimeout(async () => {
+    // Wait for cache to be loaded (if not already)
+    if (!cs2ApiCache || Object.keys(cs2ApiCache.odds || {}).length === 0 && !cs2ApiCache.matches?.data) {
+      console.log("[CS2 Sync] Waiting for cache to load...");
+      await loadCS2ApiCache();
+    }
+    
+    console.log("[CS2 Sync] Performing initial sync on server start...");
+    await syncCS2Events();
+    // Also update odds on initial sync
+    console.log("[CS2 Odds] Performing initial odds update on server start...");
+    await updateAllMatchOdds(true, true); // Force update on server start
+  }, 10000); // Wait 10 seconds for server to fully initialize
 }
 
 // ========== END CS2 BETTING SCHEDULED TASKS ==========

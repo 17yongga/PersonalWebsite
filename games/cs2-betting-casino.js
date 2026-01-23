@@ -143,9 +143,42 @@ class CS2BettingGame {
   }
 
   attachEventListeners() {
-    // Refresh events button
-    document.getElementById('refreshEventsBtn')?.addEventListener('click', () => {
-      this.loadEvents();
+    // Refresh events button - calls API to sync and update odds
+    document.getElementById('refreshEventsBtn')?.addEventListener('click', async () => {
+      try {
+        const serverUrl = window.CASINO_SERVER_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin);
+        const refreshBtn = document.getElementById('refreshEventsBtn');
+        if (refreshBtn) {
+          refreshBtn.disabled = true;
+          refreshBtn.textContent = '🔄 Refreshing...';
+        }
+        
+        console.log('[CS2 Frontend] Refresh button clicked - calling API sync...');
+        const response = await fetch(`${serverUrl}/api/cs2/sync`, { method: 'GET' });
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('[CS2 Frontend] Refresh successful:', data);
+          // Reload events after sync
+          await this.loadEvents();
+        } else {
+          console.error('[CS2 Frontend] Refresh failed:', data);
+          alert('Failed to refresh matches. Please try again later.');
+        }
+        
+        if (refreshBtn) {
+          refreshBtn.disabled = false;
+          refreshBtn.textContent = '🔄 Refresh';
+        }
+      } catch (error) {
+        console.error('[CS2 Frontend] Error refreshing:', error);
+        alert('Error refreshing matches. Please try again later.');
+        const refreshBtn = document.getElementById('refreshEventsBtn');
+        if (refreshBtn) {
+          refreshBtn.disabled = false;
+          refreshBtn.textContent = '🔄 Refresh';
+        }
+      }
     });
 
     // Bet amount quick buttons
@@ -300,23 +333,9 @@ class CS2BettingGame {
           console.warn('[CS2 Frontend] Events array is empty! Response:', data);
         }
         
-        // Fetch odds for events that don't have them (limit to first 10 to avoid rate limits)
-        const eventsNeedingOdds = this.events
-          .filter(e => (!e.odds || !e.odds.team1 || !e.odds.team2) && 
-                       (e.status === 'scheduled' || e.status === 'live') &&
-                       e.hasOdds !== false)
-          .slice(0, 10); // Limit to first 10 to respect rate limits
-        
-        if (eventsNeedingOdds.length > 0) {
-          console.log(`[CS2 Frontend] Fetching odds for ${eventsNeedingOdds.length} events...`);
-          // Fetch odds in parallel with delays to respect rate limits
-          for (let i = 0; i < eventsNeedingOdds.length; i++) {
-            const event = eventsNeedingOdds[i];
-            setTimeout(async () => {
-              await this.fetchEventOddsIfNeeded(event.id, true); // Force fetch
-            }, i * 600); // 600ms delay between requests (respecting 500ms cooldown + buffer)
-          }
-        }
+        // NOTE: Do NOT automatically fetch odds from API
+        // API calls are restricted to: server start, refresh button, and daily updates
+        // Odds will be available if they were fetched during those times
         
         this.renderEvents();
       } else {
@@ -542,48 +561,49 @@ class CS2BettingGame {
   }
 
   async fetchEventOddsIfNeeded(eventId, force = false) {
+    // NOTE: This function no longer calls the API
+    // API calls are restricted to: server start, refresh button, and daily updates
+    // This function just returns cached odds from the server
+    
     const event = this.events.find(e => e.id === eventId);
     if (!event) {
       console.warn(`[CS2 Frontend] Event ${eventId} not found`);
       return;
     }
     
-    if (!force && event.odds?.team1 && event.odds?.team2) {
-      // Odds already available
+    if (event.odds?.team1 && event.odds?.team2) {
+      // Odds already available in local cache
       console.log(`[CS2 Frontend] Odds already available for event ${eventId}`);
-      return;
+      return true;
     }
 
+    // Try to get cached odds from server (no API call)
     try {
-      console.log(`[CS2 Frontend] Fetching odds for event ${eventId}...`);
+      console.log(`[CS2 Frontend] Checking cached odds for event ${eventId}...`);
       const serverUrl = window.CASINO_SERVER_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin);
       const response = await fetch(`${serverUrl}/api/cs2/events/${eventId}/odds`);
       
       if (response.ok) {
         const data = await response.json();
-        if (data.success && data.event && data.event.odds) {
+        if (data.success && data.event && data.event.odds && (data.event.odds.team1 || data.event.odds.team2)) {
           // Update event odds in our local array
           const eventIndex = this.events.findIndex(e => e.id === eventId);
           if (eventIndex !== -1) {
             this.events[eventIndex].odds = data.event.odds;
             this.events[eventIndex].hasOdds = true;
-            console.log(`[CS2 Frontend] Updated odds for event ${eventId}:`, data.event.odds);
+            console.log(`[CS2 Frontend] Updated odds for event ${eventId} from cache:`, data.event.odds);
             // Re-render to show updated odds
             this.renderEvents();
             return true; // Success
           }
         } else {
-          console.warn(`[CS2 Frontend] No odds data in response for event ${eventId}:`, data);
+          console.log(`[CS2 Frontend] No cached odds available for event ${eventId}. Use refresh button to update.`);
         }
-      } else {
-        console.error(`[CS2 Frontend] Failed to fetch odds for event ${eventId}: HTTP ${response.status}`);
-        const errorData = await response.json().catch(() => ({}));
-        console.error(`[CS2 Frontend] Error response:`, errorData);
       }
     } catch (error) {
-      console.error(`[CS2 Frontend] Error fetching odds for event ${eventId}:`, error);
+      console.error(`[CS2 Frontend] Error checking cached odds for event ${eventId}:`, error);
     }
-    return false; // Failed
+    return false; // No odds available
   }
 
   selectOutcome(eventId, selection) {
