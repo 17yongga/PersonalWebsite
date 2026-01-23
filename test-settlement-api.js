@@ -304,7 +304,7 @@ async function testSettlementsEndpoint(fixtureId) {
     // Also make a direct call to see raw response structure
     const axios = require('axios');
     const ODDSPAPI_BASE_URL = process.env.ODDSPAPI_BASE_URL || 'https://api.oddspapi.io/v4';
-    const ODDSPAPI_API_KEY = process.env.ODDSPAPI_API_KEY || '54e76406-74ee-4337-af07-85994db01523';
+    const ODDSPAPI_API_KEY = process.env.ODDSPAPI_API_KEY || '492c4517-843e-49d5-96dd-8eed82567c5b';
     
     console.log(`📡 Making direct API call to see raw response structure...`);
     

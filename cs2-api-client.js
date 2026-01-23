@@ -13,12 +13,31 @@ const path = require('path');
 
 // Configuration - can be overridden via environment variables
 const ODDSPAPI_BASE_URL = process.env.ODDSPAPI_BASE_URL || 'https://api.oddspapi.io/v4';
-const ODDSPAPI_API_KEY = process.env.ODDSPAPI_API_KEY || '54e76406-74ee-4337-af07-85994db01523';
 const ODDSPAPI_LANGUAGE = process.env.ODDSPAPI_LANGUAGE || 'en';
 const ODDSPAPI_ODDS_FORMAT = process.env.ODDSPAPI_ODDS_FORMAT || 'decimal'; // decimal, fractional, american
 
+// API Key configuration with fallback keys
+// Primary key first, then fallback keys if primary fails
+const ODDSPAPI_API_KEYS = [
+  process.env.ODDSPAPI_API_KEY || '492c4517-843e-49d5-96dd-8eed82567c5b', // Primary key
+  '9003763c-674b-4b96-be80-fb8d08ff99db', // Fallback 1
+  '0ddeae0a-1e13-4285-9e35-b5b590190fa8', // Fallback 2
+  '2fc3c182-766b-4992-9729-f439efdac2ba', // Fallback 3
+  'ba42222d-487b-4c70-a53e-7d50c212559f', // Fallback 4
+  '8afcb165-1989-42f1-8739-da129bb40337', // Fallback 5
+  '4d4fde92-a84b-433f-a815-462b3d6aca20'  // Fallback 6
+];
+
+// Current active API key index
+let currentApiKeyIndex = 0;
+
+// Get current API key
+function getCurrentApiKey() {
+  return ODDSPAPI_API_KEYS[currentApiKeyIndex];
+}
+
 // Verify API key is set
-if (!ODDSPAPI_API_KEY || ODDSPAPI_API_KEY.length < 10) {
+if (!getCurrentApiKey() || getCurrentApiKey().length < 10) {
   console.warn('[CS2 API Client] WARNING: API key appears to be invalid or not set');
 }
 
@@ -33,9 +52,10 @@ const API_LOG_FILE = path.join(__dirname, 'oddspapi-api-calls.log');
 
 // Initialize log file with header on first run
 if (!fs.existsSync(API_LOG_FILE)) {
+  const currentKey = getCurrentApiKey();
   const header = `# OddsPapi API Call Log
 # Started: ${new Date().toISOString()}
-# API Key: ${ODDSPAPI_API_KEY.substring(0, 8)}...${ODDSPAPI_API_KEY.substring(ODDSPAPI_API_KEY.length - 4)}
+# API Key: ${currentKey.substring(0, 8)}...${currentKey.substring(currentKey.length - 4)}
 # Format: JSON Lines (one JSON object per line)
 #
 `;
@@ -86,14 +106,18 @@ const MARKET_MONEYLINE = '101';
 const MARKET_MATCH_WINNER = '171';
 
 /**
- * Make authenticated request to OddsPapi API
+ * Make authenticated request to OddsPapi API with automatic fallback to backup keys
  * @param {string} endpoint - API endpoint (e.g., '/sports', '/fixtures')
  * @param {Object} params - Query parameters
  * @param {string} purpose - Purpose/reason for this API call (for logging)
+ * @param {number} retryKeyIndex - Internal parameter for retrying with different keys (default: current key)
  * @returns {Promise<Object>} API response
  */
-async function makeRequest(endpoint, params = {}, purpose = 'API call') {
+async function makeRequest(endpoint, params = {}, purpose = 'API call', retryKeyIndex = null) {
   const startTime = Date.now();
+  const keyIndex = retryKeyIndex !== null ? retryKeyIndex : currentApiKeyIndex;
+  const apiKey = ODDSPAPI_API_KEYS[keyIndex];
+  
   try {
     // Respect API cooldown (500ms between requests)
     const now = Date.now();
@@ -108,12 +132,12 @@ async function makeRequest(endpoint, params = {}, purpose = 'API call') {
     const url = `${ODDSPAPI_BASE_URL}${endpoint}`;
     const queryParams = {
       ...params,
-      apiKey: ODDSPAPI_API_KEY,
+      apiKey: apiKey,
       language: ODDSPAPI_LANGUAGE
     };
 
     console.log(`[OddsPapi] Fetching: ${url}`);
-    console.log(`[OddsPapi] Using API key: ${ODDSPAPI_API_KEY.substring(0, 8)}...${ODDSPAPI_API_KEY.substring(ODDSPAPI_API_KEY.length - 4)}`);
+    console.log(`[OddsPapi] Using API key: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)} (key ${keyIndex + 1}/${ODDSPAPI_API_KEYS.length})`);
 
     const response = await axios.get(url, {
       params: queryParams,
@@ -127,6 +151,12 @@ async function makeRequest(endpoint, params = {}, purpose = 'API call') {
     requestCount++;
     const responseTime = Date.now() - startTime;
     
+    // Update current key index if we're using a fallback key
+    if (keyIndex !== currentApiKeyIndex) {
+      console.log(`[OddsPapi] ✓ Successfully using fallback API key ${keyIndex + 1}, switching to it`);
+      currentApiKeyIndex = keyIndex;
+    }
+    
     // Log successful API call
     logApiCall(endpoint, purpose, params, 'success', null, responseTime);
     
@@ -135,19 +165,41 @@ async function makeRequest(endpoint, params = {}, purpose = 'API call') {
     const responseTime = Date.now() - startTime;
     const errorMessage = error.message || 'Unknown error';
     
-    // Log failed API call
-    logApiCall(endpoint, purpose, params, 'error', errorMessage, responseTime);
+    // Check if this is an authentication error (401, 403) and we have more keys to try
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      const nextKeyIndex = keyIndex + 1;
+      
+      if (nextKeyIndex < ODDSPAPI_API_KEYS.length) {
+        console.warn(`[OddsPapi] ⚠ API key ${keyIndex + 1} failed (${error.response.status}). Trying fallback key ${nextKeyIndex + 1}...`);
+        
+        // Try with next API key (recursive call will automatically try all remaining keys)
+        return await makeRequest(endpoint, params, purpose, nextKeyIndex);
+      } else {
+        // All keys exhausted
+        console.error(`[OddsPapi] ❌ All ${ODDSPAPI_API_KEYS.length} API keys have been tried and failed.`);
+      }
+    }
+    
+    // Log failed API call (only log once at the end, not for each failed key attempt)
+    // Skip logging if we're in the middle of trying fallback keys (keyIndex > currentApiKeyIndex)
+    if (keyIndex === currentApiKeyIndex || (error.response && error.response.status !== 401 && error.response.status !== 403)) {
+      logApiCall(endpoint, purpose, params, 'error', errorMessage, responseTime);
+    }
     
     console.error(`[OddsPapi] Error fetching ${endpoint}:`, errorMessage);
     if (error.response) {
       console.error('[OddsPapi] Response status:', error.response.status);
       console.error('[OddsPapi] Response data:', JSON.stringify(error.response.data, null, 2));
 
-      if (error.response.status === 401) {
-        console.error('[OddsPapi] ⚠ API key appears to be invalid. Please verify:');
-        console.error(`[OddsPapi]   - API key: ${ODDSPAPI_API_KEY.substring(0, 8)}...${ODDSPAPI_API_KEY.substring(ODDSPAPI_API_KEY.length - 4)}`);
-        console.error(`[OddsPapi]   - Get a valid key at: https://oddspapi.io`);
-        console.error(`[OddsPapi]   - Or set ODDSPAPI_API_KEY environment variable`);
+      if (error.response.status === 401 || error.response.status === 403) {
+        // Only show detailed error if we've exhausted all keys
+        if (keyIndex >= ODDSPAPI_API_KEYS.length - 1) {
+          console.error('[OddsPapi] ⚠ All API keys appear to be invalid or unauthorized.');
+          console.error(`[OddsPapi]   - Last tried key: ${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`);
+          console.error(`[OddsPapi]   - Total keys tried: ${ODDSPAPI_API_KEYS.length}`);
+          console.error(`[OddsPapi]   - Get a valid key at: https://oddspapi.io`);
+          console.error(`[OddsPapi]   - Or set ODDSPAPI_API_KEY environment variable`);
+        }
       } else if (error.response.status === 429) {
         console.warn('[OddsPapi] Rate limit exceeded. Please wait before making more requests.');
       }
