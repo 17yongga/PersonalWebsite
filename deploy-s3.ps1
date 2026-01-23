@@ -49,6 +49,10 @@ aws s3 cp games/games.css "s3://$S3_BUCKET/games/games.css" `
     --content-type "text/css" `
     --cache-control "max-age=31536000"
 
+aws s3 cp games/cs2-betting-casino.js "s3://$S3_BUCKET/games/cs2-betting-casino.js" `
+    --content-type "application/javascript" `
+    --cache-control "max-age=31536000"
+
 # Invalidate CloudFront cache
 if ($DISTRIBUTION_ID) {
     Write-Host ""
@@ -60,7 +64,8 @@ if ($DISTRIBUTION_ID) {
         "/games/blackjack.js",
         "/games/coinflip-casino.js",
         "/games/roulette-casino.js",
-        "/games/games.css"
+        "/games/games.css",
+        "/games/cs2-betting-casino.js"
     )
     aws cloudfront create-invalidation `
         --distribution-id $DISTRIBUTION_ID `

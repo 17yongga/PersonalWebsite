@@ -1,5 +1,6 @@
 #!/bin/bash
-# deploy-s3.sh - Deploy static files to S3
+# Production Deployment Script - EC2 + S3
+# This script deploys backend to EC2 and frontend to S3
 
 set -e
 
@@ -8,12 +9,53 @@ set -e
 # ============================================
 S3_BUCKET="your-s3-bucket-name"
 DISTRIBUTION_ID="your-cloudfront-distribution-id"  # Leave empty if not using CloudFront
+EC2_HOST="gary-yong.com"  # or your EC2 IP
+EC2_USER="ubuntu"
+EC2_KEY_PATH=""  # Path to SSH key if needed (e.g., ~/.ssh/key.pem)
 
 # ============================================
 # DEPLOYMENT SCRIPT
 # ============================================
 
-echo "🚀 Deploying static files to S3..."
+echo "🚀 Starting Production Deployment..."
+echo "=========================================="
+echo ""
+
+# Part 1: Deploy Backend to EC2
+echo "📦 Part 1: Deploying Backend to EC2..."
+echo "=========================================="
+
+if [ -z "$EC2_KEY_PATH" ]; then
+    SSH_CMD="ssh $EC2_USER@$EC2_HOST"
+else
+    SSH_CMD="ssh -i $EC2_KEY_PATH $EC2_USER@$EC2_HOST"
+fi
+
+$SSH_CMD << 'ENDSSH'
+cd ~/PersonalWebsite
+echo "📥 Pulling latest changes from GitHub..."
+git pull origin master
+
+echo "📦 Installing/updating dependencies..."
+npm install --production
+
+echo "🔄 Restarting casino server..."
+pm2 restart casino-server || pm2 start ecosystem.config.js
+pm2 save
+
+echo "✅ EC2 deployment complete!"
+echo ""
+echo "Server Status:"
+pm2 status
+ENDSSH
+
+echo ""
+echo "✅ Backend deployed to EC2!"
+echo ""
+
+# Part 2: Deploy Frontend to S3
+echo "📦 Part 2: Deploying Frontend to S3..."
+echo "=========================================="
 echo "Bucket: $S3_BUCKET"
 if [ ! -z "$DISTRIBUTION_ID" ]; then
   echo "CloudFront Distribution: $DISTRIBUTION_ID"
@@ -68,11 +110,24 @@ if [ ! -z "$DISTRIBUTION_ID" ]; then
 fi
 
 echo ""
-echo "✅ S3 deployment complete!"
+echo "✅ Frontend deployed to S3!"
 echo ""
-echo "Verify deployment:"
-echo "  - Visit: https://gary-yong.com/casino.html"
-echo "  - Check browser console for errors"
-echo "  - Test game functionality"
 
-
+# Summary
+echo "=========================================="
+echo "✅ Production Deployment Complete!"
+echo "=========================================="
+echo ""
+echo "Deployed:"
+echo "  ✅ Backend: EC2 ($EC2_HOST)"
+echo "  ✅ Frontend: S3 ($S3_BUCKET)"
+echo ""
+echo "Next Steps:"
+echo "  1. Verify backend: ssh $EC2_USER@$EC2_HOST 'pm2 logs casino-server --lines 20'"
+echo "  2. Verify frontend: Visit https://gary-yong.com/casino.html"
+echo "  3. Test CS2 betting functionality"
+echo "  4. Monitor logs for any errors"
+echo ""
+echo "Check API key status in logs:"
+echo "  ssh $EC2_USER@$EC2_HOST 'pm2 logs casino-server | grep \"API key\"'"
+echo ""
