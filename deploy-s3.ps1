@@ -1,10 +1,18 @@
 # deploy-s3.ps1 - Deploy static files to S3 (PowerShell)
 
+# Add AWS CLI to PATH if not already there
+$awsPath = "C:\Program Files\Amazon\AWSCLIV2"
+if (Test-Path "$awsPath\aws.exe") {
+    if ($env:PATH -notlike "*$awsPath*") {
+        $env:PATH += ";$awsPath"
+    }
+}
+
 # ============================================
 # CONFIGURATION - UPDATE THESE VALUES
 # ============================================
-$S3_BUCKET = "your-s3-bucket-name"
-$DISTRIBUTION_ID = "your-cloudfront-distribution-id"  # Leave empty if not using CloudFront
+$S3_BUCKET = "gary-yong.com"
+$DISTRIBUTION_ID = "EUVZ94LCG1QV2"  # Leave empty if not using CloudFront
 
 # ============================================
 # DEPLOYMENT SCRIPT

@@ -7,11 +7,11 @@ set -e
 # ============================================
 # CONFIGURATION - UPDATE THESE VALUES
 # ============================================
-S3_BUCKET="your-s3-bucket-name"
-DISTRIBUTION_ID="your-cloudfront-distribution-id"  # Leave empty if not using CloudFront
-EC2_HOST="gary-yong.com"  # or your EC2 IP
+S3_BUCKET="gary-yong.com"  # S3 bucket name (not ARN, just the bucket name)
+DISTRIBUTION_ID="EUVZ94LCG1QV2"  # CloudFront Distribution ID (the ID, not the domain)
+EC2_HOST="98.82.129.231"  # EC2 hostname or IP address (NOT CloudFront domain)
 EC2_USER="ubuntu"
-EC2_KEY_PATH=""  # Path to SSH key if needed (e.g., ~/.ssh/key.pem)
+EC2_KEY_PATH="/c/Users/yongg/.ssh/ask-gary-key.pem"  # Path to SSH key (Git Bash format on Windows)
 
 # ============================================
 # DEPLOYMENT SCRIPT

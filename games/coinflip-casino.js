@@ -277,15 +277,30 @@ class CoinflipGame {
     });
 
     this.socket.on('error', (message) => {
-      alert(message);
+      console.error('[Coinflip] Socket error:', message);
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logError(new Error(message), {
+          context: 'coinflip socket error',
+          game: 'coinflip'
+        });
+      }
+      this.showTemporaryMessage(message, 'error');
     });
 
     this.socket.on('playerData', (data) => {
+      const oldBalance = this.casino.credits;
       // Only update credits if they're higher (server might have old data)
       // Or if we don't have credits yet (initial load)
       if (this.casino.credits === 0 || data.credits > this.casino.credits) {
         this.casino.credits = data.credits;
         this.casino.updateCreditsDisplay();
+        
+        if (window.casinoDebugLogger) {
+          window.casinoDebugLogger.logBalanceUpdate(oldBalance, data.credits, 'socket', {
+            game: 'coinflip',
+            source: 'playerData event'
+          });
+        }
       }
     });
 
@@ -480,62 +495,152 @@ class CoinflipGame {
   }
 
   createRoom() {
-    const amount = parseInt(document.getElementById('createBetAmountInput').value);
-    if (!amount || amount <= 0 || amount > this.casino.credits || !this.createChoice) {
-      alert('Please set a valid bet amount and choice');
-      return;
+    try {
+      // Set navigation guard
+      if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
+        this.casino.setBetPlacementInProgress(true);
+      }
+
+      const amount = parseInt(document.getElementById('createBetAmountInput').value);
+      
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logBetPlacement('coinflip', amount, 'started', {
+          action: 'createRoom',
+          choice: this.createChoice
+        });
+      }
+
+      if (!amount || amount <= 0 || amount > this.casino.credits || !this.createChoice) {
+        const msg = 'Please set a valid bet amount and choice';
+        if (window.casinoDebugLogger) {
+          window.casinoDebugLogger.logBetPlacement('coinflip', amount, 'failed', { reason: msg });
+        }
+        this.showTemporaryMessage(msg, 'error');
+        return;
+      }
+
+      this.socket.emit('createRoom', { betAmount: amount, choice: this.createChoice });
+      
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logBetPlacement('coinflip', amount, 'emitting', {
+          action: 'createRoom',
+          choice: this.createChoice
+        });
+      }
+
+      // Close the create room modal
+      this.toggleCreateRoomSection();
+
+      // Clear navigation guard after a short delay
+      setTimeout(() => {
+        if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
+          this.casino.setBetPlacementInProgress(false);
+        }
+      }, 1000);
+    } catch (error) {
+      // Clear navigation guard on error
+      if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
+        this.casino.setBetPlacementInProgress(false);
+      }
+      console.error('[Coinflip] Error in createRoom:', error);
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logError(error, {
+          context: 'coinflip createRoom'
+        });
+      }
+      this.showTemporaryMessage('Error creating room. Please try again.', 'error');
     }
-    this.socket.emit('createRoom', { betAmount: amount, choice: this.createChoice });
-    // Close the create room modal
-    this.toggleCreateRoomSection();
+  }
+
+  showTemporaryMessage(message, type = 'info') {
+    // Remove any existing message
+    const existingMsg = document.getElementById('coinflipTempMessage');
+    if (existingMsg) {
+      existingMsg.remove();
+    }
+
+    // Create message element
+    const msgEl = document.createElement('div');
+    msgEl.id = 'coinflipTempMessage';
+    msgEl.className = `cs2-temp-message cs2-temp-message-${type}`;
+    msgEl.textContent = message;
+    
+    // Add to game container
+    const gameView = document.getElementById('coinflipGame');
+    if (gameView) {
+      gameView.appendChild(msgEl);
+      
+      // Auto-remove after 3 seconds
+      setTimeout(() => {
+        msgEl.style.opacity = '0';
+        msgEl.style.transition = 'opacity 0.3s';
+        setTimeout(() => msgEl.remove(), 300);
+      }, 3000);
+    }
   }
 
   playWithBot() {
-    if (!this.currentRoomId || !this.isCreator) {
-      return;
-    }
-    if (!this.socket || !this.socket.connected) {
-      alert('Not connected to server. Please refresh the page.');
-      return;
-    }
-    
-    // Disable button to prevent multiple clicks
-    const botBtn = document.getElementById('playWithBotBtn');
-    if (botBtn) {
-      botBtn.disabled = true;
-      botBtn.textContent = 'Adding Bot...';
-    }
-    
-    // Set a timeout to reset button if no response comes back
-    const resetTimeout = setTimeout(() => {
-      if (botBtn) {
-        botBtn.disabled = false;
-        botBtn.textContent = 'Play with Bot';
+    try {
+      if (!this.currentRoomId || !this.isCreator) {
+        return;
       }
-    }, 10000); // 10 second timeout
-    
-    this.socket.emit('playWithBot', { roomId: this.currentRoomId }, (response) => {
-      clearTimeout(resetTimeout);
-      if (response && response.error) {
-        alert(response.error);
+      if (!this.socket || !this.socket.connected) {
+        this.showTemporaryMessage('Not connected to server. Please refresh the page.', 'error');
+        return;
+      }
+      
+      // Disable button to prevent multiple clicks
+      const botBtn = document.getElementById('playWithBotBtn');
+      if (botBtn) {
+        botBtn.disabled = true;
+        botBtn.textContent = 'Adding Bot...';
+      }
+      
+      // Set a timeout to reset button if no response comes back
+      const resetTimeout = setTimeout(() => {
         if (botBtn) {
           botBtn.disabled = false;
           botBtn.textContent = 'Play with Bot';
         }
-      }
-      // If successful, the button will be hidden by updatePlayersDisplay
-      // But reset it anyway in case something goes wrong
-      if (response && response.success && botBtn) {
-        // Button will be hidden when playersUpdate is received
-        // But set a fallback timeout just in case
-        setTimeout(() => {
-          if (botBtn && !botBtn.classList.contains('hidden')) {
+      }, 10000); // 10 second timeout
+      
+      this.socket.emit('playWithBot', { roomId: this.currentRoomId }, (response) => {
+        clearTimeout(resetTimeout);
+        if (response && response.error) {
+          if (window.casinoDebugLogger) {
+            window.casinoDebugLogger.logError(new Error(response.error), {
+              context: 'coinflip playWithBot',
+              roomId: this.currentRoomId
+            });
+          }
+          this.showTemporaryMessage(response.error, 'error');
+          if (botBtn) {
             botBtn.disabled = false;
             botBtn.textContent = 'Play with Bot';
           }
-        }, 2000);
+        }
+        // If successful, the button will be hidden by updatePlayersDisplay
+        // But reset it anyway in case something goes wrong
+        if (response && response.success && botBtn) {
+          // Button will be hidden when playersUpdate is received
+          // But set a fallback timeout just in case
+          setTimeout(() => {
+            if (botBtn && !botBtn.classList.contains('hidden')) {
+              botBtn.disabled = false;
+              botBtn.textContent = 'Play with Bot';
+            }
+          }, 2000);
+        }
+      });
+    } catch (error) {
+      console.error('[Coinflip] Error in playWithBot:', error);
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logError(error, {
+          context: 'coinflip playWithBot'
+        });
       }
-    });
+      this.showTemporaryMessage('Error playing with bot. Please try again.', 'error');
+    }
   }
 
   leaveRoom() {
@@ -543,8 +648,54 @@ class CoinflipGame {
   }
 
   confirmParticipation() {
-    if (!this.currentRoomId) return;
-    this.socket.emit('confirmParticipation', { roomId: this.currentRoomId });
+    try {
+      // Set navigation guard
+      if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
+        this.casino.setBetPlacementInProgress(true);
+      }
+
+      if (!this.currentRoomId) {
+        if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
+          this.casino.setBetPlacementInProgress(false);
+        }
+        if (window.casinoDebugLogger) {
+          window.casinoDebugLogger.logBetPlacement('coinflip', 0, 'failed', {
+            reason: 'No current room ID',
+            action: 'confirmParticipation'
+          });
+        }
+        return;
+      }
+
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logBetPlacement('coinflip', 0, 'emitting', {
+          action: 'confirmParticipation',
+          roomId: this.currentRoomId
+        });
+      }
+
+      this.socket.emit('confirmParticipation', { roomId: this.currentRoomId });
+
+      // Clear navigation guard after a short delay
+      setTimeout(() => {
+        if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
+          this.casino.setBetPlacementInProgress(false);
+        }
+      }, 1000);
+    } catch (error) {
+      // Clear navigation guard on error
+      if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
+        this.casino.setBetPlacementInProgress(false);
+      }
+      console.error('[Coinflip] Error in confirmParticipation:', error);
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logError(error, {
+          context: 'coinflip confirmParticipation',
+          roomId: this.currentRoomId
+        });
+      }
+      this.showTemporaryMessage('Error confirming participation. Please try again.', 'error');
+    }
   }
 
   updateRoomList(rooms) {

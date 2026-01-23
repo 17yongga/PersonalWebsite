@@ -108,6 +108,22 @@ let usersLoadedPromise = loadUsers().then(data => {
   return {};
 });
 
+// Per-user balance lock: ensures joinCasino reads after in-flight REST (CS2 bet) updates
+// Fixes race where user places CS2 bet -> navigates -> joinCasino sends stale balance
+const userBalanceLocks = {};
+
+function acquireUserBalanceLock(userId) {
+  const tail = userBalanceLocks[userId] || Promise.resolve();
+  return tail;
+}
+
+function runWithUserBalanceLock(userId, fn) {
+  const prev = userBalanceLocks[userId] || Promise.resolve();
+  const next = prev.then(() => fn());
+  userBalanceLocks[userId] = next;
+  return next;
+}
+
 // Save user balance
 async function saveUserBalance(userId, credits) {
   if (users[userId]) {
@@ -135,8 +151,8 @@ const coinflipRooms = {};
 let coinflipRoomCounter = 1;
 
 // ========== CS2 BETTING STATE ==========
-// CS2 betting data file path
-const CS2_BETTING_FILE = path.join(__dirname, "cs2-betting-data.json");
+// CS2 betting data file path - moved to data/ subdirectory to reduce Live Server file watching
+const CS2_BETTING_FILE = path.join(__dirname, "data", "cs2-betting-data.json");
 // CS2 team rankings file path
 const CS2_TEAM_RANKINGS_FILE = path.join(__dirname, "cs2-team-rankings.json");
 // CS2 API cache file path
@@ -177,11 +193,28 @@ async function loadCS2BettingData() {
 }
 
 // Save CS2 betting data to file
+// Uses atomic writes (write to temp file, then rename) to reduce file watcher triggers
 async function saveCS2BettingData() {
   try {
-    await fs.writeFile(CS2_BETTING_FILE, JSON.stringify(cs2BettingState, null, 2), "utf8");
+    // Ensure data directory exists
+    const dataDir = path.join(__dirname, "data");
+    try {
+      await fs.mkdir(dataDir, { recursive: true });
+    } catch (mkdirError) {
+      // Directory might already exist, ignore error
+    }
+    
+    const tempFile = CS2_BETTING_FILE + '.tmp';
+    await fs.writeFile(tempFile, JSON.stringify(cs2BettingState, null, 2), "utf8");
+    await fs.rename(tempFile, CS2_BETTING_FILE);
   } catch (error) {
     console.error("Error saving CS2 betting data:", error);
+    // Clean up temp file if rename failed
+    try {
+      await fs.unlink(CS2_BETTING_FILE + '.tmp');
+    } catch (unlinkError) {
+      // Ignore cleanup errors
+    }
   }
 }
 
@@ -851,22 +884,27 @@ io.on("connection", (socket) => {
       return;
     }
 
+    const uname = username.trim();
+
     // Check if user exists
-    const user = users[username];
+    const user = users[uname];
     if (!user) {
       socket.emit("error", "User not found. Please register first.");
       return;
     }
 
-    // Initialize player data with saved balance
+    // Wait for any in-flight balance updates (e.g. CS2 bet) before reading
+    await acquireUserBalanceLock(uname);
+    const credits = users[uname] ? users[uname].credits : user.credits;
+
     players[socket.id] = {
-      username: username.trim(),
-      credits: user.credits,
+      username: uname,
+      credits,
       roomId: null,
-      userId: username
+      userId: uname
     };
 
-    socketToUser[socket.id] = username;
+    socketToUser[socket.id] = uname;
 
     socket.emit("playerData", {
       username: players[socket.id].username,
@@ -1705,12 +1743,11 @@ app.get("/api/cs2/balance", async (req, res) => {
       return res.status(400).json({ success: false, error: "userId or sessionId required" });
     }
     
-    // Use existing casino user credits (shared with casino games)
+    await acquireUserBalanceLock(userId);
     const user = users[userId];
     if (user) {
-      res.json({ success: true, balance: user.credits || 0 });
+      res.json({ success: true, balance: user.credits ?? 0 });
     } else {
-      // If user doesn't exist, return initial credits (they'll be created on first bet)
       res.json({ success: true, balance: INITIAL_CREDITS });
     }
   } catch (error) {
@@ -1791,10 +1828,11 @@ app.post("/api/cs2/bets", async (req, res) => {
       });
     }
     
-    // Deduct credits
-    user.credits -= amount;
-    await saveUserBalance(userId, user.credits);
-    
+    await runWithUserBalanceLock(userId, async () => {
+      user.credits -= amount;
+      await saveUserBalance(userId, user.credits);
+    });
+
     // Create bet record
     const betId = `bet_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const bet = {
@@ -1809,14 +1847,14 @@ app.post("/api/cs2/bets", async (req, res) => {
       placedAt: new Date().toISOString(),
       settledAt: null
     };
-    
+
     cs2BettingState.bets[betId] = bet;
     await saveCS2BettingData();
-    
+
     res.json({
       success: true,
       bet: bet,
-      newBalance: user.credits
+      newBalance: users[userId].credits
     });
   } catch (error) {
     console.error("Error placing CS2 bet:", error);

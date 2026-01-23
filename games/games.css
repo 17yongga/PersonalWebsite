@@ -2909,10 +2909,10 @@ html[data-theme="light"] .cs2-event-card {
 }
 
 .event-team-row .team-logo-container {
-  width: clamp(32px, 10vw, 44px);
-  height: clamp(32px, 10vw, 44px);
-  min-width: clamp(32px, 10vw, 44px);
-  min-height: clamp(32px, 10vw, 44px);
+  width: clamp(24px, 6vw, 32px);
+  height: clamp(24px, 6vw, 32px);
+  min-width: clamp(24px, 6vw, 32px);
+  min-height: clamp(24px, 6vw, 32px);
   border-radius: 50%;
   overflow: hidden;
   border: 1.5px solid rgba(148, 163, 184, 0.4);
@@ -2928,6 +2928,64 @@ html[data-theme="light"] .cs2-event-card {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* Fallback acronym styling */
+.event-team-row .team-logo-container .team-acronym {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.6rem, 3vw, 0.75rem);
+  font-weight: 700;
+  color: #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Temporary message notification */
+.cs2-temp-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 10000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideInRight 0.3s ease-out;
+  max-width: 400px;
+}
+
+.cs2-temp-message-success {
+  background: #22c55e;
+  color: white;
+  border: 1px solid #16a34a;
+}
+
+.cs2-temp-message-error {
+  background: #ef4444;
+  color: white;
+  border: 1px solid #dc2626;
+}
+
+.cs2-temp-message-info {
+  background: #3b82f6;
+  color: white;
+  border: 1px solid #2563eb;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .event-team-row .team-name {

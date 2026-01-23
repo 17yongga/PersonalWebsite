@@ -177,8 +177,16 @@ class RouletteGame {
     });
 
     this.socket.on('playerData', (data) => {
+      const oldBalance = this.casino.credits;
       this.casino.credits = data.credits;
       this.casino.updateCreditsDisplay();
+      
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logBalanceUpdate(oldBalance, data.credits, 'socket', {
+          game: 'roulette',
+          source: 'playerData event'
+        });
+      }
     });
 
     this.socket.on('rouletteState', (state) => {
@@ -265,7 +273,14 @@ class RouletteGame {
     });
 
     this.socket.on('error', (message) => {
-      alert(message);
+      console.error('[Roulette] Socket error:', message);
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logError(new Error(message), {
+          context: 'roulette socket error',
+          game: 'roulette'
+        });
+      }
+      this.showTemporaryMessage(message, 'error');
     });
   }
 
@@ -298,43 +313,108 @@ class RouletteGame {
   }
 
   placeBet(color) {
-    if (this.spinning) {
-      alert('Cannot place bets while wheel is spinning');
-      return;
-    }
+    try {
+      // Set navigation guard
+      if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
+        this.casino.setBetPlacementInProgress(true);
+      }
 
-    // Check if player already has a bet placed
-    if (this.currentBet) {
-      alert('You can only place one bet per round. Please clear your current bet first.');
-      return;
-    }
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logBetPlacement('roulette', 0, 'started', { color });
+      }
 
-    const amount = parseInt(document.getElementById('rouletteBetAmount').value);
-    if (!amount || amount < 1) {
-      alert('Please enter a valid bet amount');
-      return;
-    }
+      if (this.spinning) {
+        const msg = 'Cannot place bets while wheel is spinning';
+        if (window.casinoDebugLogger) {
+          window.casinoDebugLogger.logBetPlacement('roulette', 0, 'failed', { reason: msg });
+        }
+        this.showTemporaryMessage(msg, 'error');
+        return;
+      }
 
-    if (amount > this.casino.credits) {
-      alert('Insufficient credits');
-      return;
-    }
+      // Check if player already has a bet placed
+      if (this.currentBet) {
+        const msg = 'You can only place one bet per round. Please clear your current bet first.';
+        if (window.casinoDebugLogger) {
+          window.casinoDebugLogger.logBetPlacement('roulette', 0, 'failed', { reason: msg });
+        }
+        this.showTemporaryMessage(msg, 'error');
+        return;
+      }
 
-    this.currentBet = { color, amount };
-    this.socket.emit('placeRouletteBet', { color, amount });
-    this.updateCurrentBetDisplay();
+      const amount = parseInt(document.getElementById('rouletteBetAmount').value);
+      if (!amount || amount < 1) {
+        const msg = 'Please enter a valid bet amount';
+        if (window.casinoDebugLogger) {
+          window.casinoDebugLogger.logBetPlacement('roulette', amount, 'failed', { reason: msg });
+        }
+        this.showTemporaryMessage(msg, 'error');
+        return;
+      }
+
+      if (amount > this.casino.credits) {
+        const msg = 'Insufficient credits';
+        if (window.casinoDebugLogger) {
+          window.casinoDebugLogger.logBetPlacement('roulette', amount, 'failed', { reason: msg });
+        }
+        this.showTemporaryMessage(msg, 'error');
+        return;
+      }
+
+      this.currentBet = { color, amount };
+      
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logBetPlacement('roulette', amount, 'emitting', { color });
+      }
+
+      this.socket.emit('placeRouletteBet', { color, amount });
+      this.updateCurrentBetDisplay();
+
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logBetPlacement('roulette', amount, 'completed', { color });
+      }
+
+      // Clear navigation guard after a short delay to allow socket response
+      setTimeout(() => {
+        if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
+          this.casino.setBetPlacementInProgress(false);
+        }
+      }, 1000);
+    } catch (error) {
+      // Clear navigation guard on error
+      if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
+        this.casino.setBetPlacementInProgress(false);
+      }
+      console.error('[Roulette] Error in placeBet:', error);
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logError(error, {
+          context: 'roulette placeBet',
+          color
+        });
+      }
+      this.showTemporaryMessage('Error placing bet. Please try again.', 'error');
+    }
   }
 
   clearBet() {
-    if (this.spinning) {
-      alert('Cannot clear bets while wheel is spinning');
-      return;
-    }
+    try {
+      if (this.spinning) {
+        this.showTemporaryMessage('Cannot clear bets while wheel is spinning', 'error');
+        return;
+      }
 
-    if (this.currentBet) {
-      this.socket.emit('clearRouletteBet');
-      this.currentBet = null;
-      this.updateCurrentBetDisplay();
+      if (this.currentBet) {
+        this.socket.emit('clearRouletteBet');
+        this.currentBet = null;
+        this.updateCurrentBetDisplay();
+      }
+    } catch (error) {
+      console.error('[Roulette] Error in clearBet:', error);
+      if (window.casinoDebugLogger) {
+        window.casinoDebugLogger.logError(error, {
+          context: 'roulette clearBet'
+        });
+      }
     }
   }
 
