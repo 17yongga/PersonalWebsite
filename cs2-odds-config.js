@@ -14,15 +14,29 @@ module.exports = {
       name: 'OddsPapi API',
       useForOdds: false // Explicitly mark as not for odds
     },
+    multiSource: {
+      enabled: true, // Primary source for odds - Multiple public APIs
+      priority: 1, // Highest priority
+      weight: 1.0, // Full weight
+      timeout: 15000, // Allow time for multiple API calls
+      name: 'Multi-Source Odds (HLTV + Betway + ESL + Pinnacle + Rankings)',
+      sources: {
+        hltv: { enabled: true, weight: 0.8, timeout: 8000 },
+        betway: { enabled: true, weight: 0.9, timeout: 8000 },
+        esl: { enabled: true, weight: 0.85, timeout: 8000 },
+        pinnacle: { enabled: true, weight: 0.95, timeout: 8000 },
+        rankings: { enabled: true, weight: 0.7, timeout: 1000 }
+      }
+    },
     gambling: {
-      enabled: true, // Only source for odds - GG.bet
-      priority: 1, // Only priority
-      weight: 1.0, // Full weight since it's the only source
-      timeout: 12000, // Scraping may take longer
-      name: 'GG.bet',
+      enabled: true, // Fallback source for odds - GG.bet
+      priority: 2, // Lower priority (fallback)
+      weight: 0.6, // Lower weight
+      timeout: 8000, // Shorter timeout for fallback
+      name: 'GG.bet (Fallback)',
       sites: {
         ggbet: {
-          enabled: true, // Only gambling source - GG.bet
+          enabled: true,
           baseUrl: 'https://gg.bet',
           rateLimit: 3000
         }

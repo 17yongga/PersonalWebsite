@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple CS2 Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .box { background: white; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        button { background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 5px; font-size: 16px; margin: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>🎮 CS2 Simple Test</h2>
+        <p><strong>Your device:</strong> <span id="device-info"></span></p>
+        <p><strong>Current URL:</strong> <span id="current-url"></span></p>
+    </div>
+
+    <div class="box">
+        <h3>Quick Tests:</h3>
+        <button onclick="testBasic()">Test Basic Connection</button>
+        <button onclick="testWithImage()">Test Via Image Method</button>
+        <button onclick="testLocal()">Test Localhost</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        // Show device info
+        document.getElementById('device-info').textContent = navigator.userAgent.split(')')[0] + ')';
+        document.getElementById('current-url').textContent = window.location.href;
+
+        function log(message, type = 'success') {
+            const results = document.getElementById('results');
+            results.innerHTML += `<div class="box ${type}"><p>${message}</p></div>`;
+        }
+
+        function testBasic() {
+            log('Testing basic connection...', '');
+            
+            // Try multiple server URLs
+            const urls = [
+                'http://192.168.2.19:3001/api/cs2/events',
+                'http://localhost:3001/api/cs2/events',
+                window.location.origin + '/api/cs2/events'
+            ];
+
+            urls.forEach(async (url, index) => {
+                try {
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        const data = await response.json();
+                        log(`✅ URL ${index + 1} SUCCESS: ${data.count || 0} matches from ${url}`, 'success');
+                    } else {
+                        log(`❌ URL ${index + 1} FAILED: ${response.status} from ${url}`, 'error');
+                    }
+                } catch (error) {
+                    log(`❌ URL ${index + 1} ERROR: ${error.message} from ${url}`, 'error');
+                }
+            });
+        }
+
+        function testWithImage() {
+            log('Testing with image method (bypass CORS)...', '');
+            
+            const img = new Image();
+            img.onload = function() {
+                log('✅ Image method: Server is reachable', 'success');
+            };
+            img.onerror = function() {
+                log('❌ Image method: Server not reachable', 'error');
+            };
+            
+            // Use a simple endpoint that returns an image or small response
+            img.src = 'http://192.168.2.19:3001/favicon.ico?' + Date.now();
+        }
+
+        function testLocal() {
+            log('Testing localhost...', '');
+            
+            fetch('http://localhost:3001/api/cs2/events')
+                .then(response => response.json())
+                .then(data => {
+                    log(`✅ Localhost SUCCESS: ${data.count} matches`, 'success');
+                })
+                .catch(error => {
+                    log(`❌ Localhost ERROR: ${error.message}`, 'error');
+                });
+        }
+
+        // Auto-run basic test
+        setTimeout(testBasic, 500);
+    </script>
+</body>
+</html>
