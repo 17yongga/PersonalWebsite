@@ -274,9 +274,12 @@ class CS2BettingGame {
 
       if (data.success) {
         this.currentBalance = data.balance;
-        // Update casino balance display if needed
-        if (this.casino.updateCredits) {
-          this.casino.updateCredits(this.currentBalance);
+        // 🔧 FIX: Set balance directly instead of adding to existing balance
+        // This prevents the balance from doubling when entering CS2 game
+        if (this.casino.credits !== this.currentBalance) {
+          this.casino.credits = this.currentBalance;
+          this.casino.updateCreditsDisplay();
+          console.log(`[CS2 Balance] Synced balance: ${this.currentBalance} credits`);
         }
       }
     } catch (error) {
@@ -705,7 +708,17 @@ class CS2BettingGame {
       return;
     }
 
+    // 🔧 FIX: Add loading state for better user feedback
+    const placeBetBtn = document.getElementById('placeBetBtn');
+    const originalText = placeBetBtn?.textContent || 'Place Bet';
+    
     try {
+      // Show loading state
+      if (placeBetBtn) {
+        placeBetBtn.disabled = true;
+        placeBetBtn.textContent = '⏳ Placing Bet...';
+      }
+
       const userId = this.casino.username || sessionStorage.getItem('casinoUsername');
       if (!userId) {
         alert('Please login first');
@@ -729,11 +742,12 @@ class CS2BettingGame {
       const data = await response.json();
 
       if (data.success) {
-        // Update balance
+        // 🔧 FIX: Update balance correctly to prevent double deduction
         this.currentBalance = data.newBalance;
-        if (this.casino.updateCredits) {
-          this.casino.updateCredits(this.currentBalance);
-        }
+        // Sync with casino balance (set directly, don't add)
+        this.casino.credits = this.currentBalance;
+        this.casino.updateCreditsDisplay();
+        console.log(`[CS2 Betting] Balance updated after bet: ${this.currentBalance} credits`);
 
         // Reload bets
         await this.loadBets();
@@ -748,6 +762,12 @@ class CS2BettingGame {
     } catch (error) {
       console.error('Error placing bet:', error);
       alert('Error placing bet. Please try again.');
+    } finally {
+      // 🔧 FIX: Always restore button state
+      if (placeBetBtn) {
+        placeBetBtn.disabled = false;
+        placeBetBtn.textContent = originalText;
+      }
     }
   }
 
