@@ -117,50 +117,6 @@ async function saveUserBalance(userId, credits) {
   }
 }
 
-// CS2 CREDIT BALANCE FIX - Helper functions for syncing real-time and persistent credit state
-
-// Helper function: Find socket ID for a given user ID
-function findSocketByUserId(targetUserId) {
-  for (const [socketId, userId] of Object.entries(socketToUser)) {
-    if (userId === targetUserId) {
-      return socketId;
-    }
-  }
-  return null;
-}
-
-// Helper function: Sync credit balance between users and players objects
-async function syncUserCredits(userId, newCredits) {
-  try {
-    // Update persistent storage
-    if (users[userId]) {
-      users[userId].credits = newCredits;
-      await saveUserBalance(userId, newCredits);
-    }
-    
-    // Update real-time state if user is connected via WebSocket
-    const socketId = findSocketByUserId(userId);
-    if (socketId && players[socketId]) {
-      players[socketId].credits = newCredits;
-      
-      // Emit real-time update to the connected user
-      io.to(socketId).emit("playerData", {
-        username: players[socketId].username,
-        credits: players[socketId].credits
-      });
-      
-      console.log(`[CS2 Balance] Synced credits for user ${userId}: ${newCredits} (socket: ${socketId})`);
-    } else {
-      console.log(`[CS2 Balance] Updated credits for user ${userId}: ${newCredits} (offline)`);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error(`[CS2 Balance] Error syncing credits for user ${userId}:`, error);
-    return false;
-  }
-}
-
 // Roulette game state
 let rouletteState = {
   currentBets: {}, // { socketId: { color: 'red'|'black'|'green', amount: number } }
@@ -442,10 +398,8 @@ function normalizeTeamName(teamName) {
     .toLowerCase()
     .trim()
     .replace(/^team\s+/i, '') // Remove "Team" prefix (e.g., "Team Vitality" -> "Vitality")
-    .replace(/\s*(esports?|gaming|team)$/i, '') // Remove common suffixes: eSports, Gaming, Team
-    .replace(/[^\w\s.]/g, '') // Remove special characters but keep dots (for BC.Game)
-    .replace(/\s+/g, ' ') // Normalize whitespace
-    .trim();
+    .replace(/[^\w\s]/g, '') // Remove special characters
+    .replace(/\s+/g, ' '); // Normalize whitespace
 }
 
 /**
@@ -469,25 +423,8 @@ function getTeamNameVariations(teamName) {
     variations.push(normalizeTeamName(`Team ${teamName}`));
   }
   
-  // Special cases for common team name variations
-  const specialMappings = {
-    'aurora gaming': ['aurora'],
-    'bcgame esports': ['bcgame', 'bc.game', 'bc game'],
-    'fut esports': ['fut', 'futbolist'],
-    'pain gaming': ['pain'],
-    'ninjas in pyjamas': ['nip', 'ninjas in pyjamas'],
-    'team liquid': ['liquid', 'tl']
-  };
-  
-  const lowerName = teamName.toLowerCase();
-  for (const [key, mappings] of Object.entries(specialMappings)) {
-    if (lowerName.includes(key.replace(/\s+/g, '')) || key.includes(lowerName.replace(/\s+/g, ''))) {
-      variations.push(...mappings);
-    }
-  }
-  
-  // Remove duplicates and empty strings
-  return [...new Set(variations)].filter(v => v && v.length > 0);
+  // Remove duplicates
+  return [...new Set(variations)];
 }
 
 /**
@@ -1854,12 +1791,9 @@ app.post("/api/cs2/bets", async (req, res) => {
       });
     }
     
-    // Deduct credits (CS2 BALANCE FIX - sync both users and players objects)
-    const newCredits = user.credits - amount;
-    const syncSuccess = await syncUserCredits(userId, newCredits);
-    if (!syncSuccess) {
-      return res.status(500).json({ success: false, error: "Failed to update balance" });
-    }
+    // Deduct credits
+    user.credits -= amount;
+    await saveUserBalance(userId, user.credits);
     
     // Create bet record
     const betId = `bet_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -2135,41 +2069,6 @@ async function syncCS2Events() {
     // - Once per day (daily check)
     // We don't fetch odds automatically during sync to avoid excessive API calls
     
-    // CLEANUP: Remove old/completed matches (CS2 MATCH REFRESH FIX)
-    let removedCount = 0;
-    const now = new Date();
-    const threeDaysAgo = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000)); // 3 days ago
-    
-    const eventIds = Object.keys(cs2BettingState.events);
-    for (const eventId of eventIds) {
-      const event = cs2BettingState.events[eventId];
-      const eventTime = event.startTime ? new Date(event.startTime) : null;
-      
-      // Remove if:
-      // 1. Event is completed/finished AND older than 1 day
-      // 2. Event is older than 3 days (regardless of status) 
-      // 3. Event has no start time and is marked as finished
-      const shouldRemove = 
-        (event.status === 'finished' && eventTime && eventTime < new Date(now.getTime() - (24 * 60 * 60 * 1000))) ||
-        (eventTime && eventTime < threeDaysAgo) ||
-        (event.status === 'finished' && !eventTime);
-        
-      if (shouldRemove) {
-        // Check if there are pending bets for this event
-        const eventHasPendingBets = Object.values(cs2BettingState.bets || {}).some(
-          bet => bet.eventId === eventId && bet.status === 'pending'
-        );
-        
-        if (eventHasPendingBets) {
-          console.log(`[CS2 Cleanup] Keeping old event ${eventId} - has pending bets`);
-        } else {
-          console.log(`[CS2 Cleanup] Removing old event: ${eventId} (${event.status}, ${eventTime ? eventTime.toISOString() : 'no time'})`);
-          delete cs2BettingState.events[eventId];
-          removedCount++;
-        }
-      }
-    }
-    
     cs2BettingState.lastApiSync = new Date().toISOString();
     // Update lastApiQuery timestamp when syncing events (this counts as an API query)
     if (!cs2BettingState.lastApiQuery) {
@@ -2177,8 +2076,8 @@ async function syncCS2Events() {
     }
     await saveCS2BettingData();
     
-    console.log(`CS2 sync complete: ${newCount} new, ${updatedCount} updated, ${filteredCount} filtered out, ${removedCount} old matches removed`);
-    return { newCount, updatedCount, filteredCount, removedCount, total: matches.length };
+    console.log(`CS2 sync complete: ${newCount} new, ${updatedCount} updated, ${filteredCount} filtered out (not in top 250)`);
+    return { newCount, updatedCount, filteredCount, total: matches.length };
   } catch (error) {
     console.error("Error syncing CS2 events:", error);
     return null;
@@ -2278,11 +2177,11 @@ async function settleCS2Bets() {
             bet.status = 'void';
             bet.result = 'void';
             
-            // Return credits to user (CS2 BALANCE FIX)
+            // Return credits to user
             const user = users[bet.userId];
             if (user) {
-              const newCredits = user.credits + bet.amount;
-              await syncUserCredits(bet.userId, newCredits);
+              user.credits += bet.amount;
+              await saveUserBalance(bet.userId, user.credits);
             }
           }
           // Otherwise, keep as pending (event might be in progress)
@@ -2302,9 +2201,8 @@ async function settleCS2Bets() {
           
           const user = users[bet.userId];
           if (user) {
-            // CS2 BALANCE FIX - sync payout to both users and players objects
-            const newCredits = user.credits + payout;
-            await syncUserCredits(bet.userId, newCredits);
+            user.credits += payout;
+            await saveUserBalance(bet.userId, user.credits);
           }
           
           wonCount++;
@@ -2701,18 +2599,6 @@ app.post("/api/cs2/admin/settle", async (req, res) => {
   }
 });
 
-// ========== HEALTH CHECK ENDPOINT ==========
-
-app.get("/health", (req, res) => {
-  res.json({ 
-    success: true, 
-    status: "OK", 
-    timestamp: new Date().toISOString(),
-    server: "casino-server",
-    cs2: !!cs2ApiClient ? "available" : "unavailable"
-  });
-});
-
 // ========== END CS2 BETTING REST API ENDPOINTS ==========
 
 // ========== CS2 BETTING SCHEDULED TASKS ==========
@@ -2762,21 +2648,6 @@ function startCS2ScheduledTasks() {
       timezone: "UTC"
     });
     
-    // Schedule daily event sync (runs once per day at 2 AM UTC)
-    // This fetches new matches and cleans up old ones
-    cs2EventSyncInterval = cron.schedule("0 2 * * *", async () => {
-      console.log("[CS2 Events] Daily event sync starting...");
-      const result = await syncCS2Events();
-      if (result) {
-        console.log(`[CS2 Events] Daily sync complete: ${result.newCount} new, ${result.updatedCount} updated, ${result.filteredCount} filtered`);
-      } else {
-        console.log("[CS2 Events] Daily sync failed");
-      }
-    }, {
-      scheduled: true,
-      timezone: "UTC"
-    });
-    
     // Schedule daily odds update (runs once per day at 1 AM UTC, or checks if 24 hours passed)
     // This ensures all matches get fresh odds once per day using common range approach
     cs2DailyOddsUpdateInterval = cron.schedule("0 1 * * *", async () => {
@@ -2797,29 +2668,15 @@ function startCS2ScheduledTasks() {
     });
     
     console.log("CS2 scheduled tasks started using node-cron:");
-    console.log(`  - Event sync: ✅ ENABLED - Daily at 2 AM UTC (fetch new matches, clean up old ones)`);
+    console.log(`  - Event sync: DISABLED (API calls restricted)`);
     console.log(`  - Settlement check: once per day at midnight UTC (or if 24 hours passed)`);
+    console.log(`  - Odds aggregation: DISABLED (API calls restricted)`);
     console.log(`  - Daily odds update: once per day at 1 AM UTC (or if 24 hours passed)`);
   } else {
     // Fallback to setInterval
-    
-    // Schedule daily event sync (check every 4 hours if it's time for daily sync)
-    cs2SyncInterval = setInterval(async () => {
-      const now = new Date();
-      const lastSync = cs2BettingState.lastApiSync ? new Date(cs2BettingState.lastApiSync) : new Date(0);
-      const hoursSinceLastSync = (now - lastSync) / (1000 * 60 * 60);
-      
-      // Run event sync once every 24 hours (if 24 hours passed)
-      if (hoursSinceLastSync >= 24) {
-        console.log("[CS2 Events] Daily event sync starting (setInterval fallback)...");
-        const result = await syncCS2Events();
-        if (result) {
-          console.log(`[CS2 Events] Daily sync complete: ${result.newCount} new, ${result.updatedCount} updated, ${result.filteredCount} filtered`);
-        } else {
-          console.log("[CS2 Events] Daily sync failed");
-        }
-      }
-    }, 4 * 60 * 60 * 1000); // Check every 4 hours
+    // NOTE: Event sync is DISABLED - API calls are restricted
+    // cs2SyncInterval is no longer used
+    cs2SyncInterval = null;
     
     // Schedule daily settlement check (runs once per day, checks if 24 hours passed)
     // Check every hour to see if 24 hours have passed since last settlement
@@ -2852,8 +2709,9 @@ function startCS2ScheduledTasks() {
     }, 60 * 60 * 1000); // Check every hour
     
     console.log("CS2 scheduled tasks started using setInterval:");
-    console.log(`  - Event sync: ✅ ENABLED - Daily (checks every 4 hours if 24h passed)`);
+    console.log(`  - Event sync: DISABLED (API calls restricted)`);
     console.log(`  - Settlement check: once per day (checks hourly if 24 hours passed)`);
+    console.log(`  - Odds aggregation: DISABLED (API calls restricted)`);
     console.log(`  - Daily odds update: once per day (checks hourly if 24 hours passed)`);
   }
   
@@ -2926,8 +2784,8 @@ if (cs2ApiClient) {
 // ========== END CS2 BETTING SCHEDULED TASKS ==========
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Casino Server running on http://0.0.0.0:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Casino Server running on http://localhost:${PORT}`);
   console.log(`  - Roulette game available`);
   console.log(`  - Coinflip game available`);
   if (cs2ApiClient) {

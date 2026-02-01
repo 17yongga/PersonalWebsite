@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS2 Mobile Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>🎮 CS2 Mobile Connection Test</h1>
+    
+    <div id="status" class="status info">
+        Starting test...
+    </div>
+
+    <div id="results"></div>
+    
+    <button onclick="testConnection()">🔄 Test Connection</button>
+    <button onclick="testAPI()">🎯 Test CS2 API</button>
+
+    <script>
+        // Auto-detect server URL (same logic as casino.html)
+        let serverUrl;
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            serverUrl = 'http://localhost:3001';
+        } else if (window.location.hostname.startsWith('192.168.') || window.location.hostname.startsWith('10.') || window.location.hostname.startsWith('172.')) {
+            // Mobile device on local network - use host IP with port 3001
+            serverUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
+        } else {
+            serverUrl = 'https://api.gary-yong.com';
+        }
+
+        function log(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.innerHTML = message;
+            console.log(message);
+        }
+
+        function addResult(message) {
+            const results = document.getElementById('results');
+            results.innerHTML += `<div class="status info">${message}</div>`;
+        }
+
+        async function testConnection() {
+            log('🔍 Testing connection...', 'info');
+            
+            addResult(`🌐 <strong>Device Info:</strong><br>
+                      - Hostname: ${window.location.hostname}<br>
+                      - Port: ${window.location.port || 'default'}<br>
+                      - Protocol: ${window.location.protocol}<br>
+                      - Server URL: ${serverUrl}<br>
+                      - User Agent: ${navigator.userAgent.substring(0, 100)}...`);
+
+            try {
+                const response = await fetch(`${serverUrl}/health`);
+                if (response.ok) {
+                    log('✅ Server connection successful!', 'success');
+                    addResult(`✅ Server health check: ${response.status} ${response.statusText}`);
+                } else {
+                    log(`❌ Server returned: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Connection failed: ${error.message}`, 'error');
+                addResult(`❌ Error: ${error.message}`);
+            }
+        }
+
+        async function testAPI() {
+            log('🎮 Testing CS2 API...', 'info');
+
+            try {
+                const response = await fetch(`${serverUrl}/api/cs2/events`);
+                if (response.ok) {
+                    const events = await response.json();
+                    log(`✅ CS2 API successful! Found ${events.length} matches`, 'success');
+                    addResult(`✅ CS2 Events API: ${events.length} matches found`);
+                    
+                    if (events.length > 0) {
+                        addResult(`📋 <strong>First match:</strong> ${events[0].team1} vs ${events[0].team2}`);
+                    }
+                } else {
+                    log(`❌ CS2 API returned: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ CS2 API failed: ${error.message}`, 'error');
+                addResult(`❌ CS2 API Error: ${error.message}`);
+            }
+        }
+
+        // Auto-run tests on page load
+        window.onload = function() {
+            setTimeout(testConnection, 500);
+            setTimeout(testAPI, 1000);
+        };
+    </script>
+</body>
+</html>

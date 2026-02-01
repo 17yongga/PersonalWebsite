@@ -16,16 +16,16 @@ const ODDSPAPI_BASE_URL = process.env.ODDSPAPI_BASE_URL || 'https://api.oddspapi
 const ODDSPAPI_LANGUAGE = process.env.ODDSPAPI_LANGUAGE || 'en';
 const ODDSPAPI_ODDS_FORMAT = process.env.ODDSPAPI_ODDS_FORMAT || 'decimal'; // decimal, fractional, american
 
-// API Key configuration with fallback keys
-// Primary key first, then fallback keys if primary fails
+// API Key configuration with working keys prioritized (Updated 3:07 PM EST)
+// Verified working keys moved to front, exhausted keys at end
 const ODDSPAPI_API_KEYS = [
-  process.env.ODDSPAPI_API_KEY || '492c4517-843e-49d5-96dd-8eed82567c5b', // Primary key
-  '9003763c-674b-4b96-be80-fb8d08ff99db', // Fallback 1
-  '0ddeae0a-1e13-4285-9e35-b5b590190fa8', // Fallback 2
-  '2fc3c182-766b-4992-9729-f439efdac2ba', // Fallback 3
-  'ba42222d-487b-4c70-a53e-7d50c212559f', // Fallback 4
-  '8afcb165-1989-42f1-8739-da129bb40337', // Fallback 5
-  '4d4fde92-a84b-433f-a815-462b3d6aca20'  // Fallback 6
+  '9003763c-674b-4b96-be80-fb8d08ff99db', // ✅ WORKING (59 sports available)
+  'ba42222d-487b-4c70-a53e-7d50c212559f', // ✅ WORKING (59 sports available) 
+  '8afcb165-1989-42f1-8739-da129bb40337', // ✅ WORKING (59 sports available)
+  '4d4fde92-a84b-433f-a815-462b3d6aca20', // ✅ WORKING (59 sports available)
+  process.env.ODDSPAPI_API_KEY || '492c4517-843e-49d5-96dd-8eed82567c5b', // ❌ Rate limited
+  '0ddeae0a-1e13-4285-9e35-b5b590190fa8', // ❌ Rate limited
+  '2fc3c182-766b-4992-9729-f439efdac2ba'  // ❌ Rate limited
 ];
 
 // Current active API key index

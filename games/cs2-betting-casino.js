@@ -288,11 +288,15 @@ class CS2BettingGame {
     try {
       // Auto-detect server URL for local vs production
       let serverUrl = window.CASINO_SERVER_URL;
-      if (!serverUrl || serverUrl === window.location.origin) {
-        // Fallback: if on localhost, use port 3001 (casino server)
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-          serverUrl = 'http://localhost:3001';
+      if (!serverUrl) {
+        // Check if we're on a local IP or localhost
+        const hostname = window.location.hostname;
+        
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.')) {
+          // Local development - always use port 3001 for casino server
+          serverUrl = `${window.location.protocol}//${hostname}:3001`;
         } else {
+          // Production - use current origin
           serverUrl = window.location.origin;
         }
       }

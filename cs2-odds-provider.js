@@ -22,6 +22,15 @@ try {
   // This is OK - gambling scraper is optional
 }
 
+// Multi-source odds provider
+let multiSourceOdds = null;
+try {
+  multiSourceOdds = require('./cs2-multi-source-odds');
+  console.log('[Odds Provider] Multi-source odds provider loaded successfully');
+} catch (error) {
+  console.warn('[Odds Provider] Multi-source odds provider not available:', error.message);
+}
+
 // Simple in-memory cache
 const oddsCache = new Map();
 const CACHE_TTL = config.cache.ttl || 300000; // 5 minutes default
@@ -256,61 +265,107 @@ async function fetchMatchOdds(fixtureId, matchInfo = {}) {
   // Get match info if not provided
   let fullMatchInfo = { ...matchInfo, fixtureId };
   
-  // Fetch from GG.bet only (single source)
-  if (!config.sources.gambling.enabled || !(fullMatchInfo.team1 || fullMatchInfo.homeTeam)) {
-    console.log(`[Odds Provider] GG.bet disabled or missing team names, using fallback odds (1.85x for both teams)`);
-    const fallbackOdds = {
-      team1: 1.85,
-      team2: 1.85,
-      draw: null,
-      sources: ['fallback'],
-      confidence: 0.3,
-      timestamp: new Date().toISOString()
-    };
-    setCachedOdds(fixtureId, fallbackOdds);
-    return fallbackOdds;
-  }
-  
-  try {
-    const odds = await Promise.race([
-      fetchGamblingOdds(fullMatchInfo),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), config.aggregation.timeout)
-      )
-    ]);
-    
-    if (odds && (odds.team1 || odds.team2)) {
-      // Format odds response (single source, no aggregation needed)
-      const result = {
-        team1: odds.team1 ? parseFloat(odds.team1.toFixed(2)) : null,
-        team2: odds.team2 ? parseFloat(odds.team2.toFixed(2)) : null,
-        draw: odds.draw ? parseFloat(odds.draw.toFixed(2)) : null,
-        sources: ['ggbet'],
-        confidence: config.aggregation.confidenceThresholds.medium, // Medium confidence for single source
-        timestamp: new Date().toISOString()
-      };
+  // Try multi-source odds provider first (HLTV, Betway, ESL, Pinnacle + ranking fallback)
+  if (multiSourceOdds && (fullMatchInfo.team1 || fullMatchInfo.homeTeam)) {
+    try {
+      console.log(`[Odds Provider] Fetching odds from multiple sources...`);
+      const odds = await Promise.race([
+        multiSourceOdds.fetchMultiSourceOdds(fullMatchInfo),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Multi-source timeout')), config.aggregation.timeout)
+        )
+      ]);
       
-      // Cache the result
-      setCachedOdds(fixtureId, result);
-      console.log(`[Odds Provider] ✓ Retrieved odds from GG.bet:`, result);
-      return result;
+      if (odds && (odds.team1 || odds.team2)) {
+        // Cache the result
+        setCachedOdds(fixtureId, odds);
+        console.log(`[Odds Provider] ✓ Retrieved odds from ${odds.sourceCount} source(s): ${odds.sources.join(', ')}`);
+        console.log(`[Odds Provider] Odds: ${odds.team1} / ${odds.team2} (confidence: ${odds.confidence})`);
+        return odds;
+      }
+    } catch (error) {
+      console.error(`[Odds Provider] Multi-source error:`, error.message);
     }
-  } catch (error) {
-    console.error(`[Odds Provider] GG.bet error:`, error.message);
+  }
+
+  // Fallback to GG.bet scraper if multi-source fails
+  if (config.sources.gambling.enabled && gamblingScraper && (fullMatchInfo.team1 || fullMatchInfo.homeTeam)) {
+    try {
+      console.log(`[Odds Provider] Trying GG.bet as fallback...`);
+      const odds = await Promise.race([
+        fetchGamblingOdds(fullMatchInfo),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('GG.bet timeout')), 8000)
+        )
+      ]);
+      
+      if (odds && (odds.team1 || odds.team2)) {
+        // Format odds response (single source, no aggregation needed)
+        const result = {
+          team1: odds.team1 ? parseFloat(odds.team1.toFixed(2)) : null,
+          team2: odds.team2 ? parseFloat(odds.team2.toFixed(2)) : null,
+          draw: odds.draw ? parseFloat(odds.draw.toFixed(2)) : null,
+          sources: ['ggbet'],
+          confidence: config.aggregation.confidenceThresholds.medium,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Cache the result
+        setCachedOdds(fixtureId, result);
+        console.log(`[Odds Provider] ✓ Retrieved fallback odds from GG.bet:`, result);
+        return result;
+      }
+    } catch (error) {
+      console.error(`[Odds Provider] GG.bet fallback error:`, error.message);
+    }
   }
   
-  // GG.bet failed - use fallback odds
-  console.log(`[Odds Provider] GG.bet unavailable, using fallback odds (1.85x for both teams)`);
-  const fallbackOdds = {
+  // Final fallback - calculate based on team rankings
+  if (multiSourceOdds) {
+    try {
+      const team1 = fullMatchInfo.team1 || fullMatchInfo.homeTeam || fullMatchInfo.participant1Name;
+      const team2 = fullMatchInfo.team2 || fullMatchInfo.awayTeam || fullMatchInfo.participant2Name;
+      
+      if (team1 && team2) {
+        console.log(`[Odds Provider] Using ranking-based fallback for ${team1} vs ${team2}...`);
+        const rankingOdds = multiSourceOdds.calculateRankingBasedOdds(team1, team2);
+        
+        const fallbackOdds = {
+          team1: rankingOdds.team1,
+          team2: rankingOdds.team2,
+          draw: null,
+          sources: [rankingOdds.source],
+          confidence: rankingOdds.confidence,
+          fallback: true,
+          rankData: {
+            team1Rank: rankingOdds.team1Rank,
+            team2Rank: rankingOdds.team2Rank,
+            rankDiff: rankingOdds.rankDiff
+          },
+          timestamp: new Date().toISOString()
+        };
+        
+        setCachedOdds(fixtureId, fallbackOdds);
+        console.log(`[Odds Provider] ✓ Calculated ranking-based odds: ${fallbackOdds.team1} / ${fallbackOdds.team2} (ranks: ${rankingOdds.team1Rank} vs ${rankingOdds.team2Rank})`);
+        return fallbackOdds;
+      }
+    } catch (error) {
+      console.error(`[Odds Provider] Ranking fallback error:`, error.message);
+    }
+  }
+  
+  // Ultimate fallback - generic odds
+  console.log(`[Odds Provider] All sources failed, using generic fallback odds`);
+  const genericFallback = {
     team1: 1.85,
     team2: 1.85,
     draw: null,
-    sources: ['fallback'],
-    confidence: 0.3,
+    sources: ['generic_fallback'],
+    confidence: 0.2,
     timestamp: new Date().toISOString()
   };
-  setCachedOdds(fixtureId, fallbackOdds);
-  return fallbackOdds;
+  setCachedOdds(fixtureId, genericFallback);
+  return genericFallback;
 }
 
 /**
