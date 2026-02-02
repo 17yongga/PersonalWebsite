@@ -1,0 +1,20 @@
+{
+  "keys": [
+    "492c4517-843e-49d5-96dd-8eed82567c5b",
+    "9003763c-674b-4b96-be80-fb8d08ff99db",
+    "0ddeae0a-1e13-4285-9e35-b5b590190fa8",
+    "2fc3c182-766b-4992-9729-f439efdac2ba",
+    "589063e9-f134-43c2-ba04-4a007dde8290"
+  ],
+  "lastUpdated": "2026-02-01T19:59:29.194Z",
+  "totalGenerated": 5,
+  "notes": "Starting with existing working keys from cs2-api-keys-enhancement.js. Automated generation will add more keys via cron jobs.",
+  "accounts": [
+    {
+      "email": "testwolf4108@hotmail.com",
+      "password": "TestPass123!",
+      "apiKey": "589063e9-f134-43c2-ba04-4a007dde8290",
+      "created": "2026-02-01T19:59:29.194Z"
+    }
+  ]
+}

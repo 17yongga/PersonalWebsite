@@ -11,6 +11,13 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
+// Import performance caching system
+const { CS2PerformanceCache, createPerformanceMiddleware } = require('./cs2-performance-cache.js');
+
+// Initialize performance caching
+const apiCache = new CS2PerformanceCache();
+const performanceMiddleware = createPerformanceMiddleware(apiCache);
+
 // Configuration - can be overridden via environment variables
 const ODDSPAPI_BASE_URL = process.env.ODDSPAPI_BASE_URL || 'https://api.oddspapi.io/v4';
 const ODDSPAPI_LANGUAGE = process.env.ODDSPAPI_LANGUAGE || 'en';
@@ -462,7 +469,8 @@ async function findCS2SportId() {
  * @param {Date} options.startTime - Filter matches starting after this time
  * @returns {Promise<Array>} Array of match objects
  */
-async function fetchUpcomingMatches(options = {}) {
+// Original fetchUpcomingMatches function (before caching)
+async function _fetchUpcomingMatches(options = {}) {
   try {
     const sportId = options.sportId || await findCS2SportId();
     
@@ -560,12 +568,16 @@ async function fetchUpcomingMatches(options = {}) {
   }
 }
 
+// Cached version of fetchUpcomingMatches
+const fetchUpcomingMatches = performanceMiddleware.wrapAPIFunction(_fetchUpcomingMatches, 'matches');
+
 /**
  * Fetch odds for a specific fixture
  * @param {string} fixtureId - Fixture ID from OddsPapi (e.g., "id1000001761300517")
  * @returns {Promise<Object|null>} Fixture with odds or null if not found
  */
-async function fetchMatchOdds(fixtureId) {
+// Original fetchMatchOdds function (before caching)
+async function _fetchMatchOdds(fixtureId) {
   try {
     if (requestCount >= REQUEST_LIMIT_PER_MONTH) {
       console.warn('[OddsPapi] Request limit reached.');
@@ -601,12 +613,16 @@ async function fetchMatchOdds(fixtureId) {
   }
 }
 
+// Cached version of fetchMatchOdds
+const fetchMatchOdds = performanceMiddleware.wrapAPIFunction(_fetchMatchOdds, 'odds');
+
 /**
  * Fetch match results/scores from OddsPapi
  * @param {string} fixtureId - Fixture ID
  * @returns {Promise<Object|null>} Match result with scores or null
  */
-async function fetchMatchResults(fixtureId) {
+// Original fetchMatchResults function (before caching)
+async function _fetchMatchResults(fixtureId) {
   try {
     if (requestCount >= REQUEST_LIMIT_PER_MONTH) {
       console.warn('[OddsPapi] Request limit reached.');
@@ -701,6 +717,25 @@ async function fetchMatchResults(fixtureId) {
     console.error(`[OddsPapi] Error fetching results for fixture ${fixtureId}:`, error.message);
     return null;
   }
+}
+
+// Cached version of fetchMatchResults
+const fetchMatchResults = performanceMiddleware.wrapAPIFunction(_fetchMatchResults, 'results');
+
+/**
+ * Get performance cache statistics
+ * @returns {Object} Cache statistics including hit rate, memory usage, etc.
+ */
+function getCacheStats() {
+  return apiCache.getStats();
+}
+
+/**
+ * Clear all cached data
+ * @returns {Promise<void>}
+ */
+async function clearCache() {
+  return apiCache.clear();
 }
 
 /**
@@ -1247,5 +1282,7 @@ module.exports = {
   getRemainingRequests,
   resetRequestCounter,
   getRequestCount,
-  mapOddsPapiFixtureToInternal
+  mapOddsPapiFixtureToInternal,
+  getCacheStats,
+  clearCache
 };

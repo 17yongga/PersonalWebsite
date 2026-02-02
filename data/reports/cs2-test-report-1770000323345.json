@@ -1,0 +1,199 @@
+{
+  "timestamp": "2026-02-02T02:45:14.941Z",
+  "overall": "CRITICAL",
+  "features": {
+    "API Resilience": {
+      "status": "FAIL",
+      "summary": "1 critical issues found",
+      "details": {
+        "enhancedClientExists": false,
+        "backupKeysCount": 0,
+        "configExists": false,
+        "apiResponseTime": 1166,
+        "matchesReturned": 0
+      },
+      "bugs": [
+        {
+          "severity": "HIGH",
+          "description": "Enhanced API client (cs2-api-client-enhanced.js) not found",
+          "solution": "Deploy the enhanced API client with resilience features"
+        },
+        {
+          "severity": "MEDIUM",
+          "description": "No backup API keys file found",
+          "solution": "Run API key generation to create backup keys"
+        }
+      ],
+      "recommendations": [
+        "Deploy resilience configuration file"
+      ]
+    },
+    "Settlement System": {
+      "status": "WARN",
+      "summary": "Settlement system needs completion",
+      "details": {
+        "systemExists": true,
+        "functionsFound": [],
+        "cs2-betting-data.jsonExists": false,
+        "settlement-testsExists": false
+      },
+      "bugs": [
+        {
+          "severity": "MEDIUM",
+          "description": "Settlement function 'processMatchResult' is missing",
+          "solution": "Implement processMatchResult in settlement system"
+        },
+        {
+          "severity": "MEDIUM",
+          "description": "Settlement function 'calculatePayouts' is missing",
+          "solution": "Implement calculatePayouts in settlement system"
+        },
+        {
+          "severity": "MEDIUM",
+          "description": "Settlement function 'updateBankroll' is missing",
+          "solution": "Implement updateBankroll in settlement system"
+        }
+      ],
+      "recommendations": []
+    },
+    "Team Logos": {
+      "status": "WARN",
+      "summary": "Logo system needs more assets",
+      "details": {
+        "implementationExists": true,
+        "logoFilesFound": 0,
+        "reportExists": false
+      },
+      "bugs": [
+        {
+          "severity": "LOW",
+          "description": "Team logo directory not found",
+          "solution": "Create img/teams/ directory with logo files"
+        }
+      ],
+      "recommendations": []
+    },
+    "Rate Limiting": {
+      "status": "FAIL",
+      "summary": "No rate limiting protection",
+      "details": {
+        "rateLimitGeneratorExists": false,
+        "hasRateLimitHandling": false,
+        "hasLogging": false
+      },
+      "bugs": [
+        {
+          "severity": "MEDIUM",
+          "description": "Rate-limited API generator not found",
+          "solution": "Deploy rate-limited-api-generator.js"
+        }
+      ],
+      "recommendations": []
+    },
+    "Mobile Responsiveness": {
+      "status": "FAIL",
+      "summary": "Mobile responsiveness has critical issues",
+      "details": {
+        "mobileTestFilesFound": 0,
+        "hasViewportMeta": false
+      },
+      "bugs": [
+        {
+          "severity": "HIGH",
+          "description": "Main CSS file not found",
+          "solution": "Ensure casino.css exists with responsive styles"
+        }
+      ],
+      "recommendations": []
+    },
+    "Error Handling": {
+      "status": "FAIL",
+      "summary": "Critical error handling issues found",
+      "details": {
+        "settlementHasErrorHandling": false,
+        "frontendHasErrorHandling": false
+      },
+      "bugs": [
+        {
+          "severity": "HIGH",
+          "description": "Cannot analyze API client for error handling",
+          "solution": "Ensure API client exists and is readable"
+        }
+      ],
+      "recommendations": []
+    },
+    "Performance": {
+      "status": "FAIL",
+      "summary": "No performance optimization found",
+      "details": {
+        "hasCache": false,
+        "cacheFilesFound": 0,
+        "cssSize": 0,
+        "hasMonitoring": false
+      },
+      "bugs": [],
+      "recommendations": [
+        "Deploy performance monitoring dashboard"
+      ]
+    }
+  },
+  "performance": {},
+  "bugs": [
+    {
+      "severity": "HIGH",
+      "description": "Enhanced API client (cs2-api-client-enhanced.js) not found",
+      "solution": "Deploy the enhanced API client with resilience features"
+    },
+    {
+      "severity": "MEDIUM",
+      "description": "No backup API keys file found",
+      "solution": "Run API key generation to create backup keys"
+    },
+    {
+      "severity": "MEDIUM",
+      "description": "Settlement function 'processMatchResult' is missing",
+      "solution": "Implement processMatchResult in settlement system"
+    },
+    {
+      "severity": "MEDIUM",
+      "description": "Settlement function 'calculatePayouts' is missing",
+      "solution": "Implement calculatePayouts in settlement system"
+    },
+    {
+      "severity": "MEDIUM",
+      "description": "Settlement function 'updateBankroll' is missing",
+      "solution": "Implement updateBankroll in settlement system"
+    },
+    {
+      "severity": "LOW",
+      "description": "Team logo directory not found",
+      "solution": "Create img/teams/ directory with logo files"
+    },
+    {
+      "severity": "MEDIUM",
+      "description": "Rate-limited API generator not found",
+      "solution": "Deploy rate-limited-api-generator.js"
+    },
+    {
+      "severity": "HIGH",
+      "description": "Main CSS file not found",
+      "solution": "Ensure casino.css exists with responsive styles"
+    },
+    {
+      "severity": "HIGH",
+      "description": "Cannot analyze API client for error handling",
+      "solution": "Ensure API client exists and is readable"
+    }
+  ],
+  "recommendations": [
+    "Deploy resilience configuration file",
+    "Deploy performance monitoring dashboard"
+  ],
+  "summary": {
+    "totalTests": 7,
+    "passCount": 0,
+    "failCount": 5,
+    "warnCount": 2,
+    "errorCount": 0
+  }
+}

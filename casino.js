@@ -347,12 +347,17 @@ class CasinoManager {
             }
             break;
           case 'cs2betting':
-            if (window.CS2BettingGame) {
-              console.log('[Casino] Initializing CS2BettingGame...');
+            // Try modern version first, fallback to legacy
+            if (window.CS2ModernBettingGame) {
+              console.log('[Casino] Initializing CS2ModernBettingGame...');
+              window.currentGameInstance = new window.CS2ModernBettingGame(this);
+              console.log('[Casino] CS2ModernBettingGame initialized successfully');
+            } else if (window.CS2BettingGame) {
+              console.log('[Casino] Initializing CS2BettingGame (legacy)...');
               window.currentGameInstance = new window.CS2BettingGame(this);
-              console.log('[Casino] CS2BettingGame initialized successfully');
+              console.log('[Casino] CS2BettingGame (legacy) initialized successfully');
             } else {
-              console.error('[Casino] CS2BettingGame class not found! Make sure games/cs2-betting-casino.js is loaded.');
+              console.error('[Casino] No CS2BettingGame class found! Make sure cs2-betting-modern.js or cs2-betting-casino.js is loaded.');
             }
             break;
           default:

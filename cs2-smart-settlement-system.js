@@ -541,6 +541,207 @@ class CS2SmartSettlementSystem {
     }
   }
 
+  // CORE FUNCTION 1: Process match result and update affected bets
+  async processMatchResult(matchId, result) {
+    console.log(`⚖️ Processing match result for ${matchId}:`, result);
+    
+    try {
+      const bettingData = await this.loadBettingData();
+      const affectedBets = Object.values(bettingData.bets || {}).filter(bet => 
+        bet.eventId === matchId && bet.status === 'pending'
+      );
+      
+      if (affectedBets.length === 0) {
+        console.log(`  ℹ️ No pending bets found for match ${matchId}`);
+        return { success: true, processedBets: 0, message: 'No pending bets' };
+      }
+      
+      console.log(`  📊 Processing ${affectedBets.length} bets for ${matchId}`);
+      
+      let processedBets = 0;
+      let totalPayouts = 0;
+      
+      for (const bet of affectedBets) {
+        const isWinning = this.determineBetOutcome(bet, result);
+        const payout = this.calculatePayouts([bet], result);
+        
+        // Update bet status
+        bet.status = isWinning ? 'won' : 'lost';
+        bet.settledAt = new Date().toISOString();
+        bet.matchResult = result;
+        bet.payout = payout.totalPayout;
+        
+        // Update user bankroll if bet won
+        if (isWinning && payout.totalPayout > 0) {
+          await this.updateBankroll(bet.userId, payout.totalPayout);
+          totalPayouts += payout.totalPayout;
+        }
+        
+        processedBets++;
+        console.log(`    ${isWinning ? '✅' : '❌'} Bet ${bet.id}: ${bet.selection} - ${isWinning ? 'WON' : 'LOST'} ${isWinning ? `$${payout.totalPayout}` : ''}`);
+      }
+      
+      // Save updated betting data
+      await fs.writeFile(this.bettingDataFile, JSON.stringify(bettingData, null, 2));
+      
+      console.log(`  🎯 Settlement complete: ${processedBets} bets processed, $${totalPayouts} paid out`);
+      return { 
+        success: true, 
+        processedBets, 
+        totalPayouts,
+        message: `Processed ${processedBets} bets, $${totalPayouts} paid out`
+      };
+      
+    } catch (error) {
+      console.error(`❌ Error processing match result for ${matchId}:`, error.message);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // CORE FUNCTION 2: Calculate payouts for bets based on result
+  calculatePayouts(bets, result) {
+    console.log(`💰 Calculating payouts for ${bets.length} bets`);
+    
+    let totalPayout = 0;
+    let winningBets = 0;
+    const payoutDetails = [];
+    
+    for (const bet of bets) {
+      const isWinning = this.determineBetOutcome(bet, result);
+      
+      if (isWinning) {
+        // Calculate payout = stake * odds
+        const payout = parseFloat(bet.stake) * parseFloat(bet.odds);
+        totalPayout += payout;
+        winningBets++;
+        
+        payoutDetails.push({
+          betId: bet.id,
+          userId: bet.userId,
+          stake: bet.stake,
+          odds: bet.odds,
+          payout: payout,
+          selection: bet.selection
+        });
+        
+        console.log(`  💰 Bet ${bet.id}: $${bet.stake} at ${bet.odds} = $${payout.toFixed(2)}`);
+      } else {
+        console.log(`  💸 Bet ${bet.id}: $${bet.stake} lost`);
+        payoutDetails.push({
+          betId: bet.id,
+          userId: bet.userId,
+          stake: bet.stake,
+          odds: bet.odds,
+          payout: 0,
+          selection: bet.selection
+        });
+      }
+    }
+    
+    console.log(`  🎯 Total payouts: $${totalPayout.toFixed(2)} for ${winningBets}/${bets.length} winning bets`);
+    
+    return {
+      totalPayout: parseFloat(totalPayout.toFixed(2)),
+      winningBets,
+      totalBets: bets.length,
+      payoutDetails
+    };
+  }
+
+  // Helper function to determine if a bet won based on result
+  determineBetOutcome(bet, result) {
+    const selection = bet.selection.toLowerCase();
+    const winner = result.winner?.toLowerCase() || '';
+    
+    // Direct team name match
+    if (winner && selection === winner) {
+      return true;
+    }
+    
+    // Match result patterns
+    if (result.score && result.teams) {
+      const [team1Score, team2Score] = result.score.split('-').map(Number);
+      const team1Name = result.teams[0]?.toLowerCase() || '';
+      const team2Name = result.teams[1]?.toLowerCase() || '';
+      
+      // Check if bet selection matches winning team
+      if (team1Score > team2Score && (selection === team1Name || selection === 'team1')) {
+        return true;
+      }
+      if (team2Score > team1Score && (selection === team2Name || selection === 'team2')) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  // CORE FUNCTION 3: Update user bankroll
+  async updateBankroll(userId, amount) {
+    console.log(`💳 Updating bankroll for user ${userId}: +$${amount}`);
+    
+    try {
+      const bettingData = await this.loadBettingData();
+      
+      // Initialize user if doesn't exist
+      if (!bettingData.users) {
+        bettingData.users = {};
+      }
+      if (!bettingData.users[userId]) {
+        bettingData.users[userId] = {
+          id: userId,
+          balance: 1000, // Default starting balance
+          totalWagered: 0,
+          totalWon: 0,
+          betsPlaced: 0,
+          betsWon: 0,
+          created: new Date().toISOString()
+        };
+      }
+      
+      const user = bettingData.users[userId];
+      const previousBalance = user.balance;
+      
+      // Update balance
+      user.balance = parseFloat((user.balance + amount).toFixed(2));
+      user.totalWon = parseFloat((user.totalWon + amount).toFixed(2));
+      user.lastUpdated = new Date().toISOString();
+      
+      // Add transaction record
+      if (!bettingData.transactions) {
+        bettingData.transactions = [];
+      }
+      
+      bettingData.transactions.push({
+        id: Date.now().toString(),
+        userId,
+        type: 'payout',
+        amount,
+        previousBalance,
+        newBalance: user.balance,
+        timestamp: new Date().toISOString(),
+        description: `Bet settlement payout`
+      });
+      
+      // Save updated data
+      await fs.writeFile(this.bettingDataFile, JSON.stringify(bettingData, null, 2));
+      
+      console.log(`  ✅ User ${userId}: $${previousBalance} → $${user.balance} (+$${amount})`);
+      
+      return {
+        success: true,
+        userId,
+        previousBalance,
+        newBalance: user.balance,
+        amount
+      };
+      
+    } catch (error) {
+      console.error(`❌ Error updating bankroll for user ${userId}:`, error.message);
+      return { success: false, error: error.message };
+    }
+  }
+
   // Extract team names from bet data
   extractTeamNamesFromBets(bets) {
     // Try to extract team names from bet event ID or selection

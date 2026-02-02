@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CS2 Modern UI Demo</title>
+  <link rel="stylesheet" href="cs2-modern-betting-ui.css">
+  <link rel="stylesheet" href="cs2-animations.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .demo-section {
+      margin: 2rem 0;
+      padding: 2rem;
+      border: 1px solid var(--cs2-border);
+      border-radius: var(--cs2-radius-lg);
+    }
+    
+    .demo-title {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--cs2-text-primary);
+    }
+    
+    .component-grid {
+      display: grid;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    
+    .two-col {
+      grid-template-columns: 1fr 1fr;
+    }
+    
+    .three-col {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  </style>
+</head>
+<body>
+  <div class="cs2-betting-container" data-theme="dark">
+    <div class="cs2-container">
+      <h1 class="cs2-title">
+        <span class="cs2-title-icon">🎮</span>
+        CS2 Modern UI Demo
+      </h1>
+
+      <!-- Theme Toggle Demo -->
+      <div class="demo-section">
+        <h2 class="demo-title">Theme Toggle</h2>
+        <button id="themeToggle" class="btn btn-secondary">
+          <span id="themeIcon">🌙</span>
+          Toggle Theme
+        </button>
+      </div>
+
+      <!-- Loading States Demo -->
+      <div class="demo-section">
+        <h2 class="demo-title">Loading States</h2>
+        <div class="component-grid three-col">
+          <div>
+            <h3>Spinner</h3>
+            <div class="loading-state">
+              <div class="cs2-loading-spinner"></div>
+              <div class="loading-text">Loading...</div>
+            </div>
+          </div>
+          <div>
+            <h3>Dots</h3>
+            <div class="loading-state">
+              <div class="cs2-dots-loader">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+              <div class="loading-text">Processing...</div>
+            </div>
+          </div>
+          <div>
+            <h3>Skeleton</h3>
+            <div class="cs2-skeleton cs2-skeleton-card"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Buttons Demo -->
+      <div class="demo-section">
+        <h2 class="demo-title">Buttons</h2>
+        <div class="component-grid three-col">
+          <button class="btn btn-primary">
+            <span>🎯</span>
+            Primary
+          </button>
+          <button class="btn btn-secondary">Secondary</button>
+          <button class="btn btn-primary btn-large">Large Button</button>
+          <button class="btn btn-secondary btn-small">Small</button>
+          <button class="btn btn-primary btn-loading">Loading...</button>
+          <button class="btn btn-primary" disabled>Disabled</button>
+        </div>
+      </div>
+
+      <!-- Event Card Demo -->
+      <div class="demo-section">
+        <h2 class="demo-title">Event Card</h2>
+        <div class="cs2-events-panel">
+          <div class="cs2-tournament-header">
+            <div class="cs2-tournament-icon">🏆</div>
+            <div class="cs2-tournament-name">BLAST Premier</div>
+            <div class="cs2-tournament-count">3</div>
+          </div>
+          
+          <div class="cs2-event-card">
+            <div class="event-match-header">
+              <div class="match-time-status">
+                <div class="match-time">Feb 02, 08:00 PM</div>
+              </div>
+              <div class="match-status-badge scheduled">📅 Scheduled</div>
+            </div>
+            
+            <div class="event-match-content">
+              <div class="event-teams-list">
+                <div class="teams-header">Teams</div>
+                <div class="event-team-row">
+                  <div class="team-logo-container">
+                    <img src="https://ui-avatars.com/api/?name=Astralis&size=64&background=random&color=fff&bold=true" alt="Astralis" class="team-logo">
+                  </div>
+                  <div class="team-name">Astralis</div>
+                </div>
+                <div class="event-team-row">
+                  <div class="team-logo-container">
+                    <img src="https://ui-avatars.com/api/?name=NAVI&size=64&background=random&color=fff&bold=true" alt="NAVI" class="team-logo">
+                  </div>
+                  <div class="team-name">Natus Vincere</div>
+                </div>
+              </div>
+              
+              <div class="event-odds-section">
+                <div class="odds-header">Winner</div>
+                <div class="odds-grid">
+                  <button class="odds-card">
+                    <div class="odds-team-name">Astralis</div>
+                    <div class="odds-value favorite">1.85</div>
+                  </button>
+                  <button class="odds-card">
+                    <div class="odds-team-name">Natus Vincere</div>
+                    <div class="odds-value">2.10</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Match Demo -->
+          <div class="cs2-event-card live">
+            <div class="event-match-header">
+              <div class="match-time-status">
+                <div class="match-time">Feb 02, 07:30 PM</div>
+                <div class="match-live-badge">🔴 LIVE</div>
+              </div>
+              <div class="match-status-badge live">🔴 Live</div>
+            </div>
+            
+            <div class="event-match-content">
+              <div class="event-teams-list">
+                <div class="teams-header">Teams</div>
+                <div class="event-team-row">
+                  <div class="team-logo-container">
+                    <img src="https://ui-avatars.com/api/?name=G2&size=64&background=random&color=fff&bold=true" alt="G2" class="team-logo">
+                  </div>
+                  <div class="team-name">G2 Esports</div>
+                </div>
+                <div class="event-team-row">
+                  <div class="team-logo-container">
+                    <img src="https://ui-avatars.com/api/?name=Vitality&size=64&background=random&color=fff&bold=true" alt="Vitality" class="team-logo">
+                  </div>
+                  <div class="team-name">Team Vitality</div>
+                </div>
+              </div>
+              
+              <div class="event-odds-section">
+                <div class="odds-header">Winner</div>
+                <div class="odds-grid">
+                  <button class="odds-card">
+                    <div class="odds-team-name">G2 Esports</div>
+                    <div class="odds-value">1.75</div>
+                  </button>
+                  <button class="odds-card selected">
+                    <div class="odds-team-name">Team Vitality</div>
+                    <div class="odds-value">2.25</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Bets Demo -->
+      <div class="demo-section">
+        <h2 class="demo-title">My Bets Panel</h2>
+        <div class="cs2-sidebar-panel">
+          <div class="cs2-my-bets-panel">
+            <div class="my-bets-header">
+              <h3>📋 My Bets</h3>
+            </div>
+            <div class="bets-tabs">
+              <button class="bet-tab active">Open</button>
+              <button class="bet-tab">History</button>
+            </div>
+            <div class="cs2-my-bets">
+              <div class="cs2-bet-card pending">
+                <div class="bet-header">
+                  <div class="bet-id">#ABC123</div>
+                  <div class="bet-status pending">⏳ Pending</div>
+                </div>
+                <div class="bet-match">Astralis vs Natus Vincere</div>
+                <div class="bet-selection">Selection: <strong>Astralis @ 1.85</strong></div>
+                <div class="bet-details">
+                  <div class="bet-detail-item">
+                    <div class="bet-detail-label">Stake:</div>
+                    <div class="bet-detail-value">100</div>
+                  </div>
+                  <div class="bet-detail-item">
+                    <div class="bet-detail-label">Payout:</div>
+                    <div class="bet-detail-value">185.00</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cs2-bet-card won">
+                <div class="bet-header">
+                  <div class="bet-id">#DEF456</div>
+                  <div class="bet-status won">✓ Won</div>
+                </div>
+                <div class="bet-match">G2 Esports vs Team Vitality</div>
+                <div class="bet-selection">Selection: <strong>G2 Esports @ 1.75</strong></div>
+                <div class="bet-details">
+                  <div class="bet-detail-item">
+                    <div class="bet-detail-label">Stake:</div>
+                    <div class="bet-detail-value">250</div>
+                  </div>
+                  <div class="bet-detail-item">
+                    <div class="bet-detail-label">Payout:</div>
+                    <div class="bet-detail-value profit">437.50</div>
+                  </div>
+                </div>
+                <div class="bet-settled">Settled: Feb 01, 2026 - 09:45 PM</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Bet Buttons Demo -->
+      <div class="demo-section">
+        <h2 class="demo-title">Quick Bet Buttons</h2>
+        <div class="quick-bets">
+          <button class="quick-bet-btn">50</button>
+          <button class="quick-bet-btn">100</button>
+          <button class="quick-bet-btn">250</button>
+          <button class="quick-bet-btn">500</button>
+        </div>
+      </div>
+
+      <!-- Toast Demo -->
+      <div class="demo-section">
+        <h2 class="demo-title">Toast Notifications</h2>
+        <div class="component-grid two-col">
+          <button class="btn btn-primary" onclick="showToast('✅ Bet placed successfully!', 'success')">Show Success</button>
+          <button class="btn btn-secondary" onclick="showToast('❌ Failed to place bet', 'error')">Show Error</button>
+          <button class="btn btn-secondary" onclick="showToast('⚠️ Insufficient credits', 'warning')">Show Warning</button>
+          <button class="btn btn-secondary" onclick="showToast('ℹ️ Odds updated', 'info')">Show Info</button>
+        </div>
+      </div>
+
+      <!-- Modal Demo -->
+      <div class="demo-section">
+        <h2 class="demo-title">Bet Slip Modal</h2>
+        <button class="btn btn-primary" onclick="showModal()">Open Bet Slip</button>
+      </div>
+    </div>
+
+    <!-- Demo Modal -->
+    <div id="demoModal" class="cs2-betslip-modal hidden">
+      <div class="cs2-betslip-modal-overlay"></div>
+      <div class="cs2-betslip-modal-content">
+        <div class="betslip-modal-header">
+          <h3>🎯 Bet Slip</h3>
+          <button onclick="closeModal()" class="close-btn">&times;</button>
+        </div>
+        
+        <div class="betslip-selection">
+          <div class="selection-match">
+            <div class="match-tournament">🏆 BLAST Premier</div>
+            <div class="match-teams">
+              <span>Astralis</span>
+              <span class="vs-text">vs</span>
+              <span>Natus Vincere</span>
+            </div>
+          </div>
+          <div class="selection-outcome">
+            <div class="outcome-label">Your Selection:</div>
+            <div class="outcome-value">Astralis @ 1.85</div>
+          </div>
+        </div>
+
+        <div class="cs2-bet-controls">
+          <div class="bet-input-group">
+            <label>💰 Bet Amount (Credits)</label>
+            <input type="number" class="bet-amount-input" value="100" min="1">
+            <div class="quick-bets">
+              <button class="quick-bet-btn">50</button>
+              <button class="quick-bet-btn">100</button>
+              <button class="quick-bet-btn">250</button>
+              <button class="quick-bet-btn">500</button>
+            </div>
+          </div>
+          
+          <div class="potential-payout">
+            <div class="payout-info">
+              <div>
+                <span>Bet Amount:</span>
+                <span class="payout-value">100 credits</span>
+              </div>
+              <div>
+                <span>Potential Payout:</span>
+                <span class="payout-value">185.00 credits</span>
+              </div>
+              <div class="total-payout">
+                <span>Potential Profit:</span>
+                <span class="payout-value profit">+85.00 credits</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="betslip-actions">
+            <button class="btn btn-primary btn-large">
+              <span>🎯</span>
+              Place Bet
+            </button>
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Theme Toggle
+    document.getElementById('themeToggle').addEventListener('click', function() {
+      const container = document.querySelector('.cs2-betting-container');
+      const themeIcon = document.getElementById('themeIcon');
+      
+      if (container.dataset.theme === 'dark') {
+        container.dataset.theme = 'light';
+        themeIcon.textContent = '☀️';
+      } else {
+        container.dataset.theme = 'dark';
+        themeIcon.textContent = '🌙';
+      }
+    });
+
+    // Toast Function
+    function showToast(message, type = 'info') {
+      const existingToasts = document.querySelectorAll('.cs2-toast');
+      existingToasts.forEach(toast => toast.remove());
+      
+      const toast = document.createElement('div');
+      toast.className = `cs2-toast ${type}`;
+      toast.textContent = message;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.add('hiding');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Modal Functions
+    function showModal() {
+      document.getElementById('demoModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('demoModal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Quick bet button interactions
+    document.querySelectorAll('.quick-bet-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.quick-bet-btn').forEach(b => b.classList.remove('selected'));
+        this.classList.add('selected');
+        
+        const input = document.querySelector('.bet-amount-input');
+        if (input) {
+          input.value = this.textContent;
+        }
+      });
+    });
+
+    // Odds card interactions
+    document.querySelectorAll('.odds-card').forEach(card => {
+      card.addEventListener('click', function() {
+        document.querySelectorAll('.odds-card').forEach(c => c.classList.remove('selected'));
+        this.classList.add('selected');
+        showToast('🎯 Selection added to bet slip', 'info');
+      });
+    });
+
+    // Tab interactions
+    document.querySelectorAll('.bet-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.bet-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Modal overlay click to close
+    document.addEventListener('click', function(e) {
+      if (e.target.classList.contains('cs2-betslip-modal-overlay')) {
+        closeModal();
+      }
+    });
+
+    // ESC key to close modal
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+
+    console.log('CS2 Modern UI Demo loaded successfully!');
+  </script>
+</body>
+</html>

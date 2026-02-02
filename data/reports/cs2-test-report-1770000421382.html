@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CS2 Comprehensive Test Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .header { background: #2196F3; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .overall-status { 
+            text-align: center; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin: 20px 0; 
+            background: #F44336;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .summary { display: flex; justify-content: space-around; margin: 20px 0; }
+        .summary-item { text-align: center; padding: 15px; border-radius: 8px; background: #f5f5f5; }
+        .feature { margin: 15px 0; padding: 15px; border-left: 4px solid #ddd; background: #fafafa; }
+        .feature h3 { margin: 0 0 10px 0; }
+        .status { font-weight: bold; padding: 4px 8px; border-radius: 4px; color: white; }
+        .bugs { background: #ffebee; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .recommendations { background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .bug-item, .rec-item { margin: 8px 0; padding: 8px; border-left: 3px solid #ccc; background: white; }
+        .severity-high { border-left-color: #f44336; }
+        .severity-medium { border-left-color: #ff9800; }
+        .severity-low { border-left-color: #4caf50; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🩺 CS2 Comprehensive Test Report</h1>
+        <p>Generated: Sun Feb 01 2026 21:46:53 GMT-0500 (Eastern Standard Time)</p>
+        <p>Dr.Molt Automated Testing Suite</p>
+    </div>
+
+    <div class="overall-status">
+        Overall Status: CRITICAL
+    </div>
+
+    <div class="summary">
+        <div class="summary-item">
+            <h3>7</h3>
+            <p>Total Tests</p>
+        </div>
+        <div class="summary-item">
+            <h3 style="color: #4CAF50">0</h3>
+            <p>Passed</p>
+        </div>
+        <div class="summary-item">
+            <h3 style="color: #FF9800">3</h3>
+            <p>Warnings</p>
+        </div>
+        <div class="summary-item">
+            <h3 style="color: #F44336">4</h3>
+            <p>Failed</p>
+        </div>
+        <div class="summary-item">
+            <h3 style="color: #9C27B0">0</h3>
+            <p>Errors</p>
+        </div>
+    </div>
+
+    <h2>🔍 Feature Test Results</h2>
+    
+        <div class="feature" style="border-left-color: #FF9800">
+            <h3>API Resilience <span class="status" style="background: #FF9800">WARN</span></h3>
+            <p><strong>Summary:</strong> Partial resilience - needs improvement</p>
+            <p><strong>Details:</strong> {
+  "enhancedClientExists": true,
+  "backupKeysCount": 0,
+  "configExists": true,
+  "apiResponseTime": 1152,
+  "matchesReturned": 0
+}</p>
+        </div>
+    
+        <div class="feature" style="border-left-color: #FF9800">
+            <h3>Settlement System <span class="status" style="background: #FF9800">WARN</span></h3>
+            <p><strong>Summary:</strong> Settlement system needs completion</p>
+            <p><strong>Details:</strong> {
+  "systemExists": true,
+  "functionsFound": [],
+  "cs2-betting-data.jsonExists": false,
+  "settlement-testsExists": true
+}</p>
+        </div>
+    
+        <div class="feature" style="border-left-color: #FF9800">
+            <h3>Team Logos <span class="status" style="background: #FF9800">WARN</span></h3>
+            <p><strong>Summary:</strong> Logo system needs more assets</p>
+            <p><strong>Details:</strong> {
+  "implementationExists": true,
+  "logoFilesFound": 0,
+  "reportExists": false
+}</p>
+        </div>
+    
+        <div class="feature" style="border-left-color: #F44336">
+            <h3>Rate Limiting <span class="status" style="background: #F44336">FAIL</span></h3>
+            <p><strong>Summary:</strong> No rate limiting protection</p>
+            <p><strong>Details:</strong> {
+  "rateLimitGeneratorExists": false,
+  "hasRateLimitHandling": false,
+  "hasLogging": false
+}</p>
+        </div>
+    
+        <div class="feature" style="border-left-color: #F44336">
+            <h3>Mobile Responsiveness <span class="status" style="background: #F44336">FAIL</span></h3>
+            <p><strong>Summary:</strong> Mobile responsiveness has critical issues</p>
+            <p><strong>Details:</strong> {
+  "mobileTestFilesFound": 0,
+  "hasViewportMeta": false
+}</p>
+        </div>
+    
+        <div class="feature" style="border-left-color: #F44336">
+            <h3>Error Handling <span class="status" style="background: #F44336">FAIL</span></h3>
+            <p><strong>Summary:</strong> Critical error handling issues found</p>
+            <p><strong>Details:</strong> {
+  "settlementHasErrorHandling": false,
+  "frontendHasErrorHandling": false
+}</p>
+        </div>
+    
+        <div class="feature" style="border-left-color: #F44336">
+            <h3>Performance <span class="status" style="background: #F44336">FAIL</span></h3>
+            <p><strong>Summary:</strong> No performance optimization found</p>
+            <p><strong>Details:</strong> {
+  "hasCache": false,
+  "cacheFilesFound": 0,
+  "cssSize": 0,
+  "hasMonitoring": false
+}</p>
+        </div>
+    
+
+    
+    <div class="bugs">
+        <h2>🐛 Bugs Found (8)</h2>
+        
+            <div class="bug-item severity-medium">
+                <strong>[MEDIUM]</strong> No backup API keys file found
+                <br><em>Solution: Run API key generation to create backup keys</em>
+            </div>
+        
+            <div class="bug-item severity-medium">
+                <strong>[MEDIUM]</strong> Settlement function 'processMatchResult' is missing
+                <br><em>Solution: Implement processMatchResult in settlement system</em>
+            </div>
+        
+            <div class="bug-item severity-medium">
+                <strong>[MEDIUM]</strong> Settlement function 'calculatePayouts' is missing
+                <br><em>Solution: Implement calculatePayouts in settlement system</em>
+            </div>
+        
+            <div class="bug-item severity-medium">
+                <strong>[MEDIUM]</strong> Settlement function 'updateBankroll' is missing
+                <br><em>Solution: Implement updateBankroll in settlement system</em>
+            </div>
+        
+            <div class="bug-item severity-low">
+                <strong>[LOW]</strong> Team logo directory not found
+                <br><em>Solution: Create img/teams/ directory with logo files</em>
+            </div>
+        
+            <div class="bug-item severity-medium">
+                <strong>[MEDIUM]</strong> Rate-limited API generator not found
+                <br><em>Solution: Deploy rate-limited-api-generator.js</em>
+            </div>
+        
+            <div class="bug-item severity-high">
+                <strong>[HIGH]</strong> Main CSS file not found
+                <br><em>Solution: Ensure casino.css exists with responsive styles</em>
+            </div>
+        
+            <div class="bug-item severity-high">
+                <strong>[HIGH]</strong> Cannot analyze API client for error handling
+                <br><em>Solution: Ensure API client exists and is readable</em>
+            </div>
+        
+    </div>
+    
+
+    
+    <div class="recommendations">
+        <h2>💡 Recommendations (1)</h2>
+        
+            <div class="rec-item">• Deploy performance monitoring dashboard</div>
+        
+    </div>
+    
+
+    <div style="margin-top: 40px; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+        <h3>Next Steps</h3>
+        <ul>
+            <li>Address all HIGH severity bugs immediately</li>
+            <li>Implement recommended improvements</li>
+            <li>Run tests again after fixes</li>
+            <li>Monitor performance in production</li>
+        </ul>
+        
+        <p style="margin-top: 20px; font-style: italic; color: #666;">
+            This report was automatically generated by Dr.Molt's CS2 Testing Suite.<br>
+            For questions or assistance, contact the development team.
+        </p>
+    </div>
+</body>
+</html>

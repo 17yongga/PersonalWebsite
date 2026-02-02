@@ -1,0 +1,600 @@
+/**
+ * CS2 Betting - Enhanced Animations & Micro-interactions
+ * Production-ready animations inspired by modern betting platforms
+ */
+
+/* ============================================
+   Enhanced Loading Animations
+   ============================================ */
+
+/* Skeleton Loading for Cards */
+.cs2-skeleton {
+  background: linear-gradient(90deg, 
+    var(--cs2-bg-elevated) 25%, 
+    rgba(255, 255, 255, 0.05) 50%, 
+    var(--cs2-bg-elevated) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--cs2-radius-md);
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.cs2-skeleton-card {
+  height: 120px;
+  margin-bottom: var(--cs2-space-md);
+  border-radius: var(--cs2-radius-lg);
+}
+
+.cs2-skeleton-text {
+  height: 1rem;
+  margin-bottom: var(--cs2-space-sm);
+  border-radius: var(--cs2-radius-sm);
+}
+
+.cs2-skeleton-text.short {
+  width: 60%;
+}
+
+.cs2-skeleton-text.medium {
+  width: 80%;
+}
+
+.cs2-skeleton-text.long {
+  width: 100%;
+}
+
+/* Enhanced Loading Spinner */
+.cs2-loading-spinner {
+  --spinner-size: 40px;
+  width: var(--spinner-size);
+  height: var(--spinner-size);
+  position: relative;
+  margin: 0 auto;
+}
+
+.cs2-loading-spinner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--cs2-border);
+  border-top-color: var(--cs2-primary);
+  border-radius: 50%;
+  animation: spinFast 0.8s linear infinite;
+}
+
+.cs2-loading-spinner::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 2px solid transparent;
+  border-top-color: var(--cs2-accent);
+  border-radius: 50%;
+  animation: spinSlow 1.2s linear infinite reverse;
+}
+
+@keyframes spinFast {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spinSlow {
+  to { transform: rotate(-360deg); }
+}
+
+/* Pulsing Dots Loader */
+.cs2-dots-loader {
+  display: flex;
+  gap: var(--cs2-space-xs);
+  justify-content: center;
+  align-items: center;
+}
+
+.cs2-dots-loader .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--cs2-primary);
+  border-radius: 50%;
+  animation: dotPulse 1.4s infinite ease-in-out both;
+}
+
+.cs2-dots-loader .dot:nth-child(1) { animation-delay: -0.32s; }
+.cs2-dots-loader .dot:nth-child(2) { animation-delay: -0.16s; }
+.cs2-dots-loader .dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% { 
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   Card & Component Animations
+   ============================================ */
+
+/* Staggered Animation for Event Cards */
+.cs2-events-list .cs2-event-card {
+  animation: slideInUp 0.5s ease-out both;
+}
+
+.cs2-events-list .cs2-event-card:nth-child(1) { animation-delay: 0.1s; }
+.cs2-events-list .cs2-event-card:nth-child(2) { animation-delay: 0.15s; }
+.cs2-events-list .cs2-event-card:nth-child(3) { animation-delay: 0.2s; }
+.cs2-events-list .cs2-event-card:nth-child(4) { animation-delay: 0.25s; }
+.cs2-events-list .cs2-event-card:nth-child(5) { animation-delay: 0.3s; }
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover Animations for Interactive Elements */
+.cs2-event-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cs2-event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 0 20px rgba(var(--cs2-primary-rgb), 0.1);
+}
+
+/* Odds Card Pulse Animation */
+.odds-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.odds-card::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(var(--cs2-primary-rgb), 0.3), transparent);
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
+}
+
+.odds-card:active::before {
+  width: 200px;
+  height: 200px;
+}
+
+/* Floating Action Button Animation */
+.cs2-fab {
+  position: fixed;
+  bottom: var(--cs2-space-xl);
+  right: var(--cs2-space-xl);
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--cs2-primary), var(--cs2-accent));
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: var(--cs2-shadow-lg);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: var(--cs2-z-modal-backdrop);
+}
+
+.cs2-fab:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: var(--cs2-shadow-xl);
+}
+
+.cs2-fab:active {
+  transform: scale(0.95);
+}
+
+/* ============================================
+   Button State Animations
+   ============================================ */
+
+/* Enhanced Button Feedback */
+.btn {
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0); /* Enable hardware acceleration */
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.btn:hover::before {
+  opacity: 1;
+}
+
+/* Success Button Animation */
+.btn-success-pulse {
+  animation: successPulse 0.6s ease-out;
+}
+
+@keyframes successPulse {
+  0% {
+    background-color: var(--cs2-success);
+    transform: scale(1);
+  }
+  50% {
+    background-color: var(--cs2-success-light);
+    transform: scale(1.05);
+  }
+  100% {
+    background-color: var(--cs2-success);
+    transform: scale(1);
+  }
+}
+
+/* Loading Button State */
+.btn-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ============================================
+   Modal & Overlay Animations
+   ============================================ */
+
+/* Enhanced Modal Animation */
+.cs2-betslip-modal {
+  animation: modalBackdropFadeIn 0.3s ease-out;
+}
+
+.cs2-betslip-modal-content {
+  animation: modalContentSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalContentSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal Closing Animation */
+.cs2-betslip-modal.closing {
+  animation: modalBackdropFadeOut 0.2s ease-in;
+}
+
+.cs2-betslip-modal.closing .cs2-betslip-modal-content {
+  animation: modalContentSlideOut 0.2s ease-in;
+}
+
+@keyframes modalBackdropFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes modalContentSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+/* ============================================
+   Toast Notifications
+   ============================================ */
+
+/* Enhanced Toast Animation */
+.cs2-toast {
+  animation: toastSlideInEnhanced 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes toastSlideInEnhanced {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.cs2-toast.hiding {
+  animation: toastSlideOut 0.3s ease-in forwards;
+}
+
+@keyframes toastSlideOut {
+  to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
+}
+
+/* Toast Progress Bar */
+.cs2-toast::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--cs2-primary), var(--cs2-accent));
+  animation: toastProgress 3s linear forwards;
+}
+
+@keyframes toastProgress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* ============================================
+   Pull-to-Refresh Animation
+   ============================================ */
+
+.cs2-pull-indicator {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  background: var(--cs2-bg-elevated);
+  border: 2px solid var(--cs2-border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+
+.cs2-pull-indicator.active {
+  top: 10px;
+  border-color: var(--cs2-primary);
+  background: rgba(var(--cs2-primary-rgb), 0.1);
+}
+
+.cs2-pull-indicator.triggered {
+  animation: pullRefreshSpin 0.8s linear infinite;
+}
+
+@keyframes pullRefreshSpin {
+  to { transform: translateX(-50%) rotate(360deg); }
+}
+
+/* ============================================
+   Micro-interactions
+   ============================================ */
+
+/* Credit Amount Animation */
+.credit-amount {
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.credit-amount.updating {
+  animation: creditFlash 0.5s ease-out;
+}
+
+@keyframes creditFlash {
+  0% { color: var(--cs2-text-primary); }
+  50% { 
+    color: var(--cs2-success);
+    transform: scale(1.1);
+  }
+  100% { 
+    color: var(--cs2-text-primary);
+    transform: scale(1);
+  }
+}
+
+/* Selection Highlight */
+.selection-highlight {
+  animation: selectionGlow 0.3s ease-out;
+}
+
+@keyframes selectionGlow {
+  0% {
+    box-shadow: 0 0 0 rgba(var(--cs2-primary-rgb), 0);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(var(--cs2-primary-rgb), 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(var(--cs2-primary-rgb), 0);
+  }
+}
+
+/* ============================================
+   Performance Optimizations
+   ============================================ */
+
+/* GPU Acceleration for Interactive Elements */
+.odds-card,
+.cs2-event-card,
+.btn,
+.cs2-betslip-modal-content {
+  will-change: transform;
+}
+
+/* Reduce animations on low-power devices */
+@media (prefers-reduced-motion: reduce) {
+  .cs2-event-card,
+  .odds-card,
+  .btn,
+  .cs2-toast {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .cs2-event-card:hover,
+  .odds-card:hover,
+  .btn:hover {
+    transform: none !important;
+  }
+}
+
+/* ============================================
+   Responsive Animation Adjustments
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Reduce animation complexity on mobile */
+  .cs2-event-card:hover {
+    transform: translateY(-1px);
+  }
+  
+  /* Simplify modal animations */
+  .cs2-betslip-modal-content {
+    animation: modalContentSlideInMobile 0.3s ease-out;
+  }
+  
+  @keyframes modalContentSlideInMobile {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Faster transitions for better touch response */
+  .btn,
+  .odds-card,
+  .quick-bet-btn {
+    transition-duration: 0.15s;
+  }
+}
+
+/* ============================================
+   Accessibility Enhancements
+   ============================================ */
+
+/* Focus Indicators with Animation */
+.odds-card:focus,
+.btn:focus,
+.quick-bet-btn:focus {
+  animation: focusGlow 1s ease-in-out infinite alternate;
+}
+
+@keyframes focusGlow {
+  from {
+    outline-color: var(--cs2-primary);
+    outline-offset: 2px;
+  }
+  to {
+    outline-color: var(--cs2-accent);
+    outline-offset: 4px;
+  }
+}
+
+/* Screen Reader Animations */
+@media (prefers-reduced-motion: no-preference) {
+  .sr-only-animate {
+    animation: slideInFromLeft 0.3s ease-out;
+  }
+  
+  @keyframes slideInFromLeft {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+}
+
+/* ============================================
+   Loading State Variations
+   ============================================ */
+
+/* Skeleton Cards for Event Loading */
+.cs2-events-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs2-space-md);
+  padding: var(--cs2-space-xl);
+}
+
+.cs2-event-skeleton {
+  background: var(--cs2-bg-card);
+  border-radius: var(--cs2-radius-lg);
+  padding: var(--cs2-space-lg);
+}
+
+.cs2-event-skeleton-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--cs2-space-md);
+}
+
+.cs2-event-skeleton-content {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--cs2-space-lg);
+}
+
+/* Breathing Animation for Loading States */
+.cs2-breathing {
+  animation: breathe 2s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Success Checkmark Animation */
+.cs2-success-checkmark {
+  animation: checkmarkDraw 0.6s ease-in-out;
+}
+
+@keyframes checkmarkDraw {
+  0% {
+    stroke-dasharray: 0 100;
+  }
+  100% {
+    stroke-dasharray: 100 0;
+  }
+}
