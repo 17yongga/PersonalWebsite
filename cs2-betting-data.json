@@ -1,53 +1,66 @@
 {
-  "users": {
-    "user1": {
-      "id": "user1",
-      "balance": 1500.00,
-      "totalWagered": 500.00,
-      "totalWon": 200.00,
-      "betsPlaced": 5,
-      "betsWon": 2,
-      "created": "2026-02-01T12:00:00.000Z",
-      "lastUpdated": "2026-02-01T21:45:00.000Z"
-    }
-  },
   "bets": {
-    "bet1": {
-      "id": "bet1",
-      "userId": "user1",
-      "eventId": "g2-vs-spirit",
-      "selection": "G2 Esports",
-      "stake": 100.00,
+    "bet-001": {
+      "id": "bet-001",
+      "eventId": "g2-vs-spirit-blast-final",
+      "selection": "g2",
+      "stake": 100,
       "odds": 1.85,
-      "status": "pending",
-      "placedAt": "2026-02-01T20:00:00.000Z",
-      "type": "match_winner"
-    },
-    "bet2": {
-      "id": "bet2", 
-      "userId": "user1",
-      "eventId": "navi-vs-faze",
-      "selection": "NAVI",
-      "stake": 50.00,
-      "odds": 2.10,
+      "potentialPayout": 185,
+      "placedAt": "2026-02-02T17:14:45.012Z",
       "status": "won",
-      "placedAt": "2026-02-01T18:00:00.000Z",
-      "settledAt": "2026-02-01T20:30:00.000Z",
-      "payout": 105.00,
-      "type": "match_winner"
+      "result": "win",
+      "payout": 185,
+      "profit": 85,
+      "roi": 85,
+      "settledAt": "2026-02-02T21:14:46.023Z",
+      "settlementMethod": "api",
+      "settlementConfidence": 0.9,
+      "settlementValidation": {
+        "confidence": 0.9,
+        "warnings": []
+      }
+    },
+    "bet-002": {
+      "id": "bet-002",
+      "eventId": "g2-vs-spirit-blast-final",
+      "selection": "team spirit",
+      "stake": 50,
+      "odds": 2.1,
+      "potentialPayout": 105,
+      "placedAt": "2026-02-02T18:14:45.013Z",
+      "status": "lost",
+      "result": "loss",
+      "payout": 0,
+      "profit": -50,
+      "roi": -100,
+      "settledAt": "2026-02-02T21:14:46.023Z",
+      "settlementMethod": "api",
+      "settlementConfidence": 0.9,
+      "settlementValidation": {
+        "confidence": 0.9,
+        "warnings": []
+      }
+    },
+    "bet-003": {
+      "id": "bet-003",
+      "eventId": "astralis-vs-vitality-esl-pro",
+      "selection": "astralis",
+      "stake": 75,
+      "odds": 1.65,
+      "potentialPayout": 123.75,
+      "placedAt": "2026-02-02T13:14:45.013Z",
+      "status": "pending"
+    },
+    "bet-004": {
+      "id": "bet-004",
+      "eventId": "navi-vs-faze-iem-cologne",
+      "selection": "natus vincere",
+      "stake": 200,
+      "odds": 1.45,
+      "potentialPayout": 290,
+      "placedAt": "2026-02-02T11:14:45.013Z",
+      "status": "pending"
     }
-  },
-  "transactions": [
-    {
-      "id": "tx1",
-      "userId": "user1",
-      "type": "payout",
-      "amount": 105.00,
-      "previousBalance": 1395.00,
-      "newBalance": 1500.00,
-      "timestamp": "2026-02-01T20:30:00.000Z",
-      "description": "Bet settlement payout"
-    }
-  ],
-  "lastUpdated": "2026-02-01T21:45:00.000Z"
+  }
 }

@@ -1,0 +1,51 @@
+{
+  "currentBalance": 1070,
+  "createdAt": "2026-02-02T21:14:46.019Z",
+  "lastUpdated": "2026-02-02T21:14:46.024Z",
+  "transactions": [
+    {
+      "id": "settlement-test-match-001-1770066886019",
+      "timestamp": "2026-02-02T21:14:46.019Z",
+      "type": "settlement",
+      "matchId": "test-match-001",
+      "description": "Match settlement: 1/2 wins",
+      "amount": 35,
+      "previousBalance": 1000,
+      "newBalance": 1035,
+      "details": {
+        "totalBets": 2,
+        "winningBets": 1,
+        "totalStake": 150,
+        "totalWinnings": 185,
+        "roi": 23.33
+      }
+    },
+    {
+      "id": "settlement-g2-vs-spirit-blast-final-1770066886024",
+      "timestamp": "2026-02-02T21:14:46.024Z",
+      "type": "settlement",
+      "matchId": "g2-vs-spirit-blast-final",
+      "description": "Match settlement: 1/2 wins",
+      "amount": 35,
+      "previousBalance": 1035,
+      "newBalance": 1070,
+      "details": {
+        "totalBets": 2,
+        "winningBets": 1,
+        "totalStake": 150,
+        "totalWinnings": 185,
+        "roi": 23.333333333333332
+      }
+    }
+  ],
+  "statistics": {
+    "totalBets": 4,
+    "winningBets": 2,
+    "totalStaked": 300,
+    "totalWinnings": 370,
+    "biggestWin": 35,
+    "biggestLoss": 0,
+    "winRate": 50,
+    "averageROI": 23.333333333333332
+  }
+}
