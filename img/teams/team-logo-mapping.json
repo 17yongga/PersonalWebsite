@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-02-02T22:03:54.733Z",
+  "totalTeams": 50,
+  "downloadedLogos": 50,
+  "teamMapping": {
+    "passion ua": "/img/teams/passionua.svg",
+    "sashi esport": "/img/teams/sashiesport.svg",
+    "apeks": "/img/teams/apeks.svg",
+    "sangal esports": "/img/teams/sangalesports.svg",
+    "rebels gaming": "/img/teams/rebelsgaming.svg",
+    "into the breach": "/img/teams/intothebreach.svg",
+    "aurora gaming": "/img/teams/auroragaming.svg",
+    "nemiga gaming": "/img/teams/nemigagaming.svg",
+    "permitta esports": "/img/teams/permittaesports.svg",
+    "ex-sprout": "/img/teams/exsprout.svg",
+    "amkal": "/img/teams/amkal.svg",
+    "9 pandas": "/img/teams/9pandas.svg",
+    "enterprise": "/img/teams/enterprise.svg",
+    "parivision": "/img/teams/parivision.svg",
+    "koi": "/img/teams/koi.svg",
+    "boss": "/img/teams/boss.svg",
+    "m80": "/img/teams/m80.svg",
+    "wildcard gaming": "/img/teams/wildcardgaming.svg",
+    "nouns esports": "/img/teams/nounsesports.svg",
+    "timbermen": "/img/teams/timbermen.svg"
+  }
+}

@@ -1,4 +1,4 @@
-/* CS2 Team Logos - Generated 2026-02-01T16:23:06.942Z */
+/* CS2 Team Logos - Generated 2026-02-02T22:03:54.727Z */
 
 .cs2-team-logo {
   width: 32px;
@@ -25,253 +25,103 @@
 }
 
 /* Team-specific logo classes */
-.cs2-team-logo.g2esports {
-  background-image: url('/img/cs2-team-logos/png/g2esports.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.teamspirit {
-  background-image: url('/img/cs2-team-logos/png/teamspirit.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.natusvincere {
-  background-image: url('/img/cs2-team-logos/png/natusvincere.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.fazeclan {
-  background-image: url('/img/cs2-team-logos/png/fazeclan.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.astralis {
-  background-image: url('/img/cs2-team-logos/png/astralis.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.vitality {
-  background-image: url('/img/cs2-team-logos/png/vitality.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.mouz {
-  background-image: url('/img/cs2-team-logos/png/mouz.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.liquid {
-  background-image: url('/img/cs2-team-logos/png/liquid.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.heroic {
-  background-image: url('/img/cs2-team-logos/png/heroic.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.ninjasinpyjamas {
-  background-image: url('/img/cs2-team-logos/png/ninjasinpyjamas.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.cloud9 {
-  background-image: url('/img/cs2-team-logos/png/cloud9.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.big {
-  background-image: url('/img/cs2-team-logos/png/big.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.ence {
-  background-image: url('/img/cs2-team-logos/png/ence.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.og {
-  background-image: url('/img/cs2-team-logos/png/og.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.complexitygaming {
-  background-image: url('/img/cs2-team-logos/png/complexitygaming.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.evilgeniuses {
-  background-image: url('/img/cs2-team-logos/png/evilgeniuses.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.furiaesports {
-  background-image: url('/img/cs2-team-logos/png/furiaesports.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.imperialesports {
-  background-image: url('/img/cs2-team-logos/png/imperialesports.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.fnatic {
-  background-image: url('/img/cs2-team-logos/png/fnatic.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.virtuspro {
-  background-image: url('/img/cs2-team-logos/png/virtuspro.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.eternalfire {
-  background-image: url('/img/cs2-team-logos/png/eternalfire.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.ecstatic {
-  background-image: url('/img/cs2-team-logos/png/ecstatic.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.saw {
-  background-image: url('/img/cs2-team-logos/png/saw.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.monte {
-  background-image: url('/img/cs2-team-logos/png/monte.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.3dmax {
-  background-image: url('/img/cs2-team-logos/png/3dmax.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.falconsesports {
-  background-image: url('/img/cs2-team-logos/png/falconsesports.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.passionua {
-  background-image: url('/img/cs2-team-logos/png/passionua.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.b8 {
-  background-image: url('/img/cs2-team-logos/png/b8.png');
+.cs2-team-logo.passionua {
+  background-image: url('/img/teams/passionua.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.sashiesport {
-  background-image: url('/img/cs2-team-logos/png/sashiesport.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.tsm {
-  background-image: url('/img/cs2-team-logos/png/tsm.png');
+  background-image: url('/img/teams/sashiesport.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.apeks {
-  background-image: url('/img/cs2-team-logos/png/apeks.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.gamerlegion {
-  background-image: url('/img/cs2-team-logos/png/gamerlegion.png');
+  background-image: url('/img/teams/apeks.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.sangalesports {
-  background-image: url('/img/cs2-team-logos/png/sangalesports.png');
+  background-image: url('/img/teams/sangalesports.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.rebelsgaming {
-  background-image: url('/img/cs2-team-logos/png/rebelsgaming.png');
+  background-image: url('/img/teams/rebelsgaming.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.intothebreach {
-  background-image: url('/img/cs2-team-logos/png/intothebreach.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}\n\n.cs2-team-logo.sinners {
-  background-image: url('/img/cs2-team-logos/png/sinners.png');
+  background-image: url('/img/teams/intothebreach.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.auroragaming {
-  background-image: url('/img/cs2-team-logos/png/auroragaming.png');
+  background-image: url('/img/teams/auroragaming.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.nemigagaming {
-  background-image: url('/img/cs2-team-logos/png/nemigagaming.png');
+  background-image: url('/img/teams/nemigagaming.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.permittaesports {
-  background-image: url('/img/cs2-team-logos/png/permittaesports.png');
+  background-image: url('/img/teams/permittaesports.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.exsprout {
-  background-image: url('/img/cs2-team-logos/png/exsprout.png');
+  background-image: url('/img/teams/exsprout.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.amkal {
-  background-image: url('/img/cs2-team-logos/png/amkal.png');
+  background-image: url('/img/teams/amkal.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.9pandas {
-  background-image: url('/img/cs2-team-logos/png/9pandas.png');
+  background-image: url('/img/teams/9pandas.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.enterprise {
-  background-image: url('/img/cs2-team-logos/png/enterprise.png');
+  background-image: url('/img/teams/enterprise.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.parivision {
-  background-image: url('/img/cs2-team-logos/png/parivision.png');
+  background-image: url('/img/teams/parivision.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.koi {
-  background-image: url('/img/cs2-team-logos/png/koi.png');
+  background-image: url('/img/teams/koi.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.boss {
-  background-image: url('/img/cs2-team-logos/png/boss.png');
+  background-image: url('/img/teams/boss.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.m80 {
-  background-image: url('/img/cs2-team-logos/png/m80.png');
+  background-image: url('/img/teams/m80.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.wildcardgaming {
-  background-image: url('/img/cs2-team-logos/png/wildcardgaming.png');
+  background-image: url('/img/teams/wildcardgaming.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.nounsesports {
-  background-image: url('/img/cs2-team-logos/png/nounsesports.png');
+  background-image: url('/img/teams/nounsesports.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }\n\n.cs2-team-logo.timbermen {
-  background-image: url('/img/cs2-team-logos/png/timbermen.png');
+  background-image: url('/img/teams/timbermen.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;

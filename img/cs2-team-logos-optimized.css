@@ -1,0 +1,219 @@
+/* CS2 Team Logos - Performance Optimized CSS */
+/* Generated: February 2, 2026 */
+
+/* Base logo styles with performance optimizations */
+.cs2-team-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: #f8f9fa;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+  
+  /* Performance optimizations */
+  will-change: transform; /* GPU acceleration hint */
+  backface-visibility: hidden; /* Prevent repaint issues */
+  transform: translateZ(0); /* Force hardware acceleration */
+  
+  /* Loading optimization */
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Size variants */
+.cs2-team-logo.small {
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
+  margin-right: 6px;
+}
+
+.cs2-team-logo.large {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+}
+
+.cs2-team-logo.extra-large {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+}
+
+/* Loading states for better UX */
+.cs2-team-logo:not(.preloaded) {
+  opacity: 0.7;
+}
+
+.cs2-team-logo.preloaded {
+  opacity: 1;
+}
+
+.cs2-team-logo[loading="lazy"] {
+  /* Intersection observer optimization */
+  content-visibility: auto;
+  contain-intrinsic-size: 32px 32px;
+}
+
+/* Placeholder styles for missing logos */
+.cs2-team-logo.placeholder {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.cs2-team-logo.placeholder.small {
+  font-size: 8px;
+}
+
+.cs2-team-logo.placeholder.large {
+  font-size: 12px;
+}
+
+.cs2-team-logo.placeholder.extra-large {
+  font-size: 14px;
+}
+
+.cs2-team-logo.placeholder::before {
+  content: attr(data-team);
+}
+
+/* Hover effects for interactive logos */
+.cs2-team-logo:hover {
+  transform: translateZ(0) scale(1.05);
+  transition: transform 0.15s ease-out;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .cs2-team-logo {
+    border: 1px solid currentColor;
+  }
+  
+  .cs2-team-logo.placeholder {
+    background: #000;
+    color: #fff;
+    border: 2px solid #fff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .cs2-team-logo {
+    transition: none;
+    transform: none;
+  }
+  
+  .cs2-team-logo:hover {
+    transform: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .cs2-team-logo {
+    background: #2d3748;
+  }
+  
+  .cs2-team-logo.placeholder {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  }
+}
+
+/* Print optimization */
+@media print {
+  .cs2-team-logo {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+
+/* Container optimizations */
+.cs2-match-team,
+.bet-team-name,
+.tournament-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Loading skeleton for better perceived performance */
+.cs2-team-logo-skeleton {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Critical CSS - inline these styles for fastest loading */
+/* These styles should be inlined in the HTML <head> for critical logos */
+.cs2-critical-logos {
+  /* Critical team logo paths - update with actual team logo URLs */
+}
+
+/* Performance monitoring CSS classes */
+.cs2-logo-performance-good { border-left: 3px solid #10b981; }
+.cs2-logo-performance-warning { border-left: 3px solid #f59e0b; }
+.cs2-logo-performance-poor { border-left: 3px solid #ef4444; }
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .cs2-team-logo {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .cs2-team-logo.large {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .cs2-team-logo.placeholder {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cs2-team-logo {
+    width: 24px;
+    height: 24px;
+    margin-right: 6px;
+  }
+  
+  .cs2-team-logo.large {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .cs2-team-logo.placeholder {
+    font-size: 8px;
+  }
+}
+
+/* Utility classes for specific use cases */
+.cs2-logo-no-margin { margin-right: 0; }
+.cs2-logo-center { margin: 0 auto; }
+.cs2-logo-inline { display: inline-block; vertical-align: baseline; }
+
+/* Performance hints for browsers */
+.cs2-team-logos-container {
+  contain: layout style paint;
+  will-change: contents;
+}

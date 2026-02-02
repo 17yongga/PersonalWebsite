@@ -1,13 +1,17 @@
-// CS2 Team Logos Implementation
-// February 1, 2026 - CS2 Enhancement Session
+// CS2 Team Logos Implementation with Performance Optimization
+// February 2, 2026 - Performance & Logo Assets Fix
 
 const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path');
 
+// Import performance monitoring
+const { CS2PerformanceMonitor } = require('./cs2-performance-monitor');
+const { CS2PerformanceCache } = require('./cs2-performance-cache');
+
 class CS2TeamLogosManager {
   constructor() {
-    this.logoDirectory = './img/cs2-team-logos/';
+    this.logoDirectory = './img/teams/'; // Updated to use existing teams directory
     this.logoApiSources = [
       {
         name: 'HLTV',
@@ -93,6 +97,20 @@ class CS2TeamLogosManager {
     
     this.teamLogoMap = new Map();
     this.downloadedLogos = new Set();
+    
+    // Initialize performance monitoring
+    this.performanceMonitor = new CS2PerformanceMonitor();
+    this.cache = new CS2PerformanceCache();
+    
+    // Performance tracking
+    this.downloadStats = {
+      startTime: Date.now(),
+      totalDownloads: 0,
+      successfulDownloads: 0,
+      failedDownloads: 0,
+      cacheHits: 0,
+      averageDownloadTime: 0
+    };
   }
 
   // Initialize logo directory
@@ -112,25 +130,35 @@ class CS2TeamLogosManager {
     }
   }
 
-  // Download team logo from various sources
+  // Download team logo from various sources with performance monitoring
   async downloadTeamLogo(team) {
+    const startTime = Date.now();
     console.log(`🏷️ Downloading logo for: ${team.name}`);
     
     const teamSlug = this.createTeamSlug(team.name);
-    const logoPath = path.join(this.logoDirectory, 'png', `${teamSlug}.png`);
+    const logoPath = path.join(this.logoDirectory, `${teamSlug}.svg`); // Use SVG for better performance
     
-    // Check if logo already exists
     try {
+      // Check if logo already exists (cache hit)
       await fs.access(logoPath);
-      console.log(`  ✅ Logo already exists: ${teamSlug}.png`);
+      console.log(`  ✅ Logo already exists: ${teamSlug}.svg`);
       this.downloadedLogos.add(teamSlug);
+      this.downloadStats.cacheHits++;
+      
+      const duration = Date.now() - startTime;
+      this.performanceMonitor.recordResponseTime(duration, true);
+      
       return logoPath;
     } catch {
       // Logo doesn't exist, proceed with download
     }
     
-    // Try different sources
+    this.downloadStats.totalDownloads++;
+    
+    // Try different sources with performance tracking
     for (const source of this.logoApiSources) {
+      const requestStartTime = Date.now();
+      
       try {
         const logoUrl = this.constructLogoUrl(source, team);
         console.log(`  🔍 Trying ${source.name}: ${logoUrl}`);
@@ -139,27 +167,42 @@ class CS2TeamLogosManager {
           method: 'GET',
           url: logoUrl,
           responseType: 'arraybuffer',
-          timeout: 10000,
+          timeout: 8000, // Reduced timeout for better performance
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
           }
         });
         
+        const requestDuration = Date.now() - requestStartTime;
+        
         if (response.status === 200 && response.data.length > 0) {
           await fs.writeFile(logoPath, response.data);
-          console.log(`  ✅ Downloaded from ${source.name}: ${teamSlug}.png`);
+          console.log(`  ✅ Downloaded from ${source.name}: ${teamSlug}.svg (${requestDuration}ms)`);
+          
           this.downloadedLogos.add(teamSlug);
-          this.teamLogoMap.set(team.name.toLowerCase(), `/img/cs2-team-logos/png/${teamSlug}.png`);
+          this.teamLogoMap.set(team.name.toLowerCase(), `/img/teams/${teamSlug}.svg`);
+          this.downloadStats.successfulDownloads++;
+          
+          const totalDuration = Date.now() - startTime;
+          this.performanceMonitor.recordResponseTime(totalDuration, true);
+          
           return logoPath;
         }
       } catch (error) {
-        console.log(`  ❌ Failed from ${source.name}: ${error.message}`);
+        const requestDuration = Date.now() - requestStartTime;
+        console.log(`  ❌ Failed from ${source.name}: ${error.message} (${requestDuration}ms)`);
+        this.performanceMonitor.recordResponseTime(requestDuration, false);
         continue;
       }
     }
     
     // Fallback: Create a placeholder logo
     await this.createPlaceholderLogo(team, logoPath);
+    this.downloadStats.failedDownloads++;
+    
+    const totalDuration = Date.now() - startTime;
+    this.performanceMonitor.recordResponseTime(totalDuration, false);
+    
     return logoPath;
   }
 
@@ -348,31 +391,82 @@ ${Array.from(this.teamLogoMap.entries()).map(([teamName, logoPath]) => {
     }
   }
 
-  // Generate JavaScript helper functions
+  // Generate JavaScript helper functions with performance optimization
   generateLogoJavaScript() {
     return `
-// CS2 Team Logo Helper Functions
+// CS2 Team Logo Helper Functions with Performance Optimization
 // Generated: ${new Date().toISOString()}
 
 class CS2TeamLogos {
   constructor() {
     this.logoMap = ${JSON.stringify(Object.fromEntries(this.teamLogoMap), null, 4)};
+    this.loadedLogos = new Set();
+    this.loadingPromises = new Map();
+    this.performanceStats = {
+      logoLoads: 0,
+      cacheHits: 0,
+      loadTime: 0
+    };
   }
 
-  // Get logo URL for a team name
+  // Get logo URL for a team name with caching
   getTeamLogo(teamName) {
     const normalized = teamName.toLowerCase();
     return this.logoMap[normalized] || null;
   }
 
-  // Create logo HTML element
-  createLogoElement(teamName, size = 'default') {
+  // Preload critical logos for performance
+  async preloadCriticalLogos(teamNames) {
+    const preloadPromises = teamNames.map(async (teamName) => {
+      const logoUrl = this.getTeamLogo(teamName);
+      if (logoUrl && !this.loadedLogos.has(logoUrl)) {
+        return this.preloadImage(logoUrl);
+      }
+    });
+    
+    await Promise.allSettled(preloadPromises);
+    console.log(\`⚡ Preloaded \${teamNames.length} critical team logos\`);
+  }
+
+  // Preload image with promise caching
+  async preloadImage(src) {
+    if (this.loadingPromises.has(src)) {
+      return this.loadingPromises.get(src);
+    }
+
+    const startTime = Date.now();
+    const promise = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        this.loadedLogos.add(src);
+        this.performanceStats.logoLoads++;
+        this.performanceStats.loadTime += Date.now() - startTime;
+        resolve(img);
+      };
+      img.onerror = reject;
+      img.src = src;
+    });
+
+    this.loadingPromises.set(src, promise);
+    return promise;
+  }
+
+  // Create optimized logo HTML element
+  createLogoElement(teamName, size = 'default', lazy = true) {
     const logoUrl = this.getTeamLogo(teamName);
     const teamSlug = this.createTeamSlug(teamName);
     const teamInitials = teamName.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase();
     
     if (logoUrl) {
-      return \`<img class="cs2-team-logo \${size} \${teamSlug}" src="\${logoUrl}" alt="\${teamName} logo" title="\${teamName}" loading="lazy">\`;
+      const loadingAttr = lazy ? 'loading="lazy"' : '';
+      const preloadedClass = this.loadedLogos.has(logoUrl) ? 'preloaded' : '';
+      
+      return \`<img class="cs2-team-logo \${size} \${teamSlug} \${preloadedClass}" 
+                   src="\${logoUrl}" 
+                   alt="\${teamName} logo" 
+                   title="\${teamName}" 
+                   \${loadingAttr}
+                   onerror="this.style.display='none'; this.nextElementSibling?.style.display='flex';">\`;
     } else {
       return \`<div class="cs2-team-logo \${size} placeholder" data-team="\${teamInitials}" title="\${teamName}"></div>\`;
     }
@@ -386,23 +480,77 @@ class CS2TeamLogos {
     element.innerHTML = logoHtml + element.innerHTML;
   }
 
-  // Batch update all team elements on page
+  // Batch update all team elements with performance optimization
   updateAllTeamElements() {
+    const startTime = Date.now();
+    let updatedElements = 0;
+    
+    // Batch collect team names for preloading
+    const teamNamesSet = new Set();
+    
     // Update CS2 betting match cards
-    document.querySelectorAll('.cs2-match-team').forEach(teamElement => {
+    const matchTeamElements = document.querySelectorAll('.cs2-match-team');
+    matchTeamElements.forEach(teamElement => {
       const teamName = teamElement.textContent || teamElement.innerText;
       if (teamName && !teamElement.querySelector('.cs2-team-logo')) {
-        this.addLogoToElement(teamElement, teamName.trim());
+        const cleanTeamName = teamName.trim();
+        teamNamesSet.add(cleanTeamName);
+        this.addLogoToElement(teamElement, cleanTeamName);
+        updatedElements++;
       }
     });
 
     // Update betting slips
-    document.querySelectorAll('.bet-team-name').forEach(teamElement => {
+    const betTeamElements = document.querySelectorAll('.bet-team-name');
+    betTeamElements.forEach(teamElement => {
       const teamName = teamElement.textContent || teamElement.innerText;
       if (teamName && !teamElement.querySelector('.cs2-team-logo')) {
-        this.addLogoToElement(teamElement, teamName.trim());
+        const cleanTeamName = teamName.trim();
+        teamNamesSet.add(cleanTeamName);
+        this.addLogoToElement(teamElement, cleanTeamName);
+        updatedElements++;
       }
     });
+
+    // Update tournament brackets
+    const bracketTeams = document.querySelectorAll('.tournament-team, .bracket-team');
+    bracketTeams.forEach(teamElement => {
+      const teamName = teamElement.textContent || teamElement.innerText;
+      if (teamName && !teamElement.querySelector('.cs2-team-logo')) {
+        const cleanTeamName = teamName.trim();
+        teamNamesSet.add(cleanTeamName);
+        this.addLogoToElement(teamElement, cleanTeamName);
+        updatedElements++;
+      }
+    });
+
+    const duration = Date.now() - startTime;
+    
+    if (updatedElements > 0) {
+      console.log(\`⚡ Updated \${updatedElements} team elements in \${duration}ms\`);
+      
+      // Preload logos for visible teams
+      const visibleTeams = Array.from(teamNamesSet).slice(0, 10); // Limit to first 10 for performance
+      if (visibleTeams.length > 0) {
+        this.preloadCriticalLogos(visibleTeams);
+      }
+    }
+  }
+
+  // Get performance statistics
+  getPerformanceStats() {
+    const avgLoadTime = this.performanceStats.logoLoads > 0 
+      ? this.performanceStats.loadTime / this.performanceStats.logoLoads 
+      : 0;
+
+    return {
+      ...this.performanceStats,
+      avgLoadTime: avgLoadTime.toFixed(2) + 'ms',
+      preloadedLogos: this.loadedLogos.size,
+      cacheHitRate: this.performanceStats.logoLoads > 0 
+        ? ((this.performanceStats.cacheHits / this.performanceStats.logoLoads) * 100).toFixed(1) + '%'
+        : '0%'
+    };
   }
 
   createTeamSlug(teamName) {
@@ -415,28 +563,88 @@ class CS2TeamLogos {
   }
 }
 
-// Global instance
+// Global instance with performance monitoring
 window.cs2TeamLogos = new CS2TeamLogos();
 
-// Auto-update logos when page loads or content changes
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => window.cs2TeamLogos.updateAllTeamElements(), 1000);
-  });
-} else {
-  setTimeout(() => window.cs2TeamLogos.updateAllTeamElements(), 1000);
+// Optimized initialization with performance tracking
+function initializeCS2Logos() {
+  const startTime = Date.now();
+  
+  // Initial logo update
+  window.cs2TeamLogos.updateAllTeamElements();
+  
+  // Preload top team logos for better performance
+  const topTeams = ['G2 Esports', 'Team Spirit', 'Natus Vincere', 'FaZe Clan', 'Astralis'];
+  window.cs2TeamLogos.preloadCriticalLogos(topTeams);
+  
+  const initTime = Date.now() - startTime;
+  console.log(\`🏷️ CS2 Team Logos initialized in \${initTime}ms\`);
 }
 
-// Watch for dynamic content updates
+// Auto-update logos with optimized timing
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    // Use requestAnimationFrame for better performance
+    requestAnimationFrame(() => {
+      setTimeout(initializeCS2Logos, 100);
+    });
+  });
+} else {
+  requestAnimationFrame(() => {
+    setTimeout(initializeCS2Logos, 100);
+  });
+}
+
+// Debounced mutation observer for better performance
+let updateTimeout;
 const observer = new MutationObserver((mutations) => {
+  let shouldUpdate = false;
+  
   mutations.forEach((mutation) => {
     if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-      setTimeout(() => window.cs2TeamLogos.updateAllTeamElements(), 500);
+      // Check if any added nodes contain team-related classes
+      for (const node of mutation.addedNodes) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const hasTeamContent = node.classList?.contains('cs2-match-team') ||
+                                node.classList?.contains('bet-team-name') ||
+                                node.classList?.contains('tournament-team') ||
+                                node.querySelector?.('.cs2-match-team, .bet-team-name, .tournament-team');
+          
+          if (hasTeamContent) {
+            shouldUpdate = true;
+            break;
+          }
+        }
+      }
     }
   });
+  
+  if (shouldUpdate) {
+    clearTimeout(updateTimeout);
+    updateTimeout = setTimeout(() => {
+      requestAnimationFrame(() => window.cs2TeamLogos.updateAllTeamElements());
+    }, 250); // Debounce to 250ms for better performance
+  }
 });
 
-observer.observe(document.body, { childList: true, subtree: true });
+observer.observe(document.body, { 
+  childList: true, 
+  subtree: true,
+  // Optimize observer performance
+  attributes: false,
+  attributeOldValue: false,
+  characterData: false
+});
+
+// Performance monitoring - log stats every 30 seconds
+if (console && console.log) {
+  setInterval(() => {
+    const stats = window.cs2TeamLogos.getPerformanceStats();
+    if (stats.logoLoads > 0) {
+      console.log('🏷️ Logo Performance:', stats);
+    }
+  }, 30000);
+}
 `.trim();
   }
 
