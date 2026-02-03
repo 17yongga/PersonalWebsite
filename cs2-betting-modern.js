@@ -25,6 +25,9 @@ class CS2ModernBettingGame {
     this.longPressTimer = null;
     this.hapticEnabled = 'vibrate' in navigator;
     
+    // Team logos
+    this.teamLogos = null;
+    
     this.init();
   }
 
@@ -596,6 +599,9 @@ class CS2ModernBettingGame {
     this.setLoadingState('initial', true);
     
     try {
+      // Load team logos first (needed for rendering events)
+      await this.loadTeamLogos();
+      
       await Promise.all([
         this.loadBalance(),
         this.loadEvents(),
@@ -1116,13 +1122,47 @@ class CS2ModernBettingGame {
   }
 
   getTeamLogo(teamName) {
+    if (!teamName) return this.getFallbackLogo('?');
+    
+    // Try to find logo in loaded team logos
+    if (this.teamLogos && this.teamLogos.teams) {
+      const normalizedName = teamName.toLowerCase().trim();
+      
+      // Direct lookup
+      if (this.teamLogos.teams[normalizedName]) {
+        return this.teamLogos.teams[normalizedName];
+      }
+      
+      // Try without common suffixes
+      const simplifiedName = normalizedName
+        .replace(/\s*(esports?|gaming|team|club)$/i, '')
+        .trim();
+      if (this.teamLogos.teams[simplifiedName]) {
+        return this.teamLogos.teams[simplifiedName];
+      }
+    }
+    
+    // Fallback to ui-avatars
     const encodedName = encodeURIComponent(teamName);
     return `https://ui-avatars.com/api/?name=${encodedName}&size=64&background=random&color=fff&bold=true`;
   }
 
   getFallbackLogo(teamName) {
-    const initial = teamName.charAt(0).toUpperCase();
+    const initial = (teamName || '?').charAt(0).toUpperCase();
     return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect fill='%23333' width='64' height='64'/%3E%3Ctext fill='%23fff' x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='24'%3E${initial}%3C/text%3E%3C/svg%3E`;
+  }
+
+  async loadTeamLogos() {
+    try {
+      const response = await fetch('cs2-team-logos.json');
+      if (response.ok) {
+        this.teamLogos = await response.json();
+        console.log('[CS2 Modern] Loaded team logos');
+      }
+    } catch (error) {
+      console.warn('[CS2 Modern] Could not load team logos:', error);
+      this.teamLogos = null;
+    }
   }
 
   getStatusText(status) {

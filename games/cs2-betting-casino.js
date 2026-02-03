@@ -614,22 +614,31 @@ class CS2BettingGame {
         const getTeamLogo = (teamName) => {
           if (!teamName) return null;
           
-          // Try to find team in rankings to get canonical name
-          const teamRanking = this.findTeamInRankings(teamName);
-          const canonicalName = teamRanking ? teamRanking.name : teamName;
+          // Normalize team name for lookup (lowercase, trim)
+          const normalizedName = teamName.toLowerCase().trim();
           
-          // Check if we have a logo for this team
-          if (this.teamLogos && this.teamLogos.teams && this.teamLogos.teams[canonicalName]) {
-            const logoPath = this.teamLogos.teams[canonicalName];
-            const basePath = this.teamLogos.logoBasePath || '';
-            // If basePath ends with /, use it as-is, otherwise add /
-            const fullPath = basePath && !basePath.endsWith('/') ? `${basePath}/${logoPath}` : `${basePath}${logoPath}`;
-            console.log(`[CS2 Betting] Found logo for ${teamName} (${canonicalName}): ${fullPath}`);
-            return fullPath;
+          // Check if we have a logo for this team (case-insensitive lookup)
+          if (this.teamLogos && this.teamLogos.teams) {
+            // Direct lookup with normalized name
+            if (this.teamLogos.teams[normalizedName]) {
+              const logoUrl = this.teamLogos.teams[normalizedName];
+              console.log(`[CS2 Betting] Found logo for ${teamName}: ${logoUrl}`);
+              return logoUrl;
+            }
+            
+            // Try without common suffixes (esports, gaming, etc.)
+            const simplifiedName = normalizedName
+              .replace(/\s*(esports?|gaming|team|club)$/i, '')
+              .trim();
+            if (this.teamLogos.teams[simplifiedName]) {
+              const logoUrl = this.teamLogos.teams[simplifiedName];
+              console.log(`[CS2 Betting] Found logo for ${teamName} (simplified: ${simplifiedName}): ${logoUrl}`);
+              return logoUrl;
+            }
           }
           
           // No logo found - will use acronym
-          console.log(`[CS2 Betting] No logo found for ${teamName} (${canonicalName}), will use acronym`);
+          console.log(`[CS2 Betting] No logo found for ${teamName}, will use acronym`);
           return null;
         };
         
