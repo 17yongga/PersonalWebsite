@@ -1,0 +1,85 @@
+{
+  "currentBalance": 1208.75,
+  "createdAt": "2026-02-02T21:14:46.019Z",
+  "lastUpdated": "2026-02-02T22:02:41.982Z",
+  "transactions": [
+    {
+      "id": "settlement-test-match-001-1770066886019",
+      "timestamp": "2026-02-02T21:14:46.019Z",
+      "type": "settlement",
+      "matchId": "test-match-001",
+      "description": "Match settlement: 1/2 wins",
+      "amount": 35,
+      "previousBalance": 1000,
+      "newBalance": 1035,
+      "details": {
+        "totalBets": 2,
+        "winningBets": 1,
+        "totalStake": 150,
+        "totalWinnings": 185,
+        "roi": 23.33
+      }
+    },
+    {
+      "id": "settlement-g2-vs-spirit-blast-final-1770066886024",
+      "timestamp": "2026-02-02T21:14:46.024Z",
+      "type": "settlement",
+      "matchId": "g2-vs-spirit-blast-final",
+      "description": "Match settlement: 1/2 wins",
+      "amount": 35,
+      "previousBalance": 1035,
+      "newBalance": 1070,
+      "details": {
+        "totalBets": 2,
+        "winningBets": 1,
+        "totalStake": 150,
+        "totalWinnings": 185,
+        "roi": 23.333333333333332
+      }
+    },
+    {
+      "id": "settlement-astralis-vs-vitality-esl-pro-1770069758970",
+      "timestamp": "2026-02-02T22:02:38.970Z",
+      "type": "settlement",
+      "matchId": "astralis-vs-vitality-esl-pro",
+      "description": "Match settlement: 1/1 wins",
+      "amount": 48.75,
+      "previousBalance": 1070,
+      "newBalance": 1118.75,
+      "details": {
+        "totalBets": 1,
+        "winningBets": 1,
+        "totalStake": 75,
+        "totalWinnings": 123.75,
+        "roi": 65
+      }
+    },
+    {
+      "id": "settlement-navi-vs-faze-iem-cologne-1770069761982",
+      "timestamp": "2026-02-02T22:02:41.982Z",
+      "type": "settlement",
+      "matchId": "navi-vs-faze-iem-cologne",
+      "description": "Match settlement: 1/1 wins",
+      "amount": 90,
+      "previousBalance": 1118.75,
+      "newBalance": 1208.75,
+      "details": {
+        "totalBets": 1,
+        "winningBets": 1,
+        "totalStake": 200,
+        "totalWinnings": 290,
+        "roi": 45
+      }
+    }
+  ],
+  "statistics": {
+    "totalBets": 6,
+    "winningBets": 4,
+    "totalStaked": 575,
+    "totalWinnings": 783.75,
+    "biggestWin": 90,
+    "biggestLoss": 0,
+    "winRate": 66.66666666666666,
+    "averageROI": 36.30434782608696
+  }
+}

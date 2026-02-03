@@ -563,67 +563,17 @@ class CasinoManager {
             }
             break;
           case 'cs2betting':
-            console.log('[Casino] CS2 Betting game selected');
-            console.log('[Casino] CS2BettingGame class available:', typeof window.CS2BettingGame !== 'undefined');
-            console.log('[Casino] CasinoManager instance (this):', this);
-            
-            if (window.CS2BettingGame) {
-              console.log('[Casino] Initializing CS2BettingGame...');
-              try {
-                // Ensure game view is visible before initializing
-                const gameView = document.getElementById('cs2BettingGame');
-                if (gameView && gameView.classList.contains('hidden')) {
-                  console.log('[Casino] Removing hidden class from game view');
-                  gameView.classList.remove('hidden');
-                }
-                
-                window.currentGameInstance = new window.CS2BettingGame(this);
-                console.log('[Casino] CS2BettingGame initialized successfully');
-                console.log('[Casino] Game instance:', window.currentGameInstance);
-                
-                // Double-check game view is visible
-                if (gameView && gameView.classList.contains('hidden')) {
-                  console.warn('[Casino] Game view still hidden after initialization, forcing visible');
-                  gameView.classList.remove('hidden');
-                }
-              } catch (error) {
-                console.error('[Casino] Error creating CS2BettingGame instance:', error);
-                console.error('[Casino] Error stack:', error.stack);
-                const gameView = document.getElementById('cs2BettingGame');
-                if (gameView) {
-                  gameView.classList.remove('hidden');
-                  gameView.innerHTML = `
-                    <div class="cs2-betting-container">
-                      <h2 class="game-title">🎮 CS2 Fantasy Betting</h2>
-                      <div class="error-text">
-                        <p>Error initializing game: ${error.message}</p>
-                        <p>Please check the browser console for details.</p>
-                        <button onclick="location.reload()" class="btn btn-primary">Reload Page</button>
-                      </div>
-                    </div>
-                  `;
-                }
-              }
+            // Try modern version first, fallback to legacy
+            if (window.CS2ModernBettingGame) {
+              console.log('[Casino] Initializing CS2ModernBettingGame...');
+              window.currentGameInstance = new window.CS2ModernBettingGame(this);
+              console.log('[Casino] CS2ModernBettingGame initialized successfully');
+            } else if (window.CS2BettingGame) {
+              console.log('[Casino] Initializing CS2BettingGame (legacy)...');
+              window.currentGameInstance = new window.CS2BettingGame(this);
+              console.log('[Casino] CS2BettingGame (legacy) initialized successfully');
             } else {
-              console.error('[Casino] CS2BettingGame class not found! Make sure games/cs2-betting-casino.js is loaded.');
-              const gameView = document.getElementById('cs2BettingGame');
-              if (gameView) {
-                gameView.classList.remove('hidden');
-                gameView.innerHTML = `
-                  <div class="cs2-betting-container">
-                    <h2 class="game-title">🎮 CS2 Fantasy Betting</h2>
-                    <div class="error-text">
-                      <p>Game script not loaded. Please check:</p>
-                      <ul>
-                        <li>Is games/cs2-betting-casino.js accessible?</li>
-                        <li>Check browser console for 404 errors</li>
-                        <li>Check Network tab for failed requests</li>
-                      </ul>
-                      <button onclick="location.reload()" class="btn btn-primary">Reload Page</button>
-                    </div>
-                  </div>
-                `;
-              }
+              console.error('[Casino] No CS2BettingGame class found! Make sure cs2-betting-modern.js or cs2-betting-casino.js is loaded.');
             }
             break;
           default:

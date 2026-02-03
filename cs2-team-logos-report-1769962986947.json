@@ -1,0 +1,554 @@
+{
+  "timestamp": "2026-02-01T16:23:06.947Z",
+  "summary": {
+    "totalTeams": 50,
+    "downloadedLogos": 50,
+    "successRate": "100%"
+  },
+  "teams": [
+    {
+      "name": "G2 Esports",
+      "slug": "g2esports",
+      "hltv_id": 5995,
+      "aliases": [
+        "G2",
+        "G2-Esports"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/g2esports.png"
+    },
+    {
+      "name": "Team Spirit",
+      "slug": "teamspirit",
+      "hltv_id": 7020,
+      "aliases": [
+        "Spirit",
+        "Team-Spirit"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/teamspirit.png"
+    },
+    {
+      "name": "Natus Vincere",
+      "slug": "natusvincere",
+      "hltv_id": 4608,
+      "aliases": [
+        "NAVI",
+        "Na'Vi",
+        "NaVi"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/natusvincere.png"
+    },
+    {
+      "name": "FaZe Clan",
+      "slug": "fazeclan",
+      "hltv_id": 6667,
+      "aliases": [
+        "FaZe",
+        "FaZe-Clan"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/fazeclan.png"
+    },
+    {
+      "name": "Astralis",
+      "slug": "astralis",
+      "hltv_id": 6665,
+      "aliases": [
+        "Astralis"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/astralis.png"
+    },
+    {
+      "name": "Vitality",
+      "slug": "vitality",
+      "hltv_id": 9565,
+      "aliases": [
+        "Team-Vitality",
+        "Vitality"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/vitality.png"
+    },
+    {
+      "name": "MOUZ",
+      "slug": "mouz",
+      "hltv_id": 4494,
+      "aliases": [
+        "mousesports",
+        "mouz"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/mouz.png"
+    },
+    {
+      "name": "Liquid",
+      "slug": "liquid",
+      "hltv_id": 5973,
+      "aliases": [
+        "Team-Liquid",
+        "TL"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/liquid.png"
+    },
+    {
+      "name": "HEROIC",
+      "slug": "heroic",
+      "hltv_id": 7175,
+      "aliases": [
+        "Heroic"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/heroic.png"
+    },
+    {
+      "name": "Ninjas in Pyjamas",
+      "slug": "ninjasinpyjamas",
+      "hltv_id": 4411,
+      "aliases": [
+        "NiP",
+        "NIP"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/ninjasinpyjamas.png"
+    },
+    {
+      "name": "Cloud9",
+      "slug": "cloud9",
+      "hltv_id": 5752,
+      "aliases": [
+        "C9",
+        "Cloud-9"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/cloud9.png"
+    },
+    {
+      "name": "BIG",
+      "slug": "big",
+      "hltv_id": 7532,
+      "aliases": [
+        "BIG"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/big.png"
+    },
+    {
+      "name": "ENCE",
+      "slug": "ence",
+      "hltv_id": 4869,
+      "aliases": [
+        "ENCE"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/ence.png"
+    },
+    {
+      "name": "OG",
+      "slug": "og",
+      "hltv_id": 10503,
+      "aliases": [
+        "OG"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/og.png"
+    },
+    {
+      "name": "Complexity Gaming",
+      "slug": "complexitygaming",
+      "hltv_id": 5005,
+      "aliases": [
+        "coL",
+        "Complexity"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/complexitygaming.png"
+    },
+    {
+      "name": "Evil Geniuses",
+      "slug": "evilgeniuses",
+      "hltv_id": 10284,
+      "aliases": [
+        "EG",
+        "Evil-Geniuses"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/evilgeniuses.png"
+    },
+    {
+      "name": "FURIA Esports",
+      "slug": "furiaesports",
+      "hltv_id": 8297,
+      "aliases": [
+        "FURIA",
+        "Furia"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/furiaesports.png"
+    },
+    {
+      "name": "Imperial Esports",
+      "slug": "imperialesports",
+      "hltv_id": 9455,
+      "aliases": [
+        "Imperial",
+        "MIBR"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/imperialesports.png"
+    },
+    {
+      "name": "Fnatic",
+      "slug": "fnatic",
+      "hltv_id": 4991,
+      "aliases": [
+        "fnatic",
+        "FNC"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/fnatic.png"
+    },
+    {
+      "name": "Virtus.pro",
+      "slug": "virtuspro",
+      "hltv_id": 5378,
+      "aliases": [
+        "VP",
+        "Virtus-pro"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/virtuspro.png"
+    },
+    {
+      "name": "Eternal Fire",
+      "slug": "eternalfire",
+      "hltv_id": 11816,
+      "aliases": [
+        "EF",
+        "Eternal-Fire"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/eternalfire.png"
+    },
+    {
+      "name": "ECSTATIC",
+      "slug": "ecstatic",
+      "hltv_id": 11251,
+      "aliases": [
+        "ECSTATIC"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/ecstatic.png"
+    },
+    {
+      "name": "SAW",
+      "slug": "saw",
+      "hltv_id": 11592,
+      "aliases": [
+        "SAW"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/saw.png"
+    },
+    {
+      "name": "Monte",
+      "slug": "monte",
+      "hltv_id": 11811,
+      "aliases": [
+        "Monte"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/monte.png"
+    },
+    {
+      "name": "3DMAX",
+      "slug": "3dmax",
+      "hltv_id": 11595,
+      "aliases": [
+        "3DMAX",
+        "3D-MAX"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/3dmax.png"
+    },
+    {
+      "name": "Falcons Esports",
+      "slug": "falconsesports",
+      "hltv_id": 11862,
+      "aliases": [
+        "Falcons"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/falconsesports.png"
+    },
+    {
+      "name": "Passion UA",
+      "slug": "passionua",
+      "hltv_id": 11948,
+      "aliases": [
+        "Passion-UA"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/passionua.png"
+    },
+    {
+      "name": "B8",
+      "slug": "b8",
+      "hltv_id": 11600,
+      "aliases": [
+        "B8"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/b8.png"
+    },
+    {
+      "name": "Sashi Esport",
+      "slug": "sashiesport",
+      "hltv_id": 11203,
+      "aliases": [
+        "Sashi"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/sashiesport.png"
+    },
+    {
+      "name": "TSM",
+      "slug": "tsm",
+      "hltv_id": 5996,
+      "aliases": [
+        "TSM",
+        "Team-SoloMid"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/tsm.png"
+    },
+    {
+      "name": "Apeks",
+      "slug": "apeks",
+      "hltv_id": 11322,
+      "aliases": [
+        "Apeks"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/apeks.png"
+    },
+    {
+      "name": "GamerLegion",
+      "slug": "gamerlegion",
+      "hltv_id": 11518,
+      "aliases": [
+        "GL",
+        "Gamer-Legion"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/gamerlegion.png"
+    },
+    {
+      "name": "Sangal Esports",
+      "slug": "sangalesports",
+      "hltv_id": 11969,
+      "aliases": [
+        "Sangal"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/sangalesports.png"
+    },
+    {
+      "name": "Rebels Gaming",
+      "slug": "rebelsgaming",
+      "hltv_id": 11412,
+      "aliases": [
+        "Rebels"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/rebelsgaming.png"
+    },
+    {
+      "name": "Into the Breach",
+      "slug": "intothebreach",
+      "hltv_id": 10835,
+      "aliases": [
+        "ITB",
+        "Into-the-Breach"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/intothebreach.png"
+    },
+    {
+      "name": "SINNERS",
+      "slug": "sinners",
+      "hltv_id": 11538,
+      "aliases": [
+        "SINNERS"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/sinners.png"
+    },
+    {
+      "name": "Aurora Gaming",
+      "slug": "auroragaming",
+      "hltv_id": 11564,
+      "aliases": [
+        "Aurora"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/auroragaming.png"
+    },
+    {
+      "name": "Nemiga Gaming",
+      "slug": "nemigagaming",
+      "hltv_id": 10894,
+      "aliases": [
+        "Nemiga"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/nemigagaming.png"
+    },
+    {
+      "name": "Permitta Esports",
+      "slug": "permittaesports",
+      "hltv_id": 11975,
+      "aliases": [
+        "Permitta"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/permittaesports.png"
+    },
+    {
+      "name": "ex-Sprout",
+      "slug": "exsprout",
+      "hltv_id": 7791,
+      "aliases": [
+        "Sprout"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/exsprout.png"
+    },
+    {
+      "name": "AMKAL",
+      "slug": "amkal",
+      "hltv_id": 11518,
+      "aliases": [
+        "AMKAL"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/amkal.png"
+    },
+    {
+      "name": "9 Pandas",
+      "slug": "9pandas",
+      "hltv_id": 11865,
+      "aliases": [
+        "9-Pandas",
+        "Pandas"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/9pandas.png"
+    },
+    {
+      "name": "Enterprise",
+      "slug": "enterprise",
+      "hltv_id": 11145,
+      "aliases": [
+        "Enterprise"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/enterprise.png"
+    },
+    {
+      "name": "PARIVISION",
+      "slug": "parivision",
+      "hltv_id": 11969,
+      "aliases": [
+        "PARIVISION"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/parivision.png"
+    },
+    {
+      "name": "KOI",
+      "slug": "koi",
+      "hltv_id": 11823,
+      "aliases": [
+        "KOI"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/koi.png"
+    },
+    {
+      "name": "BOSS",
+      "slug": "boss",
+      "hltv_id": 11863,
+      "aliases": [
+        "BOSS"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/boss.png"
+    },
+    {
+      "name": "M80",
+      "slug": "m80",
+      "hltv_id": 11811,
+      "aliases": [
+        "M80"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/m80.png"
+    },
+    {
+      "name": "Wildcard Gaming",
+      "slug": "wildcardgaming",
+      "hltv_id": 11576,
+      "aliases": [
+        "Wildcard"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/wildcardgaming.png"
+    },
+    {
+      "name": "Nouns Esports",
+      "slug": "nounsesports",
+      "hltv_id": 11642,
+      "aliases": [
+        "Nouns"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/nounsesports.png"
+    },
+    {
+      "name": "timbermen",
+      "slug": "timbermen",
+      "hltv_id": 11755,
+      "aliases": [
+        "timbermen"
+      ],
+      "logoDownloaded": true,
+      "logoPath": "/img/cs2-team-logos/png/timbermen.png"
+    }
+  ],
+  "logoSources": [
+    {
+      "name": "HLTV",
+      "baseUrl": "https://static.hltv.org/images/team/logo/",
+      "format": "svg"
+    },
+    {
+      "name": "Liquipedia",
+      "baseUrl": "https://liquipedia.net/counterstrike/Special:Filepath/",
+      "format": "png"
+    },
+    {
+      "name": "PGL",
+      "baseUrl": "https://www.pgl.gg/uploads/team/",
+      "format": "png"
+    }
+  ],
+  "integration": {
+    "cssFile": "cs2-team-logos.css",
+    "jsFile": "cs2-team-logos.js",
+    "mappingFile": "team-logo-mapping.json"
+  }
+}

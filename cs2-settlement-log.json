@@ -1,0 +1,159 @@
+[
+  {
+    "timestamp": "2026-02-02T21:14:46.025Z",
+    "matchId": "g2-vs-spirit-blast-final",
+    "result": {
+      "winner": "g2",
+      "confidence": 0.9,
+      "method": "api",
+      "source": "HLTV"
+    },
+    "stats": {
+      "settledCount": 2,
+      "winCount": 1,
+      "lossCount": 1,
+      "payoutSummary": {
+        "totalBets": 2,
+        "winningBets": 1,
+        "totalStake": 150,
+        "totalWinnings": 185,
+        "netProfit": 35,
+        "roi": 23.333333333333332
+      },
+      "bankrollUpdate": {
+        "previousBalance": 1035,
+        "newBalance": 1070,
+        "netChange": 35,
+        "transaction": {
+          "id": "settlement-g2-vs-spirit-blast-final-1770066886024",
+          "timestamp": "2026-02-02T21:14:46.024Z",
+          "type": "settlement",
+          "matchId": "g2-vs-spirit-blast-final",
+          "description": "Match settlement: 1/2 wins",
+          "amount": 35,
+          "previousBalance": 1035,
+          "newBalance": 1070,
+          "details": {
+            "totalBets": 2,
+            "winningBets": 1,
+            "totalStake": 150,
+            "totalWinnings": 185,
+            "roi": 23.333333333333332
+          }
+        }
+      },
+      "validation": {
+        "isValid": true,
+        "errors": [],
+        "warnings": [],
+        "confidence": 0.9,
+        "betsValidated": 2
+      }
+    },
+    "version": "1.0"
+  },
+  {
+    "timestamp": "2026-02-02T22:02:38.973Z",
+    "matchId": "astralis-vs-vitality-esl-pro",
+    "result": {
+      "winner": "astralis",
+      "confidence": 0.9,
+      "method": "api"
+    },
+    "stats": {
+      "settledCount": 1,
+      "winCount": 1,
+      "lossCount": 0,
+      "payoutSummary": {
+        "totalBets": 1,
+        "winningBets": 1,
+        "totalStake": 75,
+        "totalWinnings": 123.75,
+        "netProfit": 48.75,
+        "roi": 65
+      },
+      "bankrollUpdate": {
+        "previousBalance": 1070,
+        "newBalance": 1118.75,
+        "netChange": 48.75,
+        "transaction": {
+          "id": "settlement-astralis-vs-vitality-esl-pro-1770069758970",
+          "timestamp": "2026-02-02T22:02:38.970Z",
+          "type": "settlement",
+          "matchId": "astralis-vs-vitality-esl-pro",
+          "description": "Match settlement: 1/1 wins",
+          "amount": 48.75,
+          "previousBalance": 1070,
+          "newBalance": 1118.75,
+          "details": {
+            "totalBets": 1,
+            "winningBets": 1,
+            "totalStake": 75,
+            "totalWinnings": 123.75,
+            "roi": 65
+          }
+        }
+      },
+      "validation": {
+        "isValid": true,
+        "errors": [],
+        "warnings": [],
+        "confidence": 0.9,
+        "betsValidated": 1
+      }
+    },
+    "version": "1.0"
+  },
+  {
+    "timestamp": "2026-02-02T22:02:41.983Z",
+    "matchId": "navi-vs-faze-iem-cologne",
+    "result": {
+      "winner": "navi",
+      "confidence": 0.9,
+      "method": "api"
+    },
+    "stats": {
+      "settledCount": 1,
+      "winCount": 1,
+      "lossCount": 0,
+      "payoutSummary": {
+        "totalBets": 1,
+        "winningBets": 1,
+        "totalStake": 200,
+        "totalWinnings": 290,
+        "netProfit": 90,
+        "roi": 45
+      },
+      "bankrollUpdate": {
+        "previousBalance": 1118.75,
+        "newBalance": 1208.75,
+        "netChange": 90,
+        "transaction": {
+          "id": "settlement-navi-vs-faze-iem-cologne-1770069761982",
+          "timestamp": "2026-02-02T22:02:41.982Z",
+          "type": "settlement",
+          "matchId": "navi-vs-faze-iem-cologne",
+          "description": "Match settlement: 1/1 wins",
+          "amount": 90,
+          "previousBalance": 1118.75,
+          "newBalance": 1208.75,
+          "details": {
+            "totalBets": 1,
+            "winningBets": 1,
+            "totalStake": 200,
+            "totalWinnings": 290,
+            "roi": 45
+          }
+        }
+      },
+      "validation": {
+        "isValid": true,
+        "errors": [],
+        "warnings": [],
+        "confidence": 0.9,
+        "betsValidated": 1
+      }
+    },
+    "version": "1.0"
+  }
+]

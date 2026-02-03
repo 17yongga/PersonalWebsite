@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .team-bg { fill: #dc2626; }
+      .team-text { 
+        fill: #ffffff; 
+        font-family: 'Arial', sans-serif; 
+        font-weight: bold; 
+        font-size: 14px;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+      .team-name { 
+        fill: #ffffff; 
+        font-family: 'Arial', sans-serif; 
+        font-size: 8px;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+    </style>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" class="team-bg" stroke="#ffffff" stroke-width="2"/>
+  
+  <!-- Team initials -->
+  <text x="32" y="28" class="team-text">AST</text>
+  
+  <!-- Team name (abbreviated if too long) -->
+  <text x="32" y="50" class="team-name">Astralis</text>
+  
+  <!-- Decorative elements -->
+  <circle cx="32" cy="32" r="26" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.3"/>
+</svg>

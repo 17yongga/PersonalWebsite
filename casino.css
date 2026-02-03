@@ -540,3 +540,65 @@ html[data-theme="light"] .game-view {
   display: none !important;
 }
 
+
+/* Mobile-First Responsive Improvements */
+@media screen and (max-width: 768px) {
+  .main-container {
+    padding: 10px;
+    margin: 0;
+  }
+
+  .betting-cards {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .team-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .odds-button {
+    padding: 8px 12px;
+    font-size: 14px;
+    min-width: 60px;
+  }
+
+  .match-header {
+    font-size: 16px;
+    text-align: center;
+  }
+
+  .vs-separator {
+    font-size: 12px;
+    margin: 5px;
+  }
+
+  .balance-display {
+    font-size: 18px;
+    text-align: center;
+    margin: 10px 0;
+  }
+
+  /* Touch-friendly buttons */
+  button, .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improved form inputs */
+  input[type="number"] {
+    font-size: 16px;
+    padding: 12px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .odds-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .team-names {
+    font-size: 14px;
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "version": "1.0.0",
+  "created": "2026-02-01T21:45:00.000Z",
+  "caching": {
+    "enabled": true,
+    "ttl": {
+      "matches": 120000,
+      "odds": 60000,
+      "results": 3600000
+    },
+    "maxSize": "50MB",
+    "cleanup": true
+  },
+  "resilience": {
+    "retryAttempts": 3,
+    "timeoutMs": 20000,
+    "circuitBreaker": {
+      "enabled": true,
+      "failureThreshold": 5,
+      "timeoutMs": 60000
+    },
+    "rateLimit": {
+      "enabled": true,
+      "requestsPerMinute": 60,
+      "burstLimit": 100
+    }
+  },
+  "apiKeys": {
+    "rotation": true,
+    "healthCheck": true,
+    "backupCount": 5,
+    "autoGenerate": true
+  },
+  "monitoring": {
+    "dashboard": true,
+    "logging": true,
+    "alerts": true
+  },
+  "features": {
+    "enhancedClient": true,
+    "performanceCaching": true,
+    "smartSettlement": true,
+    "teamLogos": true,
+    "mobileResponsive": true,
+    "errorHandling": true
+  }
+}

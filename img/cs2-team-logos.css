@@ -1,0 +1,140 @@
+/* CS2 Team Logos - Generated 2026-02-02T22:03:54.727Z */
+
+.cs2-team-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: #f0f0f0;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.cs2-team-logo.large {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+}
+
+.cs2-team-logo.small {
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
+  margin-right: 6px;
+}
+
+/* Team-specific logo classes */
+.cs2-team-logo.passionua {
+  background-image: url('/img/teams/passionua.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.sashiesport {
+  background-image: url('/img/teams/sashiesport.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.apeks {
+  background-image: url('/img/teams/apeks.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.sangalesports {
+  background-image: url('/img/teams/sangalesports.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.rebelsgaming {
+  background-image: url('/img/teams/rebelsgaming.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.intothebreach {
+  background-image: url('/img/teams/intothebreach.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.auroragaming {
+  background-image: url('/img/teams/auroragaming.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.nemigagaming {
+  background-image: url('/img/teams/nemigagaming.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.permittaesports {
+  background-image: url('/img/teams/permittaesports.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.exsprout {
+  background-image: url('/img/teams/exsprout.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.amkal {
+  background-image: url('/img/teams/amkal.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.9pandas {
+  background-image: url('/img/teams/9pandas.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.enterprise {
+  background-image: url('/img/teams/enterprise.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.parivision {
+  background-image: url('/img/teams/parivision.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.koi {
+  background-image: url('/img/teams/koi.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.boss {
+  background-image: url('/img/teams/boss.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.m80 {
+  background-image: url('/img/teams/m80.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.wildcardgaming {
+  background-image: url('/img/teams/wildcardgaming.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.nounsesports {
+  background-image: url('/img/teams/nounsesports.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}\n\n.cs2-team-logo.timbermen {
+  background-image: url('/img/teams/timbermen.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Fallback for missing logos */
+.cs2-team-logo[data-team]:not([style*="background-image"]):before {
+  content: attr(data-team);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: #666;
+  text-transform: uppercase;
+}

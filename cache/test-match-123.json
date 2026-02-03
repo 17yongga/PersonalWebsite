@@ -1,0 +1,10 @@
+{
+  "data": {
+    "match": "Team1 vs Team2",
+    "score": "16-12",
+    "winner": "Team1"
+  },
+  "timestamp": 1770069787194,
+  "type": "matches",
+  "size": 59
+}

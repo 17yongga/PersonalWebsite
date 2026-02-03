@@ -1,0 +1,55 @@
+{
+  "matches": {
+    "test-match-001": {
+      "id": "test-match-001",
+      "odds": {
+        "team1": 1.75,
+        "team2": 2.25
+      },
+      "teams": {
+        "team1": "Test Team A",
+        "team2": "Test Team B"
+      },
+      "tournament": "Test Tournament",
+      "startTime": "2026-02-02T04:12:03.375Z",
+      "cachedAt": "2026-02-02T04:12:03.375Z",
+      "status": "scheduled",
+      "source": "api"
+    },
+    "test-no-overwrite-001": {
+      "id": "test-no-overwrite-001",
+      "odds": {
+        "team1": 1.5,
+        "team2": 2.8
+      },
+      "teams": {
+        "team1": "Original A",
+        "team2": "Original B"
+      },
+      "cachedAt": "2026-02-02T04:12:03.376Z",
+      "status": "scheduled",
+      "source": "api"
+    },
+    "integration-test-001": {
+      "id": "integration-test-001",
+      "odds": {
+        "team1": 1.65,
+        "team2": 2.35
+      },
+      "teams": {
+        "team1": "Integration Team A",
+        "team2": "Integration Team B"
+      },
+      "cachedAt": "2026-02-02T04:12:03.665Z",
+      "status": "scheduled",
+      "source": "api"
+    }
+  },
+  "metadata": {
+    "version": "2.0.0",
+    "lastUpdated": "2026-02-02T04:12:03.665Z",
+    "totalMatches": 3,
+    "totalApiCalls": 3,
+    "apiCallsSavedByCache": 1
+  }
+}

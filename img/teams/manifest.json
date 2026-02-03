@@ -1,0 +1,260 @@
+{
+  "generated": "2026-02-02T02:44:45.036Z",
+  "totalLogos": 50,
+  "format": "SVG",
+  "size": "64x64",
+  "type": "placeholder",
+  "teams": [
+    {
+      "name": "G2-Esports",
+      "filename": "g2-esports.svg",
+      "displayName": "G2 Esports"
+    },
+    {
+      "name": "Team-Spirit",
+      "filename": "team-spirit.svg",
+      "displayName": "Team Spirit"
+    },
+    {
+      "name": "NAVI",
+      "filename": "navi.svg",
+      "displayName": "NAVI"
+    },
+    {
+      "name": "FaZe-Clan",
+      "filename": "faze-clan.svg",
+      "displayName": "FaZe Clan"
+    },
+    {
+      "name": "Astralis",
+      "filename": "astralis.svg",
+      "displayName": "Astralis"
+    },
+    {
+      "name": "Vitality",
+      "filename": "vitality.svg",
+      "displayName": "Vitality"
+    },
+    {
+      "name": "MOUZ",
+      "filename": "mouz.svg",
+      "displayName": "MOUZ"
+    },
+    {
+      "name": "Team-Liquid",
+      "filename": "team-liquid.svg",
+      "displayName": "Team Liquid"
+    },
+    {
+      "name": "HEROIC",
+      "filename": "heroic.svg",
+      "displayName": "HEROIC"
+    },
+    {
+      "name": "NiP",
+      "filename": "nip.svg",
+      "displayName": "NiP"
+    },
+    {
+      "name": "Cloud9",
+      "filename": "cloud9.svg",
+      "displayName": "Cloud9"
+    },
+    {
+      "name": "BIG",
+      "filename": "big.svg",
+      "displayName": "BIG"
+    },
+    {
+      "name": "ENCE",
+      "filename": "ence.svg",
+      "displayName": "ENCE"
+    },
+    {
+      "name": "OG",
+      "filename": "og.svg",
+      "displayName": "OG"
+    },
+    {
+      "name": "Complexity",
+      "filename": "complexity.svg",
+      "displayName": "Complexity"
+    },
+    {
+      "name": "Evil-Geniuses",
+      "filename": "evil-geniuses.svg",
+      "displayName": "Evil Geniuses"
+    },
+    {
+      "name": "FURIA",
+      "filename": "furia.svg",
+      "displayName": "FURIA"
+    },
+    {
+      "name": "fnatic",
+      "filename": "fnatic.svg",
+      "displayName": "fnatic"
+    },
+    {
+      "name": "Gambit",
+      "filename": "gambit.svg",
+      "displayName": "Gambit"
+    },
+    {
+      "name": "BLAST",
+      "filename": "blast.svg",
+      "displayName": "BLAST"
+    },
+    {
+      "name": "TSM",
+      "filename": "tsm.svg",
+      "displayName": "TSM"
+    },
+    {
+      "name": "Dignitas",
+      "filename": "dignitas.svg",
+      "displayName": "Dignitas"
+    },
+    {
+      "name": "North",
+      "filename": "north.svg",
+      "displayName": "North"
+    },
+    {
+      "name": "Renegades",
+      "filename": "renegades.svg",
+      "displayName": "Renegades"
+    },
+    {
+      "name": "Endpoint",
+      "filename": "endpoint.svg",
+      "displayName": "Endpoint"
+    },
+    {
+      "name": "Sinners",
+      "filename": "sinners.svg",
+      "displayName": "Sinners"
+    },
+    {
+      "name": "ECSTATIC",
+      "filename": "ecstatic.svg",
+      "displayName": "ECSTATIC"
+    },
+    {
+      "name": "GamerLegion",
+      "filename": "gamerlegion.svg",
+      "displayName": "GamerLegion"
+    },
+    {
+      "name": "Into-the-Breach",
+      "filename": "into-the-breach.svg",
+      "displayName": "Into the Breach"
+    },
+    {
+      "name": "Preasy",
+      "filename": "preasy.svg",
+      "displayName": "Preasy"
+    },
+    {
+      "name": "Akimbo",
+      "filename": "akimbo.svg",
+      "displayName": "Akimbo"
+    },
+    {
+      "name": "EYEBALLERS",
+      "filename": "eyeballers.svg",
+      "displayName": "EYEBALLERS"
+    },
+    {
+      "name": "Nexus",
+      "filename": "nexus.svg",
+      "displayName": "Nexus"
+    },
+    {
+      "name": "Sashi",
+      "filename": "sashi.svg",
+      "displayName": "Sashi"
+    },
+    {
+      "name": "Aurora",
+      "filename": "aurora.svg",
+      "displayName": "Aurora"
+    },
+    {
+      "name": "Monte",
+      "filename": "monte.svg",
+      "displayName": "Monte"
+    },
+    {
+      "name": "Eternal-Fire",
+      "filename": "eternal-fire.svg",
+      "displayName": "Eternal Fire"
+    },
+    {
+      "name": "SAW",
+      "filename": "saw.svg",
+      "displayName": "SAW"
+    },
+    {
+      "name": "Passion-UA",
+      "filename": "passion-ua.svg",
+      "displayName": "Passion UA"
+    },
+    {
+      "name": "3DMAX",
+      "filename": "3dmax.svg",
+      "displayName": "3DMAX"
+    },
+    {
+      "name": "Falcons",
+      "filename": "falcons.svg",
+      "displayName": "Falcons"
+    },
+    {
+      "name": "Rebels",
+      "filename": "rebels.svg",
+      "displayName": "Rebels"
+    },
+    {
+      "name": "B8",
+      "filename": "b8.svg",
+      "displayName": "B8"
+    },
+    {
+      "name": "BetBoom",
+      "filename": "betboom.svg",
+      "displayName": "BetBoom"
+    },
+    {
+      "name": "Permitta",
+      "filename": "permitta.svg",
+      "displayName": "Permitta"
+    },
+    {
+      "name": "Sangal",
+      "filename": "sangal.svg",
+      "displayName": "Sangal"
+    },
+    {
+      "name": "Rare-Atom",
+      "filename": "rare-atom.svg",
+      "displayName": "Rare Atom"
+    },
+    {
+      "name": "FORZE",
+      "filename": "forze.svg",
+      "displayName": "FORZE"
+    },
+    {
+      "name": "Wildcard",
+      "filename": "wildcard.svg",
+      "displayName": "Wildcard"
+    },
+    {
+      "name": "Nouns",
+      "filename": "nouns.svg",
+      "displayName": "Nouns"
+    }
+  ],
+  "note": "These are placeholder logos. Replace with actual team logos for production use."
+}

@@ -377,13 +377,12 @@ class CS2BettingGame {
 
       if (data.success) {
         this.currentBalance = data.balance;
-        // Update casino balance display if needed - use setCredits to set absolute value
-        if (this.casino.setCredits) {
-          this.casino.setCredits(this.currentBalance);
-        } else if (this.casino.updateCredits) {
-          // Fallback: calculate difference if setCredits doesn't exist
-          const difference = this.currentBalance - (this.casino.credits || 0);
-          this.casino.updateCredits(difference);
+        // 🔧 FIX: Set balance directly instead of adding to existing balance
+        // This prevents the balance from doubling when entering CS2 game
+        if (this.casino.credits !== this.currentBalance) {
+          this.casino.credits = this.currentBalance;
+          this.casino.updateCreditsDisplay();
+          console.log(`[CS2 Balance] Synced balance: ${this.currentBalance} credits`);
         }
       }
     } catch (error) {
@@ -877,7 +876,17 @@ class CS2BettingGame {
       return;
     }
 
+    // 🔧 FIX: Add loading state for better user feedback
+    const placeBetBtn = document.getElementById('placeBetBtn');
+    const originalText = placeBetBtn?.textContent || 'Place Bet';
+    
     try {
+      // Show loading state
+      if (placeBetBtn) {
+        placeBetBtn.disabled = true;
+        placeBetBtn.textContent = '⏳ Placing Bet...';
+      }
+
       const userId = this.casino.username || sessionStorage.getItem('casinoUsername');
       if (!userId) {
         // Clear navigation guard on validation failure
@@ -925,95 +934,12 @@ class CS2BettingGame {
       }
 
       if (data.success) {
-        // Capture before we clear selection (closeBetSlipModal nulls selectedEvent)
-        const placedEventId = this.selectedEvent?.id;
-        const placedBetAmount = this.betAmount;
-
-        // Update balance - use setCredits to set absolute value, not add
-        const serverBalance = data.newBalance || data.balance;
-        if (serverBalance !== undefined && serverBalance !== null) {
-          this.currentBalance = serverBalance;
-        } else {
-          // Fallback: manually deduct if server didn't return balance
-          this.currentBalance = Math.max(0, this.currentBalance - this.betAmount);
-        }
-        
-        console.log('[CS2 Betting] Bet placed successfully.');
-        console.log('[CS2 Betting] Server returned balance:', serverBalance);
-        console.log('[CS2 Betting] Updated currentBalance to:', this.currentBalance);
-        console.log('[CS2 Betting] Casino manager exists:', !!this.casino);
-        console.log('[CS2 Betting] Casino manager type:', typeof this.casino);
-        
-        // Update casino balance display - CRITICAL: must update the main casino balance
-        // Wrap in try-catch to prevent any errors from causing navigation
-        try {
-          const oldBalance = this.casino?.credits;
-          
-          if (this.casino) {
-            console.log('[CS2 Betting] Casino credits before update:', this.casino.credits);
-            
-            if (typeof this.casino.setCredits === 'function') {
-              console.log('[CS2 Betting] Using setCredits method with balance:', this.currentBalance);
-              this.casino.setCredits(this.currentBalance);
-              console.log('[CS2 Betting] Casino credits after setCredits:', this.casino.credits);
-              
-              if (window.casinoDebugLogger) {
-                window.casinoDebugLogger.logBalanceUpdate(oldBalance, this.casino.credits, 'manual', {
-                  game: 'cs2betting',
-                  method: 'setCredits',
-                  expectedBalance: this.currentBalance
-                });
-              }
-              
-              // Verify the update worked
-              if (Math.abs(this.casino.credits - this.currentBalance) > 0.01) {
-                console.warn('[CS2 Betting] Balance mismatch! Expected:', this.currentBalance, 'Got:', this.casino.credits);
-                // Force update again
-                this.casino.setCredits(this.currentBalance);
-              }
-            } else if (typeof this.casino.updateCredits === 'function') {
-              // Fallback: calculate difference if setCredits doesn't exist
-              const oldBalance = this.casino.credits || this.currentBalance + this.betAmount;
-              const difference = this.currentBalance - oldBalance;
-              console.log('[CS2 Betting] Using updateCredits fallback. Old:', oldBalance, 'New:', this.currentBalance, 'Diff:', difference);
-              this.casino.updateCredits(difference);
-              console.log('[CS2 Betting] Casino credits after updateCredits:', this.casino.credits);
-              
-              if (window.casinoDebugLogger) {
-                window.casinoDebugLogger.logBalanceUpdate(oldBalance, this.casino.credits, 'manual', {
-                  game: 'cs2betting',
-                  method: 'updateCredits',
-                  difference
-                });
-              }
-            } else {
-              console.error('[CS2 Betting] ERROR: No valid credit update method found on casino manager!');
-              console.error('[CS2 Betting] Casino manager methods:', Object.getOwnPropertyNames(this.casino));
-              if (window.casinoDebugLogger) {
-                window.casinoDebugLogger.logError(new Error('No valid credit update method'), {
-                  context: 'cs2betting balance update',
-                  casinoMethods: Object.getOwnPropertyNames(this.casino)
-                });
-              }
-            }
-          } else {
-            console.error('[CS2 Betting] ERROR: Casino manager is null or undefined!');
-            if (window.casinoDebugLogger) {
-              window.casinoDebugLogger.logError(new Error('Casino manager is null'), {
-                context: 'cs2betting balance update'
-              });
-            }
-          }
-        } catch (balanceError) {
-          console.error('[CS2 Betting] Error updating balance (non-fatal):', balanceError);
-          if (window.casinoDebugLogger) {
-            window.casinoDebugLogger.logError(balanceError, {
-              context: 'cs2betting balance update',
-              nonFatal: true
-            });
-          }
-          // Don't throw - we still want to show success and reload bets
-        }
+        // 🔧 FIX: Update balance correctly to prevent double deduction
+        this.currentBalance = data.newBalance;
+        // Sync with casino balance (set directly, don't add)
+        this.casino.credits = this.currentBalance;
+        this.casino.updateCreditsDisplay();
+        console.log(`[CS2 Betting] Balance updated after bet: ${this.currentBalance} credits`);
 
         // Reload bets (wrap in try-catch to prevent errors from causing navigation)
         try {
@@ -1082,36 +1008,13 @@ class CS2BettingGame {
         alert(`Failed to place bet: ${errorMsg}`);
       }
     } catch (error) {
-      // Clear navigation guard on error
-      if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
-        this.casino.setBetPlacementInProgress(false);
-      }
-      console.error('[CS2 Betting] Error placing bet:', error);
-      console.error('[CS2 Betting] Error stack:', error.stack);
-      
-      if (window.casinoDebugLogger) {
-        const eventId = this.selectedEvent?.id;
-        const betAmount = this.betAmount;
-        window.casinoDebugLogger.logError(error, {
-          context: 'cs2betting placeBet',
-          eventId,
-          betAmount
-        });
-      }
-      
-      // Use non-blocking notification instead of alert to prevent navigation
-      try {
-        this.showTemporaryMessage(`Error placing bet: ${error.message || 'Unknown error'}`, 'error');
-      } catch (notifError) {
-        console.error('[CS2 Betting] Error showing error notification:', notifError);
-        if (window.casinoDebugLogger) {
-          window.casinoDebugLogger.logError(notifError, {
-            context: 'cs2betting show error notification',
-            originalError: error.message
-          });
-        }
-        // Last resort: console only, no alert
-        console.error('[CS2 Betting] Bet placement failed:', error.message || 'Unknown error');
+      console.error('Error placing bet:', error);
+      alert('Error placing bet. Please try again.');
+    } finally {
+      // 🔧 FIX: Always restore button state
+      if (placeBetBtn) {
+        placeBetBtn.disabled = false;
+        placeBetBtn.textContent = originalText;
       }
     }
   }

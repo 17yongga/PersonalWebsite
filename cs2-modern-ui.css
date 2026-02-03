@@ -1,0 +1,674 @@
+/**
+ * CS2 Modern UI - Optimized Edition
+ * Clean, responsive design for the CS2 betting interface
+ */
+
+/* ============================================
+   CSS Variables - Theme Configuration
+   ============================================ */
+:root {
+  /* Primary Colors */
+  --cs2-primary: #ff6b35;
+  --cs2-primary-dark: #e55a2b;
+  --cs2-primary-light: #ff8a5c;
+  
+  /* Accent Colors */
+  --cs2-accent: #00d4aa;
+  --cs2-accent-dark: #00b894;
+  
+  /* Status Colors */
+  --cs2-success: #00c853;
+  --cs2-warning: #ffc107;
+  --cs2-danger: #ff4757;
+  --cs2-info: #2196f3;
+  
+  /* Background Gradients */
+  --cs2-bg-dark: #0a0e14;
+  --cs2-bg-card: #141a24;
+  --cs2-bg-card-hover: #1a2332;
+  --cs2-bg-elevated: #1e2836;
+  
+  /* Text Colors */
+  --cs2-text-primary: #ffffff;
+  --cs2-text-secondary: #a0aec0;
+  --cs2-text-muted: #718096;
+  
+  /* Borders */
+  --cs2-border: rgba(255, 255, 255, 0.08);
+  --cs2-border-active: rgba(255, 107, 53, 0.5);
+  
+  /* Shadows */
+  --cs2-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --cs2-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --cs2-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --cs2-shadow-glow: 0 0 20px rgba(255, 107, 53, 0.3);
+  
+  /* Transitions */
+  --cs2-transition-fast: 150ms ease;
+  --cs2-transition-normal: 250ms ease;
+  --cs2-transition-slow: 400ms ease;
+  
+  /* Border Radius */
+  --cs2-radius-sm: 6px;
+  --cs2-radius-md: 10px;
+  --cs2-radius-lg: 16px;
+  --cs2-radius-xl: 24px;
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+.cs2-betting-container {
+  background: var(--cs2-bg-dark);
+  min-height: 100vh;
+  color: var(--cs2-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+/* ============================================
+   Match Cards - Modern Design
+   ============================================ */
+.cs2-match-card {
+  background: var(--cs2-bg-card);
+  border: 1px solid var(--cs2-border);
+  border-radius: var(--cs2-radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  transition: all var(--cs2-transition-normal);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.cs2-match-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--cs2-primary), var(--cs2-accent));
+  transform: scaleX(0);
+  transition: transform var(--cs2-transition-normal);
+}
+
+.cs2-match-card:hover {
+  background: var(--cs2-bg-card-hover);
+  border-color: var(--cs2-border-active);
+  transform: translateY(-2px);
+  box-shadow: var(--cs2-shadow-lg);
+}
+
+.cs2-match-card:hover::before {
+  transform: scaleX(1);
+}
+
+.cs2-match-card.selected {
+  border-color: var(--cs2-primary);
+  box-shadow: var(--cs2-shadow-glow);
+}
+
+/* Match Header - Tournament & Time */
+.cs2-match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--cs2-border);
+}
+
+.cs2-tournament-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 107, 53, 0.15);
+  color: var(--cs2-primary-light);
+  padding: 4px 10px;
+  border-radius: var(--cs2-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cs2-match-time {
+  color: var(--cs2-text-muted);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs2-match-time.live {
+  color: var(--cs2-danger);
+  font-weight: 600;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Teams Display */
+.cs2-teams-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.cs2-team {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cs2-team.team1 {
+  align-items: flex-start;
+}
+
+.cs2-team.team2 {
+  align-items: flex-end;
+}
+
+.cs2-team-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--cs2-bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--cs2-text-secondary);
+  overflow: hidden;
+}
+
+.cs2-team-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cs2-team-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cs2-text-primary);
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cs2-vs-badge {
+  background: var(--cs2-bg-elevated);
+  color: var(--cs2-text-muted);
+  padding: 6px 12px;
+  border-radius: var(--cs2-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Odds Display */
+.cs2-odds-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.cs2-odds-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  background: var(--cs2-bg-elevated);
+  border: 2px solid transparent;
+  border-radius: var(--cs2-radius-md);
+  cursor: pointer;
+  transition: all var(--cs2-transition-fast);
+  min-height: 60px;
+}
+
+.cs2-odds-btn:hover {
+  background: rgba(255, 107, 53, 0.15);
+  border-color: var(--cs2-primary);
+}
+
+.cs2-odds-btn.selected {
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(255, 107, 53, 0.1));
+  border-color: var(--cs2-primary);
+  box-shadow: 0 0 12px rgba(255, 107, 53, 0.3);
+}
+
+.cs2-odds-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cs2-odds-team {
+  font-size: 0.8rem;
+  color: var(--cs2-text-secondary);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.cs2-odds-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--cs2-primary-light);
+}
+
+.cs2-odds-value.favorite {
+  color: var(--cs2-accent);
+}
+
+/* ============================================
+   Bet Slip - Modern Modal
+   ============================================ */
+.cs2-betslip-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.cs2-betslip-modal.hidden {
+  display: none;
+}
+
+.cs2-betslip-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.cs2-betslip-modal-content {
+  position: relative;
+  background: var(--cs2-bg-card);
+  border: 1px solid var(--cs2-border);
+  border-radius: var(--cs2-radius-xl);
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--cs2-shadow-lg);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.betslip-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--cs2-border);
+}
+
+.betslip-modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--cs2-text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: color var(--cs2-transition-fast);
+}
+
+.close-btn:hover {
+  color: var(--cs2-text-primary);
+}
+
+/* ============================================
+   Quick Bet Buttons
+   ============================================ */
+.quick-bets {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.quick-bet-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--cs2-bg-elevated);
+  border: 1px solid var(--cs2-border);
+  border-radius: var(--cs2-radius-sm);
+  color: var(--cs2-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--cs2-transition-fast);
+}
+
+.quick-bet-btn:hover {
+  background: rgba(255, 107, 53, 0.15);
+  border-color: var(--cs2-primary);
+  color: var(--cs2-primary-light);
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--cs2-radius-md);
+  cursor: pointer;
+  transition: all var(--cs2-transition-fast);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--cs2-primary), var(--cs2-primary-dark));
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--cs2-primary-light), var(--cs2-primary));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.5);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: var(--cs2-bg-elevated);
+  color: var(--cs2-text-secondary);
+  border: 1px solid var(--cs2-border);
+}
+
+.btn-secondary:hover {
+  background: var(--cs2-bg-card-hover);
+  color: var(--cs2-text-primary);
+  border-color: var(--cs2-text-muted);
+}
+
+.btn-large {
+  width: 100%;
+  padding: 14px 28px;
+  font-size: 1rem;
+}
+
+.btn-small {
+  padding: 8px 16px;
+  font-size: 0.8rem;
+}
+
+/* ============================================
+   My Bets Panel
+   ============================================ */
+.cs2-my-bets-panel {
+  background: var(--cs2-bg-card);
+  border: 1px solid var(--cs2-border);
+  border-radius: var(--cs2-radius-lg);
+  padding: 16px;
+}
+
+.cs2-my-bets-panel h3 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cs2-text-primary);
+}
+
+.bets-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  background: var(--cs2-bg-elevated);
+  padding: 4px;
+  border-radius: var(--cs2-radius-sm);
+}
+
+.bet-tab {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: var(--cs2-radius-sm);
+  color: var(--cs2-text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--cs2-transition-fast);
+}
+
+.bet-tab:hover {
+  color: var(--cs2-text-secondary);
+}
+
+.bet-tab.active {
+  background: var(--cs2-bg-card);
+  color: var(--cs2-primary-light);
+}
+
+/* Individual Bet Card */
+.cs2-bet-card {
+  background: var(--cs2-bg-elevated);
+  border-radius: var(--cs2-radius-md);
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.cs2-bet-card.won {
+  border-left: 3px solid var(--cs2-success);
+}
+
+.cs2-bet-card.lost {
+  border-left: 3px solid var(--cs2-danger);
+}
+
+.cs2-bet-card.pending {
+  border-left: 3px solid var(--cs2-warning);
+}
+
+.bet-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.bet-match-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--cs2-text-primary);
+}
+
+.bet-status {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.bet-status.won {
+  background: rgba(0, 200, 83, 0.15);
+  color: var(--cs2-success);
+}
+
+.bet-status.lost {
+  background: rgba(255, 71, 87, 0.15);
+  color: var(--cs2-danger);
+}
+
+.bet-status.pending {
+  background: rgba(255, 193, 7, 0.15);
+  color: var(--cs2-warning);
+}
+
+.bet-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--cs2-text-secondary);
+}
+
+.bet-selection {
+  color: var(--cs2-text-primary);
+  font-weight: 500;
+}
+
+.bet-potential-payout {
+  color: var(--cs2-accent);
+  font-weight: 600;
+}
+
+/* ============================================
+   Loading & Empty States
+   ============================================ */
+.loading-text,
+.no-bets,
+.no-matches {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--cs2-text-muted);
+  font-size: 0.9rem;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--cs2-border);
+  border-top-color: var(--cs2-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+@media (max-width: 768px) {
+  .cs2-betting-layout {
+    flex-direction: column;
+  }
+  
+  .cs2-events-panel {
+    order: 1;
+  }
+  
+  .cs2-my-bets-panel {
+    order: 2;
+    margin-top: 16px;
+  }
+  
+  .cs2-teams-row {
+    grid-template-columns: 1fr 40px 1fr;
+    gap: 8px;
+  }
+  
+  .cs2-team-name {
+    font-size: 0.9rem;
+    max-width: 100px;
+  }
+  
+  .cs2-odds-btn {
+    padding: 10px 12px;
+    min-height: 50px;
+  }
+  
+  .cs2-odds-value {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .cs2-match-card {
+    padding: 12px;
+  }
+  
+  .cs2-tournament-badge {
+    font-size: 0.65rem;
+    padding: 3px 6px;
+  }
+  
+  .cs2-team-logo {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+  
+  .cs2-team-name {
+    font-size: 0.85rem;
+    max-width: 80px;
+  }
+  
+  .cs2-vs-badge {
+    padding: 4px 8px;
+    font-size: 0.65rem;
+  }
+  
+  .btn-large {
+    padding: 12px 20px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+.hidden {
+  display: none !important;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.text-success { color: var(--cs2-success); }
+.text-warning { color: var(--cs2-warning); }
+.text-danger { color: var(--cs2-danger); }
+.text-muted { color: var(--cs2-text-muted); }
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }

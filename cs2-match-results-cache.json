@@ -1,0 +1,36 @@
+{
+  "timestamp": 1770069763987,
+  "matches": {
+    "astralis-vs-vitality-esl-pro": {
+      "matchId": "astralis-vs-vitality-esl-pro",
+      "winner": "astralis",
+      "loser": "vitality-esl-pro",
+      "score": "2-1",
+      "confidence": 0.9,
+      "finishedAt": "2026-02-02T22:02:38.966Z",
+      "maps": [
+        "de_mirage",
+        "de_inferno",
+        "de_dust2"
+      ],
+      "timestamp": 1770069758966,
+      "source": "HLTV"
+    },
+    "navi-vs-faze-iem-cologne": {
+      "matchId": "navi-vs-faze-iem-cologne",
+      "winner": "navi",
+      "loser": "faze-iem-cologne",
+      "score": "2-1",
+      "confidence": 0.9,
+      "finishedAt": "2026-02-02T22:02:41.980Z",
+      "maps": [
+        "de_mirage",
+        "de_inferno",
+        "de_dust2"
+      ],
+      "timestamp": 1770069761980,
+      "source": "HLTV"
+    }
+  },
+  "lastUpdated": null
+}
