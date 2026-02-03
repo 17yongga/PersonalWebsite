@@ -621,19 +621,32 @@ class CS2ModernBettingGame {
       const userId = this.casino.username || sessionStorage.getItem('casinoUsername');
       if (!userId) return;
 
+      // FIX: Trust the casino's existing balance if it's already been set by socket
+      // This prevents race conditions where API returns different value than socket
+      if (this.casino.credits > 0 && this.casino.credits !== 10000) {
+        // Casino already has a valid balance from login/socket - use that
+        this.currentBalance = this.casino.credits;
+        console.log(`[CS2 Balance] Using existing casino balance: ${this.currentBalance}`);
+        return;
+      }
+
       const serverUrl = this.getServerUrl();
       const response = await fetch(`${serverUrl}/api/cs2/balance?userId=${userId}`);
       const data = await response.json();
 
       if (data.success) {
         this.currentBalance = data.balance;
-        if (this.casino.credits !== this.currentBalance) {
+        // Only update casino credits if they haven't been set yet or are at default
+        if (this.casino.credits === 0 || this.casino.credits === 10000) {
           this.casino.credits = this.currentBalance;
           this.casino.updateCreditsDisplay();
+          console.log(`[CS2 Balance] Set balance from API: ${this.currentBalance}`);
         }
       }
     } catch (error) {
       console.error('Error loading balance:', error);
+      // Fallback to casino's current balance
+      this.currentBalance = this.casino.credits || 0;
     }
   }
 
@@ -1033,12 +1046,16 @@ class CS2ModernBettingGame {
 
   renderBetCard(bet) {
     const event = this.events.find(e => e.id === bet.eventId);
-    const eventName = event 
-      ? `${event.homeTeam} vs ${event.awayTeam}` 
-      : `Event ${bet.eventId}`;
     
-    const selectionName = bet.selection === 'team1' ? event?.homeTeam :
-                         bet.selection === 'team2' ? event?.awayTeam : 'Draw';
+    // Use stored team names from bet object, fallback to event lookup
+    const homeTeam = bet.homeTeam || event?.homeTeam || 'Team 1';
+    const awayTeam = bet.awayTeam || event?.awayTeam || 'Team 2';
+    const eventName = `${homeTeam} vs ${awayTeam}`;
+    
+    // Use stored selection name from bet object, fallback to calculation
+    const selectionName = bet.selectionName || 
+                         (bet.selection === 'team1' ? homeTeam :
+                          bet.selection === 'team2' ? awayTeam : 'Draw');
     
     const statusClass = bet.status === 'won' ? 'won' :
                        bet.status === 'lost' ? 'lost' :

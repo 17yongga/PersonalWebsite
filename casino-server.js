@@ -1898,13 +1898,21 @@ app.post("/api/cs2/bets", async (req, res) => {
       return res.status(500).json({ success: false, error: "Failed to update balance" });
     }
     
-    // Create bet record
+    // Create bet record with team names stored for display even after event ends
     const betId = `bet_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const homeTeam = event.homeTeam || event.participant1Name || 'Team 1';
+    const awayTeam = event.awayTeam || event.participant2Name || 'Team 2';
+    const selectionName = selection === 'team1' ? homeTeam :
+                          selection === 'team2' ? awayTeam : 'Draw';
+    
     const bet = {
       id: betId,
       userId: userId,
       eventId: eventId,
       selection: selection,
+      selectionName: selectionName,  // Store selection name for display
+      homeTeam: homeTeam,            // Store team names for display
+      awayTeam: awayTeam,
       amount: amount,
       odds: odds,
       potentialPayout: amount * odds,
