@@ -619,9 +619,12 @@ class CS2BettingGame {
           
           // Check if we have a logo for this team (case-insensitive lookup)
           if (this.teamLogos && this.teamLogos.teams) {
+            const basePath = this.teamLogos.logoBasePath || '';
+            
             // Direct lookup with normalized name
             if (this.teamLogos.teams[normalizedName]) {
-              const logoUrl = this.teamLogos.teams[normalizedName];
+              const logoFile = this.teamLogos.teams[normalizedName];
+              const logoUrl = basePath + logoFile;
               console.log(`[CS2 Betting] Found logo for ${teamName}: ${logoUrl}`);
               return logoUrl;
             }
@@ -631,7 +634,8 @@ class CS2BettingGame {
               .replace(/\s*(esports?|gaming|team|club)$/i, '')
               .trim();
             if (this.teamLogos.teams[simplifiedName]) {
-              const logoUrl = this.teamLogos.teams[simplifiedName];
+              const logoFile = this.teamLogos.teams[simplifiedName];
+              const logoUrl = basePath + logoFile;
               console.log(`[CS2 Betting] Found logo for ${teamName} (simplified: ${simplifiedName}): ${logoUrl}`);
               return logoUrl;
             }

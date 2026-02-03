@@ -1126,11 +1126,12 @@ class CS2ModernBettingGame {
     
     // Try to find logo in loaded team logos
     if (this.teamLogos && this.teamLogos.teams) {
+      const basePath = this.teamLogos.logoBasePath || '';
       const normalizedName = teamName.toLowerCase().trim();
       
       // Direct lookup
       if (this.teamLogos.teams[normalizedName]) {
-        return this.teamLogos.teams[normalizedName];
+        return basePath + this.teamLogos.teams[normalizedName];
       }
       
       // Try without common suffixes
@@ -1138,7 +1139,7 @@ class CS2ModernBettingGame {
         .replace(/\s*(esports?|gaming|team|club)$/i, '')
         .trim();
       if (this.teamLogos.teams[simplifiedName]) {
-        return this.teamLogos.teams[simplifiedName];
+        return basePath + this.teamLogos.teams[simplifiedName];
       }
     }
     
