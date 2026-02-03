@@ -325,11 +325,98 @@
         }
 
         @media (max-width: 480px) {
+          #${CONFIG.WIDGET_ID} {
+            bottom: 16px;
+            right: 16px;
+          }
+
+          .ag-launcher {
+            width: 50px;
+            height: 50px;
+          }
+
+          .ag-launcher-icon {
+            font-size: 22px;
+          }
+
           .ag-chat-window {
-            width: calc(100vw - 32px);
-            height: calc(100vh - 100px);
-            bottom: 76px;
-            right: -8px;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 80px;
+            width: auto;
+            height: auto;
+            border-radius: 12px;
+          }
+
+          .ag-header {
+            padding: 12px 14px;
+            gap: 10px;
+          }
+
+          .ag-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+          }
+
+          .ag-header-info h3 {
+            font-size: 0.9rem;
+          }
+
+          .ag-header-info p {
+            font-size: 0.7rem;
+          }
+
+          .ag-messages {
+            padding: 12px;
+            gap: 8px;
+          }
+
+          .ag-message {
+            max-width: 90%;
+            padding: 10px 12px;
+            font-size: 0.85rem;
+            border-radius: 12px;
+          }
+
+          .ag-suggestions {
+            padding: 6px 12px;
+            gap: 6px;
+          }
+
+          .ag-suggestion {
+            padding: 5px 10px;
+            font-size: 0.7rem;
+          }
+
+          .ag-input-area {
+            padding: 10px 12px;
+            gap: 8px;
+          }
+
+          .ag-input {
+            padding: 10px 12px;
+            font-size: 0.85rem;
+          }
+
+          .ag-send-btn {
+            width: 36px;
+            height: 36px;
+            font-size: 14px;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .ag-message {
+            font-size: 0.8rem;
+            padding: 8px 10px;
+          }
+
+          .ag-suggestion {
+            font-size: 0.65rem;
+            padding: 4px 8px;
           }
         }
       </style>
