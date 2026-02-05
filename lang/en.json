@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "home": "Home",
+    "projects": "Projects",
+    "experience": "Experience",
+    "about": "About",
+    "skills": "Skills",
+    "blog": "Blog",
+    "contact": "Contact"
+  },
+  "home": {
+    "hero_greeting": "Hi, I'm",
+    "hero_name": "Gary Yong",
+    "hero_title": "Technology Consultant & AI Enthusiast",
+    "hero_description": "I help organizations transform through technology, specializing in AI solutions, digital transformation, and enterprise consulting.",
+    "hero_cta": "View My Work",
+    "hero_cta_secondary": "Get In Touch",
+    "featured_title": "Featured Projects",
+    "featured_subtitle": "A selection of my recent work"
+  },
+  "about": {
+    "title": "About Me",
+    "subtitle": "Get to know me better",
+    "intro": "I'm a technology consultant with a passion for AI and digital transformation.",
+    "background_title": "Background",
+    "interests_title": "Interests",
+    "values_title": "Values"
+  },
+  "experience": {
+    "title": "Experience",
+    "subtitle": "My professional journey",
+    "present": "Present"
+  },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "Things I've built",
+    "view_project": "View Project",
+    "view_code": "View Code"
+  },
+  "skills": {
+    "title": "Skills",
+    "subtitle": "Technologies & capabilities",
+    "technical": "Technical Skills",
+    "tools": "Tools & Platforms",
+    "soft": "Soft Skills"
+  },
+  "blog": {
+    "title": "Blog & Writing",
+    "subtitle": "",
+    "read_more": "Read more",
+    "back_to_blog": "← Back to Blog",
+    "min_read": "min read"
+  },
+  "contact": {
+    "title": "Get In Touch",
+    "subtitle": "Let's connect",
+    "email": "Email",
+    "linkedin": "LinkedIn",
+    "github": "GitHub"
+  },
+  "footer": {
+    "copyright": "©2025 Gary Yong · Built with love ❤️."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "coming_soon": "Coming Soon"
+  }
+}

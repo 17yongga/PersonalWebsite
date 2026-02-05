@@ -1471,3 +1471,17 @@ html[data-theme="light"] .hero-agent-callout {
   font-weight: 600;
 }
 
+
+/* Language Toggle */
+.lang-toggle {
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+.lang-toggle:hover {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}

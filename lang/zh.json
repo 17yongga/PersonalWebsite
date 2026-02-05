@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "home": "首页",
+    "projects": "项目",
+    "experience": "经历",
+    "about": "关于",
+    "skills": "技能",
+    "blog": "博客",
+    "contact": "联系"
+  },
+  "home": {
+    "hero_greeting": "你好，我是",
+    "hero_name": "Gary Yong",
+    "hero_title": "技术顾问 & AI 爱好者",
+    "hero_description": "我帮助企业通过技术实现转型，专注于人工智能解决方案、数字化转型和企业咨询。",
+    "hero_cta": "查看我的作品",
+    "hero_cta_secondary": "联系我",
+    "featured_title": "精选项目",
+    "featured_subtitle": "我近期的部分作品"
+  },
+  "about": {
+    "title": "关于我",
+    "subtitle": "更好地了解我",
+    "intro": "我是一名热衷于人工智能和数字化转型的技术顾问。",
+    "background_title": "背景",
+    "interests_title": "兴趣",
+    "values_title": "价值观"
+  },
+  "experience": {
+    "title": "工作经历",
+    "subtitle": "我的职业历程",
+    "present": "至今"
+  },
+  "projects": {
+    "title": "项目",
+    "subtitle": "我构建的作品",
+    "view_project": "查看项目",
+    "view_code": "查看代码"
+  },
+  "skills": {
+    "title": "技能",
+    "subtitle": "技术与能力",
+    "technical": "技术技能",
+    "tools": "工具与平台",
+    "soft": "软技能"
+  },
+  "blog": {
+    "title": "博客与文章",
+    "subtitle": "",
+    "read_more": "阅读更多",
+    "back_to_blog": "← 返回博客",
+    "min_read": "分钟阅读"
+  },
+  "contact": {
+    "title": "联系我",
+    "subtitle": "让我们建立联系",
+    "email": "邮箱",
+    "linkedin": "领英",
+    "github": "GitHub"
+  },
+  "footer": {
+    "copyright": "©2025 Gary Yong · 用心构建 ❤️"
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "出错了",
+    "coming_soon": "即将推出"
+  }
+}
