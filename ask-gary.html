@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <link rel="icon" type="image/png" href="/img/logo-dark.png">
   <meta charset="UTF-8" />
@@ -33,6 +33,72 @@
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
+    }
+
+    .ask-gary-header {
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .ask-gary-header .logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    .ask-gary-header .logo img {
+      height: 32px;
+    }
+
+    .ask-gary-header nav {
+      display: flex;
+      gap: 24px;
+    }
+
+    .ask-gary-header nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .ask-gary-header nav a:hover {
+      color: var(--accent);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .header-actions button {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .header-actions button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+      .ask-gary-header nav {
+        display: none;
+      }
     }
 
     main {
@@ -78,7 +144,7 @@
     @media (max-width: 900px) {
       main {
         padding: 24px 12px;
-        padding-top: 96px;
+        padding-top: 24px;
       }
       .shell {
         grid-template-columns: minmax(0, 1fr);
@@ -470,8 +536,22 @@
   </style>
 </head>
 <body>
-  <!-- If you have a shared header/nav include, keep using it.
-       Otherwise this can be your main content. -->
+  <header class="ask-gary-header">
+    <a href="index.html" class="logo">
+      <img src="img/logo-light.png" alt="GY logo" />
+    </a>
+    <nav>
+      <a href="index.html" data-i18n="nav.home">Home</a>
+      <a href="projects.html" data-i18n="nav.projects">Projects</a>
+      <a href="experience.html" data-i18n="nav.experience">Experience</a>
+      <a href="about.html" data-i18n="nav.about">About</a>
+      <a href="skills.html" data-i18n="nav.skills">Skills</a>
+      <a href="blog.html" data-i18n="nav.blog">Blog</a>
+    </nav>
+    <div class="header-actions">
+      <button id="lang-toggle" aria-label="Switch language">中文</button>
+    </div>
+  </header>
 
   <main>
     <div class="shell">
@@ -479,23 +559,23 @@
       <section class="panel">
         <header class="panel-header">
           <div>
-            <div class="panel-title">Ask Gary</div>
-            <div class="panel-subtitle">Personal AI Career Agent </div>
+            <div class="panel-title" data-i18n="ask_gary.title">Ask Gary</div>
+            <div class="panel-subtitle" data-i18n="ask_gary.subtitle">Personal AI Career Agent</div>
           </div>
           <div class="pill">
             <span class="pill-dot"></span>
-            Live demo
+            <span data-i18n="ask_gary.live_demo">Live demo</span>
           </div>
         </header>
 
         <div class="chat">
           <div id="messages" class="chat-messages">
             <div class="chat-message bot">
-              <p>Hi! I'm Ask Gary, Gary's career assistant. I'm here to answer questions about his professional background, skills, projects, and experiences on his behalf.</p>
-              <p>Feel free to ask me anything—for example: "What did Gary do at Capco?" or "Tell me about Gary's experience with AI and automation."</p>
+              <p data-i18n="ask_gary.welcome_p1">Hi! I'm Ask Gary, Gary's career assistant. I'm here to answer questions about his professional background, skills, projects, and experiences on his behalf.</p>
+              <p data-i18n="ask_gary.welcome_p2">Feel free to ask me anything—for example: "What did Gary do at Capco?" or "Tell me about Gary's experience with AI and automation."</p>
               <div class="chat-meta">
                 <span>Ask Gary</span>
-                <span class="sources">Sources: resume_2025.txt</span>
+                <span class="sources" data-i18n="ask_gary.sources">Sources: resume_2025.txt</span>
               </div>
             </div>
           </div>
@@ -504,10 +584,11 @@
             <textarea
               id="user-input"
               class="chat-input"
-              placeholder="Ask something about Gary’s experience, skills, or projects…"
+              data-i18n="ask_gary.input_placeholder"
+              placeholder="Ask something about Gary's experience, skills, or projects…"
             ></textarea>
             <button id="send-button" class="send-button">
-              <span>Send</span>
+              <span data-i18n="ask_gary.send_button">Send</span>
               <span class="send-icon">➤</span>
             </button>
           </div>
@@ -516,21 +597,21 @@
 
       <!-- Right: context / instructions -->
       <aside class="panel">
-        <div class="sidebar-title">Good questions to try</div>
+        <div class="sidebar-title" data-i18n="ask_gary.questions_title">Good questions to try</div>
         <ul class="sidebar-list">
-          <li>“What did Gary do at Capco?”</li>
-          <li>“Summarize Gary’s experience with AI and automation.”</li>
-          <li>“What projects show Gary’s leadership?”</li>
+          <li data-i18n="ask_gary.question_1">"What did Gary do at Capco?"</li>
+          <li data-i18n="ask_gary.question_2">"Summarize Gary's experience with AI and automation."</li>
+          <li data-i18n="ask_gary.question_3">"What projects show Gary's leadership?"</li>
         </ul>
 
-        <div class="sidebar-title" style="margin-top: 16px;">How it works</div>
+        <div class="sidebar-title" style="margin-top: 16px;" data-i18n="ask_gary.how_it_works_title">How it works</div>
         <ul class="sidebar-list">
-          <li>Answers are grounded only in Gary’s resumes and career docs.</li>
-          <li>Top‑K relevant chunks are retrieved for each question.</li>
-          <li>The model is instructed to say “I don’t know” when context is missing.</li>
+          <li data-i18n="ask_gary.how_1">Answers are grounded only in Gary's resumes and career docs.</li>
+          <li data-i18n="ask_gary.how_2">Top‑K relevant chunks are retrieved for each question.</li>
+          <li data-i18n="ask_gary.how_3">The model is instructed to say "I don't know" when context is missing.</li>
         </ul>
 
-        <p class="hint">
+        <p class="hint" data-i18n="ask_gary.hint">
           This page is backed by a FastAPI service and a retrieval‑augmented generation pipeline using OpenAI embeddings and a
           lightweight in‑memory index.
         </p>
@@ -538,6 +619,7 @@
     </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="ask-gary.js"></script>
 </body>
 </html>

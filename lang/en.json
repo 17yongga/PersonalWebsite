@@ -310,6 +310,36 @@
       }
     }
   },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Let's discuss how we can work together.",
+    "name_label": "Name",
+    "name_placeholder": "Your Name",
+    "email_label": "Email",
+    "email_placeholder": "you@example.com",
+    "message_label": "Message",
+    "message_placeholder": "How can we work together?",
+    "send_button": "Send message"
+  },
+  "ask_gary": {
+    "title": "Ask Gary",
+    "subtitle": "Personal AI Career Agent",
+    "live_demo": "Live demo",
+    "welcome_p1": "Hi! I'm Ask Gary, Gary's career assistant. I'm here to answer questions about his professional background, skills, projects, and experiences on his behalf.",
+    "welcome_p2": "Feel free to ask me anything—for example: \"What did Gary do at Capco?\" or \"Tell me about Gary's experience with AI and automation.\"",
+    "sources": "Sources: resume_2025.txt",
+    "input_placeholder": "Ask something about Gary's experience, skills, or projects…",
+    "send_button": "Send",
+    "questions_title": "Good questions to try",
+    "question_1": "\"What did Gary do at Capco?\"",
+    "question_2": "\"Summarize Gary's experience with AI and automation.\"",
+    "question_3": "\"What projects show Gary's leadership?\"",
+    "how_it_works_title": "How it works",
+    "how_1": "Answers are grounded only in Gary's resumes and career docs.",
+    "how_2": "Top‑K relevant chunks are retrieved for each question.",
+    "how_3": "The model is instructed to say \"I don't know\" when context is missing.",
+    "hint": "This page is backed by a FastAPI service and a retrieval‑augmented generation pipeline using OpenAI embeddings and a lightweight in‑memory index."
+  },
   "footer": {
     "copyright": "©2025 Gary Yong · Built with love ❤️."
   },

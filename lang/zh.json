@@ -310,6 +310,36 @@
       }
     }
   },
+  "contact": {
+    "title": "联系我",
+    "subtitle": "期待与您探讨合作机会",
+    "name_label": "姓名",
+    "name_placeholder": "请输入您的姓名",
+    "email_label": "邮箱",
+    "email_placeholder": "you@example.com",
+    "message_label": "留言",
+    "message_placeholder": "请描述您希望如何合作",
+    "send_button": "发送消息"
+  },
+  "ask_gary": {
+    "title": "Ask Gary",
+    "subtitle": "个人 AI 职业助手",
+    "live_demo": "在线演示",
+    "welcome_p1": "你好！我是 Ask Gary，Gary 的职业助手。我可以代他回答关于专业背景、技能、项目和工作经历的问题。",
+    "welcome_p2": "欢迎随时提问——例如：「Gary 在 Capco 做了什么？」或「介绍一下 Gary 在 AI 和自动化方面的经验。」",
+    "sources": "数据来源：resume_2025.txt",
+    "input_placeholder": "询问关于 Gary 的经历、技能或项目…",
+    "send_button": "发送",
+    "questions_title": "推荐问题",
+    "question_1": "「Gary 在 Capco 做了什么？」",
+    "question_2": "「总结一下 Gary 在 AI 和自动化方面的经验。」",
+    "question_3": "「哪些项目展示了 Gary 的领导力？」",
+    "how_it_works_title": "工作原理",
+    "how_1": "所有回答仅基于 Gary 的简历和职业文档。",
+    "how_2": "每个问题会检索最相关的 Top-K 文本片段。",
+    "how_3": "当缺乏相关信息时，模型会回答「我不清楚」。",
+    "hint": "本页面由 FastAPI 服务支持，采用基于 OpenAI 嵌入向量和轻量级内存索引的检索增强生成（RAG）技术。"
+  },
   "footer": {
     "copyright": "©2025 Gary Yong · 用心打造 ❤️"
   },
