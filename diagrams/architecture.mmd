@@ -1,0 +1,40 @@
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#38bdf8', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1e40af', 'lineColor': '#38bdf8', 'secondaryColor': '#1e293b', 'tertiaryColor': '#0f172a'}}}%%
+flowchart TB
+    subgraph Internet["🌐 Internet"]
+        User["👤 Visitors / Recruiters<br/>(Web Browser)"]
+        CF["☁️ Cloudflare CDN<br/>gary-yong.com"]
+    end
+
+    subgraph AWS["☁️ AWS EC2 Instance"]
+        subgraph Nginx["🔧 Nginx Reverse Proxy"]
+            Static["📄 Static Files<br/>gary-yong.com/*"]
+            Proxy["🔀 API Proxy<br/>api.gary-yong.com"]
+        end
+        
+        subgraph Frontend["🖥️ Frontend"]
+            HTML["📝 ask-gary.html<br/>Chat Interface"]
+            JS["⚡ ask-gary.js<br/>Chat Logic"]
+            CSS["🎨 styles.css"]
+        end
+        
+        subgraph Backend["⚙️ Backend (FastAPI)"]
+            Main["🐍 main.py<br/>/health, /chat"]
+            Config["⚙️ config.py<br/>Prompts & Settings"]
+            Index["📊 indexed_data.json<br/>Embedded Knowledge"]
+        end
+    end
+    
+    subgraph OpenAI["🤖 OpenAI API"]
+        Embed["🔢 Embeddings API<br/>text-embedding-3-small"]
+        Chat["💬 Chat Completions<br/>gpt-4o-mini"]
+    end
+
+    User --> CF
+    CF --> Nginx
+    Static --> Frontend
+    Proxy --> Backend
+    JS --> Proxy
+    Main --> Embed
+    Main --> Chat
+    Config --> Main
+    Index --> Main

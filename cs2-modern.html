@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CS2 Betting - Modern Static Odds Interface">
+    <title>CS2 Betting - Modern Interface</title>
+    
+    <!-- Modern Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Modern CSS -->
+    <link rel="stylesheet" href="css/cs2-modern.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+    <!-- Skip to content for accessibility -->
+    <a href="#main-content" class="cs2-sr-only">Skip to main content</a>
+    
+    <!-- Modern Navigation -->
+    <nav class="cs2-navigation">
+        <div class="cs2-container">
+            <div class="cs2-nav-content">
+                <a href="/" class="cs2-nav-brand">CS2 Betting</a>
+                
+                <ul class="cs2-nav-links">
+                    <li><a href="#matches" class="cs2-nav-link active">Matches</a></li>
+                    <li><a href="#tournaments" class="cs2-nav-link">Tournaments</a></li>
+                    <li><a href="#stats" class="cs2-nav-link">Statistics</a></li>
+                    <li><a href="#history" class="cs2-nav-link">History</a></li>
+                </ul>
+                
+                <div class="cs2-nav-actions">
+                    <button class="cs2-theme-toggle" aria-label="Toggle theme">
+                        🌙
+                    </button>
+                    <button class="cs2-button cs2-button-primary">
+                        Sign In
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main id="main-content" class="cs2-container">
+        <!-- Header Section -->
+        <header class="cs2-text-center cs2-mb-2xl">
+            <h1 class="cs2-heading-1">CS2 Static Betting</h1>
+            <p class="cs2-text-body">
+                Modern interface with static odds snapshots - no live complexity
+            </p>
+        </header>
+        
+        <!-- Featured Matches -->
+        <section class="cs2-mb-2xl">
+            <h2 class="cs2-heading-2 cs2-mb-lg">Featured Matches</h2>
+            
+            <div class="cs2-grid cs2-grid-cols-2">
+                <!-- Match Card 1 -->
+                <div class="cs2-match-card">
+                    <div class="cs2-match-header">
+                        <span class="cs2-match-time">Today, 7:00 PM</span>
+                        <span class="cs2-tournament-badge">ESL Pro League</span>
+                    </div>
+                    
+                    <div class="cs2-teams-container">
+                        <div class="cs2-team">
+                            <img src="img/teams/navi.png" alt="NAVI" class="cs2-team-logo">
+                            <div class="cs2-team-name">NAVI</div>
+                        </div>
+                        
+                        <div class="cs2-vs-separator">VS</div>
+                        
+                        <div class="cs2-team">
+                            <img src="img/teams/g2.png" alt="G2 Esports" class="cs2-team-logo">
+                            <div class="cs2-team-name">G2 Esports</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Static Odds -->
+                    <div class="cs2-static-odds">
+                        <div class="cs2-static-odds-header">
+                            <h4>Match Winner</h4>
+                            <span class="cs2-static-indicator">
+                                📸 Static
+                            </span>
+                        </div>
+                        
+                        <div class="cs2-odds-grid">
+                            <div class="cs2-odds-option" data-team="navi">
+                                <div class="cs2-team-name">NAVI</div>
+                                <div class="cs2-odds-value">1.85</div>
+                            </div>
+                            <div class="cs2-odds-option" data-team="g2">
+                                <div class="cs2-team-name">G2 Esports</div>
+                                <div class="cs2-odds-value">2.15</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cs2-card-footer">
+                        <button class="cs2-button cs2-button-secondary">
+                            View Details
+                        </button>
+                        <button class="cs2-button cs2-button-primary">
+                            Place Bet
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Match Card 2 -->
+                <div class="cs2-match-card">
+                    <div class="cs2-match-header">
+                        <span class="cs2-match-time">Tomorrow, 2:00 PM</span>
+                        <span class="cs2-tournament-badge">BLAST Premier</span>
+                    </div>
+                    
+                    <div class="cs2-teams-container">
+                        <div class="cs2-team">
+                            <img src="img/teams/astralis.png" alt="Astralis" class="cs2-team-logo">
+                            <div class="cs2-team-name">Astralis</div>
+                        </div>
+                        
+                        <div class="cs2-vs-separator">VS</div>
+                        
+                        <div class="cs2-team">
+                            <img src="img/teams/liquid.png" alt="Team Liquid" class="cs2-team-logo">
+                            <div class="cs2-team-name">Team Liquid</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Static Odds -->
+                    <div class="cs2-static-odds">
+                        <div class="cs2-static-odds-header">
+                            <h4>Match Winner</h4>
+                            <span class="cs2-static-indicator">
+                                📸 Static
+                            </span>
+                        </div>
+                        
+                        <div class="cs2-odds-grid">
+                            <div class="cs2-odds-option" data-team="astralis">
+                                <div class="cs2-team-name">Astralis</div>
+                                <div class="cs2-odds-value">2.45</div>
+                            </div>
+                            <div class="cs2-odds-option" data-team="liquid">
+                                <div class="cs2-team-name">Team Liquid</div>
+                                <div class="cs2-odds-value">1.65</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cs2-card-footer">
+                        <button class="cs2-button cs2-button-secondary">
+                            View Details
+                        </button>
+                        <button class="cs2-button cs2-button-primary">
+                            Place Bet
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Statistics Section -->
+        <section class="cs2-mb-2xl">
+            <h2 class="cs2-heading-2 cs2-mb-lg">System Statistics</h2>
+            
+            <div class="cs2-grid cs2-grid-cols-4">
+                <div class="cs2-card cs2-text-center">
+                    <div class="cs2-heading-1" style="color: var(--cs2-primary);">156</div>
+                    <div class="cs2-text-small">Static Snapshots</div>
+                </div>
+                
+                <div class="cs2-card cs2-text-center">
+                    <div class="cs2-heading-1" style="color: var(--cs2-success);">98%</div>
+                    <div class="cs2-text-small">Cache Hit Rate</div>
+                </div>
+                
+                <div class="cs2-card cs2-text-center">
+                    <div class="cs2-heading-1" style="color: var(--cs2-accent);">245</div>
+                    <div class="cs2-text-small">API Calls Saved</div>
+                </div>
+                
+                <div class="cs2-card cs2-text-center">
+                    <div class="cs2-heading-1" style="color: var(--cs2-secondary);">0</div>
+                    <div class="cs2-text-small">Live Updates</div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="cs2-text-center cs2-text-small" style="padding: var(--cs2-spacing-2xl) 0;">
+        <div class="cs2-container">
+            <p>&copy; 2026 CS2 Modern Betting Interface. Static odds only - no live complexity.</p>
+            <p>Modern UI System v1.0 - Optimized for static snapshots</p>
+        </div>
+    </footer>
+    
+    <!-- Modern JavaScript -->
+    <script src="js/cs2-modern.js"></script>
+    
+    <!-- Initialize -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🎨 CS2 Modern Interface loaded');
+            
+            // Listen for odds selection
+            document.addEventListener('oddsSelected', (e) => {
+                console.log('Odds selected:', e.detail);
+            });
+            
+            // Listen for theme changes
+            window.addEventListener('cs2:themeChanged', (e) => {
+                console.log('Theme changed to:', e.detail.theme);
+            });
+        });
+    </script>
+</body>
+</html>

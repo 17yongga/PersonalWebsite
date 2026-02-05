@@ -20,22 +20,27 @@
     <a href="index.html" class="logo">
   <img src="img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
   <img src="img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
-  <!--<span class="logo-text">YourName</span>-->
 </a>
 
     <!-- Desktop navigation -->
     <nav class="nav nav-desktop">
-      <a href="index.html">Home</a>
-      <a href="projects.html">Projects</a>
-      <a href="experience.html">Experience</a>
-      <a href="about.html">About</a>
-      <a href="skills.html">Skills</a>
-      <a href="blog.html">Blog</a>
-      <!--<a href="contact.html">Contact</a>-->
+      <a href="index.html" data-i18n="nav.home">Home</a>
+      <a href="projects.html" data-i18n="nav.projects">Projects</a>
+      <a href="experience.html" data-i18n="nav.experience">Experience</a>
+      <a href="about.html" data-i18n="nav.about">About</a>
+      <a href="skills.html" data-i18n="nav.skills">Skills</a>
+      <a href="blog.html" data-i18n="nav.blog">Blog</a>
     </nav>
 
-    <!-- Right controls: theme + mobile toggle -->
+    <!-- Right controls: lang + theme + mobile toggle -->
     <div class="header-actions">
+      <button
+        id="lang-toggle"
+        class="btn btn-ghost lang-toggle"
+        aria-label="Switch language"
+      >
+        中文
+      </button>
       <button
         id="theme-toggle"
         class="btn btn-ghost theme-toggle"
@@ -60,12 +65,12 @@
   <!-- Mobile navigation panel -->
   <nav class="nav-mobile" aria-label="Mobile navigation">
     <div class="nav-mobile-inner">
-      <a href="index.html">Home</a>
-      <a href="projects.html">Projects</a>
-      <a href="experience.html">Experience</a>
-      <a href="about.html">About</a>
-      <a href="skills.html">Skills</a>
-      <a href="blog.html">Blog</a>
+      <a href="index.html" data-i18n="nav.home">Home</a>
+      <a href="projects.html" data-i18n="nav.projects">Projects</a>
+      <a href="experience.html" data-i18n="nav.experience">Experience</a>
+      <a href="about.html" data-i18n="nav.about">About</a>
+      <a href="skills.html" data-i18n="nav.skills">Skills</a>
+      <a href="blog.html" data-i18n="nav.blog">Blog</a>
     </div>
   </nav>
 </header>
@@ -75,19 +80,19 @@
   <section class="section">
     <div class="container">
       <header class="section-header animate-fade-up">
-        <h2>About</h2>
-        <p>A bit about who I am and what I enjoy working on.</p>
+        <h2 data-i18n="about.title">About</h2>
+        <p data-i18n="about.subtitle">A bit about who I am and what I enjoy working on.</p>
       </header>
 
       <!-- Top: narrative about section full width -->
       <div class="about-intro animate-fade-up">
-        <p>
-          I’m a technology consultant who enjoys turning ambiguous problems into clear,
-          user‑centered solutions. Over the past few years, I’ve worked across banking and
+        <p data-i18n="about.intro_p1">
+          I'm a technology consultant who enjoys turning ambiguous problems into clear,
+          user‑centered solutions. Over the past few years, I've worked across banking and
           retail, helping teams modernize their systems, improve customer experiences, and
           ship reliable products.
         </p>
-        <p>
+        <p data-i18n="about.intro_p2">
           My work usually sits at the intersection of business analysis, product thinking,
           and engineering — from mapping out future‑state architectures to building
           lightweight tools that automate away repetitive work.
@@ -96,45 +101,45 @@
 
       <!-- Middle: quick snapshot card -->
       <div class="about-snapshot animate-fade-up">
-        <h3>Snapshot</h3>
+        <h3 data-i18n="about.snapshot_title">Snapshot</h3>
         <div class="about-snapshot-grid">
           <div>
-            <h4>What I do</h4>
-            <p>Bridge business needs and technical teams to design and deliver practical digital solutions.</p>
+            <h4 data-i18n="about.what_i_do_title">What I do</h4>
+            <p data-i18n="about.what_i_do_desc">Bridge business needs and technical teams to design and deliver practical digital solutions.</p>
           </div>
           <div>
-            <h4>What I care about</h4>
-            <p>Build thoughtful systems and experiences that actually benefit the people using them.</p>
+            <h4 data-i18n="about.what_i_care_title">What I care about</h4>
+            <p data-i18n="about.what_i_care_desc">Build thoughtful systems and experiences that actually benefit the people using them.</p>
           </div>
         </div>
       </div>
 
       <!-- Bottom: hobbies as cards -->
       <div class="about-hobbies animate-fade-up">
-        <h3>Hobbies</h3>
+        <h3 data-i18n="about.hobbies_title">Hobbies</h3>
         <div class="hobby-grid">
           <div class="hobby-card">
             <div class="hobby-icon">🧗‍♂️</div>
-            <h4>Rock climbing</h4>
-            <p>Finding new routes, solving movement puzzles, and enjoying time on the wall.</p>
+            <h4 data-i18n="about.hobby_climbing_title">Rock climbing</h4>
+            <p data-i18n="about.hobby_climbing_desc">Finding new routes, solving movement puzzles, and enjoying time on the wall.</p>
           </div>
 
           <div class="hobby-card">
             <div class="hobby-icon">📷</div>
-            <h4>Capturing moments</h4>
-            <p>Taking photos of everyday scenes, friends, and trips to document life as it happens.</p>
+            <h4 data-i18n="about.hobby_photo_title">Capturing moments</h4>
+            <p data-i18n="about.hobby_photo_desc">Taking photos of everyday scenes, friends, and trips to document life as it happens.</p>
           </div>
 
           <div class="hobby-card">
             <div class="hobby-icon">🏃‍♂️</div>
-            <h4>Running</h4>
-            <p>Short city runs to reset, think through ideas, and stay active between projects.</p>
+            <h4 data-i18n="about.hobby_running_title">Running</h4>
+            <p data-i18n="about.hobby_running_desc">Short city runs to reset, think through ideas, and stay active between projects.</p>
           </div>
 
           <div class="hobby-card">
             <div class="hobby-icon">👨🏻‍💻</div>
-            <h4>Building for fun</h4>
-            <p>Experimenting with small tools and prototypes to try new tech and deploy ideas quickly.</p>
+            <h4 data-i18n="about.hobby_building_title">Building for fun</h4>
+            <p data-i18n="about.hobby_building_desc">Experimenting with small tools and prototypes to try new tech and deploy ideas quickly.</p>
           </div>
         </div>
       </div>
@@ -146,11 +151,12 @@
 
     <footer class="site-footer">
       <div class="container">
-        <p>©2025 Gary Yong · Built with love ❤️.</p>
+        <p data-i18n="footer.copyright">©2025 Gary Yong · Built with love ❤️.</p>
       </div>
     </footer>
 
     <script src="main.js"></script>
+    <script src="js/i18n.js"></script>
     <script src="ask-gary-widget.js"></script>
   </body>
 </html>

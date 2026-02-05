@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang=\"en\" data-theme=\"dark\">
+<head>
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <meta name=\"description\" content=\"CS2 Betting - Enhanced UI/UX with Mobile Optimization\">
+    <title>CS2 Betting - Enhanced UI/UX Demo</title>
+    
+    <!-- Modern Fonts -->
+    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">
+    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>
+    <link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap\" rel=\"stylesheet\">
+    
+    <!-- Enhanced CSS -->
+    <link rel=\"stylesheet\" href=\"css/cs2-modern.css\">
+    <link rel=\"stylesheet\" href=\"css/cs2-enhanced-mobile.css\">
+    
+    <!-- Favicon -->
+    <link rel=\"icon\" type=\"image/x-icon\" href=\"/favicon.ico\">
+</head>
+<body>
+    <!-- Skip Links for Accessibility -->
+    <div class=\"cs2-skip-links\">
+        <a href=\"#main-content\" class=\"cs2-skip-link\">Skip to main content</a>
+        <a href=\"#navigation\" class=\"cs2-skip-link\">Skip to navigation</a>
+    </div>
+    
+    <!-- Enhanced Navigation -->
+    <nav class=\"cs2-navigation\" id=\"navigation\">
+        <div class=\"cs2-container\">
+            <div class=\"cs2-nav-content\">
+                <!-- Mobile toggle will be added by JavaScript -->
+                <a href=\"/\" class=\"cs2-nav-brand\">🎮 CS2 Betting</a>
+                
+                <ul class=\"cs2-nav-links\">
+                    <li><a href=\"#matches\" class=\"cs2-nav-link active\">Live Matches</a></li>
+                    <li><a href=\"#tournaments\" class=\"cs2-nav-link\">Tournaments</a></li>
+                    <li><a href=\"#stats\" class=\"cs2-nav-link\">Statistics</a></li>
+                    <li><a href=\"#history\" class=\"cs2-nav-link\">Bet History</a></li>
+                </ul>
+                
+                <div class=\"cs2-nav-actions\">
+                    <button class=\"cs2-theme-toggle\" aria-label=\"Toggle dark/light theme\">
+                        🌙
+                    </button>
+                    <button class=\"cs2-button cs2-button-primary\">
+                        Sign In
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main id=\"main-content\" class=\"cs2-container\">
+        <!-- Header Section -->
+        <section class=\"cs2-section\">
+            <div class=\"cs2-section-header\">
+                <h1 class=\"cs2-section-title\">🎯 Live CS2 Matches</h1>
+                <p class=\"cs2-section-subtitle\">Enhanced UI/UX with mobile-first design, improved accessibility, and streamlined betting flow</p>
+            </div>
+        </section>
+        
+        <!-- Improved Filters -->
+        <section class=\"cs2-section\">
+            <div class=\"cs2-filters\" style=\"display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;\">
+                <button class=\"cs2-button cs2-button-secondary cs2-filter-active\">All Matches</button>
+                <button class=\"cs2-button cs2-button-secondary\">Live Now</button>
+                <button class=\"cs2-button cs2-button-secondary\">Starting Soon</button>
+                <button class=\"cs2-button cs2-button-secondary\">Favorites ❤️</button>
+            </div>
+        </section>
+        
+        <!-- Enhanced Match Cards -->
+        <section class=\"cs2-section\" id=\"matches\">
+            <!-- Live Match Card -->
+            <article class=\"cs2-match-card\">
+                <div class=\"cs2-match-header\">
+                    <div class=\"cs2-match-status live\">🔴 Live</div>
+                    <div class=\"cs2-match-time\">Map 2/3</div>
+                </div>
+                
+                <div class=\"cs2-teams-container\">
+                    <div class=\"cs2-team home\">
+                        <img src=\"img/navi-logo.png\" alt=\"NAVI\" class=\"cs2-team-logo\" onerror=\"this.style.background='#ff6b35'; this.style.color='white'; this.innerHTML='NA'; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center'; this.style.fontSize='14px'; this.style.fontWeight='bold';\">
+                        <div class=\"cs2-team-info\">
+                            <div class=\"cs2-team-name\">NAVI</div>
+                            <div class=\"cs2-team-score\">13</div>
+                        </div>
+                    </div>
+                    
+                    <div class=\"cs2-vs-separator\">VS</div>
+                    
+                    <div class=\"cs2-team away\">
+                        <img src=\"img/g2-logo.png\" alt=\"G2\" class=\"cs2-team-logo\" onerror=\"this.style.background='#0077be'; this.style.color='white'; this.innerHTML='G2'; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center'; this.style.fontSize='14px'; this.style.fontWeight='bold';\">
+                        <div class=\"cs2-team-info\">
+                            <div class=\"cs2-team-name\">G2 Esports</div>
+                            <div class=\"cs2-team-score\">11</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class=\"cs2-match-info\" style=\"text-align: center; margin: 1rem 0; color: var(--cs2-text-muted); font-size: 0.875rem;\">
+                    📍 IEM Cologne 2026 • de_mirage • Best of 3
+                </div>
+                
+                <div class=\"cs2-odds-container\">
+                    <button class=\"cs2-odds-button\" tabindex=\"0\" aria-label=\"Bet on NAVI to win at 1.85 odds\">
+                        <div class=\"cs2-odds-label\">NAVI Win</div>
+                        <div class=\"cs2-odds-value\">1.85</div>
+                    </button>
+                    <button class=\"cs2-odds-button\" tabindex=\"0\" aria-label=\"Bet on G2 to win at 2.10 odds\">
+                        <div class=\"cs2-odds-label\">G2 Win</div>
+                        <div class=\"cs2-odds-value\">2.10</div>
+                    </button>
+                    <button class=\"cs2-odds-button\" tabindex=\"0\" aria-label=\"Bet on over 26.5 rounds at 1.95 odds\">
+                        <div class=\"cs2-odds-label\">Over 26.5</div>
+                        <div class=\"cs2-odds-value\">1.95</div>
+                    </button>
+                </div>
+            </article>
+            
+            <!-- Upcoming Match Card -->
+            <article class=\"cs2-match-card\">
+                <div class=\"cs2-match-header\">
+                    <div class=\"cs2-match-status upcoming\">⏰ In 45min</div>
+                    <div class=\"cs2-match-time\">15:30 EST</div>
+                </div>
+                
+                <div class=\"cs2-teams-container\">
+                    <div class=\"cs2-team home\">
+                        <img src=\"img/astralis-logo.png\" alt=\"Astralis\" class=\"cs2-team-logo\" onerror=\"this.style.background='#ffd700'; this.style.color='black'; this.innerHTML='AST'; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center'; this.style.fontSize='12px'; this.style.fontWeight='bold';\">
+                        <div class=\"cs2-team-info\">
+                            <div class=\"cs2-team-name\">Astralis</div>
+                        </div>
+                    </div>
+                    
+                    <div class=\"cs2-vs-separator\">VS</div>
+                    
+                    <div class=\"cs2-team away\">
+                        <img src=\"img/vitality-logo.png\" alt=\"Vitality\" class=\"cs2-team-logo\" onerror=\"this.style.background='#000000'; this.style.color='#ffd700'; this.innerHTML='VIT'; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center'; this.style.fontSize='12px'; this.style.fontWeight='bold';\">
+                        <div class=\"cs2-team-info\">
+                            <div class=\"cs2-team-name\">Team Vitality</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class=\"cs2-match-info\" style=\"text-align: center; margin: 1rem 0; color: var(--cs2-text-muted); font-size: 0.875rem;\">
+                    📍 ESL Pro League • Best of 3 • Group Stage
+                </div>
+                
+                <div class=\"cs2-odds-container\">
+                    <button class=\"cs2-odds-button\" tabindex=\"0\" aria-label=\"Bet on Astralis to win at 2.45 odds\">
+                        <div class=\"cs2-odds-label\">Astralis Win</div>
+                        <div class=\"cs2-odds-value\">2.45</div>
+                    </button>
+                    <button class=\"cs2-odds-button\" tabindex=\"0\" aria-label=\"Bet on Vitality to win at 1.65 odds\">
+                        <div class=\"cs2-odds-label\">Vitality Win</div>
+                        <div class=\"cs2-odds-value\">1.65</div>
+                    </button>
+                    <button class=\"cs2-odds-button\" tabindex=\"0\" aria-label=\"Bet on over 2.5 maps at 1.75 odds\">
+                        <div class=\"cs2-odds-label\">Over 2.5 Maps</div>
+                        <div class=\"cs2-odds-value\">1.75</div>
+                    </button>
+                </div>
+            </article>
+        </section>
+        
+        <!-- Enhanced Form Demo -->
+        <section class=\"cs2-section\">
+            <h2 class=\"cs2-section-title\">📝 Enhanced Betting Form</h2>
+            <form class=\"cs2-form\" style=\"max-width: 500px;\">
+                <div class=\"cs2-form-group\">
+                    <label for=\"betAmount\" class=\"cs2-label\">Bet Amount ($)</label>
+                    <input type=\"number\" id=\"betAmount\" class=\"cs2-input\" placeholder=\"Enter amount\" min=\"5\" max=\"1000\" required>
+                </div>
+                
+                <div class=\"cs2-form-group\">
+                    <label for=\"betType\" class=\"cs2-label\">Bet Type</label>
+                    <select id=\"betType\" class=\"cs2-select\" required>
+                        <option value=\"\">Select bet type</option>
+                        <option value=\"match-winner\">Match Winner</option>
+                        <option value=\"map-winner\">Map Winner</option>
+                        <option value=\"over-under\">Over/Under Rounds</option>
+                    </select>
+                </div>
+                
+                <div class=\"cs2-form-group\">
+                    <label for=\"notes\" class=\"cs2-label\">Notes (Optional)</label>
+                    <textarea id=\"notes\" class=\"cs2-textarea\" placeholder=\"Add any notes about your bet...\" rows=\"3\"></textarea>
+                </div>
+                
+                <div class=\"cs2-form-group\" style=\"display: flex; gap: 1rem;\">
+                    <button type=\"button\" class=\"cs2-button cs2-button-secondary\" style=\"flex: 1;\">Reset Form</button>
+                    <button type=\"submit\" class=\"cs2-button cs2-button-primary cs2-button-large\" style=\"flex: 2;\">Place Bet 🎯</button>
+                </div>
+            </form>
+        </section>
+        
+        <!-- Loading States Demo -->
+        <section class=\"cs2-section\">
+            <h2 class=\"cs2-section-title\">⚡ Loading States & Feedback</h2>
+            
+            <div style=\"display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;\">
+                <button class=\"cs2-button cs2-button-primary\" onclick=\"window.cs2UI.showToast('Success message!', 'success')\">
+                    Show Success Toast
+                </button>
+                <button class=\"cs2-button cs2-button-secondary\" onclick=\"window.cs2UI.showToast('Error message!', 'error')\">
+                    Show Error Toast
+                </button>
+                <button class=\"cs2-button cs2-button-secondary\" onclick=\"window.cs2UI.showToast('Info message!', 'info')\">
+                    Show Info Toast
+                </button>
+                <button class=\"cs2-button cs2-button-secondary\" onclick=\"this.disabled=true; window.cs2UI.setLoadingState(this, true); setTimeout(()=>{window.cs2UI.setLoadingState(this, false);this.disabled=false;}, 2000);\">
+                    Test Loading State
+                </button>
+            </div>
+            
+            <!-- Skeleton Loading Demo -->
+            <div class=\"cs2-match-card\" style=\"opacity: 0.7;\">
+                <div class=\"cs2-match-header\">
+                    <div class=\"cs2-skeleton cs2-skeleton-text\" style=\"width: 80px; height: 24px;\"></div>
+                    <div class=\"cs2-skeleton cs2-skeleton-text\" style=\"width: 60px; height: 20px;\"></div>
+                </div>
+                
+                <div class=\"cs2-teams-container\">
+                    <div class=\"cs2-team home\">
+                        <div class=\"cs2-skeleton cs2-skeleton-avatar\"></div>
+                        <div class=\"cs2-team-info\">
+                            <div class=\"cs2-skeleton cs2-skeleton-text\" style=\"width: 120px;\"></div>
+                        </div>
+                    </div>
+                    
+                    <div class=\"cs2-vs-separator\">VS</div>
+                    
+                    <div class=\"cs2-team away\">
+                        <div class=\"cs2-skeleton cs2-skeleton-avatar\"></div>
+                        <div class=\"cs2-team-info\">
+                            <div class=\"cs2-skeleton cs2-skeleton-text\" style=\"width: 100px;\"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class=\"cs2-odds-container\">
+                    <div class=\"cs2-skeleton\" style=\"height: 44px; border-radius: 8px;\"></div>
+                    <div class=\"cs2-skeleton\" style=\"height: 44px; border-radius: 8px;\"></div>
+                    <div class=\"cs2-skeleton\" style=\"height: 44px; border-radius: 8px;\"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Mobile Instructions -->
+        <section class=\"cs2-section\">
+            <div class=\"cs2-card\" style=\"background: var(--cs2-bg-secondary); padding: 2rem; border-radius: 1rem; margin-top: 2rem;\">
+                <h3 style=\"margin-top: 0; color: var(--cs2-primary);\">📱 Mobile Features Test</h3>
+                <ul style=\"line-height: 1.8; color: var(--cs2-text-secondary);\">
+                    <li><strong>Navigation:</strong> Tap the hamburger menu (☰) on mobile</li>
+                    <li><strong>Swipe:</strong> Swipe left/right on match cards for quick actions</li>
+                    <li><strong>Touch Targets:</strong> All buttons are 44px+ for easy tapping</li>
+                    <li><strong>Theme Toggle:</strong> Tap the 🌙/☀️ button to switch themes</li>
+                    <li><strong>Accessibility:</strong> Full keyboard navigation and screen reader support</li>
+                    <li><strong>Forms:</strong> Real-time validation with helpful error messages</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer class=\"cs2-footer\" style=\"margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--cs2-bg-tertiary); text-align: center; color: var(--cs2-text-muted);\">
+        <div class=\"cs2-container\">
+            <p>🎮 CS2 Enhanced UI/UX Demo - Mobile-First Design with Improved Accessibility</p>
+            <p style=\"font-size: 0.875rem; margin-top: 1rem;\">
+                ✅ Mobile Responsive • ✅ Accessibility (WCAG 2.1) • ✅ Loading States • ✅ Enhanced Forms • ✅ Visual Consistency
+            </p>
+        </div>
+    </footer>
+    
+    <!-- Enhanced JavaScript -->
+    <script src=\"js/cs2-modern.js\"></script>
+    <script src=\"js/cs2-enhanced-ui.js\"></script>
+    
+    <!-- ARIA Live Region for Screen Readers -->
+    <div id=\"cs2-live-region\" aria-live=\"polite\" aria-atomic=\"true\" style=\"position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;\"></div>
+</body>
+</html>"

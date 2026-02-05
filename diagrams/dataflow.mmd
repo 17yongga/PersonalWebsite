@@ -1,0 +1,19 @@
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#38bdf8', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1e40af', 'lineColor': '#38bdf8'}}}%%
+sequenceDiagram
+    autonumber
+    participant U as 👤 User
+    participant F as 🖥️ Frontend<br/>(ask-gary.js)
+    participant B as ⚙️ Backend<br/>(FastAPI)
+    participant I as 📊 Knowledge Base<br/>(indexed_data.json)
+    participant O as 🤖 OpenAI API
+
+    U->>F: Types question
+    F->>B: POST /chat<br/>{session_id, message}
+    B->>O: Generate embedding<br/>for user query
+    O-->>B: Query embedding vector
+    B->>I: Cosine similarity search
+    I-->>B: Top 6 relevant chunks
+    B->>O: Chat completion<br/>(context + question)
+    O-->>B: Generated response
+    B-->>F: {answer, sources}
+    F-->>U: Display with animation

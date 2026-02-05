@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Gary - Architecture Diagrams</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 40px;
+        }
+        h1 { 
+            text-align: center; 
+            color: #38bdf8; 
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+        }
+        h2 { 
+            color: #38bdf8; 
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #1e293b;
+        }
+        .diagram-container {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .description {
+            color: #9ca3af;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+        @media print {
+            body { background: white; color: black; }
+            .diagram-container { box-shadow: none; border: 1px solid #ccc; }
+            h1, h2 { color: #1e40af; }
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 Ask Gary - Technical Architecture</h1>
+    
+    <h2>1. Solution Architecture Overview</h2>
+    <p class="description">High-level view of all system components and their interactions.</p>
+    <div class="diagram-container">
+        <div class="mermaid" id="arch">
+flowchart TB
+    subgraph Internet["🌐 Internet"]
+        User["👤 Visitors / Recruiters"]
+        CF["☁️ Cloudflare CDN"]
+    end
+
+    subgraph AWS["☁️ AWS EC2 Instance"]
+        subgraph Nginx["🔧 Nginx"]
+            Static["📄 Static Files"]
+            Proxy["🔀 API Proxy"]
+        end
+        
+        subgraph Frontend["🖥️ Frontend"]
+            HTML["📝 ask-gary.html"]
+            JS["⚡ ask-gary.js"]
+            CSS["🎨 styles.css"]
+        end
+        
+        subgraph Backend["⚙️ Backend - FastAPI"]
+            Main["🐍 main.py"]
+            Config["⚙️ config.py"]
+            Index["📊 indexed_data.json"]
+        end
+    end
+    
+    subgraph OpenAI["🤖 OpenAI API"]
+        Embed["🔢 Embeddings"]
+        Chat["💬 GPT-4o-mini"]
+    end
+
+    User --> CF
+    CF --> Nginx
+    Static --> Frontend
+    Proxy --> Backend
+    JS --> Proxy
+    Main --> Embed
+    Main --> Chat
+    Config --> Main
+    Index --> Main
+        </div>
+    </div>
+
+    <h2>2. Data Flow - User Query Processing</h2>
+    <p class="description">Step-by-step flow of how a user question is processed and answered.</p>
+    <div class="diagram-container">
+        <div class="mermaid" id="flow">
+sequenceDiagram
+    autonumber
+    participant U as 👤 User
+    participant F as 🖥️ Frontend
+    participant B as ⚙️ Backend
+    participant I as 📊 Knowledge Base
+    participant O as 🤖 OpenAI API
+
+    U->>F: Types question
+    F->>B: POST /chat
+    B->>O: Generate query embedding
+    O-->>B: Embedding vector
+    B->>I: Similarity search
+    I-->>B: Top 6 relevant chunks
+    B->>O: Chat completion request
+    O-->>B: Generated response
+    B-->>F: Answer + sources
+    F-->>U: Display response
+        </div>
+    </div>
+
+    <h2>3. Technology Stack</h2>
+    <p class="description">Overview of all technologies used across the stack.</p>
+    <div class="diagram-container">
+        <div class="mermaid" id="stack">
+mindmap
+  root((Ask Gary))
+    Frontend
+      HTML5
+      CSS3
+      JavaScript
+      marked.js
+    Backend
+      Python
+      FastAPI
+      Uvicorn
+      Pydantic
+    Infrastructure
+      AWS EC2
+      Ubuntu
+      Nginx
+      systemd
+      Cloudflare
+    AI/ML
+      GPT-4o-mini
+      Embeddings API
+      RAG
+        </div>
+    </div>
+
+    <h2>4. Component Architecture</h2>
+    <p class="description">Detailed view of frontend and backend components.</p>
+    <div class="diagram-container">
+        <div class="mermaid" id="components">
+flowchart LR
+    subgraph FE["Frontend Components"]
+        direction TB
+        A1["ask-gary.html<br/>───────────<br/>• Chat UI<br/>• Dark theme<br/>• Responsive"]
+        A2["ask-gary.js<br/>───────────<br/>• Session mgmt<br/>• Retry logic<br/>• Animations"]
+        A3["styles.css<br/>───────────<br/>• CSS variables<br/>• Gradients<br/>• Transitions"]
+    end
+
+    subgraph BE["Backend Components"]
+        direction TB
+        B1["main.py<br/>───────────<br/>• /health<br/>• /chat<br/>• RAG logic"]
+        B2["config.py<br/>───────────<br/>• System prompt<br/>• Model config<br/>• Chunk settings"]
+        B3["indexed_data.json<br/>───────────<br/>• Pre-computed<br/>• Embeddings<br/>• Source refs"]
+    end
+
+    subgraph Data["Knowledge Base"]
+        direction TB
+        D1["AboutMe.txt"]
+        D2["Experience.txt"]
+        D3["Projects.txt"]
+        D4["Skills.txt"]
+    end
+
+    FE --> BE
+    Data --> B3
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#38bdf8',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#1e40af',
+                lineColor: '#38bdf8',
+                secondaryColor: '#1e293b',
+                tertiaryColor: '#0f172a',
+                background: '#1e293b',
+                mainBkg: '#1e293b',
+                secondBkg: '#334155'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                useMaxWidth: true,
+                wrap: true
+            }
+        });
+    </script>
+</body>
+</html>

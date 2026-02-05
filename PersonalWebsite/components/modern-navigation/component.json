@@ -1,0 +1,10 @@
+{
+  "name": "ModernNavigation",
+  "type": "navigation",
+  "features": [
+    "responsive-menu",
+    "dark-mode-toggle",
+    "accessibility"
+  ],
+  "generated": "2026-02-03T06:35:45.400Z"
+}

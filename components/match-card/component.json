@@ -1,0 +1,10 @@
+{
+  "name": "MatchCard",
+  "type": "card",
+  "features": [
+    "hover-effects",
+    "team-logos",
+    "responsive"
+  ],
+  "generated": "2026-02-03T04:18:13.638Z"
+}

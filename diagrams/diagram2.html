@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+body { background: #1e293b; margin: 0; padding: 40px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.container { background: #0f172a; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+h1 { color: #38bdf8; text-align: center; font-family: system-ui; margin-bottom: 30px; font-size: 1.8rem; }
+</style>
+</head><body>
+<div class="container">
+<h1>🔄 Ask Gary - Data Flow</h1>
+<div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant U as 👤 User
+    participant F as 🖥️ Frontend<br/>(ask-gary.js)
+    participant B as ⚙️ Backend<br/>(FastAPI)
+    participant I as 📊 Knowledge Base<br/>(indexed_data.json)
+    participant O as 🤖 OpenAI API
+
+    U->>F: Types question in chat
+    F->>B: POST /chat {session_id, message}
+    B->>O: Generate embedding for query
+    O-->>B: Query embedding vector
+    B->>I: Cosine similarity search
+    I-->>B: Top 6 relevant chunks
+    B->>O: Chat completion (context + question)
+    O-->>B: Generated response
+    B-->>F: {answer, sources}
+    F-->>U: Display with animation
+</div>
+</div>
+<script>mermaid.initialize({startOnLoad:true,theme:'dark',themeVariables:{primaryColor:'#38bdf8',primaryTextColor:'#fff',lineColor:'#38bdf8',secondaryColor:'#1e293b'}});</script>
+</body></html>

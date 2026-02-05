@@ -1,0 +1,10 @@
+{
+  "name": "StaticOddsDisplay",
+  "type": "odds",
+  "features": [
+    "responsive",
+    "accessible",
+    "static-optimized"
+  ],
+  "generated": "2026-02-03T04:18:13.637Z"
+}

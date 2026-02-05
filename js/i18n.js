@@ -83,6 +83,15 @@ const i18n = {
   },
   
   applyTranslations() {
+    // Update page title if data-i18n-title is set on html element
+    const titleKey = document.documentElement.getAttribute('data-i18n-title');
+    if (titleKey) {
+      const titleTranslation = this.t(titleKey);
+      if (titleTranslation && titleTranslation !== titleKey) {
+        document.title = titleTranslation;
+      }
+    }
+
     // Find all elements with data-i18n attribute
     const elements = document.querySelectorAll('[data-i18n]');
     

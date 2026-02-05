@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+body { 
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); 
+    margin: 0; 
+    padding: 50px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    min-height: 100vh; 
+}
+.container { 
+    background: #ffffff; 
+    border-radius: 24px; 
+    padding: 50px 60px; 
+    box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+    max-width: 1100px;
+}
+h1 { 
+    color: #1a1a2e; 
+    text-align: center; 
+    font-family: 'Segoe UI', system-ui, sans-serif; 
+    margin-bottom: 10px; 
+    font-size: 2rem;
+    font-weight: 700;
+}
+.subtitle {
+    color: #6b7280;
+    text-align: center;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    margin-bottom: 35px;
+    font-size: 1rem;
+}
+.mermaid { display: flex; justify-content: center; }
+</style>
+</head><body>
+<div class="container">
+<h1>🚀 Ask Gary - Deployment Architecture</h1>
+<p class="subtitle">Production infrastructure and request routing flow</p>
+<div class="mermaid">
+flowchart TB
+    subgraph Client["👤 CLIENT"]
+        Browser["🌐 Web Browser<br/>HTTPS Request"]
+    end
+    
+    subgraph CDN["☁️ CLOUDFLARE"]
+        DNS["📍 DNS Resolution"]
+        Cache["⚡ Edge Caching"]
+        SSL1["🔒 SSL/TLS"]
+        DDOS["🛡️ DDoS Protection"]
+    end
+    
+    subgraph EC2["🖥️ AWS EC2 - Ubuntu"]
+        subgraph WebServer["NGINX :443"]
+            SSL2["🔒 SSL Termination"]
+            StaticServe["📄 Static Files"]
+            ReverseProxy["🔀 Reverse Proxy :8000"]
+        end
+        
+        subgraph App["APPLICATION LAYER"]
+            Systemd["⚙️ systemd Service<br/>Auto-restart"]
+            Uvicorn["🦄 Uvicorn ASGI<br/>Port 8000"]
+            FastAPI["🐍 FastAPI App<br/>Async Processing"]
+        end
+        
+        subgraph Storage["💾 DATA LAYER"]
+            Env["🔐 .env<br/>API Keys"]
+            JSON["📊 indexed_data.json<br/>5MB Embeddings"]
+            Venv["📦 Python venv<br/>Dependencies"]
+        end
+    end
+    
+    subgraph External["🔌 EXTERNAL"]
+        OpenAI["🤖 OpenAI API<br/>GPT-4o-mini"]
+    end
+
+    Browser ==> DNS
+    DNS --> Cache
+    Cache --> SSL1
+    SSL1 --> DDOS
+    DDOS ==> SSL2
+    SSL2 --> StaticServe
+    SSL2 --> ReverseProxy
+    ReverseProxy ==> Uvicorn
+    Systemd -.->|manages| Uvicorn
+    Uvicorn --> FastAPI
+    FastAPI --> JSON
+    FastAPI --> Env
+    FastAPI ==> OpenAI
+</div>
+</div>
+<script>
+mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+        primaryColor: '#f59e0b',
+        primaryTextColor: '#1e293b',
+        primaryBorderColor: '#d97706',
+        lineColor: '#f59e0b',
+        secondaryColor: '#fef3c7',
+        tertiaryColor: '#fde68a',
+        background: '#ffffff',
+        mainBkg: '#fef3c7',
+        secondBkg: '#fffbeb',
+        textColor: '#1e293b',
+        nodeTextColor: '#1e293b',
+        clusterBkg: '#fefce8',
+        clusterBorder: '#fcd34d',
+        edgeLabelBackground: '#ffffff'
+    },
+    flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+    }
+});
+</script>
+</body></html>

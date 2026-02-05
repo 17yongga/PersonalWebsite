@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+body { 
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+    margin: 0; 
+    padding: 50px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    min-height: 100vh; 
+}
+.container { 
+    background: #ffffff; 
+    border-radius: 24px; 
+    padding: 50px 60px; 
+    box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+    max-width: 1000px;
+}
+h1 { 
+    color: #1a1a2e; 
+    text-align: center; 
+    font-family: 'Segoe UI', system-ui, sans-serif; 
+    margin-bottom: 10px; 
+    font-size: 2rem;
+    font-weight: 700;
+}
+.subtitle {
+    color: #6b7280;
+    text-align: center;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    margin-bottom: 35px;
+    font-size: 1rem;
+}
+.mermaid { display: flex; justify-content: center; }
+</style>
+</head><body>
+<div class="container">
+<h1>🔄 Ask Gary - Data Flow</h1>
+<p class="subtitle">Step-by-step request processing from user question to AI response</p>
+<div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant U as 👤 User
+    participant F as 🖥️ Frontend<br/>(ask-gary.js)
+    participant B as ⚙️ Backend<br/>(FastAPI)
+    participant K as 📚 Knowledge Base<br/>(indexed_data.json)
+    participant O as 🤖 OpenAI API
+
+    U->>F: Types question in chat
+    F->>B: POST /chat {session_id, message}
+    B->>O: Generate query embedding
+    O-->>B: Returns embedding vector
+    B->>K: Cosine similarity search
+    K-->>B: Top 6 relevant chunks
+    B->>O: Chat completion request<br/>(context + question + prompt)
+    O-->>B: Generated response
+    B-->>F: JSON {answer, sources}
+    F-->>U: Display with animation
+</div>
+</div>
+<script>
+mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+        primaryColor: '#10b981',
+        primaryTextColor: '#ffffff',
+        primaryBorderColor: '#059669',
+        lineColor: '#10b981',
+        actorBkg: '#10b981',
+        actorTextColor: '#ffffff',
+        actorBorder: '#059669',
+        signalColor: '#1e293b',
+        signalTextColor: '#1e293b',
+        labelBoxBkgColor: '#f0fdf4',
+        labelBoxBorderColor: '#86efac',
+        labelTextColor: '#1e293b',
+        loopTextColor: '#1e293b',
+        noteBkgColor: '#fef3c7',
+        noteTextColor: '#1e293b',
+        noteBorderColor: '#fcd34d',
+        activationBkgColor: '#d1fae5',
+        activationBorderColor: '#10b981',
+        sequenceNumberColor: '#ffffff'
+    },
+    sequence: {
+        useMaxWidth: true,
+        wrap: true,
+        actorMargin: 80,
+        messageMargin: 40
+    }
+});
+</script>
+</body></html>

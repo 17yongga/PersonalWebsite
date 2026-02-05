@@ -1,0 +1,10 @@
+{
+  "name": "BettingInterface",
+  "type": "interface",
+  "features": [
+    "static-betting",
+    "simplified-ui",
+    "mobile-optimized"
+  ],
+  "generated": "2026-02-03T04:18:13.641Z"
+}

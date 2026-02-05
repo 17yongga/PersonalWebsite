@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Gary - Technical Specification Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #ffffff;
+            color: #1a1a2e;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+        
+        h1 { 
+            color: #1e40af;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #38bdf8;
+            padding-bottom: 15px;
+        }
+        
+        h2 { 
+            color: #1e40af;
+            font-size: 1.6rem;
+            margin: 35px 0 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        h3 {
+            color: #374151;
+            font-size: 1.2rem;
+            margin: 25px 0 10px;
+        }
+        
+        .header-meta {
+            color: #6b7280;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+        
+        .diagram-container {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        .diagram-title {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.95rem;
+        }
+        
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        tr:nth-child(even) {
+            background: #fafafa;
+        }
+        
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 0.9em;
+            color: #1e40af;
+        }
+        
+        pre {
+            background: #1e293b;
+            color: #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        .highlight-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        @media print {
+            body { padding: 20px; }
+            .diagram-container { break-inside: avoid; }
+            h2 { break-after: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 Ask Gary - Technical Specification Document</h1>
+    
+    <div class="header-meta">
+        <strong>Version:</strong> 1.0 | 
+        <strong>Last Updated:</strong> February 4, 2026 | 
+        <strong>Author:</strong> Dr.Molt
+    </div>
+
+    <div class="section">
+        <h2>1. Overview</h2>
+        <p><strong>Ask Gary</strong> is an AI-powered career assistant chatbot embedded in Gary Yong's personal portfolio website (gary-yong.com). It enables visitors to ask questions about Gary's professional background, work experience, projects, and skills through a conversational interface.</p>
+        
+        <h3>Purpose</h3>
+        <ul>
+            <li>Provide interactive engagement for recruiters and visitors</li>
+            <li>Showcase Gary's technical capabilities through the AI implementation itself</li>
+            <li>Answer questions about Gary's career in a conversational, friendly manner</li>
+        </ul>
+        
+        <h3>Key Features</h3>
+        <ul>
+            <li>Natural language question-answering about Gary's career</li>
+            <li>Context-aware responses using RAG (Retrieval-Augmented Generation)</li>
+            <li>Conversational tone with short, engaging responses</li>
+            <li>Source attribution for transparency</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>2. Solution Architecture</h2>
+        
+        <div class="diagram-container">
+            <div class="diagram-title">📊 High-Level Architecture Diagram</div>
+            <div class="mermaid">
+flowchart TB
+    subgraph Internet["🌐 Internet"]
+        User["👤 Visitors / Recruiters<br/>(Web Browser)"]
+        CF["☁️ Cloudflare CDN<br/>gary-yong.com"]
+    end
+
+    subgraph AWS["☁️ AWS EC2 Instance (Ubuntu)"]
+        subgraph Nginx["🔧 Nginx Reverse Proxy"]
+            Static["📄 Static Files<br/>gary-yong.com/*"]
+            Proxy["🔀 API Proxy<br/>api.gary-yong.com"]
+        end
+        
+        subgraph Frontend["🖥️ Frontend"]
+            HTML["📝 ask-gary.html"]
+            JS["⚡ ask-gary.js"]
+            CSS["🎨 styles.css"]
+        end
+        
+        subgraph Backend["⚙️ Backend (FastAPI)"]
+            Main["🐍 main.py<br/>/health, /chat"]
+            Config["⚙️ config.py"]
+            Index["📊 indexed_data.json"]
+        end
+    end
+    
+    subgraph OpenAI["🤖 OpenAI API"]
+        Embed["🔢 Embeddings API<br/>text-embedding-3-small"]
+        Chat["💬 Chat Completions<br/>gpt-4o-mini"]
+    end
+
+    User --> CF
+    CF --> Nginx
+    Static --> Frontend
+    Proxy --> Backend
+    JS -.->|"POST /chat"| Proxy
+    Main --> Embed
+    Main --> Chat
+    Config --> Main
+    Index --> Main
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>3. Data Flow</h2>
+        
+        <div class="diagram-container">
+            <div class="diagram-title">📊 User Query Processing Flow</div>
+            <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant U as 👤 User
+    participant F as 🖥️ Frontend<br/>(ask-gary.js)
+    participant B as ⚙️ Backend<br/>(FastAPI)
+    participant I as 📊 Knowledge Base<br/>(indexed_data.json)
+    participant O as 🤖 OpenAI API
+
+    U->>F: Types question in chat
+    F->>B: POST /chat {session_id, message}
+    B->>O: Generate embedding for query
+    O-->>B: Query embedding vector
+    B->>I: Cosine similarity search
+    I-->>B: Top 6 relevant chunks
+    B->>O: Chat completion (context + question)
+    O-->>B: Generated response
+    B-->>F: {answer, sources}
+    F-->>U: Display with animation
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>4. Technology Stack</h2>
+        
+        <div class="diagram-container">
+            <div class="diagram-title">📊 Technology Mind Map</div>
+            <div class="mermaid">
+mindmap
+  root((Ask Gary<br/>Tech Stack))
+    Frontend
+      HTML5
+      CSS3
+      Vanilla JavaScript
+      marked.js
+    Backend
+      Python 3.x
+      FastAPI
+      Uvicorn
+      Pydantic
+      OpenAI SDK
+    Infrastructure
+      AWS EC2
+      Ubuntu Linux
+      Nginx
+      systemd
+      Cloudflare
+      Let's Encrypt
+    AI/ML
+      GPT-4o-mini
+      text-embedding-3-small
+      RAG Architecture
+      Cosine Similarity
+            </div>
+        </div>
+        
+        <h3>Frontend Stack</h3>
+        <table>
+            <tr><th>Component</th><th>Technology</th><th>Purpose</th></tr>
+            <tr><td>Structure</td><td>HTML5</td><td>Page layout and semantic structure</td></tr>
+            <tr><td>Styling</td><td>CSS3</td><td>Custom styling with CSS variables</td></tr>
+            <tr><td>Logic</td><td>Vanilla JavaScript</td><td>Chat interactions, API calls, animations</td></tr>
+            <tr><td>Markdown</td><td>marked.js</td><td>Rendering markdown in bot responses</td></tr>
+        </table>
+        
+        <h3>Backend Stack</h3>
+        <table>
+            <tr><th>Component</th><th>Technology</th><th>Purpose</th></tr>
+            <tr><td>Framework</td><td>FastAPI</td><td>High-performance async API framework</td></tr>
+            <tr><td>Runtime</td><td>Python 3.x</td><td>Backend programming language</td></tr>
+            <tr><td>Server</td><td>Uvicorn</td><td>ASGI server for FastAPI</td></tr>
+            <tr><td>Validation</td><td>Pydantic</td><td>Request/response validation</td></tr>
+            <tr><td>AI Client</td><td>OpenAI SDK</td><td>API client for GPT and embeddings</td></tr>
+        </table>
+        
+        <h3>Infrastructure Stack</h3>
+        <table>
+            <tr><th>Component</th><th>Technology</th><th>Purpose</th></tr>
+            <tr><td>Cloud</td><td>AWS EC2</td><td>Virtual server hosting</td></tr>
+            <tr><td>OS</td><td>Ubuntu Linux</td><td>Server operating system</td></tr>
+            <tr><td>Web Server</td><td>Nginx</td><td>Reverse proxy, static files, SSL</td></tr>
+            <tr><td>Process Mgr</td><td>systemd</td><td>Service management and auto-restart</td></tr>
+            <tr><td>DNS/CDN</td><td>Cloudflare</td><td>DNS, caching, DDoS protection</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>5. Component Architecture</h2>
+        
+        <div class="diagram-container">
+            <div class="diagram-title">📊 Component Details</div>
+            <div class="mermaid">
+flowchart LR
+    subgraph FE["🖥️ Frontend Components"]
+        direction TB
+        A1["<b>ask-gary.html</b><br/>─────────<br/>• Chat UI<br/>• Dark theme<br/>• Responsive"]
+        A2["<b>ask-gary.js</b><br/>─────────<br/>• Session mgmt<br/>• Retry logic<br/>• Animations"]
+    end
+
+    subgraph BE["⚙️ Backend Components"]
+        direction TB
+        B1["<b>main.py</b><br/>─────────<br/>• /health<br/>• /chat<br/>• RAG logic"]
+        B2["<b>config.py</b><br/>─────────<br/>• System prompt<br/>• Model config"]
+    end
+
+    subgraph DATA["📊 Data Layer"]
+        direction TB
+        D1["<b>indexed_data.json</b><br/>Pre-computed embeddings"]
+        D2["<b>/data/*.txt</b><br/>Source documents"]
+    end
+
+    FE -->|"HTTP/JSON"| BE
+    D2 -->|"index_data.py"| D1
+    D1 --> BE
+            </div>
+        </div>
+        
+        <h3>API Endpoints</h3>
+        <table>
+            <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+            <tr><td><code>/health</code></td><td>GET</td><td>Health check - returns {"status": "ok"}</td></tr>
+            <tr><td><code>/chat</code></td><td>POST</td><td>Main chat - accepts message, returns answer + sources</td></tr>
+        </table>
+        
+        <h3>Configuration Settings</h3>
+        <table>
+            <tr><th>Setting</th><th>Value</th><th>Description</th></tr>
+            <tr><td>EMBEDDINGS_MODEL</td><td>text-embedding-3-small</td><td>OpenAI embedding model</td></tr>
+            <tr><td>CHAT_MODEL</td><td>gpt-4o-mini</td><td>OpenAI chat model</td></tr>
+            <tr><td>TOP_K_RESULTS</td><td>6</td><td>Context chunks to retrieve</td></tr>
+            <tr><td>CHUNK_SIZE</td><td>800</td><td>Characters per chunk</td></tr>
+            <tr><td>CHUNK_OVERLAP</td><td>100</td><td>Overlap between chunks</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>6. Knowledge Base</h2>
+        
+        <h3>Source Documents</h3>
+        <table>
+            <tr><th>File</th><th>Content</th></tr>
+            <tr><td>AboutMe.txt</td><td>Personal background</td></tr>
+            <tr><td>Experience.txt</td><td>Work history details</td></tr>
+            <tr><td>Projects.txt</td><td>Technical project descriptions</td></tr>
+            <tr><td>Skills.txt</td><td>Technical skills list</td></tr>
+            <tr><td>WorkSelfEvaluation.txt</td><td>Self-assessment content</td></tr>
+            <tr><td>WorkTermReportData.txt</td><td>Detailed work term reports</td></tr>
+            <tr><td>resume_2025.txt</td><td>Current resume</td></tr>
+        </table>
+        
+        <h3>Indexing Process</h3>
+        <div class="highlight-box">
+            <strong>index_data.py</strong> pre-processes source files:
+            <ol>
+                <li>Reads all .txt files from <code>/data</code> directory</li>
+                <li>Chunks text into 800-character segments with 100-char overlap</li>
+                <li>Generates embeddings for each chunk via OpenAI API</li>
+                <li>Saves to <code>indexed_data.json</code> with metadata</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>7. Deployment Architecture</h2>
+        
+        <h3>Directory Structure (EC2)</h3>
+        <pre><code>/home/ubuntu/PersonalWebsite/
+├── ask-gary.html              # Frontend HTML
+├── ask-gary.js                # Frontend JavaScript
+├── styles.css                 # Global styles
+├── ask-gary-backend/
+│   ├── main.py                # FastAPI application
+│   ├── config.py              # Configuration
+│   ├── index_data.py          # Indexing script
+│   ├── indexed_data.json      # Pre-computed embeddings
+│   ├── requirements.txt       # Python dependencies
+│   ├── .env                   # API keys (not in git)
+│   ├── venv/                  # Python virtual environment
+│   └── data/                  # Source knowledge files</code></pre>
+        
+        <h3>Systemd Service</h3>
+        <pre><code>[Unit]
+Description=Ask Gary Backend
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/PersonalWebsite/ask-gary-backend
+ExecStart=/home/ubuntu/.../venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+    </div>
+
+    <div class="section">
+        <h2>8. Performance & Security</h2>
+        
+        <h3>Performance Characteristics</h3>
+        <table>
+            <tr><th>Metric</th><th>Value</th></tr>
+            <tr><td>Cold Start</td><td>~2-3 seconds</td></tr>
+            <tr><td>Warm Response</td><td>~1-2 seconds</td></tr>
+            <tr><td>Context Retrieval</td><td>~100ms</td></tr>
+            <tr><td>Max Response Tokens</td><td>150</td></tr>
+            <tr><td>Retry Attempts</td><td>3 (exponential backoff)</td></tr>
+        </table>
+        
+        <h3>Security Measures</h3>
+        <table>
+            <tr><th>Aspect</th><th>Implementation</th></tr>
+            <tr><td>HTTPS</td><td>SSL/TLS via Let's Encrypt</td></tr>
+            <tr><td>CORS</td><td>Restricted to specific origins</td></tr>
+            <tr><td>API Keys</td><td>Stored in .env, not in repository</td></tr>
+            <tr><td>Rate Limiting</td><td>Handled by Cloudflare</td></tr>
+            <tr><td>Input Validation</td><td>Pydantic models in FastAPI</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>9. Future Improvements</h2>
+        
+        <div class="highlight-box">
+            <h3>Phase 1: Cost Optimization</h3>
+            <p>Migrate from OpenAI API (pay-per-use) to Claude Max subscription for predictable monthly costs.</p>
+            
+            <h3>Phase 2: Interface Modernization</h3>
+            <p>Convert from dedicated page to floating chatbot widget with bottom-right chat icon and popup window.</p>
+            
+            <h3>Phase 3: Conversation Enhancement</h3>
+            <p>Further tune response length and tone, add contextual follow-up suggestions.</p>
+        </div>
+    </div>
+
+    <div class="section" style="margin-top: 50px; padding-top: 20px; border-top: 2px solid #e5e7eb; color: #6b7280; font-size: 0.9rem;">
+        <p><em>Document generated by Dr.Molt for Gary Yong's portfolio project.</em></p>
+        <p><em>Last updated: February 4, 2026</em></p>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#3b82f6',
+                primaryTextColor: '#1e293b',
+                primaryBorderColor: '#1e40af',
+                lineColor: '#64748b',
+                secondaryColor: '#f1f5f9',
+                tertiaryColor: '#e2e8f0'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                useMaxWidth: true,
+                wrap: true
+            }
+        });
+    </script>
+</body>
+</html>

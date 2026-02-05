@@ -1,0 +1,10 @@
+{
+  "name": "DashboardLayout",
+  "type": "layout",
+  "features": [
+    "grid-system",
+    "responsive-columns",
+    "modern-cards"
+  ],
+  "generated": "2026-02-03T04:18:13.643Z"
+}

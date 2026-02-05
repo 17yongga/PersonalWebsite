@@ -20,21 +20,27 @@
     <a href="index.html" class="logo">
   <img src="img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
   <img src="img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
-  <!--<span class="logo-text">YourName</span>-->
 </a>
 
     <!-- Desktop navigation -->
     <nav class="nav nav-desktop">
-      <a href="index.html">Home</a>
-      <a href="projects.html">Projects</a>
-      <a href="experience.html">Experience</a>
-      <a href="about.html">About</a>
-      <a href="skills.html">Skills</a>
-      <a href="blog.html">Blog</a>
+      <a href="index.html" data-i18n="nav.home">Home</a>
+      <a href="projects.html" data-i18n="nav.projects">Projects</a>
+      <a href="experience.html" data-i18n="nav.experience">Experience</a>
+      <a href="about.html" data-i18n="nav.about">About</a>
+      <a href="skills.html" data-i18n="nav.skills">Skills</a>
+      <a href="blog.html" data-i18n="nav.blog">Blog</a>
     </nav>
 
-    <!-- Right controls: theme + mobile toggle -->
+    <!-- Right controls: lang + theme + mobile toggle -->
     <div class="header-actions">
+      <button
+        id="lang-toggle"
+        class="btn btn-ghost lang-toggle"
+        aria-label="Switch language"
+      >
+        中文
+      </button>
       <button
         id="theme-toggle"
         class="btn btn-ghost theme-toggle"
@@ -59,12 +65,12 @@
   <!-- Mobile navigation panel -->
   <nav class="nav-mobile" aria-label="Mobile navigation">
     <div class="nav-mobile-inner">
-      <a href="index.html">Home</a>
-      <a href="projects.html">Projects</a>
-      <a href="experience.html">Experience</a>
-      <a href="about.html">About</a>
-      <a href="skills.html">Skills</a>
-      <a href="blog.html">Blog</a>
+      <a href="index.html" data-i18n="nav.home">Home</a>
+      <a href="projects.html" data-i18n="nav.projects">Projects</a>
+      <a href="experience.html" data-i18n="nav.experience">Experience</a>
+      <a href="about.html" data-i18n="nav.about">About</a>
+      <a href="skills.html" data-i18n="nav.skills">Skills</a>
+      <a href="blog.html" data-i18n="nav.blog">Blog</a>
     </div>
   </nav>
 </header>
@@ -73,250 +79,251 @@
     <section class="section">
     <div class="container">
       <header class="section-header animate-fade-up">
-      <h2>Projects</h2>
-      <!-- <p>Technologist at heart and consultant by trade, I experiment with cutting-edge tools in my spare time while spending my days modernizing large-scale, complex banking systems and driving multi-team transformation programs. 
-      This portfolio showcases the experimental side of how I explore new technologies, complementing my core work helping financial institutions migrate 
-      mission-critical platforms and deliver resilient, real-world solutions.</p> -->
+        <h2 data-i18n="projects.title">Projects</h2>
       </header>
       <div class="grid grid-3">
+      
+      <!-- Ask Gary -->
       <article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>Ask Gary – Personal AI Career Chatbot</h3>
-      <p class="meta">
-        Tech: FastAPI · Python · OpenAI · Vanilla JS · AWS EC2/S3
-      </p>
-    </div>
-    <div class="project-actions">
-      <a href="https://gary-yong.com/ask-gary.html" class="btn btn-primary btn-pill">Live demo</a>
-      <a href="https://github.com/17yongga/PersonalWebsite" class="btn btn-secondary btn-pill">Source code</a>
-</a>
-    </div>
-  </header>
+        <header class="project-card-header">
+          <div class="project-card-heading">
+            <h3 data-i18n="projects.ask_gary.title">Ask Gary – Personal AI Career Chatbot</h3>
+            <p class="meta" data-i18n="projects.ask_gary.meta">
+              Tech: FastAPI · Python · OpenAI · Vanilla JS · AWS EC2/S3
+            </p>
+          </div>
+          <div class="project-actions">
+            <a href="https://gary-yong.com/ask-gary.html" class="btn btn-primary btn-pill" data-i18n="projects.ask_gary.cta_demo">Live demo</a>
+            <a href="https://github.com/17yongga/PersonalWebsite" class="btn btn-secondary btn-pill" data-i18n="projects.ask_gary.cta_source">Source code</a>
+          </div>
+        </header>
 
-  <!-- LEFT SIDE: text -->
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Built Ask Gary, a retrieval‑augmented AI chatbot that answers career questions from my resume, LinkedIn, hobbies, and projects.</li>
-      <li>Uses a FastAPI backend with vector search and OpenAI models.</li>
-      <li>Integrated as a dedicated page on my personal website with a lightweight JavaScript frontend.</li>
-      <li>Deployed on AWS (EC2 for backend, S3 for static site) with logging, evaluation, and troubleshooting workflows.</li>
-    </ul>
+        <div class="project-card-main">
+          <ul class="bullets">
+            <li data-i18n="projects.ask_gary.bullets.0">Built Ask Gary, a retrieval‑augmented AI chatbot that answers career questions from my resume, LinkedIn, hobbies, and projects.</li>
+            <li data-i18n="projects.ask_gary.bullets.1">Uses a FastAPI backend with vector search and OpenAI models.</li>
+            <li data-i18n="projects.ask_gary.bullets.2">Integrated as a dedicated page on my personal website with a lightweight JavaScript frontend.</li>
+            <li data-i18n="projects.ask_gary.bullets.3">Deployed on AWS (EC2 for backend, S3 for static site) with logging, evaluation, and troubleshooting workflows.</li>
+          </ul>
 
-    <ul class="tags">
-      <li>AI chatbot</li>
-      <li>Retrieval‑augmented generation (RAG)</li>
-      <li>Python</li>
-      <li>OpenAI API</li>
-      <li>AWS EC2</li>
-      <li>AWS S3</li>
-    </ul>
-  </div>
+          <ul class="tags">
+            <li>AI chatbot</li>
+            <li>RAG</li>
+            <li>Python</li>
+            <li>OpenAI API</li>
+            <li>AWS EC2</li>
+            <li>AWS S3</li>
+          </ul>
+        </div>
 
-  <!-- RIGHT SIDE: image -->
-  <div class="project-card-media">
-    <img src="img/ask-gary-1.png" alt="Ask Gary chat interface" />
-  </div>
-</article>
-<article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>Lunar – Crypto Portfolio Builder</h3>
-      <p class="meta">
-        4th Year Design Project
-      </p>
-    </div>
-    <div class="project-actions">
-      <!-- Replace # with real links if available -->
-      <a href="https://lunar.alan-wu.com/landing" class="btn btn-primary btn-pill">Live demo</a>
-      <a href="Lunar_Proposal_Deck.pdf" class="btn btn-secondary btn-pill">Proposal Deck</a>
-      <a href="LunarProjectReport.pdf" class="btn btn-secondary btn-pill">Project Report</a>
-    </div>
-  </header>
+        <div class="project-card-media">
+          <img src="img/ask-gary-1.png" alt="Ask Gary chat interface" />
+        </div>
+      </article>
 
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Led a team of five as Project manager/UIUX Designer to deliver a deployed crypto portfolio management web platform.</li>
-      <li>Managed seven stakeholders through three design revisions, seven feedback sessions, and bi‑weekly retros.</li>
-      <li>Conducted needs analysis via user surveys and interviews, then designed end‑to‑end user journeys for the product.</li>
-    </ul>
+      <!-- Lunar -->
+      <article class="card project-card project-card-split animate-fade-up">
+        <header class="project-card-header">
+          <div class="project-card-heading">
+            <h3 data-i18n="projects.lunar.title">Lunar – Crypto Portfolio Builder</h3>
+            <p class="meta" data-i18n="projects.lunar.meta">
+              4th Year Design Project
+            </p>
+          </div>
+          <div class="project-actions">
+            <a href="https://lunar.alan-wu.com/landing" class="btn btn-primary btn-pill" data-i18n="projects.lunar.cta_demo">Live demo</a>
+            <a href="Lunar_Proposal_Deck.pdf" class="btn btn-secondary btn-pill" data-i18n="projects.lunar.cta_proposal">Proposal Deck</a>
+            <a href="LunarProjectReport.pdf" class="btn btn-secondary btn-pill" data-i18n="projects.lunar.cta_report">Project Report</a>
+          </div>
+        </header>
 
-    <ul class="tags">
-      <li>Capstone Project</li>
-      <li>Product management</li>
-      <li>Team leadership</li>
-      <li>User research</li>
-      <li>Crypto</li>
-    </ul>
-  </div>
+        <div class="project-card-main">
+          <ul class="bullets">
+            <li data-i18n="projects.lunar.bullets.0">Led a team of five as Project manager/UIUX Designer to deliver a deployed crypto portfolio management web platform.</li>
+            <li data-i18n="projects.lunar.bullets.1">Managed seven stakeholders through three design revisions, seven feedback sessions, and bi‑weekly retros.</li>
+            <li data-i18n="projects.lunar.bullets.2">Conducted needs analysis via user surveys and interviews, then designed end‑to‑end user journeys for the product.</li>
+          </ul>
 
-  <div class="project-card-media">
-    <img src="img/lunarRefPic.png"
-         alt="Lunar crypto portfolio builder interface" />
-  </div>
-</article>
-<article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>Personal Website &amp; Portfolio Platform</h3>
-      <p class="meta">
-        Tech: HTML · CSS · JavaScript · Responsive Design · AWS S3/Route 53
-      </p>
-    </div>
-    <div class="project-actions">
-      <a href="https://gary-yong.com" class="btn btn-primary btn-pill">Live demo</a>
-      <a href="https://github.com/17yongga/PersonalWebsite" class="btn btn-secondary btn-pill">Source code</a>
-    </div>
-  </header>
+          <ul class="tags">
+            <li>Capstone</li>
+            <li>PM</li>
+            <li>Team leadership</li>
+            <li>User research</li>
+            <li>Crypto</li>
+          </ul>
+        </div>
 
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Designed and built a multi‑page personal website with dedicated sections for projects, experience, skills, blog, and contact</li>
-      <li>Implemented dark/light theme support, scroll‑reveal animations, and a mobile navigation drawer for a modern, app‑like user experience.</li>
-      <li>Deployed the site on AWS S3 with a custom domain and HTTPS, and structured content so new projects and posts can be added with minimal changes.</li>
-    </ul>
+        <div class="project-card-media">
+          <img src="img/lunarRefPic.png"
+               alt="Lunar crypto portfolio builder interface" />
+        </div>
+      </article>
 
-    <ul class="tags">
-      <li>Portfolio website</li>
-      <li>Responsive UI</li>
-      <li>Dark / light mode</li>
-      <li>CSS animations</li>
-      <li>Front‑end architecture</li>
-      <li>AWS S3</li>
-    </ul>
-  </div>
+      <!-- Personal Website -->
+      <article class="card project-card project-card-split animate-fade-up">
+        <header class="project-card-header">
+          <div class="project-card-heading">
+            <h3 data-i18n="projects.website.title">Personal Website &amp; Portfolio Platform</h3>
+            <p class="meta" data-i18n="projects.website.meta">
+              Tech: HTML · CSS · JavaScript · Responsive Design · AWS S3/Route 53
+            </p>
+          </div>
+          <div class="project-actions">
+            <a href="https://gary-yong.com" class="btn btn-primary btn-pill" data-i18n="projects.website.cta_demo">Live demo</a>
+            <a href="https://github.com/17yongga/PersonalWebsite" class="btn btn-secondary btn-pill" data-i18n="projects.website.cta_source">Source code</a>
+          </div>
+        </header>
 
-  <div class="project-card-media">
-    <img src="img/personalWebsite.png" alt="Screenshot of personal website homepage" />
-  </div>
-</article>
-<article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>Rideshare Service Platform</h3>
-      <p class="meta">
-        
-      </p>
-    </div>
-    <div class="project-actions">
-  
-    </div>
-  </header>
+        <div class="project-card-main">
+          <ul class="bullets">
+            <li data-i18n="projects.website.bullets.0">Designed and built a multi‑page personal website with dedicated sections for projects, experience, skills, blog, and contact</li>
+            <li data-i18n="projects.website.bullets.1">Implemented dark/light theme support, scroll‑reveal animations, and a mobile navigation drawer for a modern, app‑like user experience.</li>
+            <li data-i18n="projects.website.bullets.2">Deployed the site on AWS S3 with a custom domain and HTTPS, and structured content so new projects and posts can be added with minimal changes.</li>
+          </ul>
 
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Developed a ridesharing app that allows students to find safe and cheap rides fast with cost-savings up to 600%</li>
-      <li>Interviewed drivers and riders to define system requirements and minimum viable product</li>
-      <li>Identified cost, safety, and efficiency issues with the existing rideshare solutions available through market research</li>
-    </ul>
+          <ul class="tags">
+            <li>Portfolio</li>
+            <li>Responsive UI</li>
+            <li>Dark/light mode</li>
+            <li>CSS animations</li>
+            <li>AWS S3</li>
+          </ul>
+        </div>
 
-    <ul class="tags">
-      <li>Project Management</li>
-      <li>Market Analysis</li>
-      <li>User Research</li>
-      <li>Product Ideation</li>
-    </ul>
-  </div>
+        <div class="project-card-media">
+          <img src="img/personalWebsite.png" alt="Screenshot of personal website homepage" />
+        </div>
+      </article>
 
-  <div class="project-card-media">
-    <img src="img/rych.png" alt="Screenshot of personal website homepage" />
-  </div>
-</article>
-<article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>Pallet Tracking Automation Project</h3>
-      <p class="meta">Loblaw Companies Limited · JavaScript · Bluetooth LE · IoT</p>
-    </div>
-  </header>
+      <!-- Rideshare -->
+      <article class="card project-card project-card-split animate-fade-up">
+        <header class="project-card-header">
+          <div class="project-card-heading">
+            <h3 data-i18n="projects.rideshare.title">Rideshare Service Platform</h3>
+            <p class="meta"></p>
+          </div>
+          <div class="project-actions">
+          </div>
+        </header>
 
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Developed an automatic data delivery application in JavaScript that connects to Bluetooth Low Energy beacons and IoT gateways.</li>
-      <li>Optimized pallet tracking by eliminating manual data entry and reducing human errors through an automated IoT tracking system.</li>
-      <li>Ran on‑site tests and presented results to logistics leadership, gaining approval for further integration into operations.</li>
-    </ul>
+        <div class="project-card-main">
+          <ul class="bullets">
+            <li data-i18n="projects.rideshare.bullets.0">Developed a ridesharing app that allows students to find safe and cheap rides fast with cost-savings up to 600%</li>
+            <li data-i18n="projects.rideshare.bullets.1">Interviewed drivers and riders to define system requirements and minimum viable product</li>
+            <li data-i18n="projects.rideshare.bullets.2">Identified cost, safety, and efficiency issues with the existing rideshare solutions available through market research</li>
+          </ul>
 
-    <ul class="tags">
-      <li>IoT</li>
-      <li>Bluetooth LE</li>
-      <li>JavaScript</li>
-      <li>Automation</li>
-      <li>Logistics</li>
-    </ul>
-  </div>
+          <ul class="tags">
+            <li>PM</li>
+            <li>Market Analysis</li>
+            <li>User Research</li>
+            <li>Product Ideation</li>
+          </ul>
+        </div>
 
-  <div class="project-card-media">
-    <img src="img/pallettracking.png"
-         alt="Pallet tracking automation dashboard mockup" />
-  </div>
-</article>
-<article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>Product Authentication Blockchain Platform</h3>
-      <p class="meta">
-        Accenture Liquid Studio · Sept 2019 – Dec 2019 · Blockchain · AWS
-      </p>
-    </div>
-  </header>
+        <div class="project-card-media">
+          <img src="img/rych.png" alt="Screenshot of personal website homepage" />
+        </div>
+      </article>
 
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Contributed to a blockchain-based platform that authenticated products and surfaced project milestones in clear, business-focused language for senior leadership.</li>
-      <li>Worked within a 12‑week Agile Scrum roadmap that included user testing and continuous integration pipelines on AWS.</li>
-      <li>Delivered a client‑ready product with detailed documentation used by senior consultants and industry leaders across multiple regions.</li>
-    </ul>
+      <!-- Pallet Tracking -->
+      <article class="card project-card project-card-split animate-fade-up">
+        <header class="project-card-header">
+          <div class="project-card-heading">
+            <h3 data-i18n="projects.pallet.title">Pallet Tracking Automation Project</h3>
+            <p class="meta" data-i18n="projects.pallet.meta">Loblaw Companies Limited · JavaScript · Bluetooth LE · IoT</p>
+          </div>
+        </header>
 
-    <ul class="tags">
-      <li>Blockchain</li>
-      <li>AWS</li>
-      <li>Agile / Scrum</li>
-      <li>Product delivery</li>
-      <li>Consulting</li>
-    </ul>
-  </div>
+        <div class="project-card-main">
+          <ul class="bullets">
+            <li data-i18n="projects.pallet.bullets.0">Developed an automatic data delivery application in JavaScript that connects to Bluetooth Low Energy beacons and IoT gateways.</li>
+            <li data-i18n="projects.pallet.bullets.1">Optimized pallet tracking by eliminating manual data entry and reducing human errors through an automated IoT tracking system.</li>
+            <li data-i18n="projects.pallet.bullets.2">Ran on‑site tests and presented results to logistics leadership, gaining approval for further integration into operations.</li>
+          </ul>
 
-  <div class="project-card-media">
-    <img src="img/luxeSamplePic.jpg"
-         alt="Product authentication blockchain platform interface" />
-  </div>
-</article>
+          <ul class="tags">
+            <li>IoT</li>
+            <li>Bluetooth LE</li>
+            <li>JavaScript</li>
+            <li>Automation</li>
+            <li>Logistics</li>
+          </ul>
+        </div>
 
-<article class="card project-card project-card-split animate-fade-up">
-  <header class="project-card-header">
-    <div class="project-card-heading">
-      <h3>ERP Process Automation Tool</h3>
-      <p class="meta">
-        Internship Project · July 2017 – Aug 2017 · Excel VBA · Process Automation
-      </p>
-    </div>
-    <div class="project-actions">
-      <!-- Replace # with real links if available -->
-      <a href="Project_Plan.pdf" class="btn btn-secondary btn-pill">Project Plan</a>
-    </div>
-  </header>
+        <div class="project-card-media">
+          <img src="img/pallettracking.png"
+               alt="Pallet tracking automation dashboard mockup" />
+        </div>
+      </article>
 
-  <div class="project-card-main">
-    <ul class="bullets">
-      <li>Analyzed transaction processing workflows using process analysis and time studies to identify major inefficiencies.</li>
-      <li>Built an Excel VBA automation tool that reduced weekly business transaction processing time from 4 hours to about 15 minutes.</li>
-      <li>Designed and iterated on a user‑centric UI with validation rules, incorporating feedback to make the tool reliable and easy to use.</li>
-    </ul>
+      <!-- Blockchain -->
+      <article class="card project-card project-card-split animate-fade-up">
+        <header class="project-card-header">
+          <div class="project-card-heading">
+            <h3 data-i18n="projects.blockchain.title">Product Authentication Blockchain Platform</h3>
+            <p class="meta" data-i18n="projects.blockchain.meta">
+              Accenture Liquid Studio · Sept 2019 – Dec 2019 · Blockchain · AWS
+            </p>
+          </div>
+        </header>
 
-    <ul class="tags">
-      <li>Process automation</li>
-      <li>Excel VBA</li>
-      <li>Operations</li>
-      <li>UI/UX</li>
-    </ul>
-  </div>
+        <div class="project-card-main">
+          <ul class="bullets">
+            <li data-i18n="projects.blockchain.bullets.0">Contributed to a blockchain-based platform that authenticated products and surfaced project milestones in clear, business-focused language for senior leadership.</li>
+            <li data-i18n="projects.blockchain.bullets.1">Worked within a 12‑week Agile Scrum roadmap that included user testing and continuous integration pipelines on AWS.</li>
+            <li data-i18n="projects.blockchain.bullets.2">Delivered a client‑ready product with detailed documentation used by senior consultants and industry leaders across multiple regions.</li>
+          </ul>
 
-  <div class="project-card-media">
-    <img src="img/ERP_Automation.png"
-         alt="ERP process automation tool interface" />
-  </div>
-</article>
+          <ul class="tags">
+            <li>Blockchain</li>
+            <li>AWS</li>
+            <li>Agile/Scrum</li>
+            <li>Product delivery</li>
+            <li>Consulting</li>
+          </ul>
+        </div>
+
+        <div class="project-card-media">
+          <img src="img/luxeSamplePic.jpg"
+               alt="Product authentication blockchain platform interface" />
+        </div>
+      </article>
+
+      <!-- ERP -->
+      <article class="card project-card project-card-split animate-fade-up">
+        <header class="project-card-header">
+          <div class="project-card-heading">
+            <h3 data-i18n="projects.erp.title">ERP Process Automation Tool</h3>
+            <p class="meta" data-i18n="projects.erp.meta">
+              Internship Project · July 2017 – Aug 2017 · Excel VBA · Process Automation
+            </p>
+          </div>
+          <div class="project-actions">
+            <a href="Project_Plan.pdf" class="btn btn-secondary btn-pill" data-i18n="projects.erp.cta_plan">Project Plan</a>
+          </div>
+        </header>
+
+        <div class="project-card-main">
+          <ul class="bullets">
+            <li data-i18n="projects.erp.bullets.0">Analyzed transaction processing workflows using process analysis and time studies to identify major inefficiencies.</li>
+            <li data-i18n="projects.erp.bullets.1">Built an Excel VBA automation tool that reduced weekly business transaction processing time from 4 hours to about 15 minutes.</li>
+            <li data-i18n="projects.erp.bullets.2">Designed and iterated on a user‑centric UI with validation rules, incorporating feedback to make the tool reliable and easy to use.</li>
+          </ul>
+
+          <ul class="tags">
+            <li>Process automation</li>
+            <li>Excel VBA</li>
+            <li>Operations</li>
+            <li>UI/UX</li>
+          </ul>
+        </div>
+
+        <div class="project-card-media">
+          <img src="img/ERP_Automation.png"
+               alt="ERP process automation tool interface" />
+        </div>
+      </article>
 
       </div>
     </div>
@@ -325,11 +332,12 @@
 
     <footer class="site-footer">
       <div class="container">
-        <p>©2025 Gary Yong · Built with love ❤️.</p>
+        <p data-i18n="footer.copyright">©2025 Gary Yong · Built with love ❤️.</p>
       </div>
     </footer>
 
     <script src="main.js"></script>
+    <script src="js/i18n.js"></script>
     <script src="ask-gary-widget.js"></script>
   </body>
 </html>

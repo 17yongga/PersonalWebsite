@@ -9,54 +9,306 @@
     "contact": "Contact"
   },
   "home": {
-    "hero_greeting": "Hi, I'm",
-    "hero_name": "Gary Yong",
-    "hero_title": "Technology Consultant & AI Enthusiast",
-    "hero_description": "I help organizations transform through technology, specializing in AI solutions, digital transformation, and enterprise consulting.",
-    "hero_cta": "View My Work",
-    "hero_cta_secondary": "Get In Touch",
-    "featured_title": "Featured Projects",
-    "featured_subtitle": "A selection of my recent work"
+    "subtitle": "Technology Consultant · Toronto, Canada",
+    "greeting": "Hi, I'm",
+    "name": "Gary Yong.",
+    "tagline": "<span class=\"hero-highlight\">Technology Consultant</span> at <span class=\"hero-highlight\">Capco</span> and <span class=\"hero-highlight\">Management Engineering graduate</span> from <span class=\"hero-highlight\">University of Waterloo</span> who brings together <span class=\"hero-highlight\">consulting</span>, <span class=\"hero-highlight\">product</span>, and <span class=\"hero-highlight\">technical skills</span> to solve complex banking problems and build practical solutions—ranging from <span class=\"hero-highlight\">CCaaS migration</span> and <span class=\"hero-highlight\">Wealth Platform Modernization</span> to self‑driven projects like <span class=\"hero-highlight\">Personalized AI Agent</span>, <span class=\"hero-highlight\">Crypto Portfolio Builder</span>, and <span class=\"hero-highlight\">Digital Personal Portfolio</span>.",
+    "cta_projects": "View Projects",
+    "cta_experience": "Work Experiences",
+    "cta_resume": "Download Resume",
+    "email_label": "Email:",
+    "agent_callout": "Don't have time to read everything here? Ask my personal <span class=\"hero-highlight\">AI Agent</span> about my skillsets, experiences or even hobbies.",
+    "agent_cta": "Try Ask‑Gary",
+    "open_roles_title": "Open to roles",
+    "role_1": "Technology / Digital Transformation Consultant",
+    "role_2": "Technical Product Manager",
+    "role_3": "Technology Program or Delivery Manager",
+    "role_4": "Senior Business / Business Systems Analyst (Digital Transformation)"
   },
   "about": {
-    "title": "About Me",
-    "subtitle": "Get to know me better",
-    "intro": "I'm a technology consultant with a passion for AI and digital transformation.",
-    "background_title": "Background",
-    "interests_title": "Interests",
-    "values_title": "Values"
+    "title": "About",
+    "subtitle": "A bit about who I am and what I enjoy working on.",
+    "intro_p1": "I'm a technology consultant who enjoys turning ambiguous problems into clear, user‑centered solutions. Over the past few years, I've worked across banking and retail, helping teams modernize their systems, improve customer experiences, and ship reliable products.",
+    "intro_p2": "My work usually sits at the intersection of business analysis, product thinking, and engineering — from mapping out future‑state architectures to building lightweight tools that automate away repetitive work.",
+    "snapshot_title": "Snapshot",
+    "what_i_do_title": "What I do",
+    "what_i_do_desc": "Bridge business needs and technical teams to design and deliver practical digital solutions.",
+    "what_i_care_title": "What I care about",
+    "what_i_care_desc": "Build thoughtful systems and experiences that actually benefit the people using them.",
+    "hobbies_title": "Hobbies",
+    "hobby_climbing_title": "Rock climbing",
+    "hobby_climbing_desc": "Finding new routes, solving movement puzzles, and enjoying time on the wall.",
+    "hobby_photo_title": "Capturing moments",
+    "hobby_photo_desc": "Taking photos of everyday scenes, friends, and trips to document life as it happens.",
+    "hobby_running_title": "Running",
+    "hobby_running_desc": "Short city runs to reset, think through ideas, and stay active between projects.",
+    "hobby_building_title": "Building for fun",
+    "hobby_building_desc": "Experimenting with small tools and prototypes to try new tech and deploy ideas quickly."
   },
   "experience": {
     "title": "Experience",
-    "subtitle": "My professional journey",
-    "present": "Present"
+    "capco": {
+      "company": "Capco",
+      "role": "Implementation Consultant",
+      "dates": "Sept 2021 – Present",
+      "location": "Toronto, ON",
+      "engagement1_title": "Engagement 1: Business Systems Analyst @ Tier‑1 Global Bank – CCaaS Migration",
+      "engagement1_bullets": [
+        "Conducted detailed current‑state analysis of the legacy contact center solution through workshops to identify key operational and customer experience pain points.",
+        "Led requirements gathering for a CCaaS migration program, collaborating with stakeholders to define business needs and technical specifications.",
+        "Created 10+ future‑state user journeys to illustrate the desired customer experience and seamless contact interaction management."
+      ],
+      "engagement2_title": "Engagement 2: Business Analyst @ Leading Canadian Bank – Digital Transformation",
+      "engagement2_bullets": [
+        "Performed capability analysis to support digital transformation across front, middle, and back‑office systems.",
+        "Led 30+ workshops with SMEs across multiple lines of business to document current‑state system architecture, highlighting capabilities, limitations, and critical integration points.",
+        "Collaborated with technical and business stakeholders to develop a future‑state system architecture diagram."
+      ],
+      "engagement3_title": "Engagement 3: Cutover Team @ Tier‑1 Global Bank – Major Bank Merger",
+      "engagement3_bullets": [
+        "Spearheaded end‑to‑end requirements gathering for cutover runbooks across 13 workstreams, facilitating workshops with senior stakeholders and SMEs to align on deliverables and timelines.",
+        "Orchestrated cross‑functional discussions to map customer‑impact scenarios, address potential risks, and increase operational readiness for edge cases.",
+        "Conducted three live rehearsals to iteratively strengthen business‑team readiness and incident response."
+      ],
+      "engagement4_title": "Engagement 4: Business Analyst @ Tier‑1 Canadian Commercial Bank – Reconciliation Automation",
+      "engagement4_bullets": [
+        "Analyzed 15 reconciliation processes and proposed automation solutions projected to save 5k+ hours annually.",
+        "Facilitated client workshops to develop reconciliation process diagrams that highlighted bottlenecks.",
+        "Compiled business requirements for the technology implementation team to build the proposed automations."
+      ],
+      "engagement5_title": "Engagement 5: Business Systems Analyst @ Leading Canadian Wealth Management Firm - Middle Office Digitization",
+      "engagement5_bullets": [
+        "Reviewed 3k+ defect resolution records and led process improvement work across five teams to optimize defect reporting.",
+        "Analyzed release defects and prepared client‑facing presentations to keep stakeholders informed on risks and progress.",
+        "Streamlined the release defect review and reporting process by building JIRA dashboards and documenting details in Confluence."
+      ],
+      "engagement6_title": "Engagement 6: E2E Process Analyst @ Tier‑1 Global Bank – Wealth Management Platform Transformation",
+      "engagement6_bullets": [
+        "Developed detailed business process flows in Visio to illustrate future‑state system capabilities and surface requirement gaps.",
+        "Led requirements definition between client and vendor through workshops and review sessions, refining 10+ customer and account maintenance process flows."
+      ]
+    },
+    "pepsico": {
+      "company": "PepsiCo Foods Canada",
+      "role": "Project Management Intern",
+      "dates": "Jan 2021 – April 2021",
+      "location": "Toronto, ON",
+      "bullets": [
+        "Coordinated updates and feedback with 10+ stakeholders across three cross‑functional projects in an agile environment.",
+        "Pioneered strategic UI changes for the marketing team, contributing to a 30% monthly sales increase for the e‑commerce store.",
+        "Led causal impact analysis for a social media campaign and proposed a new data‑driven strategy that delivered a 20% sales lift."
+      ]
+    },
+    "electro": {
+      "company": "Electro Source Inc.",
+      "role": "Product Management Intern",
+      "dates": "June 2020 – Aug 2020",
+      "location": "Toronto, ON",
+      "bullets": [
+        "Owned the MVP of a remote work collaboration platform for software/hardware hybrid design teams.",
+        "Roadmapped the MVP, prioritized features, and proposed a delivery timeline to turn the concept into a demonstrable product.",
+        "Interviewed and demoed to 10+ clients to keep core product features aligned with user needs.",
+        "Implemented Scrum ceremonies (stand‑ups, planning, retros) that kept a fully remote team moving consistently.",
+        "Led a cross‑functional team to complete MVP functionality in four two‑week sprints with high‑quality deliverables."
+      ]
+    },
+    "accenture": {
+      "company": "Accenture",
+      "role": "Software Engineering Intern",
+      "dates": "Sept 2019 – Dec 2019",
+      "location": "Toronto, ON",
+      "bullets": [
+        "Developed an application backed by Hyperledger Fabric blockchain to authenticate luxury apparel using RFID.",
+        "Designed and implemented intuitive UI/UX with React Native to maximize usability and user satisfaction.",
+        "Architected an authentication framework with AWS Cognito and IAM to maintain application security."
+      ]
+    },
+    "loblaw": {
+      "company": "Loblaw Companies Limited",
+      "role": "Supply Chain Logistics Analyst",
+      "dates": "Jan 2019 – Apr 2019",
+      "location": "Brampton, ON",
+      "bullets": [
+        "Analyzed time studies and logistics expense reports to uncover a recurring million‑dollar loss in pallet tracking procedures.",
+        "Proposed an automated data delivery system using IoT devices that could save over $1M annually in logistics costs.",
+        "Defined system requirements through stakeholder interviews and outlined a roadmap from design to implementation.",
+        "Delivered an on‑site tested prototype to senior managers in under three months, earning approval for further integration."
+      ]
+    },
+    "pureliving": {
+      "company": "PureLiving China",
+      "role": "Automation Specialist",
+      "dates": "May 2018 – Aug 2018",
+      "location": "Shanghai, China",
+      "bullets": [
+        "Analyzed inefficient transaction sorting procedures and proposed an automation solution to the department lead.",
+        "Built an Excel widget using VBA that improved business transaction processing and sorting efficiency by roughly 1600%.",
+        "Partnered with the sales team to help complete sales orders totaling about $800K."
+      ]
+    }
   },
   "projects": {
     "title": "Projects",
-    "subtitle": "Things I've built",
-    "view_project": "View Project",
-    "view_code": "View Code"
+    "ask_gary": {
+      "title": "Ask Gary – Personal AI Career Chatbot",
+      "meta": "Tech: FastAPI · Python · OpenAI · Vanilla JS · AWS EC2/S3",
+      "bullets": [
+        "Built Ask Gary, a retrieval‑augmented AI chatbot that answers career questions from my resume, LinkedIn, hobbies, and projects.",
+        "Uses a FastAPI backend with vector search and OpenAI models.",
+        "Integrated as a dedicated page on my personal website with a lightweight JavaScript frontend.",
+        "Deployed on AWS (EC2 for backend, S3 for static site) with logging, evaluation, and troubleshooting workflows."
+      ],
+      "tags": ["AI chatbot", "Retrieval‑augmented generation (RAG)", "Python", "OpenAI API", "AWS EC2", "AWS S3"],
+      "cta_demo": "Live demo",
+      "cta_source": "Source code"
+    },
+    "lunar": {
+      "title": "Lunar – Crypto Portfolio Builder",
+      "meta": "4th Year Design Project",
+      "bullets": [
+        "Led a team of five as Project manager/UIUX Designer to deliver a deployed crypto portfolio management web platform.",
+        "Managed seven stakeholders through three design revisions, seven feedback sessions, and bi‑weekly retros.",
+        "Conducted needs analysis via user surveys and interviews, then designed end‑to‑end user journeys for the product."
+      ],
+      "tags": ["Capstone Project", "Product management", "Team leadership", "User research", "Crypto"],
+      "cta_demo": "Live demo",
+      "cta_proposal": "Proposal Deck",
+      "cta_report": "Project Report"
+    },
+    "website": {
+      "title": "Personal Website & Portfolio Platform",
+      "meta": "Tech: HTML · CSS · JavaScript · Responsive Design · AWS S3/Route 53",
+      "bullets": [
+        "Designed and built a multi‑page personal website with dedicated sections for projects, experience, skills, blog, and contact",
+        "Implemented dark/light theme support, scroll‑reveal animations, and a mobile navigation drawer for a modern, app‑like user experience.",
+        "Deployed the site on AWS S3 with a custom domain and HTTPS, and structured content so new projects and posts can be added with minimal changes."
+      ],
+      "tags": ["Portfolio website", "Responsive UI", "Dark / light mode", "CSS animations", "Front‑end architecture", "AWS S3"],
+      "cta_demo": "Live demo",
+      "cta_source": "Source code"
+    },
+    "rideshare": {
+      "title": "Rideshare Service Platform",
+      "bullets": [
+        "Developed a ridesharing app that allows students to find safe and cheap rides fast with cost-savings up to 600%",
+        "Interviewed drivers and riders to define system requirements and minimum viable product",
+        "Identified cost, safety, and efficiency issues with the existing rideshare solutions available through market research"
+      ],
+      "tags": ["Project Management", "Market Analysis", "User Research", "Product Ideation"]
+    },
+    "pallet": {
+      "title": "Pallet Tracking Automation Project",
+      "meta": "Loblaw Companies Limited · JavaScript · Bluetooth LE · IoT",
+      "bullets": [
+        "Developed an automatic data delivery application in JavaScript that connects to Bluetooth Low Energy beacons and IoT gateways.",
+        "Optimized pallet tracking by eliminating manual data entry and reducing human errors through an automated IoT tracking system.",
+        "Ran on‑site tests and presented results to logistics leadership, gaining approval for further integration into operations."
+      ],
+      "tags": ["IoT", "Bluetooth LE", "JavaScript", "Automation", "Logistics"]
+    },
+    "blockchain": {
+      "title": "Product Authentication Blockchain Platform",
+      "meta": "Accenture Liquid Studio · Sept 2019 – Dec 2019 · Blockchain · AWS",
+      "bullets": [
+        "Contributed to a blockchain-based platform that authenticated products and surfaced project milestones in clear, business-focused language for senior leadership.",
+        "Worked within a 12‑week Agile Scrum roadmap that included user testing and continuous integration pipelines on AWS.",
+        "Delivered a client‑ready product with detailed documentation used by senior consultants and industry leaders across multiple regions."
+      ],
+      "tags": ["Blockchain", "AWS", "Agile / Scrum", "Product delivery", "Consulting"]
+    },
+    "erp": {
+      "title": "ERP Process Automation Tool",
+      "meta": "Internship Project · July 2017 – Aug 2017 · Excel VBA · Process Automation",
+      "bullets": [
+        "Analyzed transaction processing workflows using process analysis and time studies to identify major inefficiencies.",
+        "Built an Excel VBA automation tool that reduced weekly business transaction processing time from 4 hours to about 15 minutes.",
+        "Designed and iterated on a user‑centric UI with validation rules, incorporating feedback to make the tool reliable and easy to use."
+      ],
+      "tags": ["Process automation", "Excel VBA", "Operations", "UI/UX"],
+      "cta_plan": "Project Plan"
+    }
   },
   "skills": {
     "title": "Skills",
-    "subtitle": "Technologies & capabilities",
-    "technical": "Technical Skills",
-    "tools": "Tools & Platforms",
-    "soft": "Soft Skills"
+    "technical_title": "Technical",
+    "technical_items": [
+      "JavaScript, TypeScript, HTML, CSS",
+      "Python for scripting and data analysis",
+      "SQL for querying and reporting",
+      "AWS (EC2, S3, Cognito, IAM)",
+      "APIs, web integrations, and IoT (BLE beacons, gateways)"
+    ],
+    "product_title": "Product & Delivery",
+    "product_items": [
+      "Requirements gathering and user journey design",
+      "Business process mapping and capability modeling",
+      "Agile delivery, workshop facilitation, and stakeholder management",
+      "Cutover planning and runbook design for large programs",
+      "Experiment design and A/B or causal impact analysis"
+    ],
+    "consulting_title": "Consulting & Domain",
+    "consulting_items": [
+      "Contact center and CCaaS transformations",
+      "Banking and financial services (retail, commercial, wealth)",
+      "Digital transformation across front, middle, and back office",
+      "Reconciliation automation and operations optimization",
+      "Cross-functional communication with technical and business teams"
+    ]
   },
   "blog": {
     "title": "Blog & Writing",
     "subtitle": "",
-    "read_more": "Read more",
+    "read_more": "Read more →",
     "back_to_blog": "← Back to Blog",
-    "min_read": "min read"
-  },
-  "contact": {
-    "title": "Get In Touch",
-    "subtitle": "Let's connect",
-    "email": "Email",
-    "linkedin": "LinkedIn",
-    "github": "GitHub"
+    "post1": {
+      "title": "The AI Agent Hype vs. Reality: A Practitioner's Guide for 2026",
+      "meta": "February 5, 2026 · AI, Technology",
+      "excerpt": "Cut through the noise and understand what AI agents can actually deliver. Real examples of successes, failures, and a practical framework for evaluation.",
+      "date": "📅 February 5, 2026",
+      "author": "👤 Gary Yong",
+      "tags": "🏷️ AI, Technology",
+      "read_time": "⏱️ 5 min read",
+      "content": {
+        "intro1": "Last week, I saw an ad claiming AI agents could \"replace 20 employees overnight.\" On platforms like <a href=\"https://www.moltbook.com\" target=\"_blank\">Moltbook</a>—a social network where AI bots interact autonomously—people are posting about agents \"starting religions\" and developing their own thoughts. Meanwhile, my inbox is flooded with pitches for \"revolutionary AI workforce solutions.\"",
+        "intro2": "Sound familiar? Welcome to 2026's AI agent gold rush.",
+        "intro3": "As someone who's spent years implementing AI solutions across enterprise environments, I've witnessed both spectacular successes and spectacular failures. Here's what I've learned about separating hype from reality.",
+        "section1_title": "What's Actually Working",
+        "section1_p1": "Let's start with a success story. I recently worked with a major bank deploying Google's conversational AI for their contact center. The system combines voice bots with real-time speech analytics—and the results were impressive: 40% reduction in call resolution time and measurably improved customer satisfaction.",
+        "section1_p2": "The key to their success? <strong>They didn't try to replace humans—they augmented them.</strong>",
+        "section1_p3": "The AI handles routine inquiries (balance checks, transaction history, basic troubleshooting) while seamlessly escalating complex issues to human agents with full context. Speech analytics identifies customer sentiment in real-time, helping agents adjust their approach mid-conversation.",
+        "section1_p4": "This isn't flashy disruption. It's practical, measurable improvement that directly impacts both the bottom line and customer experience.",
+        "section2_title": "Where It Goes Wrong",
+        "section2_p1": "Not every implementation succeeds. I've observed a consistent pattern: systems work beautifully in controlled testing, then fall apart when they encounter the messy exceptions that define real business operations.",
+        "section2_p2": "The failures typically stem from three root causes:",
+        "section2_bullets": [
+          "<strong>Misaligned expectations:</strong> Organizations expect AI agents to handle every edge case and understand context like humans. When reality falls short of these expectations, disappointment follows.",
+          "<strong>Rigid AI in flexible environments:</strong> AI excels at consistency, but many business processes require flexibility and judgment. Forcing rigid automation onto inherently flexible processes creates frustration for everyone.",
+          "<strong>Poor data quality:</strong> This is the silent killer. Fragmented, inconsistent data doesn't just reduce accuracy—it can stall projects entirely. Clean, structured data isn't optional; it's the foundation everything else is built on."
+        ],
+        "section3_title": "A Practical Evaluation Framework",
+        "section3_p1": "Before greenlighting any AI agent project, I ask three questions:",
+        "section3_list": [
+          "<strong>Is this genuinely repetitive?</strong> If there's significant variation or creativity required, human oversight remains essential.",
+          "<strong>How sensitive is the data?</strong> High-sensitivity environments need additional safeguards and human checkpoints. Security can't be an afterthought.",
+          "<strong>What does success look like—specifically?</strong> Vague goals like \"improve efficiency\" aren't enough. You need measurable KPIs everyone agrees on before development begins."
+        ],
+        "section3_p2": "These questions eliminate about 60% of problematic projects before they start.",
+        "section3_p3": "For implementations already underway, I apply three litmus tests: <strong>consistency</strong> (same input, same output every time), <strong>graceful human handoff</strong> (seamless escalation when the AI hits its limits), and <strong>real-world performance</strong> (results outside controlled testing).",
+        "section4_title": "What's Genuinely Exciting",
+        "section4_p1": "Despite the hype, real progress is happening. The developments I'm most excited about:",
+        "section4_p2": "<strong>Proactive task management:</strong> Agents that anticipate needs rather than just responding to requests—scheduling meetings based on email context, flagging potential issues before they become problems, managing workflows across systems.",
+        "section4_p3": "<strong>Persistent memory and learning:</strong> We're moving from reactive systems to assistants that remember context and adapt over time. The next 12-18 months will bring more powerful models with better tool integration and genuine learning capabilities.",
+        "section4_quote": "The AI agent revolution is real—but it's about augmenting human capabilities, not replacing humans wholesale.",
+        "section5_title": "The Bottom Line",
+        "section5_p1": "If you're evaluating AI agents for your organization, here's my advice:",
+        "section5_p2": "<strong>Start small.</strong> Target your most repetitive tasks with clear success metrics. Don't try to automate everything at once.",
+        "section5_p3": "<strong>Invest in data quality.</strong> The organizations that will succeed are those building the infrastructure to support sophisticated AI systems. That starts with clean, structured data.",
+        "section5_p4": "<strong>Design for humans.</strong> The best implementations enhance human capabilities rather than replacing them. Build in oversight, intervention points, and graceful fallbacks.",
+        "section5_p5": "The companies that understand the distinction between hype and reality—and implement AI agents accordingly—will thrive. Those chasing headlines without understanding fundamentals will waste time, money, and opportunity.",
+        "cta_question": "What's your experience with AI agents?",
+        "cta_text": "I'd love to hear your stories. Connect with me on <a href=\"https://www.linkedin.com/in/gary-yong-66a9ba164\" target=\"_blank\">LinkedIn</a> to continue the conversation."
+      }
+    }
   },
   "footer": {
     "copyright": "©2025 Gary Yong · Built with love ❤️."

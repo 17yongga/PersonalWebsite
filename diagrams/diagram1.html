@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+body { background: #1e293b; margin: 0; padding: 40px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.container { background: #0f172a; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+h1 { color: #38bdf8; text-align: center; font-family: system-ui; margin-bottom: 30px; font-size: 1.8rem; }
+</style>
+</head><body>
+<div class="container">
+<h1>🏗️ Ask Gary - Solution Architecture</h1>
+<div class="mermaid">
+flowchart TB
+    subgraph Internet["🌐 Internet"]
+        User["👤 Visitors / Recruiters<br/>(Web Browser)"]
+        CF["☁️ Cloudflare CDN<br/>gary-yong.com"]
+    end
+
+    subgraph AWS["☁️ AWS EC2 Instance (Ubuntu)"]
+        subgraph Nginx["🔧 Nginx Reverse Proxy"]
+            Static["📄 Static Files<br/>gary-yong.com/*"]
+            Proxy["🔀 API Proxy<br/>api.gary-yong.com"]
+        end
+        
+        subgraph Frontend["🖥️ Frontend"]
+            HTML["📝 ask-gary.html"]
+            JS["⚡ ask-gary.js"]
+            CSS["🎨 styles.css"]
+        end
+        
+        subgraph Backend["⚙️ Backend (FastAPI)"]
+            Main["🐍 main.py<br/>/health, /chat"]
+            Config["⚙️ config.py"]
+            Index["📊 indexed_data.json"]
+        end
+    end
+    
+    subgraph OpenAI["🤖 OpenAI API"]
+        Embed["🔢 Embeddings API<br/>text-embedding-3-small"]
+        Chat["💬 Chat Completions<br/>gpt-4o-mini"]
+    end
+
+    User --> CF
+    CF --> Nginx
+    Static --> Frontend
+    Proxy --> Backend
+    JS -.->|"POST /chat"| Proxy
+    Main --> Embed
+    Main --> Chat
+    Config --> Main
+    Index --> Main
+</div>
+</div>
+<script>mermaid.initialize({startOnLoad:true,theme:'dark',themeVariables:{primaryColor:'#38bdf8',primaryTextColor:'#fff',primaryBorderColor:'#1e40af',lineColor:'#38bdf8',secondaryColor:'#1e293b',tertiaryColor:'#0f172a'}});</script>
+</body></html>

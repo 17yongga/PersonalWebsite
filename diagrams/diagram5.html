@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+body { background: #1e293b; margin: 0; padding: 40px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.container { background: #0f172a; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+h1 { color: #38bdf8; text-align: center; font-family: system-ui; margin-bottom: 30px; font-size: 1.8rem; }
+</style>
+</head><body>
+<div class="container">
+<h1>🌐 Ask Gary - Deployment Architecture</h1>
+<div class="mermaid">
+flowchart TB
+    subgraph Client["👤 Client Side"]
+        Browser["Web Browser"]
+    end
+    
+    subgraph CDN["☁️ Cloudflare"]
+        DNS["DNS Resolution"]
+        Cache["Edge Caching"]
+        SSL1["SSL Termination"]
+    end
+    
+    subgraph EC2["🖥️ AWS EC2"]
+        subgraph WebServer["Nginx :443/:80"]
+            SSL2["SSL/TLS"]
+            StaticServe["Static File Serving"]
+            ReverseProxy["Reverse Proxy :8000"]
+        end
+        
+        subgraph App["Application Layer"]
+            Systemd["systemd Service"]
+            Uvicorn["Uvicorn ASGI"]
+            FastAPI["FastAPI App"]
+        end
+        
+        subgraph Storage["Data Storage"]
+            Env[".env (secrets)"]
+            JSON["indexed_data.json"]
+            Venv["Python venv"]
+        end
+    end
+    
+    subgraph External["🔌 External APIs"]
+        OpenAI["OpenAI API"]
+    end
+
+    Browser --> DNS
+    DNS --> Cache
+    Cache --> SSL1
+    SSL1 --> SSL2
+    SSL2 --> StaticServe
+    SSL2 --> ReverseProxy
+    ReverseProxy --> Uvicorn
+    Systemd --> Uvicorn
+    Uvicorn --> FastAPI
+    FastAPI --> JSON
+    FastAPI --> Env
+    FastAPI --> OpenAI
+</div>
+</div>
+<script>mermaid.initialize({startOnLoad:true,theme:'dark',themeVariables:{primaryColor:'#38bdf8',primaryTextColor:'#fff',lineColor:'#38bdf8',secondaryColor:'#1e293b'}});</script>
+</body></html>

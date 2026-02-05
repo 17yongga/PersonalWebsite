@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+body { background: #1e293b; margin: 0; padding: 40px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.container { background: #0f172a; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-width: 1200px; }
+h1 { color: #38bdf8; text-align: center; font-family: system-ui; margin-bottom: 30px; font-size: 1.8rem; }
+</style>
+</head><body>
+<div class="container">
+<h1>📦 Ask Gary - Component Architecture</h1>
+<div class="mermaid">
+flowchart LR
+    subgraph FE["🖥️ Frontend Components"]
+        direction TB
+        A1["ask-gary.html<br/>───────────<br/>• Chat UI<br/>• Dark theme<br/>• Responsive"]
+        A2["ask-gary.js<br/>───────────<br/>• Session mgmt<br/>• Retry logic<br/>• Animations"]
+        A3["styles.css<br/>───────────<br/>• CSS variables<br/>• Gradients"]
+    end
+
+    subgraph BE["⚙️ Backend Components"]
+        direction TB
+        B1["main.py<br/>───────────<br/>• /health<br/>• /chat<br/>• RAG logic"]
+        B2["config.py<br/>───────────<br/>• System prompt<br/>• Model config"]
+        B3["indexed_data.json<br/>───────────<br/>• Embeddings<br/>• Source refs"]
+    end
+
+    subgraph Data["📊 Knowledge Base"]
+        direction TB
+        D1["AboutMe.txt"]
+        D2["Experience.txt"]
+        D3["Projects.txt"]
+        D4["Skills.txt"]
+    end
+
+    FE -->|"HTTP/JSON"| BE
+    Data -->|"index_data.py"| B3
+</div>
+</div>
+<script>mermaid.initialize({startOnLoad:true,theme:'dark',themeVariables:{primaryColor:'#38bdf8',primaryTextColor:'#fff',lineColor:'#38bdf8',secondaryColor:'#1e293b'}});</script>
+</body></html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+body { 
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+    margin: 0; 
+    padding: 50px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    min-height: 100vh; 
+}
+.container { 
+    background: #ffffff; 
+    border-radius: 24px; 
+    padding: 50px 60px; 
+    box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+}
+h1 { 
+    color: #1a1a2e; 
+    text-align: center; 
+    font-family: 'Segoe UI', system-ui, sans-serif; 
+    margin-bottom: 10px; 
+    font-size: 2rem;
+    font-weight: 700;
+}
+.subtitle {
+    color: #6b7280;
+    text-align: center;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    margin-bottom: 35px;
+    font-size: 1rem;
+}
+.mermaid { display: flex; justify-content: center; }
+</style>
+</head><body>
+<div class="container">
+<h1>🛠️ Ask Gary - Technology Stack</h1>
+<p class="subtitle">Complete breakdown of technologies powering the AI assistant</p>
+<div class="mermaid">
+mindmap
+    root((🤖 Ask Gary<br/>Tech Stack))
+        🖥️ Frontend
+            HTML5
+            CSS3
+            JavaScript ES6+
+            marked.js
+        ⚙️ Backend
+            Python 3.x
+            FastAPI
+            Uvicorn ASGI
+            Pydantic
+            OpenAI SDK
+        ☁️ Infrastructure
+            AWS EC2
+            Ubuntu Linux
+            Nginx
+            systemd
+            Cloudflare
+            Lets Encrypt SSL
+        🧠 AI & ML
+            GPT-4o-mini
+            text-embedding-3-small
+            RAG Architecture
+            Cosine Similarity
+            Vector Search
+</div>
+</div>
+<script>
+mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+        primaryColor: '#ec4899',
+        primaryTextColor: '#1e293b',
+        primaryBorderColor: '#db2777',
+        lineColor: '#ec4899',
+        secondaryColor: '#fce7f3',
+        tertiaryColor: '#fbcfe8'
+    },
+    mindmap: {
+        useMaxWidth: true,
+        padding: 20
+    }
+});
+</script>
+</body></html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+body { 
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+    margin: 0; 
+    padding: 50px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    min-height: 100vh; 
+}
+.container { 
+    background: #ffffff; 
+    border-radius: 24px; 
+    padding: 50px 60px; 
+    box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+    max-width: 1200px;
+}
+h1 { 
+    color: #1a1a2e; 
+    text-align: center; 
+    font-family: 'Segoe UI', system-ui, sans-serif; 
+    margin-bottom: 10px; 
+    font-size: 2rem;
+    font-weight: 700;
+}
+.subtitle {
+    color: #6b7280;
+    text-align: center;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    margin-bottom: 35px;
+    font-size: 1rem;
+}
+.mermaid { display: flex; justify-content: center; }
+</style>
+</head><body>
+<div class="container">
+<h1>📦 Ask Gary - Component Architecture</h1>
+<p class="subtitle">Detailed view of frontend, backend, and data layer components</p>
+<div class="mermaid">
+flowchart LR
+    subgraph FE["🖥️ FRONTEND LAYER"]
+        direction TB
+        A1["<b>ask-gary.html</b><br/>─────────────<br/>✓ Chat UI<br/>✓ Dark Theme<br/>✓ Responsive Design<br/>✓ Animations"]
+        A2["<b>ask-gary.js</b><br/>─────────────<br/>✓ Session Management<br/>✓ Retry Logic (3x)<br/>✓ Typing Indicators<br/>✓ Error Handling"]
+        A3["<b>styles.css</b><br/>─────────────<br/>✓ CSS Variables<br/>✓ Gradients<br/>✓ Transitions"]
+    end
+
+    subgraph BE["⚙️ BACKEND LAYER"]
+        direction TB
+        B1["<b>main.py</b><br/>─────────────<br/>✓ GET /health<br/>✓ POST /chat<br/>✓ RAG Pipeline<br/>✓ CORS Config"]
+        B2["<b>config.py</b><br/>─────────────<br/>✓ System Prompt<br/>✓ Model Settings<br/>✓ Chunk Config"]
+        B3["<b>indexed_data.json</b><br/>─────────────<br/>✓ Pre-computed<br/>✓ Embeddings<br/>✓ Source References"]
+    end
+
+    subgraph DATA["📚 KNOWLEDGE BASE"]
+        direction TB
+        D1["AboutMe.txt"]
+        D2["Experience.txt"]
+        D3["Projects.txt"]
+        D4["Skills.txt"]
+        D5["WorkReports.txt"]
+    end
+
+    FE -->|"HTTP/JSON<br/>REST API"| BE
+    DATA -->|"index_data.py<br/>Preprocessing"| B3
+</div>
+</div>
+<script>
+mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+        primaryColor: '#0ea5e9',
+        primaryTextColor: '#ffffff',
+        primaryBorderColor: '#0284c7',
+        lineColor: '#0ea5e9',
+        secondaryColor: '#f0f9ff',
+        tertiaryColor: '#e0f2fe',
+        background: '#ffffff',
+        mainBkg: '#0ea5e9',
+        secondBkg: '#f8fafc',
+        textColor: '#1e293b',
+        nodeTextColor: '#1e293b',
+        clusterBkg: '#f0f9ff',
+        clusterBorder: '#7dd3fc',
+        edgeLabelBackground: '#ffffff'
+    },
+    flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+    }
+});
+</script>
+</body></html>
