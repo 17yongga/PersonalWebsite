@@ -13,6 +13,13 @@
       content="Learn more about Gary Yong: background, strengths, and interests."
     />
     <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
   </head>
   <body>
     <header class="site-header">
@@ -100,14 +107,21 @@
       </div>
 
       <!-- Middle: quick snapshot card -->
-      <div class="about-snapshot animate-fade-up">
-        <h3 data-i18n="about.snapshot_title">Snapshot</h3>
-        <div class="about-snapshot-grid">
-          <div>
+      <div class="about-snapshot-v2 animate-fade-up">
+        <div class="snapshot-card">
+          <div class="snapshot-icon">
+            <i class="fas fa-briefcase"></i>
+          </div>
+          <div class="snapshot-content">
             <h4 data-i18n="about.what_i_do_title">What I do</h4>
             <p data-i18n="about.what_i_do_desc">Bridge business needs and technical teams to design and deliver practical digital solutions.</p>
           </div>
-          <div>
+        </div>
+        <div class="snapshot-card">
+          <div class="snapshot-icon snapshot-icon-alt">
+            <i class="fas fa-heart"></i>
+          </div>
+          <div class="snapshot-content">
             <h4 data-i18n="about.what_i_care_title">What I care about</h4>
             <p data-i18n="about.what_i_care_desc">Build thoughtful systems and experiences that actually benefit the people using them.</p>
           </div>
@@ -115,31 +129,47 @@
       </div>
 
       <!-- Bottom: hobbies as cards -->
-      <div class="about-hobbies animate-fade-up">
+      <div class="about-hobbies-v2 animate-fade-up">
         <h3 data-i18n="about.hobbies_title">Hobbies</h3>
-        <div class="hobby-grid">
-          <div class="hobby-card">
-            <div class="hobby-icon">🧗‍♂️</div>
-            <h4 data-i18n="about.hobby_climbing_title">Rock climbing</h4>
-            <p data-i18n="about.hobby_climbing_desc">Finding new routes, solving movement puzzles, and enjoying time on the wall.</p>
+        <div class="hobby-grid-v2">
+          <div class="hobby-card-v2">
+            <div class="hobby-icon-v2 hobby-icon-climb">
+              <i class="fas fa-mountain"></i>
+            </div>
+            <div class="hobby-content">
+              <h4 data-i18n="about.hobby_climbing_title">Rock climbing</h4>
+              <p data-i18n="about.hobby_climbing_desc">Finding new routes, solving movement puzzles, and enjoying time on the wall.</p>
+            </div>
           </div>
 
-          <div class="hobby-card">
-            <div class="hobby-icon">📷</div>
-            <h4 data-i18n="about.hobby_photo_title">Capturing moments</h4>
-            <p data-i18n="about.hobby_photo_desc">Taking photos of everyday scenes, friends, and trips to document life as it happens.</p>
+          <div class="hobby-card-v2">
+            <div class="hobby-icon-v2 hobby-icon-photo">
+              <i class="fas fa-camera"></i>
+            </div>
+            <div class="hobby-content">
+              <h4 data-i18n="about.hobby_photo_title">Capturing moments</h4>
+              <p data-i18n="about.hobby_photo_desc">Taking photos of everyday scenes, friends, and trips to document life as it happens.</p>
+            </div>
           </div>
 
-          <div class="hobby-card">
-            <div class="hobby-icon">🏃‍♂️</div>
-            <h4 data-i18n="about.hobby_running_title">Running</h4>
-            <p data-i18n="about.hobby_running_desc">Short city runs to reset, think through ideas, and stay active between projects.</p>
+          <div class="hobby-card-v2">
+            <div class="hobby-icon-v2 hobby-icon-run">
+              <i class="fas fa-person-running"></i>
+            </div>
+            <div class="hobby-content">
+              <h4 data-i18n="about.hobby_running_title">Running</h4>
+              <p data-i18n="about.hobby_running_desc">Short city runs to reset, think through ideas, and stay active between projects.</p>
+            </div>
           </div>
 
-          <div class="hobby-card">
-            <div class="hobby-icon">👨🏻‍💻</div>
-            <h4 data-i18n="about.hobby_building_title">Building for fun</h4>
-            <p data-i18n="about.hobby_building_desc">Experimenting with small tools and prototypes to try new tech and deploy ideas quickly.</p>
+          <div class="hobby-card-v2">
+            <div class="hobby-icon-v2 hobby-icon-build">
+              <i class="fas fa-laptop-code"></i>
+            </div>
+            <div class="hobby-content">
+              <h4 data-i18n="about.hobby_building_title">Building for fun</h4>
+              <p data-i18n="about.hobby_building_desc">Experimenting with small tools and prototypes to try new tech and deploy ideas quickly.</p>
+            </div>
           </div>
         </div>
       </div>
