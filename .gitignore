@@ -3,3 +3,15 @@ ask-gary-backend/.env
 casino-users.json
 *.log
 logs/
+
+# Cache and temp files
+*.backup
+*.bak
+cache/
+*-report-*.json
+cs2-api-cache.json
+cs2-match-results-cache.json
+cs2-static-odds-cache.json
+
+# OS files
+.DS_Store
