@@ -1,10 +1,6 @@
 import os
 
 
-# Chroma configuration
-COLLECTION_NAME = "ask_gary_collection_v2"  # new name
-CHROMA_DB_PATH = "./chroma_db"
-
 # Data directory
 DATA_DIR = "data"
 

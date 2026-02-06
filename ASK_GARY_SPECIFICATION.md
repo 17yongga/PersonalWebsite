@@ -386,7 +386,6 @@ OPENAI_API_KEY=sk-...  # Required for embeddings and chat
 ```
 fastapi
 uvicorn
-chromadb
 openai
 python-dotenv
 pydantic

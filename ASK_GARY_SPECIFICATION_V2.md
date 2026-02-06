@@ -569,7 +569,6 @@ const RETRY_DELAY = 2000;      // Exponential backoff
 # requirements.txt
 fastapi
 uvicorn
-chromadb
 openai
 python-dotenv
 pydantic
