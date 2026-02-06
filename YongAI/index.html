@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YongAI — AI Automation Consulting</title>
+  <meta name="description" content="AI automation consulting for law firms and recruiting agencies. YongAI delivers enterprise-grade AI solutions — from strategic audits to full implementation and ongoing partnership. Based in Toronto.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Favicon (inline SVG data URI) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+  <!-- ════════════════════════════════════════ NAV ════════════════════════════════════════ -->
+  <nav class="nav" id="nav">
+    <div class="nav__inner container">
+      <a href="#" class="nav__logo">
+        <span class="nav__logo-icon">⚡</span>
+        <span class="nav__logo-text">Yong<span class="accent">AI</span></span>
+      </a>
+      <ul class="nav__links">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#testimonials">Results</a></li>
+        <li><a href="#contact" class="btn btn--sm">Get Started</a></li>
+      </ul>
+      <button class="nav__burger" id="burger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <!-- Mobile menu -->
+    <div class="nav__mobile" id="mobileMenu">
+      <ul>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#testimonials">Results</a></li>
+        <li><a href="#contact" class="btn btn--sm">Get Started</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ════════════════════════════════════════ HERO ════════════════════════════════════════ -->
+  <header class="hero" id="hero">
+    <div class="hero__bg">
+      <div class="hero__grid"></div>
+      <div class="hero__glow hero__glow--1"></div>
+      <div class="hero__glow hero__glow--2"></div>
+    </div>
+    <div class="hero__inner container">
+      <div class="hero__badge reveal">
+        <span class="pulse-dot"></span>
+        Now accepting Q1 2026 clients
+      </div>
+      <h1 class="hero__title reveal">
+        Stop paying people<br>to do what <span class="accent-gradient">AI can do better.</span>
+      </h1>
+      <p class="hero__sub reveal">
+        AI automation for law firms and recruiting agencies.<br class="hide-mobile">
+        Cut costs, eliminate bottlenecks, and scale what actually works.
+      </p>
+      <div class="hero__ctas reveal">
+        <a href="#contact" class="btn btn--primary btn--lg">
+          Book a Free Strategy Call
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a href="#services" class="btn btn--ghost btn--lg">See Pricing</a>
+      </div>
+      <div class="hero__stats reveal">
+        <div class="hero__stat">
+          <span class="hero__stat-num" data-target="6">0</span><span class="hero__stat-suffix">+</span>
+          <span class="hero__stat-label">Years Enterprise<br>Consulting</span>
+        </div>
+        <div class="hero__stat-divider"></div>
+        <div class="hero__stat">
+          <span class="hero__stat-num" data-target="40">0</span><span class="hero__stat-suffix">%</span>
+          <span class="hero__stat-label">Avg. Cost Reduction<br>for Clients</span>
+        </div>
+        <div class="hero__stat-divider"></div>
+        <div class="hero__stat">
+          <span class="hero__stat-num" data-target="2">0</span><span class="hero__stat-suffix"> wk</span>
+          <span class="hero__stat-label">From Kickoff<br>to First Results</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero__scroll">
+      <div class="hero__scroll-line"></div>
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════ LOGOS / TRUST BAR ════════════════════════════════════════ -->
+  <section class="trust">
+    <div class="container">
+      <p class="trust__label reveal">Trusted by teams using</p>
+      <div class="trust__logos reveal">
+        <span>Salesforce</span>
+        <span>HubSpot</span>
+        <span>Slack</span>
+        <span>Notion</span>
+        <span>Zapier</span>
+        <span>OpenAI</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ PROBLEM ════════════════════════════════════════ -->
+  <section class="problem" id="problem">
+    <div class="container">
+      <div class="problem__grid">
+        <div class="problem__text reveal">
+          <span class="section-tag">The Problem</span>
+          <h2>Your team is drowning in repetitive work.</h2>
+          <p>Candidate screening. Contract review. Client intake. Document generation. Your best people are stuck doing tasks a well-built AI agent could handle in seconds.</p>
+          <p>Meanwhile, competing firms are already automating — and pulling ahead.</p>
+        </div>
+        <div class="problem__cards reveal">
+          <div class="problem__card">
+            <div class="problem__card-icon">📊</div>
+            <h3>Hours wasted</h3>
+            <p>Associates and recruiters spend 30%+ of their time on tasks that could be fully automated.</p>
+          </div>
+          <div class="problem__card">
+            <div class="problem__card-icon">💸</div>
+            <h3>Money burned</h3>
+            <p>Manual processes cost 3-5x more than intelligent automation at scale.</p>
+          </div>
+          <div class="problem__card">
+            <div class="problem__card-icon">🐌</div>
+            <h3>Falling behind</h3>
+            <p>72% of enterprises have already adopted AI tooling. The gap widens daily.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ SERVICES ════════════════════════════════════════ -->
+  <section class="services" id="services">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">Services & Pricing</span>
+        <h2>Three ways to work together.</h2>
+        <p>Whether you're exploring AI or ready to go all-in, there's a clear path forward.</p>
+      </div>
+
+      <div class="pricing">
+        <!-- Tier 1 -->
+        <div class="pricing__card reveal">
+          <div class="pricing__card-header">
+            <span class="pricing__tier">Tier 1</span>
+            <h3>AI Readiness Audit</h3>
+            <div class="pricing__price">
+              <span class="pricing__amount">$2,500</span>
+              <span class="pricing__term">one-time</span>
+            </div>
+            <p class="pricing__desc">For companies curious about AI but unsure where to start.</p>
+          </div>
+          <ul class="pricing__features">
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              2-week deep-dive into one business area
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Identify top 3–5 automation opportunities
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              ROI projection for each opportunity
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Strategic automation roadmap deliverable
+            </li>
+          </ul>
+          <a href="#contact" class="btn btn--outline btn--full">Start Here</a>
+        </div>
+
+        <!-- Tier 2 (Popular) -->
+        <div class="pricing__card pricing__card--featured reveal">
+          <div class="pricing__card-badge">Most Popular</div>
+          <div class="pricing__card-header">
+            <span class="pricing__tier">Tier 2</span>
+            <h3>AI Implementation</h3>
+            <div class="pricing__price">
+              <span class="pricing__amount">$5K–$15K</span>
+              <span class="pricing__term">per project</span>
+            </div>
+            <p class="pricing__desc">For companies ready to automate a specific process.</p>
+          </div>
+          <ul class="pricing__features">
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Custom AI agent, chatbot, or workflow build
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Integration with your existing tools (CRM, email, DBs)
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Full testing, deployment & handoff docs
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              2 weeks of post-launch support included
+            </li>
+          </ul>
+          <a href="#contact" class="btn btn--primary btn--full">Let's Build</a>
+        </div>
+
+        <!-- Tier 3 -->
+        <div class="pricing__card reveal">
+          <div class="pricing__card-header">
+            <span class="pricing__tier">Tier 3</span>
+            <h3>AI Partnership</h3>
+            <div class="pricing__price">
+              <span class="pricing__amount">$2K–$5K</span>
+              <span class="pricing__term">per month</span>
+            </div>
+            <p class="pricing__desc">For companies that want a dedicated AI partner.</p>
+          </div>
+          <ul class="pricing__features">
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Ongoing AI system monitoring & optimization
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Monthly strategy call + performance reports
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Priority support & troubleshooting
+            </li>
+            <li>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Continuous prompt tuning & model updates
+            </li>
+          </ul>
+          <a href="#contact" class="btn btn--outline btn--full">Go Retainer</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ PROCESS ════════════════════════════════════════ -->
+  <section class="process">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">How It Works</span>
+        <h2>From first call to live automation in weeks.</h2>
+      </div>
+      <div class="process__steps">
+        <div class="process__step reveal">
+          <div class="process__step-num">01</div>
+          <h3>Discovery Call</h3>
+          <p>Free 30-minute call to understand your workflows, pain points, and goals. No pitch — just an honest assessment.</p>
+        </div>
+        <div class="process__step reveal">
+          <div class="process__step-num">02</div>
+          <h3>Audit & Roadmap</h3>
+          <p>Deep-dive into your systems. You'll get a clear roadmap with specific automation opportunities ranked by ROI.</p>
+        </div>
+        <div class="process__step reveal">
+          <div class="process__step-num">03</div>
+          <h3>Build & Deploy</h3>
+          <p>Custom AI solutions built, tested, and integrated into your existing stack. You own everything we build.</p>
+        </div>
+        <div class="process__step reveal">
+          <div class="process__step-num">04</div>
+          <h3>Optimize & Scale</h3>
+          <p>Ongoing monitoring and improvement. As your needs grow, your AI systems evolve with you.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ ABOUT ════════════════════════════════════════ -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="about__grid">
+        <div class="about__image reveal">
+          <div class="about__image-placeholder">
+            <div class="about__image-initials">ZY</div>
+            <div class="about__image-ring"></div>
+          </div>
+        </div>
+        <div class="about__text reveal">
+          <span class="section-tag">About</span>
+          <h2>Built by someone who's done this at scale.</h2>
+          <p>I'm Gary (Zhenghan Yong) — a Toronto-based tech consultant with <strong>6+ years</strong> in enterprise consulting and AI/LLM implementation.</p>
+          <p>I've seen how large organizations adopt AI: the politics, the failed POCs, the tools that sit unused. I started YongAI to bring that enterprise-grade thinking to growing companies — <strong>without the enterprise-grade bureaucracy.</strong></p>
+          <p>Every engagement is hands-on. You work directly with me — no junior consultants, no outsourcing. Just proven systems that deliver measurable results.</p>
+          <div class="about__badges">
+            <span class="about__badge">🧠 AI & LLM Specialist</span>
+            <span class="about__badge">🏢 Enterprise Background</span>
+            <span class="about__badge">📍 Toronto, Canada</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ TESTIMONIALS ════════════════════════════════════════ -->
+  <section class="testimonials" id="testimonials">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">Client Results</span>
+        <h2>What happens after we work together.</h2>
+        <!-- ⚠️ PLACEHOLDER TESTIMONIALS — Replace with real client feedback once you have it -->
+      </div>
+      <div class="testimonials__grid">
+        <div class="testimonial reveal">
+          <div class="testimonial__stars">★★★★★</div>
+          <p class="testimonial__quote">"Gary identified automation opportunities we'd been blind to for years. The ROI roadmap alone was worth 10x the audit cost. We cut our intake processing time by 70% in the first month."</p>
+          <div class="testimonial__author">
+            <div class="testimonial__avatar">JM</div>
+            <div>
+              <span class="testimonial__name">— Managing Partner</span>
+              <span class="testimonial__company">Mid-Size Law Firm</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial reveal">
+          <div class="testimonial__stars">★★★★★</div>
+          <p class="testimonial__quote">"We went from a 4-hour manual screening process to a fully automated pipeline in under 3 weeks. Our recruiters couldn't believe it. Gary just gets it — fast, no BS, and actually delivers."</p>
+          <div class="testimonial__author">
+            <div class="testimonial__avatar">SK</div>
+            <div>
+              <span class="testimonial__name">— Head of Talent Acquisition</span>
+              <span class="testimonial__company">Recruiting Agency</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial reveal">
+          <div class="testimonial__stars">★★★★★</div>
+          <p class="testimonial__quote">"Having Gary on retainer is like having a senior AI engineer on staff at a fraction of the cost. He proactively finds new ways to automate our document workflows every month."</p>
+          <div class="testimonial__author">
+            <div class="testimonial__avatar">RL</div>
+            <div>
+              <span class="testimonial__name">— COO</span>
+              <span class="testimonial__company">Legal Services Firm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ FAQ ════════════════════════════════════════ -->
+  <section class="faq">
+    <div class="container container--narrow">
+      <div class="section-header reveal">
+        <span class="section-tag">FAQ</span>
+        <h2>Common questions.</h2>
+      </div>
+      <div class="faq__list">
+        <details class="faq__item reveal">
+          <summary>What kind of businesses do you work with?</summary>
+          <p>Primarily law firms and recruiting agencies in the GTA and beyond. If your team has repeatable processes — intake, screening, document generation, client comms — and growth ambitions, we're a good fit.</p>
+        </details>
+        <details class="faq__item reveal">
+          <summary>How fast can you deliver results?</summary>
+          <p>The AI Readiness Audit takes 2 weeks. Implementation projects typically run 3–6 weeks depending on complexity. Most clients see measurable ROI within the first month.</p>
+        </details>
+        <details class="faq__item reveal">
+          <summary>What tools and platforms do you work with?</summary>
+          <p>I'm platform-agnostic. Common integrations include OpenAI/Anthropic APIs, LangChain, Salesforce, HubSpot, Slack, Notion, Zapier, Make, and custom Python/Node.js builds. If you use it, I can integrate with it.</p>
+        </details>
+        <details class="faq__item reveal">
+          <summary>Do I own what you build?</summary>
+          <p>100%. Every agent, workflow, and integration I build is yours — full IP ownership, source code, and documentation. No lock-in.</p>
+        </details>
+        <details class="faq__item reveal">
+          <summary>What if I'm not sure where to start?</summary>
+          <p>That's exactly what the free strategy call is for. We'll talk through your current workflows and I'll give you an honest assessment — even if the answer is "you don't need AI for this yet."</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ CTA / CONTACT ════════════════════════════════════════ -->
+  <section class="contact" id="contact">
+    <div class="container">
+      <div class="contact__inner reveal">
+        <div class="contact__glow"></div>
+        <span class="section-tag">Ready to Start?</span>
+        <h2>Let's find your first $100K in savings.</h2>
+        <p>Book a free 30-minute strategy call. No pitch, no pressure — just an honest look at how AI can impact your business.</p>
+        <form class="contact__form" id="contactForm">
+          <div class="contact__form-row">
+            <input type="text" name="name" placeholder="Your name" required>
+            <input type="email" name="email" placeholder="Work email" required>
+          </div>
+          <input type="text" name="company" placeholder="Company name">
+          <select name="interest" required>
+            <option value="" disabled selected>What are you interested in?</option>
+            <option value="audit">AI Readiness Audit — $2,500</option>
+            <option value="implementation">AI Implementation — $5K–$15K</option>
+            <option value="partnership">AI Partnership — $2K–$5K/mo</option>
+            <option value="unsure">Not sure yet — let's talk</option>
+          </select>
+          <textarea name="message" rows="4" placeholder="Tell me about your biggest workflow bottleneck (optional)"></textarea>
+          <button type="submit" class="btn btn--primary btn--lg btn--full">
+            Book My Free Strategy Call
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+          <p class="contact__fine">Free 30-minute call · No commitment · Response within 24 hours</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ FOOTER ════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div class="footer__brand">
+          <span class="nav__logo-icon">⚡</span>
+          <span class="nav__logo-text">Yong<span class="accent">AI</span></span>
+        </div>
+        <div class="footer__links">
+          <a href="#services">Services</a>
+          <a href="#about">About</a>
+          <a href="#contact">Contact</a>
+        </div>
+        <p class="footer__copy">&copy; 2026 YongAI. Toronto, Canada. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
