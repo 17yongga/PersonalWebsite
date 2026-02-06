@@ -98,28 +98,43 @@
     });
   }
 
-  // ── Contact form (demo handler) ────────────────────────────
+  // ── Contact form (Formspree handler) ────────────────────────
   const form = document.getElementById('contactForm');
   if (form) {
-    form.addEventListener('submit', function (e) {
+    form.addEventListener('submit', async function (e) {
       e.preventDefault();
 
-      // Collect form data
       const data = new FormData(form);
-      const payload = {};
-      data.forEach((value, key) => { payload[key] = value; });
+      const btn = form.querySelector('button[type="submit"]');
+      const origText = btn.innerHTML;
+      btn.innerHTML = 'Sending...';
+      btn.disabled = true;
 
-      // Log for now (replace with actual endpoint)
-      console.log('Form submission:', payload);
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body: data,
+          headers: { 'Accept': 'application/json' }
+        });
 
-      // Show success state
-      form.innerHTML = `
-        <div class="form-success">
-          <h3>🎉 You're in.</h3>
-          <p>I'll be in touch within 24 hours to schedule your free strategy call.</p>
-        </div>
-      `;
-      form.classList.add('submitted');
+        if (res.ok) {
+          form.innerHTML = `
+            <div class="form-success">
+              <h3>🎉 You're in.</h3>
+              <p>I'll be in touch within 24 hours to schedule your free strategy call.</p>
+            </div>
+          `;
+          form.classList.add('submitted');
+        } else {
+          btn.innerHTML = origText;
+          btn.disabled = false;
+          alert('Something went wrong. Please try again or email gary.yong@yongai.ca directly.');
+        }
+      } catch (err) {
+        btn.innerHTML = origText;
+        btn.disabled = false;
+        alert('Network error. Please try again or email gary.yong@yongai.ca directly.');
+      }
     });
   }
 

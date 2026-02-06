@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
   <!-- Favicon (inline SVG data URI) -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 </head>
@@ -61,7 +62,7 @@
         Cut costs, eliminate bottlenecks, and scale what actually works.
       </p>
       <div class="hero__ctas reveal">
-        <a href="#contact" class="btn btn--primary btn--lg">
+        <a href="#" onclick="Calendly.initPopupWidget({url: 'https://calendly.com/gary-yong-yongai/30min'});return false;" class="btn btn--primary btn--lg">
           Book a Free Strategy Call
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </a>
@@ -389,7 +390,7 @@
         <span class="section-tag">Ready to Start?</span>
         <h2>Let's find your first $100K in savings.</h2>
         <p>Book a free 30-minute strategy call. No pitch, no pressure — just an honest look at how AI can impact your business.</p>
-        <form class="contact__form" id="contactForm">
+        <form class="contact__form" id="contactForm" action="https://formspree.io/f/xwvnkpak" method="POST">
           <div class="contact__form-row">
             <input type="text" name="name" placeholder="Your name" required>
             <input type="email" name="email" placeholder="Work email" required>
@@ -431,6 +432,8 @@
     </div>
   </footer>
 
+  <!-- Calendly popup widget -->
+  <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
   <script src="script.js"></script>
 </body>
 </html>
