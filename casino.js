@@ -282,38 +282,27 @@ class CasinoManager {
         const now = Date.now();
         const oldBalance = this.credits;
         
+        console.log(`[Casino] playerData received: socket=${socketCredits}, current=${oldBalance}, game=${this.currentGame}`);
+        
         if (window.casinoDebugLogger) {
           window.casinoDebugLogger.logBalanceUpdate(oldBalance, socketCredits, 'socket', {
             currentGame: this.currentGame
           });
         }
         
-        // Prefer recent API balance over socket to fix race: user places CS2 bet -> navigates -> joinCasino sends stale balance
-        // Extended to 10s window to account for slow networks and socket reconnection delays
-        const recentFetch = this._lastBalanceFetchAt && (now - this._lastBalanceFetchAt) < 10000;
-        if (recentFetch && socketCredits !== this.credits) {
-          console.log('[Casino] Ignoring socket playerData - using recent API balance (stale socket guard)', {
-            apiBalance: this.credits,
+        // Simple approach: always trust the server's balance.
+        // The server is the single source of truth — it reads from the persisted users file.
+        // Only skip if we JUST did a CS2 bet via REST (within 3 seconds) and the socket
+        // is sending back a stale pre-bet balance.
+        const hasRecentManualUpdate = this._lastManualCreditUpdate && (now - this._lastManualCreditUpdate) < 3000;
+        
+        if (hasRecentManualUpdate && socketCredits > this.credits) {
+          // Socket is sending a balance higher than what we set after a bet deduction.
+          // This is the stale joinCasino response — ignore it.
+          console.log('[Casino] Ignoring stale socket playerData after recent CS2 bet', {
+            currentBalance: this.credits,
             socketBalance: socketCredits
           });
-          return;
-        }
-        
-        // Always allow socket updates that increase balance (winnings from any game)
-        if (socketCredits > this.credits) {
-          console.log('[Casino] Socket update increases balance (winnings), allowing:', socketCredits);
-          this.credits = socketCredits;
-          this.updateCreditsDisplay();
-          this._lastManualCreditUpdate = null;
-          return;
-        }
-        
-        // For decreases or same balance: only block if we're in CS2 betting AND just did a manual update
-        const isCS2Betting = this.currentGame === 'cs2betting';
-        const hasRecentManualUpdate = this._lastManualCreditUpdate && (now - this._lastManualCreditUpdate) < 2000;
-        
-        if (isCS2Betting && hasRecentManualUpdate && socketCredits < this.credits) {
-          console.log('[Casino] Ignoring socket playerData - CS2 betting manual update in progress (would decrease balance)');
           return;
         }
         

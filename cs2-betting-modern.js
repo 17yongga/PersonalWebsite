@@ -765,8 +765,8 @@ class CS2ModernBettingGame {
     const team1Odds = this.getDisplayOdds(event.odds?.team1);
     const team2Odds = this.getDisplayOdds(event.odds?.team2);
     
-    const homeTeamLogo = this.getTeamLogo(homeTeamName);
-    const awayTeamLogo = this.getTeamLogo(awayTeamName);
+    const homeTeamLogo = event.team1Logo || this.getTeamLogo(homeTeamName);
+    const awayTeamLogo = event.team2Logo || this.getTeamLogo(awayTeamName);
 
     return `
       <div class="cs2-event-card ${isLive ? 'live' : ''}" data-event-id="${event.id}">
@@ -1031,8 +1031,8 @@ class CS2ModernBettingGame {
     const event = this.events.find(e => e.id === bet.eventId);
     
     // Use stored team names from bet object, fallback to event lookup
-    const homeTeam = bet.homeTeam || event?.homeTeam || 'Team 1';
-    const awayTeam = bet.awayTeam || event?.awayTeam || 'Team 2';
+    const homeTeam = bet.homeTeam || event?.homeTeam || event?.participant1Name || 'Unknown Team';
+    const awayTeam = bet.awayTeam || event?.awayTeam || event?.participant2Name || 'Unknown Team';
     const eventName = `${homeTeam} vs ${awayTeam}`;
     
     // Use stored selection name from bet object, fallback to calculation
@@ -1046,6 +1046,9 @@ class CS2ModernBettingGame {
     
     const statusText = this.getStatusBadge(bet.status);
     const potentialPayout = bet.potentialPayout || (bet.amount * bet.odds);
+    
+    // Format the date
+    const placedDate = bet.placedAt ? new Date(bet.placedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
 
     return `
       <div class="cs2-bet-card ${statusClass}">
@@ -1076,6 +1079,11 @@ class CS2ModernBettingGame {
 
   // Utility Functions
   getServerUrl() {
+    // Always prefer the globally configured server URL (set in casino.html)
+    if (window.CASINO_SERVER_URL) {
+      return window.CASINO_SERVER_URL;
+    }
+    
     const hostname = window.location.hostname;
     
     if (hostname === 'localhost' || hostname === '127.0.0.1' || 

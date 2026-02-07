@@ -1803,8 +1803,23 @@ app.get("/api/cs2/bets", async (req, res) => {
       return res.status(400).json({ success: false, error: "userId or sessionId required" });
     }
     
-    // Filter bets by userId
-    const userBets = Object.values(cs2BettingState.bets).filter(bet => bet.userId === userId);
+    // Filter bets by userId and enrich with team names from events
+    const userBets = Object.values(cs2BettingState.bets)
+      .filter(bet => bet.userId === userId)
+      .map(bet => {
+        // Backfill team names from events if missing (legacy bets)
+        if (!bet.homeTeam || !bet.awayTeam) {
+          const event = cs2BettingState.events[bet.eventId];
+          if (event) {
+            bet.homeTeam = bet.homeTeam || event.homeTeam || event.participant1Name || 'Unknown';
+            bet.awayTeam = bet.awayTeam || event.awayTeam || event.participant2Name || 'Unknown';
+            bet.selectionName = bet.selectionName || 
+              (bet.selection === 'team1' ? bet.homeTeam :
+               bet.selection === 'team2' ? bet.awayTeam : 'Draw');
+          }
+        }
+        return bet;
+      });
     
     res.json({
       success: true,
@@ -2070,15 +2085,17 @@ async function syncCS2Events() {
       const isFromFallbackSource = match.source === 'bo3gg' || match.source === 'hltv';
       
       // Filter: For OddsPapi matches, require both teams in top 250
-      // For fallback sources (bo3.gg, HLTV), require at least one team in top 250
+      // For fallback sources (bo3.gg, HLTV) with real bookmaker odds, accept all matches
+      // For fallback sources without odds, require at least one team in top 250
       const team1Ranking = getTeamRanking(matchTeam1);
       const team2Ranking = getTeamRanking(matchTeam2);
       const bothInTop250 = team1Ranking !== null && team2Ranking !== null;
       const atLeastOneInTop250 = team1Ranking !== null || team2Ranking !== null;
+      const hasRealOdds = match.hasOdds && match.odds && match.odds.team1 && match.odds.team2;
       
-      if (!bothInTop250 && !(isFromFallbackSource && atLeastOneInTop250)) {
+      if (!bothInTop250 && !(isFromFallbackSource && (hasRealOdds || atLeastOneInTop250))) {
         filteredCount++;
-        console.log(`[CS2 Sync] Filtering out match: ${matchTeam1} vs ${matchTeam2} (team1 rank: ${team1Ranking?.rank || 'N/A'}, team2 rank: ${team2Ranking?.rank || 'N/A'})`);
+        console.log(`[CS2 Sync] Filtering out match: ${matchTeam1} vs ${matchTeam2} (team1 rank: ${team1Ranking?.rank || 'N/A'}, team2 rank: ${team2Ranking?.rank || 'N/A'}, hasOdds: ${hasRealOdds})`);
         continue;
       }
       // Use fixtureId as the key since that's what OddsPapi uses
@@ -2273,6 +2290,8 @@ async function syncCS2Events() {
         awayTeam: match.awayTeam || match.participant2Name || 'Team 2',
         participant1Name: match.participant1Name || match.homeTeam || 'Team 1',
         participant2Name: match.participant2Name || match.awayTeam || 'Team 2',
+        team1Logo: match.team1Logo || existingEvent?.team1Logo || null,
+        team2Logo: match.team2Logo || existingEvent?.team2Logo || null,
         odds: existingOdds,
         status: finalStatus,
         statusId: match.statusId || (finalStatus === 'live' ? 1 : (finalStatus === 'finished' ? 2 : 0)),
