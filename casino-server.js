@@ -2065,15 +2065,20 @@ async function syncCS2Events() {
     let oddsFetchCount = 0; // Track how many odds we fetch during sync
     
     for (const match of uniqueMatches) {
-      // Filter: Only include matches where both teams are in top 250
       const matchTeam1 = match.homeTeam || match.participant1Name;
       const matchTeam2 = match.awayTeam || match.participant2Name;
+      const isFromFallbackSource = match.source === 'bo3gg' || match.source === 'hltv';
       
-      if (!areBothTeamsInTop250(matchTeam1, matchTeam2)) {
+      // Filter: For OddsPapi matches, require both teams in top 250
+      // For fallback sources (bo3.gg, HLTV), require at least one team in top 250
+      const team1Ranking = getTeamRanking(matchTeam1);
+      const team2Ranking = getTeamRanking(matchTeam2);
+      const bothInTop250 = team1Ranking !== null && team2Ranking !== null;
+      const atLeastOneInTop250 = team1Ranking !== null || team2Ranking !== null;
+      
+      if (!bothInTop250 && !(isFromFallbackSource && atLeastOneInTop250)) {
         filteredCount++;
-        const team1Ranking = getTeamRanking(matchTeam1);
-        const team2Ranking = getTeamRanking(matchTeam2);
-        console.log(`[CS2 Sync] Filtering out match: ${matchTeam1} vs ${matchTeam2} (team1 in top 250: ${team1Ranking !== null}, team2 in top 250: ${team2Ranking !== null})`);
+        console.log(`[CS2 Sync] Filtering out match: ${matchTeam1} vs ${matchTeam2} (team1 rank: ${team1Ranking?.rank || 'N/A'}, team2 rank: ${team2Ranking?.rank || 'N/A'})`);
         continue;
       }
       // Use fixtureId as the key since that's what OddsPapi uses
@@ -2200,10 +2205,49 @@ async function syncCS2Events() {
           existingOdds = validatedOdds;
           console.log(`[CS2 Sync] ✓ Got odds for ${team1Name} vs ${team2Name}: ${validatedOdds.team1}/${validatedOdds.team2}`);
         } else {
-          // No odds available - skip this match (don't add to events)
-          console.log(`[CS2 Sync] ⚠ Skipping match ${team1Name} vs ${team2Name} - both teams in top 250 but no odds available`);
-          filteredCount++;
-          continue; // Skip adding this match to events
+          // No real odds available from API - try ranking-based odds as fallback
+          if (team1Ranking !== null && team2Ranking !== null) {
+            // Both teams in rankings - calculate odds from rankings
+            const rank1 = team1Ranking ? team1Ranking.rank : 999;
+            const rank2 = team2Ranking ? team2Ranking.rank : 999;
+            const rankDiff = Math.abs(rank1 - rank2);
+            
+            // Simple ranking-based odds: favorite gets lower odds
+            let favoriteOdds, underdogOdds;
+            if (rankDiff <= 5) {
+              favoriteOdds = 1.85; underdogOdds = 1.95;
+            } else if (rankDiff <= 20) {
+              favoriteOdds = 1.55; underdogOdds = 2.35;
+            } else if (rankDiff <= 50) {
+              favoriteOdds = 1.35; underdogOdds = 3.00;
+            } else if (rankDiff <= 100) {
+              favoriteOdds = 1.20; underdogOdds = 4.00;
+            } else {
+              favoriteOdds = 1.10; underdogOdds = 6.00;
+            }
+            
+            existingOdds = {
+              team1: rank1 <= rank2 ? favoriteOdds : underdogOdds,
+              team2: rank1 <= rank2 ? underdogOdds : favoriteOdds,
+              draw: null
+            };
+            console.log(`[CS2 Sync] ✓ Using ranking-based odds for ${team1Name} (rank ${rank1}) vs ${team2Name} (rank ${rank2}): ${existingOdds.team1}/${existingOdds.team2}`);
+          } else if (isFromFallbackSource) {
+            // Fallback source, at least one team is ranked - use lenient odds
+            const rank1 = team1Ranking ? team1Ranking.rank : 999;
+            const rank2 = team2Ranking ? team2Ranking.rank : 999;
+            existingOdds = {
+              team1: rank1 < rank2 ? 1.40 : 2.75,
+              team2: rank1 < rank2 ? 2.75 : 1.40,
+              draw: null
+            };
+            console.log(`[CS2 Sync] ✓ Using fallback odds for ${team1Name} vs ${team2Name}: ${existingOdds.team1}/${existingOdds.team2}`);
+          } else {
+            // No odds available - skip this match (don't add to events)
+            console.log(`[CS2 Sync] ⚠ Skipping match ${team1Name} vs ${team2Name} - no odds available`);
+            filteredCount++;
+            continue; // Skip adding this match to events
+          }
         }
       }
       
