@@ -2764,11 +2764,18 @@ async function updateAllMatchOdds(updateAll = false, force = false) {
           const team2Name = event.awayTeam || event.participant2Name || 'Team 2';
           const bothInTop250 = areBothTeamsInTop250(team1Name, team2Name);
           
-          if (bothInTop250 && (event.status === 'scheduled' || event.status === 'live')) {
-            // Remove match from events since it doesn't have odds
-            console.log(`[CS2 Odds] Removing match ${team1Name} vs ${team2Name} from events - both in top 250 but no odds available`);
+          // Check if event already has valid odds from another source (e.g. bo3.gg bet_updates)
+          const hasExistingOdds = event.odds && event.odds.team1 && event.odds.team2 &&
+                                  event.odds.team1 !== 2.0 && event.odds.team2 !== 2.0;
+          
+          if (bothInTop250 && !hasExistingOdds && (event.status === 'scheduled' || event.status === 'live')) {
+            // Remove match from events since it doesn't have odds from any source
+            console.log(`[CS2 Odds] Removing match ${team1Name} vs ${team2Name} from events - both in top 250 but no odds from any source`);
             delete cs2BettingState.events[eventId];
             await saveCS2BettingData();
+          } else if (bothInTop250 && hasExistingOdds) {
+            console.log(`[CS2 Odds] Keeping match ${team1Name} vs ${team2Name} - OddsPapi failed but has odds from another source (${event.odds.team1}/${event.odds.team2})`);
+            // Keep existing odds, don't overwrite
           } else {
             // Keep the match but mark as no odds (for non-top-250 matches or finished matches)
             if (event.hasOdds !== false) {
