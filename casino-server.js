@@ -29,6 +29,15 @@ try {
   cs2OddsProvider = cs2ApiClient;
 }
 
+// CS2 bo3.gg API Client - Free alternative data source for matches
+let cs2Bo3ggClient = null;
+try {
+  cs2Bo3ggClient = require("./cs2-bo3gg-client");
+  console.log("CS2 bo3.gg client loaded (free match data source)");
+} catch (error) {
+  console.warn("CS2 bo3.gg client not available:", error.message);
+}
+
 // CS2 Free Result Sources - HLTV/Liquipedia scraping for settlement fallback
 let cs2ResultFetcher = null;
 try {
@@ -1976,34 +1985,49 @@ async function syncCS2Events() {
         matches = [];
       }
       
-      // If OddsPapi returned no matches (API keys exhausted), try HLTV scraper
-      if ((!matches || matches.length === 0) && cs2ResultFetcher) {
-        console.log("[CS2 Sync] OddsPapi returned no matches, trying HLTV scraper...");
-        try {
-          const hltvMatches = await cs2ResultFetcher.getUpcomingMatches();
-          if (hltvMatches && hltvMatches.length > 0) {
-            console.log(`[CS2 Sync] HLTV returned ${hltvMatches.length} upcoming matches`);
-            // Map HLTV format to internal format
-            matches = hltvMatches.map(m => ({
-              id: `hltv_${m.hltvId || Date.now()}_${Math.random().toString(36).substr(2,6)}`,
-              fixtureId: `hltv_${m.hltvId || Date.now()}_${Math.random().toString(36).substr(2,6)}`,
-              homeTeam: m.team1,
-              awayTeam: m.team2,
-              participant1Name: m.team1,
-              participant2Name: m.team2,
-              tournamentName: m.event || 'CS2 Tournament',
-              commenceTime: m.time ? new Date(m.time).toISOString() : new Date(Date.now() + 3600000).toISOString(),
-              startTime: m.time ? new Date(m.time).toISOString() : new Date(Date.now() + 3600000).toISOString(),
-              status: 'scheduled',
-              statusId: 0,
-              completed: false,
-              hasOdds: false, // HLTV doesn't provide odds
-              odds: { team1: null, team2: null, draw: null },
-              source: 'hltv'
-            }));
+      // If OddsPapi returned no matches (API keys exhausted), try fallback sources
+      if (!matches || matches.length === 0) {
+        // Fallback 1: bo3.gg API (free, no API key required, works from cloud servers)
+        if (cs2Bo3ggClient) {
+          console.log("[CS2 Sync] OddsPapi returned no matches, trying bo3.gg API...");
+          try {
+            matches = await cs2Bo3ggClient.fetchUpcomingMatches({ limit: 50 });
+            if (matches && matches.length > 0) {
+              console.log(`[CS2 Sync] bo3.gg returned ${matches.length} upcoming matches`);
+            }
+          } catch (bo3Error) {
+            console.warn(`[CS2 Sync] bo3.gg API failed: ${bo3Error.message}`);
           }
-        } catch (hltvError) {
-          console.warn(`[CS2 Sync] HLTV scraper also failed: ${hltvError.message}`);
+        }
+        
+        // Fallback 2: HLTV scraper (may be blocked from cloud servers)
+        if ((!matches || matches.length === 0) && cs2ResultFetcher) {
+          console.log("[CS2 Sync] Trying HLTV scraper...");
+          try {
+            const hltvMatches = await cs2ResultFetcher.getUpcomingMatches();
+            if (hltvMatches && hltvMatches.length > 0) {
+              console.log(`[CS2 Sync] HLTV returned ${hltvMatches.length} upcoming matches`);
+              matches = hltvMatches.map(m => ({
+                id: `hltv_${m.hltvId || Date.now()}_${Math.random().toString(36).substr(2,6)}`,
+                fixtureId: `hltv_${m.hltvId || Date.now()}_${Math.random().toString(36).substr(2,6)}`,
+                homeTeam: m.team1,
+                awayTeam: m.team2,
+                participant1Name: m.team1,
+                participant2Name: m.team2,
+                tournamentName: m.event || 'CS2 Tournament',
+                commenceTime: m.time ? new Date(m.time).toISOString() : new Date(Date.now() + 3600000).toISOString(),
+                startTime: m.time ? new Date(m.time).toISOString() : new Date(Date.now() + 3600000).toISOString(),
+                status: 'scheduled',
+                statusId: 0,
+                completed: false,
+                hasOdds: false,
+                odds: { team1: null, team2: null, draw: null },
+                source: 'hltv'
+              }));
+            }
+          } catch (hltvError) {
+            console.warn(`[CS2 Sync] HLTV scraper also failed: ${hltvError.message}`);
+          }
         }
       }
       
