@@ -2091,11 +2091,11 @@ async function syncCS2Events() {
       const team2Ranking = getTeamRanking(matchTeam2);
       const bothInTop250 = team1Ranking !== null && team2Ranking !== null;
       const atLeastOneInTop250 = team1Ranking !== null || team2Ranking !== null;
-      const hasRealOdds = match.hasOdds && match.odds && match.odds.team1 && match.odds.team2;
+      const matchHasOdds = match.hasOdds && match.odds && match.odds.team1 && match.odds.team2;
       
-      if (!bothInTop250 && !(isFromFallbackSource && (hasRealOdds || atLeastOneInTop250))) {
+      if (!bothInTop250 && !(isFromFallbackSource && (matchHasOdds || atLeastOneInTop250))) {
         filteredCount++;
-        console.log(`[CS2 Sync] Filtering out match: ${matchTeam1} vs ${matchTeam2} (team1 rank: ${team1Ranking?.rank || 'N/A'}, team2 rank: ${team2Ranking?.rank || 'N/A'}, hasOdds: ${hasRealOdds})`);
+        console.log(`[CS2 Sync] Filtering out match: ${matchTeam1} vs ${matchTeam2} (team1 rank: ${team1Ranking?.rank || 'N/A'}, team2 rank: ${team2Ranking?.rank || 'N/A'}, hasOdds: ${matchHasOdds})`);
         continue;
       }
       // Use fixtureId as the key since that's what OddsPapi uses
