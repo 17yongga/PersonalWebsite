@@ -367,37 +367,14 @@ class CS2BettingGame {
   }
 
   async loadBalance() {
-    try {
-      const userId = this.casino.username || sessionStorage.getItem('casinoUsername');
-      if (!userId) return;
-
-      // FIX: Trust the casino's existing balance if it's already been set by socket
-      // This prevents race conditions where API returns different value than socket
-      if (this.casino.credits > 0 && this.casino.credits !== 10000) {
-        // Casino already has a valid balance from login/socket - use that
-        this.currentBalance = this.casino.credits;
-        console.log(`[CS2 Balance] Using existing casino balance: ${this.currentBalance}`);
-        return;
-      }
-
-      const serverUrl = window.CASINO_SERVER_URL || window.location.origin;
-      const response = await fetch(`${serverUrl}/api/cs2/balance?userId=${userId}`);
-      const data = await response.json();
-
-      if (data.success) {
-        this.currentBalance = data.balance;
-        // Only update casino credits if they haven't been set yet or are at default
-        if (this.casino.credits === 0 || this.casino.credits === 10000) {
-          this.casino.credits = this.currentBalance;
-          this.casino.updateCreditsDisplay();
-          console.log(`[CS2 Balance] Set balance from API: ${this.currentBalance}`);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading balance:', error);
-      // Fallback to casino's current balance
-      this.currentBalance = this.casino.credits || 0;
-    }
+    // BALANCE DOUBLING FIX: Always trust the casino manager's balance.
+    // The casino manager already has the authoritative balance from login or
+    // session restore (restoreSessionAndConnect). Making a separate API call
+    // here creates a race condition with the socket playerData event, which
+    // can cause balance doubling (API fetch + socket event both write to credits).
+    // The casino manager is the single source of truth for balance.
+    this.currentBalance = this.casino.credits || 0;
+    console.log(`[CS2 Balance] Using casino manager balance: ${this.currentBalance}`);
   }
 
   async loadEvents() {
@@ -625,7 +602,6 @@ class CS2BettingGame {
             if (this.teamLogos.teams[normalizedName]) {
               const logoFile = this.teamLogos.teams[normalizedName];
               const logoUrl = basePath + logoFile;
-              console.log(`[CS2 Betting] Found logo for ${teamName}: ${logoUrl}`);
               return logoUrl;
             }
             
@@ -636,14 +612,21 @@ class CS2BettingGame {
             if (this.teamLogos.teams[simplifiedName]) {
               const logoFile = this.teamLogos.teams[simplifiedName];
               const logoUrl = basePath + logoFile;
-              console.log(`[CS2 Betting] Found logo for ${teamName} (simplified: ${simplifiedName}): ${logoUrl}`);
+              return logoUrl;
+            }
+            
+            // Try with "team" prefix removed
+            const withoutTeam = normalizedName.replace(/^team\s+/i, '').trim();
+            if (this.teamLogos.teams[withoutTeam]) {
+              const logoFile = this.teamLogos.teams[withoutTeam];
+              const logoUrl = basePath + logoFile;
               return logoUrl;
             }
           }
           
-          // No logo found - will use acronym
-          console.log(`[CS2 Betting] No logo found for ${teamName}, will use acronym`);
-          return null;
+          // Fallback to ui-avatars service
+          const encodedName = encodeURIComponent(teamName);
+          return `https://ui-avatars.com/api/?name=${encodedName}&size=64&background=1a1a2e&color=e94560&bold=true&format=svg`;
         };
         
         const homeTeamLogo = getTeamLogo.call(this, homeTeamName);

@@ -289,7 +289,8 @@ class CasinoManager {
         }
         
         // Prefer recent API balance over socket to fix race: user places CS2 bet -> navigates -> joinCasino sends stale balance
-        const recentFetch = this._lastBalanceFetchAt && (now - this._lastBalanceFetchAt) < 2500;
+        // Extended to 10s window to account for slow networks and socket reconnection delays
+        const recentFetch = this._lastBalanceFetchAt && (now - this._lastBalanceFetchAt) < 10000;
         if (recentFetch && socketCredits !== this.credits) {
           console.log('[Casino] Ignoring socket playerData - using recent API balance (stale socket guard)', {
             apiBalance: this.credits,

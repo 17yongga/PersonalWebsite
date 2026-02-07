@@ -29,6 +29,17 @@ try {
   cs2OddsProvider = cs2ApiClient;
 }
 
+// CS2 Free Result Sources - HLTV/Liquipedia scraping for settlement fallback
+let cs2ResultFetcher = null;
+try {
+  const freeResultSources = require("./cs2-free-result-sources");
+  cs2ResultFetcher = freeResultSources.resultFetcher;
+  console.log("CS2 Free Result Sources loaded (HLTV + Liquipedia scrapers)");
+} catch (error) {
+  console.warn("CS2 Free Result Sources not available:", error.message);
+  console.warn("Settlement will rely solely on OddsPapi for results");
+}
+
 // Scheduled tasks for CS2 betting (using node-cron if available)
 let cron = null;
 try {
@@ -1958,10 +1969,50 @@ async function syncCS2Events() {
       console.log("Syncing CS2 events from API...");
       
       // Fetch upcoming matches from API
-      matches = await matchClient.fetchUpcomingMatches({ limit: 50 });
+      try {
+        matches = await matchClient.fetchUpcomingMatches({ limit: 50 });
+      } catch (apiError) {
+        console.warn(`[CS2 Sync] OddsPapi API failed: ${apiError.message}`);
+        matches = [];
+      }
       
-      // Cache the matches
-      await cacheMatches(matches);
+      // If OddsPapi returned no matches (API keys exhausted), try HLTV scraper
+      if ((!matches || matches.length === 0) && cs2ResultFetcher) {
+        console.log("[CS2 Sync] OddsPapi returned no matches, trying HLTV scraper...");
+        try {
+          const hltvMatches = await cs2ResultFetcher.getUpcomingMatches();
+          if (hltvMatches && hltvMatches.length > 0) {
+            console.log(`[CS2 Sync] HLTV returned ${hltvMatches.length} upcoming matches`);
+            // Map HLTV format to internal format
+            matches = hltvMatches.map(m => ({
+              id: `hltv_${m.hltvId || Date.now()}_${Math.random().toString(36).substr(2,6)}`,
+              fixtureId: `hltv_${m.hltvId || Date.now()}_${Math.random().toString(36).substr(2,6)}`,
+              homeTeam: m.team1,
+              awayTeam: m.team2,
+              participant1Name: m.team1,
+              participant2Name: m.team2,
+              tournamentName: m.event || 'CS2 Tournament',
+              commenceTime: m.time ? new Date(m.time).toISOString() : new Date(Date.now() + 3600000).toISOString(),
+              startTime: m.time ? new Date(m.time).toISOString() : new Date(Date.now() + 3600000).toISOString(),
+              status: 'scheduled',
+              statusId: 0,
+              completed: false,
+              hasOdds: false, // HLTV doesn't provide odds
+              odds: { team1: null, team2: null, draw: null },
+              source: 'hltv'
+            }));
+          }
+        } catch (hltvError) {
+          console.warn(`[CS2 Sync] HLTV scraper also failed: ${hltvError.message}`);
+        }
+      }
+      
+      if (!matches) matches = [];
+      
+      // Cache the matches (even if from HLTV)
+      if (matches.length > 0) {
+        await cacheMatches(matches);
+      }
     }
     
     // Deduplicate matches by fixtureId (in case API returns duplicates)
@@ -2273,36 +2324,79 @@ async function settleCS2Bets() {
         continue;
       }
       
-      // If event is not finished, check API for results
+      // If event is not finished, check for results from multiple sources
       if (event.status !== 'finished') {
+        let resultFound = false;
+        
+        // Source 1: Try OddsPapi first (if available)
         try {
-          // Use cs2ApiClient or cs2OddsProvider for fetching results
           const resultClient = cs2OddsProvider || cs2ApiClient;
-          if (!resultClient) {
-            console.warn(`No API client available to fetch results for event ${eventId}`);
-            continue;
-          }
-          const result = await resultClient.fetchMatchResults(eventId);
-          if (result && result.completed) {
-            // Update event status
-            event.status = 'finished';
-            event.statusId = result.statusId;
-            event.completed = true;
-            event.result = {
-              winner: result.winner,
-              participant1Score: result.participant1Score || result.homeScore,
-              participant2Score: result.participant2Score || result.awayScore,
-              homeScore: result.homeScore || result.participant1Score,
-              awayScore: result.awayScore || result.participant2Score
-            };
-            cs2BettingState.events[eventId] = event;
-          } else {
-            // Event not finished yet, skip
-            continue;
+          if (resultClient && resultClient.fetchMatchResults) {
+            const result = await resultClient.fetchMatchResults(eventId);
+            if (result && result.completed && result.winner) {
+              event.status = 'finished';
+              event.statusId = result.statusId || 3;
+              event.completed = true;
+              event.result = {
+                winner: result.winner,
+                participant1Score: result.participant1Score || result.homeScore,
+                participant2Score: result.participant2Score || result.awayScore,
+                homeScore: result.homeScore || result.participant1Score,
+                awayScore: result.awayScore || result.participant2Score
+              };
+              cs2BettingState.events[eventId] = event;
+              resultFound = true;
+              console.log(`[CS2 Settlement] Got result from OddsPapi for ${eventId}: winner=${result.winner}`);
+            }
           }
         } catch (error) {
-          console.error(`Error fetching results for event ${eventId}:`, error.message);
-          // Continue with next event
+          console.warn(`[CS2 Settlement] OddsPapi results failed for ${eventId}: ${error.message}`);
+        }
+        
+        // Source 2: Fallback to HLTV/Liquipedia scrapers
+        if (!resultFound && cs2ResultFetcher) {
+          try {
+            const team1 = event.homeTeam || event.participant1Name;
+            const team2 = event.awayTeam || event.participant2Name;
+            
+            if (team1 && team2) {
+              console.log(`[CS2 Settlement] Trying HLTV/Liquipedia for ${team1} vs ${team2}...`);
+              const scraperResult = await cs2ResultFetcher.findMatchResult(team1, team2);
+              
+              if (scraperResult && scraperResult.winner) {
+                // Map scraped winner name back to team1/team2
+                const { teamsMatch } = require('./cs2-free-result-sources');
+                let winner = null;
+                if (teamsMatch(scraperResult.winner, team1)) {
+                  winner = 'team1';
+                } else if (teamsMatch(scraperResult.winner, team2)) {
+                  winner = 'team2';
+                }
+                
+                if (winner) {
+                  event.status = 'finished';
+                  event.statusId = 3;
+                  event.completed = true;
+                  event.result = {
+                    winner: winner,
+                    participant1Score: null,
+                    participant2Score: null,
+                    source: scraperResult.source,
+                    confidence: scraperResult.confidence
+                  };
+                  cs2BettingState.events[eventId] = event;
+                  resultFound = true;
+                  console.log(`[CS2 Settlement] Got result from ${scraperResult.source} for ${team1} vs ${team2}: winner=${winner} (${scraperResult.winner})`);
+                }
+              }
+            }
+          } catch (error) {
+            console.warn(`[CS2 Settlement] HLTV/Liquipedia fallback failed for ${eventId}: ${error.message}`);
+          }
+        }
+        
+        if (!resultFound) {
+          // Event not finished yet or results unavailable, skip
           continue;
         }
       }
@@ -2385,6 +2479,24 @@ async function settleCS2Bets() {
 }
 
 // Aggregate odds for all active CS2 events from HLTV and gambling scrapers
+/**
+ * Check if it's been enough time since last settlement check
+ * Settlement runs every 2 hours to catch completed matches promptly
+ * @returns {boolean} True if enough time has passed or no previous check
+ */
+function shouldRunSettlementCheck() {
+  if (!cs2BettingState.lastSettlementCheck) {
+    return true; // No previous check, allow it
+  }
+  
+  const lastCheck = new Date(cs2BettingState.lastSettlementCheck);
+  const now = new Date();
+  const hoursSinceLastCheck = (now - lastCheck) / (1000 * 60 * 60);
+  
+  // Run settlement every 2 hours instead of 24 to catch completed matches faster
+  return hoursSinceLastCheck >= 2;
+}
+
 /**
  * Check if it's been 24 hours since last API query
  * @returns {boolean} True if 24 hours have passed or no previous query
@@ -2788,19 +2900,17 @@ function startCS2ScheduledTasks() {
     // cs2SyncInterval is no longer used
     cs2SyncInterval = null;
     
-    // Schedule daily settlement check (runs once per day at midnight UTC, or checks if 24 hours passed)
-    // This ensures bets are settled once per day
-    cs2SettlementInterval = cron.schedule("0 0 * * *", async () => {
-      // Check if 24 hours have passed since last settlement check
+    // Schedule settlement check every 2 hours to catch completed matches promptly
+    cs2SettlementInterval = cron.schedule("0 */2 * * *", async () => {
       if (shouldRunSettlementCheck()) {
-        console.log("[CS2 Settlement] Daily check: 24 hours passed, starting settlement check...");
+        console.log("[CS2 Settlement] Periodic check: starting settlement...");
         await settleCS2Bets(); // Function will update lastSettlementCheck timestamp
       } else {
         const lastCheck = new Date(cs2BettingState.lastSettlementCheck);
         const now = new Date();
         const hoursSinceLastCheck = (now - lastCheck) / (1000 * 60 * 60);
-        const hoursRemaining = 24 - hoursSinceLastCheck;
-        console.log(`[CS2 Settlement] Daily check: ${hoursRemaining.toFixed(1)} hours remaining until next settlement check`);
+        const hoursRemaining = Math.max(0, 2 - hoursSinceLastCheck);
+        console.log(`[CS2 Settlement] ${hoursRemaining.toFixed(1)} hours until next settlement check`);
       }
     }, {
       scheduled: true,
@@ -2843,7 +2953,7 @@ function startCS2ScheduledTasks() {
     
     console.log("CS2 scheduled tasks started using node-cron:");
     console.log(`  - Event sync: ✅ ENABLED - Daily at 2 AM UTC (fetch new matches, clean up old ones)`);
-    console.log(`  - Settlement check: once per day at midnight UTC (or if 24 hours passed)`);
+    console.log(`  - Settlement check: every 2 hours (cron schedule)`);
     console.log(`  - Daily odds update: once per day at 1 AM UTC (or if 24 hours passed)`);
   } else {
     // Fallback to setInterval
@@ -2866,20 +2976,19 @@ function startCS2ScheduledTasks() {
       }
     }, 4 * 60 * 60 * 1000); // Check every 4 hours
     
-    // Schedule daily settlement check (runs once per day, checks if 24 hours passed)
-    // Check every hour to see if 24 hours have passed since last settlement
+    // Schedule settlement check every 30 minutes to catch completed matches promptly
     cs2SettlementInterval = setInterval(async () => {
       if (shouldRunSettlementCheck()) {
-        console.log("[CS2 Settlement] Daily check: 24 hours passed, starting settlement check...");
+        console.log("[CS2 Settlement] Periodic check: starting settlement...");
         await settleCS2Bets(); // Function will update lastSettlementCheck timestamp
       } else {
         const lastCheck = new Date(cs2BettingState.lastSettlementCheck);
         const now = new Date();
         const hoursSinceLastCheck = (now - lastCheck) / (1000 * 60 * 60);
-        const hoursRemaining = 24 - hoursSinceLastCheck;
-        console.log(`[CS2 Settlement] Daily check: ${hoursRemaining.toFixed(1)} hours remaining until next settlement check`);
+        const hoursRemaining = Math.max(0, 2 - hoursSinceLastCheck);
+        console.log(`[CS2 Settlement] ${hoursRemaining.toFixed(1)} hours until next settlement check`);
       }
-    }, 60 * 60 * 1000); // Check every hour
+    }, 30 * 60 * 1000); // Check every 30 minutes
     
     // Schedule daily odds update (runs once per day, checks if 24 hours passed)
     cs2DailyOddsUpdateInterval = setInterval(async () => {
@@ -2898,7 +3007,7 @@ function startCS2ScheduledTasks() {
     
     console.log("CS2 scheduled tasks started using setInterval:");
     console.log(`  - Event sync: ✅ ENABLED - Daily (checks every 4 hours if 24h passed)`);
-    console.log(`  - Settlement check: once per day (checks hourly if 24 hours passed)`);
+    console.log(`  - Settlement check: every 2 hours (checks every 30 minutes)`);
     console.log(`  - Daily odds update: once per day (checks hourly if 24 hours passed)`);
   }
   
@@ -2965,6 +3074,9 @@ if (cs2ApiClient) {
     // Also update odds on initial sync
     console.log("[CS2 Odds] Performing initial odds update on server start...");
     await updateAllMatchOdds(true, true); // Force update on server start
+    // Run initial settlement check to catch any completed matches
+    console.log("[CS2 Settlement] Performing initial settlement check on server start...");
+    await settleCS2Bets();
   }, 10000); // Wait 10 seconds for server to fully initialize
 }
 

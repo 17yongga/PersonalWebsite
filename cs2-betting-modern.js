@@ -623,37 +623,14 @@ class CS2ModernBettingGame {
   }
 
   async loadBalance() {
-    try {
-      const userId = this.casino.username || sessionStorage.getItem('casinoUsername');
-      if (!userId) return;
-
-      // FIX: Trust the casino's existing balance if it's already been set by socket
-      // This prevents race conditions where API returns different value than socket
-      if (this.casino.credits > 0 && this.casino.credits !== 10000) {
-        // Casino already has a valid balance from login/socket - use that
-        this.currentBalance = this.casino.credits;
-        console.log(`[CS2 Balance] Using existing casino balance: ${this.currentBalance}`);
-        return;
-      }
-
-      const serverUrl = this.getServerUrl();
-      const response = await fetch(`${serverUrl}/api/cs2/balance?userId=${userId}`);
-      const data = await response.json();
-
-      if (data.success) {
-        this.currentBalance = data.balance;
-        // Only update casino credits if they haven't been set yet or are at default
-        if (this.casino.credits === 0 || this.casino.credits === 10000) {
-          this.casino.credits = this.currentBalance;
-          this.casino.updateCreditsDisplay();
-          console.log(`[CS2 Balance] Set balance from API: ${this.currentBalance}`);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading balance:', error);
-      // Fallback to casino's current balance
-      this.currentBalance = this.casino.credits || 0;
-    }
+    // BALANCE DOUBLING FIX: Always trust the casino manager's balance.
+    // The casino manager already has the authoritative balance from login or
+    // session restore (restoreSessionAndConnect). Making a separate API call
+    // here creates a race condition with the socket playerData event, which
+    // can cause balance doubling (API fetch + socket event both write to credits).
+    // The casino manager is the single source of truth for balance.
+    this.currentBalance = this.casino.credits || 0;
+    console.log(`[CS2 Balance] Using casino manager balance: ${this.currentBalance}`);
   }
 
   async loadEvents() {
@@ -1141,11 +1118,23 @@ class CS2ModernBettingGame {
       if (this.teamLogos.teams[simplifiedName]) {
         return basePath + this.teamLogos.teams[simplifiedName];
       }
+      
+      // Try with "team" prefix removed
+      const withoutTeam = normalizedName.replace(/^team\s+/i, '').trim();
+      if (this.teamLogos.teams[withoutTeam]) {
+        return basePath + this.teamLogos.teams[withoutTeam];
+      }
+      
+      // Try generating PNG filename from team name
+      const pngFilename = normalizedName.replace(/[^a-z0-9]/g, '') + '.png';
+      const pngPath = 'img/cs2-team-logos/png/' + pngFilename;
+      // Check if this path exists in our mapping (we can't check filesystem from browser)
+      // but we can try loading it with an onerror fallback
     }
     
-    // Fallback to ui-avatars
+    // Fallback to ui-avatars with team-themed colors
     const encodedName = encodeURIComponent(teamName);
-    return `https://ui-avatars.com/api/?name=${encodedName}&size=64&background=random&color=fff&bold=true`;
+    return `https://ui-avatars.com/api/?name=${encodedName}&size=64&background=1a1a2e&color=e94560&bold=true&format=svg`;
   }
 
   getFallbackLogo(teamName) {
