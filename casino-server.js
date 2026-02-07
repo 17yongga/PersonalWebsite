@@ -2132,8 +2132,15 @@ async function syncCS2Events() {
         finalCompleted = false;
       }
       
-      // Use existing odds if available, otherwise initialize as null
-      let existingOdds = existingEvent?.odds || match.odds || { team1: null, team2: null, draw: null };
+      // Prefer fresh odds from the match source (e.g. bo3.gg bet_updates with real bookmaker odds)
+      // over stale existing event odds (which may be ranking-based estimates)
+      const matchHasBookmakerOdds = match.hasOdds && match.odds && match.odds.team1 && match.odds.team2;
+      let existingOdds;
+      if (matchHasBookmakerOdds) {
+        existingOdds = match.odds; // Use fresh bookmaker odds from bo3.gg
+      } else {
+        existingOdds = existingEvent?.odds || match.odds || { team1: null, team2: null, draw: null };
+      }
       
       // Check if existing event should be removed (both teams in top 250 but no odds)
       if (existingEvent && (finalStatus === 'scheduled' || finalStatus === 'live')) {
@@ -2161,8 +2168,10 @@ async function syncCS2Events() {
       
       // IMPORTANT: For matches with both teams in top 250, we require REAL odds to be available
       // Check if existing odds are real (not placeholder 2.0)
-      const hasRealOdds = existingOdds.team1 && existingOdds.team2 && 
-                         existingOdds.team1 !== 2.0 && existingOdds.team2 !== 2.0;
+      // Also skip OddsPapi fetch entirely if we already have bookmaker odds from bo3.gg
+      const hasRealOdds = (existingOdds.team1 && existingOdds.team2 && 
+                         existingOdds.team1 !== 2.0 && existingOdds.team2 !== 2.0) ||
+                         matchHasBookmakerOdds;
       
       if (!hasRealOdds && (finalStatus === 'scheduled' || finalStatus === 'live')) {
         // Try to fetch odds immediately (if not already cached)
