@@ -58,9 +58,9 @@
   --cs2-text-muted-light: #718096;
   
   /* Borders & Dividers */
-  --cs2-border: rgba(255, 255, 255, 0.08);
+  --cs2-border: rgba(255, 255, 255, 0.04);
   --cs2-border-active: rgba(255, 107, 53, 0.5);
-  --cs2-border-hover: rgba(255, 255, 255, 0.12);
+  --cs2-border-hover: rgba(255, 255, 255, 0.08);
   
   /* Light mode borders */
   --cs2-border-light: rgba(0, 0, 0, 0.06);
@@ -196,7 +196,7 @@
 .cs2-events-panel {
   background: var(--cs2-bg-secondary);
   border-radius: var(--cs2-radius-xl);
-  border: 1px solid var(--cs2-border);
+  border: none;
   overflow: hidden;
   box-shadow: var(--cs2-shadow-lg);
 }
@@ -204,7 +204,7 @@
 .cs2-sidebar-panel {
   background: var(--cs2-bg-secondary);
   border-radius: var(--cs2-radius-xl);
-  border: 1px solid var(--cs2-border);
+  border: none;
   overflow: hidden;
   box-shadow: var(--cs2-shadow-lg);
   height: fit-content;
@@ -219,9 +219,7 @@
   background: var(--cs2-bg-elevated);
   border-bottom: 1px solid var(--cs2-border);
   padding: var(--cs2-space-lg) 0;
-  position: sticky;
-  top: 0;
-  z-index: var(--cs2-z-sticky);
+  position: relative;
   backdrop-filter: blur(12px);
   box-shadow: var(--cs2-shadow-sm);
 }
@@ -482,120 +480,109 @@
 
 /* Event Card Content */
 .event-match-content {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--cs2-space-xl);
-  padding: var(--cs2-space-lg) var(--cs2-space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: var(--cs2-space-sm) var(--cs2-space-lg);
 }
 
-/* Teams Section */
-.event-teams-list {
-  flex-grow: 1;
-}
-
-.teams-header {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--cs2-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: var(--cs2-space-md);
-}
-
+/* Team Row - Compact inline: logo + name + odds button */
 .event-team-row {
   display: flex;
   align-items: center;
   gap: var(--cs2-space-md);
-  margin-bottom: var(--cs2-space-sm);
   padding: var(--cs2-space-sm) 0;
 }
 
-.event-team-row:last-child {
-  margin-bottom: 0;
+.event-team-row:first-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .team-logo-container {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
 }
 
 .team-logo {
   width: 100%;
   height: 100%;
-  border-radius: var(--cs2-radius-sm);
-  object-fit: cover;
+  border-radius: 50%;
+  object-fit: contain;
   background: var(--cs2-bg-elevated);
-  border: 2px solid var(--cs2-border);
+  padding: 4px;
   transition: all var(--cs2-transition-fast);
 }
 
 .team-logo:hover {
-  border-color: var(--cs2-primary);
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .team-name {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--cs2-text-primary);
   line-height: 1.3;
-  max-width: 160px;
+  flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Odds Section - Modern Grid Layout */
-.event-odds-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cs2-space-md);
-  min-width: 200px;
-}
-
-.odds-header {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--cs2-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-align: center;
-}
-
-.odds-grid {
-  display: grid;
-  gap: var(--cs2-space-sm);
-  grid-template-columns: 1fr;
-}
-
-.odds-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--cs2-space-md);
+/* Odds Button - Inline with team row */
+.odds-btn {
+  padding: 6px 14px;
   background: var(--cs2-bg-elevated);
-  border: 2px solid var(--cs2-border);
+  border: 1.5px solid var(--cs2-border);
   border-radius: var(--cs2-radius-md);
   cursor: pointer;
   transition: all var(--cs2-transition-fast);
-  min-height: 64px;
-  position: relative;
-  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--cs2-accent);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  flex-shrink: 0;
+  min-width: 60px;
+  text-align: center;
 }
 
-.odds-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(var(--cs2-primary-rgb), 0.05), transparent);
-  opacity: 0;
-  transition: opacity var(--cs2-transition-fast);
+.odds-btn:hover:not(.disabled) {
+  border-color: var(--cs2-accent);
+  background: rgba(var(--cs2-accent-rgb, 0, 200, 83), 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 200, 83, 0.2);
 }
 
-.odds-card:hover::before {
-  opacity: 1;
+.odds-btn:active:not(.disabled) {
+  transform: translateY(0);
+}
+
+.odds-btn.favorite {
+  color: var(--cs2-success);
+}
+
+.odds-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.odds-btn.selected {
+  border-color: var(--cs2-accent);
+  background: rgba(0, 200, 83, 0.15);
+  color: var(--cs2-accent);
+  box-shadow: 0 0 10px rgba(0, 200, 83, 0.2);
+}
+
+/* Legacy selectors kept for compatibility */
+.event-teams-list { display: contents; }
+.teams-header { display: none; }
+.event-odds-section { display: none; }
+.odds-header { display: none; }
+.odds-grid { display: none; }
+
+.odds-card {
+  display: none;
 }
 
 .odds-card:hover {
@@ -665,11 +652,14 @@
 .cs2-betslip-modal {
   position: fixed;
   inset: 0;
-  z-index: var(--cs2-z-modal);
+  z-index: 9998;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: var(--cs2-space-lg);
+  padding: 2vh 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .cs2-betslip-modal.hidden {
@@ -677,11 +667,11 @@
 }
 
 .cs2-betslip-modal-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  background: var(--cs2-bg-overlay);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   animation: fadeIn 0.2s ease;
 }
 
@@ -689,13 +679,15 @@
   position: relative;
   background: var(--cs2-bg-elevated);
   border: 1px solid var(--cs2-border);
-  border-radius: var(--cs2-radius-2xl);
+  border-radius: 12px;
   width: 100%;
-  max-width: 480px;
-  max-height: 90vh;
-  overflow: hidden;
-  box-shadow: var(--cs2-shadow-xl);
+  max-width: 440px;
+  overflow: visible;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   animation: modalSlideUp 0.3s var(--cs2-transition-bounce);
+  margin-bottom: 2vh;
+  min-height: auto;
+  max-height: calc(96vh - 4vh);
 }
 
 @keyframes fadeIn {
@@ -718,14 +710,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--cs2-space-xl);
+  padding: 8px 12px;
   background: linear-gradient(135deg, var(--cs2-bg-card), var(--cs2-bg-elevated));
   border-bottom: 1px solid var(--cs2-border);
 }
 
 .betslip-modal-header h3 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--cs2-text-primary);
 }
@@ -755,7 +747,7 @@
 
 /* Bet Selection Display */
 .betslip-selection {
-  padding: var(--cs2-space-xl);
+  padding: 8px 12px;
   background: var(--cs2-bg-card);
   border-bottom: 1px solid var(--cs2-border);
 }
@@ -783,8 +775,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--cs2-space-md);
-  font-size: 1rem;
+  gap: var(--cs2-space-sm);
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--cs2-text-primary);
 }
@@ -821,11 +813,11 @@
 
 /* Bet Controls */
 .cs2-bet-controls {
-  padding: var(--cs2-space-xl);
+  padding: 8px 12px;
 }
 
 .bet-input-group {
-  margin-bottom: var(--cs2-space-lg);
+  margin-bottom: 12px;
 }
 
 .bet-input-group label {
@@ -858,17 +850,17 @@
 .quick-bets {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--cs2-space-sm);
-  margin-top: var(--cs2-space-md);
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .quick-bet-btn {
-  padding: var(--cs2-space-md);
+  padding: 6px 4px;
   background: var(--cs2-bg-elevated);
   border: 1px solid var(--cs2-border);
   border-radius: var(--cs2-radius-md);
   color: var(--cs2-text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--cs2-transition-fast);
@@ -892,8 +884,8 @@
   background: linear-gradient(135deg, var(--cs2-bg-elevated), var(--cs2-bg-card));
   border: 1px solid var(--cs2-border);
   border-radius: var(--cs2-radius-lg);
-  padding: var(--cs2-space-lg);
-  margin-bottom: var(--cs2-space-lg);
+  padding: 10px 12px;
+  margin-bottom: 12px;
 }
 
 .payout-info {
@@ -1033,7 +1025,7 @@
 .cs2-my-bets-panel {
   background: var(--cs2-bg-secondary);
   border-radius: var(--cs2-radius-xl);
-  border: 1px solid var(--cs2-border);
+  border: none;
   overflow: hidden;
   box-shadow: var(--cs2-shadow-lg);
 }
@@ -1104,7 +1096,8 @@
   margin-bottom: var(--cs2-space-md);
   transition: all var(--cs2-transition-fast);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 .cs2-bet-card::before {
@@ -1413,16 +1406,7 @@
   }
   
   .event-match-content {
-    grid-template-columns: 1fr;
-    gap: var(--cs2-space-lg);
-  }
-  
-  .event-odds-section {
-    min-width: auto;
-  }
-  
-  .odds-grid {
-    grid-template-columns: 1fr 1fr;
+    padding: var(--cs2-space-sm) var(--cs2-space-md);
   }
 }
 
@@ -1449,7 +1433,7 @@
   
   .event-match-header,
   .event-match-content {
-    padding: var(--cs2-space-md) var(--cs2-space-lg);
+    padding: var(--cs2-space-sm) var(--cs2-space-md);
   }
   
   .event-team-row {
@@ -1462,25 +1446,18 @@
   }
   
   .team-name {
-    font-size: 0.875rem;
-    max-width: 120px;
+    font-size: 0.85rem;
   }
   
-  .odds-card {
-    padding: var(--cs2-space-sm) var(--cs2-space-md);
-    min-height: 56px;
-  }
-  
-  .odds-value {
-    font-size: 1.125rem;
-  }
-  
-  .odds-team-name {
-    font-size: 0.7rem;
+  .odds-btn {
+    padding: 5px 12px;
+    font-size: 0.85rem;
+    min-width: 55px;
+    min-height: 36px;
   }
   
   /* Touch optimizations */
-  .odds-card,
+  .odds-btn,
   .quick-bet-btn,
   .bet-tab {
     min-height: 44px; /* iOS touch target minimum */
@@ -1492,17 +1469,17 @@
   }
   
   .cs2-betslip-modal-content {
-    margin: var(--cs2-space-md);
-    max-height: calc(100vh - 2rem);
+    max-width: 95%;
   }
   
   .quick-bets {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--cs2-space-md);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
   }
   
   .betslip-actions {
-    flex-direction: column;
+    flex-direction: row;
+    gap: 8px;
   }
 }
 
@@ -1550,15 +1527,25 @@
   }
   
   .cs2-betslip-modal {
-    padding: var(--cs2-space-sm);
+    padding: 1vh 6px;
+    align-items: flex-start;
+  }
+  
+  .cs2-betslip-modal-content {
+    max-height: calc(98vh - 2vh);
+    margin-bottom: 1vh;
   }
   
   .betslip-modal-header {
-    padding: var(--cs2-space-lg);
+    padding: 10px 14px;
   }
   
   .betslip-selection {
-    padding: var(--cs2-space-lg);
+    padding: 10px 14px;
+  }
+
+  .cs2-bet-controls {
+    padding: 10px 14px 16px;
   }
 }
 
@@ -1666,4 +1653,464 @@
   .btn-secondary {
     display: none;
   }
+}/* ============================================
+   Credit History Styles
+   ============================================ */
+
+/* Credit History Button in Header */
+.credit-history-btn {
+  background: var(--cs2-accent);
+  color: white;
+  border: none;
+  border-radius: var(--cs2-radius-sm);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--cs2-transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.credit-history-btn:hover {
+  background: var(--cs2-accent-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--cs2-shadow-md);
+}
+
+.credit-history-btn:active {
+  transform: translateY(0);
+}
+
+/* Credit History Modal */
+.credit-history-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 5vh;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--cs2-transition-normal);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.credit-history-modal.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.credit-history-modal-content {
+  background: var(--cs2-bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--cs2-border);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  width: 92%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(20px);
+  transition: transform var(--cs2-transition-normal);
+  margin-bottom: 5vh;
+}
+
+.credit-history-modal.visible .credit-history-modal-content {
+  transform: translateY(0);
+}
+
+.credit-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--cs2-bg-elevated);
+  border-bottom: 1px solid var(--cs2-border);
+  flex-shrink: 0;
+}
+
+.credit-history-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cs2-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--cs2-text-muted);
+  cursor: pointer;
+  transition: color var(--cs2-transition-fast);
+  padding: 4px 8px;
+  border-radius: var(--cs2-radius-sm);
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: var(--cs2-text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Credit History Summary Stats */
+.credit-history-summary {
+  padding: 12px 16px;
+  background: var(--cs2-bg-card);
+  border-bottom: 1px solid var(--cs2-border);
+  flex-shrink: 0;
+}
+
+.credit-history-summary h4 {
+  margin: 0 0 10px 0;
+  font-size: 0.7rem;
+  color: var(--cs2-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.summary-stats-top {
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 8px;
+}
+
+.summary-stats-bottom {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.summary-stat {
+  text-align: center;
+  padding: 6px 4px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.summary-stat-label {
+  display: block;
+  font-size: 0.6rem;
+  color: var(--cs2-text-muted);
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.summary-stat-value {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--cs2-text-primary);
+}
+
+.summary-stat-value.positive {
+  color: var(--cs2-success);
+}
+
+.summary-stat-value.negative {
+  color: var(--cs2-danger);
+}
+
+.current-balance {
+  background: linear-gradient(135deg, var(--cs2-accent), var(--cs2-accent-dark));
+  color: white;
+  border-radius: 6px;
+  padding: 6px 4px;
+}
+
+.current-balance .summary-stat-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.current-balance .summary-stat-value {
+  color: white;
+}
+
+/* Credit History List */
+.credit-history-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0;
+  min-height: 0;
+}
+
+.credit-history-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--cs2-border);
+  transition: background-color var(--cs2-transition-fast);
+  gap: 10px;
+}
+
+.credit-history-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.credit-history-item:last-child {
+  border-bottom: none;
+}
+
+.transaction-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  font-weight: bold;
+}
+
+.transaction-icon.bet-placed {
+  background: rgba(255, 167, 38, 0.2);
+  color: var(--cs2-warning);
+}
+
+.transaction-icon.bet-won {
+  background: rgba(0, 200, 83, 0.2);
+  color: var(--cs2-success);
+}
+
+.transaction-icon.bet-lost {
+  background: rgba(255, 71, 87, 0.2);
+  color: var(--cs2-danger);
+}
+
+.transaction-icon.bet-void {
+  background: rgba(156, 163, 175, 0.2);
+  color: var(--cs2-text-muted);
+}
+
+.transaction-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.transaction-description {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--cs2-text-primary);
+  margin-bottom: 2px;
+  line-height: 1.3;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.transaction-time {
+  font-size: 0.7rem;
+  color: var(--cs2-text-muted);
+}
+
+.transaction-amount {
+  text-align: right;
+  flex-shrink: 0;
+  min-width: 70px;
+}
+
+.transaction-amount-value {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.transaction-amount-value.positive {
+  color: var(--cs2-success);
+}
+
+.transaction-amount-value.negative {
+  color: var(--cs2-danger);
+}
+
+.transaction-amount-value.neutral {
+  color: var(--cs2-text-muted);
+}
+
+.transaction-balance {
+  font-size: 0.65rem;
+  color: var(--cs2-text-muted);
+}
+
+/* Empty State */
+.credit-history-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--cs2-text-muted);
+}
+
+.credit-history-empty .empty-state-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.credit-history-empty .empty-state-text {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.credit-history-empty .empty-state-subtext {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* Loading State */
+.credit-history-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--cs2-text-muted);
+}
+
+.credit-history-loading .loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--cs2-border);
+  border-top: 3px solid var(--cs2-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .credit-history-modal {
+    padding-top: 3vh;
+    align-items: flex-start;
+  }
+
+  .credit-history-modal-content {
+    width: 95%;
+    max-height: 90vh;
+    border-radius: 10px;
+  }
+  
+  .credit-history-header {
+    padding: 10px 14px;
+  }
+
+  .credit-history-header h3 {
+    font-size: 0.95rem;
+  }
+  
+  .credit-history-summary {
+    padding: 10px 14px;
+  }
+
+  .credit-history-summary h4 {
+    font-size: 0.65rem;
+    margin-bottom: 8px;
+  }
+  
+  .summary-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .summary-stat {
+    padding: 5px 3px;
+  }
+
+  .summary-stat-label {
+    font-size: 0.55rem;
+  }
+  
+  .summary-stat-value {
+    font-size: 0.85rem;
+  }
+
+  .current-balance {
+    padding: 5px 3px;
+  }
+  
+  .credit-history-item {
+    padding: 8px 14px;
+    gap: 8px;
+  }
+  
+  .transaction-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+  }
+  
+  .transaction-description {
+    font-size: 0.75rem;
+  }
+  
+  .transaction-amount {
+    min-width: 65px;
+  }
+  
+  .transaction-amount-value {
+    font-size: 0.75rem;
+  }
+
+  .transaction-balance {
+    font-size: 0.6rem;
+  }
+
+  .transaction-time {
+    font-size: 0.65rem;
+  }
+}
+
+/* Light Theme Support */
+[data-theme="light"] .credit-history-modal {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="light"] .credit-history-modal-content {
+  background: var(--cs2-bg-secondary-light);
+  border: 1px solid var(--cs2-border-light);
+  box-shadow: var(--cs2-shadow-lg-light);
+}
+
+[data-theme="light"] .credit-history-header {
+  background: var(--cs2-bg-elevated-light);
+  border-bottom: 1px solid var(--cs2-border-light);
+}
+
+[data-theme="light"] .credit-history-summary {
+  background: var(--cs2-bg-card-light);
+  border-bottom: 1px solid var(--cs2-border-light);
+}
+
+[data-theme="light"] .credit-history-item {
+  border-bottom: 1px solid var(--cs2-border-light);
+}
+
+[data-theme="light"] .credit-history-item:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .close-btn:hover {
+  color: var(--cs2-text-primary-light);
+  background: rgba(0, 0, 0, 0.05);
 }

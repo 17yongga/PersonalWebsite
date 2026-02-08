@@ -66,8 +66,9 @@ class CS2ModernBettingGame {
                 CS2 Fantasy Betting
               </h1>
               <div class="header-actions">
-                <button id="themeToggle" class="btn btn-secondary btn-icon" title="Toggle Theme">
-                  <span class="theme-icon">🌙</span>
+                <button id="creditHistoryBtn" class="credit-history-btn" title="View Credit History">
+                  <span>💳</span>
+                  History
                 </button>
               </div>
             </div>
@@ -174,6 +175,56 @@ class CS2ModernBettingGame {
           </div>
         </div>
 
+        <!-- Credit History Modal -->
+        <div id="creditHistoryModal" class="credit-history-modal">
+          <div class="credit-history-modal-content">
+            <div class="credit-history-header">
+              <h3>
+                <span>💳</span>
+                Credit History
+              </h3>
+              <button id="closeCreditHistoryBtn" class="close-btn" title="Close">&times;</button>
+            </div>
+            
+            <!-- Summary Stats -->
+            <div class="credit-history-summary">
+              <h4>Summary Statistics</h4>
+              <div class="summary-stats summary-stats-top">
+                <div class="summary-stat current-balance">
+                  <span class="summary-stat-label">Balance</span>
+                  <span id="summaryCurrentBalance" class="summary-stat-value">0</span>
+                </div>
+                <div class="summary-stat">
+                  <span class="summary-stat-label">Wagered</span>
+                  <span id="summaryTotalWagered" class="summary-stat-value">0</span>
+                </div>
+                <div class="summary-stat">
+                  <span class="summary-stat-label">Won</span>
+                  <span id="summaryTotalWon" class="summary-stat-value positive">0</span>
+                </div>
+              </div>
+              <div class="summary-stats summary-stats-bottom">
+                <div class="summary-stat">
+                  <span class="summary-stat-label">Net Profit</span>
+                  <span id="summaryNetProfit" class="summary-stat-value">0</span>
+                </div>
+                <div class="summary-stat">
+                  <span class="summary-stat-label">Win Rate</span>
+                  <span id="summaryWinRate" class="summary-stat-value">0%</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Transaction History -->
+            <div id="creditHistoryList" class="credit-history-list">
+              <div class="credit-history-loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading transaction history...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Toast Container -->
         <div id="toastContainer" class="toast-container"></div>
       </div>
@@ -193,11 +244,13 @@ class CS2ModernBettingGame {
       refreshBtn.addEventListener('click', this.handleRefreshEvents.bind(this));
     }
 
-    // Theme toggle
-    const themeToggle = document.getElementById('themeToggle');
-    if (themeToggle) {
-      themeToggle.addEventListener('click', this.toggleTheme.bind(this));
+    // Credit History button
+    const creditHistoryBtn = document.getElementById('creditHistoryBtn');
+    if (creditHistoryBtn) {
+      creditHistoryBtn.addEventListener('click', this.openCreditHistory.bind(this));
     }
+
+    // Theme toggle - REMOVED
 
     // Bet amount controls with real-time validation
     const betAmountInput = document.getElementById('cs2BetAmount');
@@ -276,9 +329,16 @@ class CS2ModernBettingGame {
   attachKeyboardListeners() {
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-      // ESC to close modal
+      // ESC to close modals
       if (e.key === 'Escape') {
-        this.closeBetSlipModal();
+        const creditHistoryModal = document.getElementById('creditHistoryModal');
+        const betSlipModal = document.getElementById('cs2BetSlipModal');
+        
+        if (creditHistoryModal && creditHistoryModal.classList.contains('visible')) {
+          this.closeCreditHistory();
+        } else if (betSlipModal && !betSlipModal.classList.contains('hidden')) {
+          this.closeBetSlipModal();
+        }
       }
       
       // Enter to place bet (if modal is open)
@@ -314,6 +374,7 @@ class CS2ModernBettingGame {
   }
 
   attachModalListeners() {
+    // Bet Slip Modal
     const modal = document.getElementById('cs2BetSlipModal');
     const closeBtn = document.getElementById('closeBetSlipBtn');
     const overlay = modal?.querySelector('.cs2-betslip-modal-overlay');
@@ -326,6 +387,24 @@ class CS2ModernBettingGame {
         });
       }
     });
+
+    // Credit History Modal
+    const creditHistoryModal = document.getElementById('creditHistoryModal');
+    const closeCreditHistoryBtn = document.getElementById('closeCreditHistoryBtn');
+    
+    if (closeCreditHistoryBtn) {
+      closeCreditHistoryBtn.addEventListener('click', () => {
+        this.closeCreditHistory();
+      });
+    }
+    
+    if (creditHistoryModal) {
+      creditHistoryModal.addEventListener('click', (e) => {
+        if (e.target === creditHistoryModal) {
+          this.closeCreditHistory();
+        }
+      });
+    }
   }
 
   async handleRefreshEvents() {
@@ -371,24 +450,7 @@ class CS2ModernBettingGame {
     }
   }
 
-  toggleTheme() {
-    const container = document.querySelector('.cs2-betting-container');
-    const themeToggle = document.getElementById('themeToggle');
-    
-    if (container.dataset.theme === 'dark') {
-      container.dataset.theme = 'light';
-      themeToggle.innerHTML = '<span class="theme-icon">☀️</span>';
-      this.showToast('☀️ Switched to light theme', 'info');
-    } else {
-      container.dataset.theme = 'dark';
-      themeToggle.innerHTML = '<span class="theme-icon">🌙</span>';
-      this.showToast('🌙 Switched to dark theme', 'info');
-    }
-    
-    // Save preference
-    localStorage.setItem('cs2-theme', container.dataset.theme);
-    this.triggerHapticFeedback('light');
-  }
+  // toggleTheme method removed - theme toggle functionality removed
 
   handleBetAmountChange(e) {
     const amount = parseInt(e.target.value) || 0;
@@ -611,8 +673,6 @@ class CS2ModernBettingGame {
       // Apply saved theme
       const savedTheme = localStorage.getItem('cs2-theme') || 'dark';
       document.querySelector('.cs2-betting-container').dataset.theme = savedTheme;
-      const themeIcon = savedTheme === 'dark' ? '🌙' : '☀️';
-      document.querySelector('.theme-icon').textContent = themeIcon;
       
     } catch (error) {
       console.error('Error loading initial data:', error);
@@ -672,9 +732,10 @@ class CS2ModernBettingGame {
 
     // Filter and group events
     const now = new Date().getTime();
+    const twelveHoursAgo = now - (12 * 60 * 60 * 1000); // 12-hour window
     const upcomingEvents = this.events.filter(event => {
       const eventTime = new Date(event.commenceTime || event.startTime || 0).getTime();
-      const isPast = eventTime < now;
+      const isPast = eventTime < twelveHoursAgo; // Allow recent/live matches within 12h window
       const isFinished = event.status === 'finished';
       const hasRealOdds = this.hasValidOdds(event);
       
@@ -719,8 +780,8 @@ class CS2ModernBettingGame {
       grouped[tournament].push(event);
     });
 
-    // Sort tournaments and events
-    Object.keys(grouped).sort().forEach(tournament => {
+    // Sort events within each tournament by time
+    Object.keys(grouped).forEach(tournament => {
       grouped[tournament].sort((a, b) => {
         const timeA = new Date(a.commenceTime || a.startTime || 0).getTime();
         const timeB = new Date(b.commenceTime || b.startTime || 0).getTime();
@@ -728,7 +789,21 @@ class CS2ModernBettingGame {
       });
     });
 
-    return grouped;
+    // Sort tournaments: S-Tier first, then A, B, C, then named tournaments, then Other
+    const tierOrder = { 's-tier': 0, 'a-tier': 1, 'b-tier': 2, 'c-tier': 3 };
+    const sortedGrouped = {};
+    Object.keys(grouped).sort((a, b) => {
+      const aLower = a.toLowerCase();
+      const bLower = b.toLowerCase();
+      const aOrder = tierOrder[aLower] !== undefined ? tierOrder[aLower] : (aLower === 'other events' ? 99 : 10);
+      const bOrder = tierOrder[bLower] !== undefined ? tierOrder[bLower] : (bLower === 'other events' ? 99 : 10);
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return a.localeCompare(b);
+    }).forEach(key => {
+      sortedGrouped[key] = grouped[key];
+    });
+
+    return sortedGrouped;
   }
 
   renderTournamentSection(tournament, events) {
@@ -779,44 +854,33 @@ class CS2ModernBettingGame {
         </div>
         
         <div class="event-match-content">
-          <div class="event-teams-list">
-            <div class="teams-header">Teams</div>
-            <div class="event-team-row">
-              <div class="team-logo-container">
-                <img src="${homeTeamLogo}" alt="${safeHomeTeam}" class="team-logo" 
-                     onerror="this.src='${this.getFallbackLogo(homeTeamName)}'">
-              </div>
-              <div class="team-name">${safeHomeTeam}</div>
+          <div class="event-team-row">
+            <div class="team-logo-container">
+              <img src="${homeTeamLogo}" alt="${safeHomeTeam}" class="team-logo" 
+                   onerror="this.src='${this.getFallbackLogo(homeTeamName)}'">
             </div>
-            <div class="event-team-row">
-              <div class="team-logo-container">
-                <img src="${awayTeamLogo}" alt="${safeAwayTeam}" class="team-logo" 
-                     onerror="this.src='${this.getFallbackLogo(awayTeamName)}'">
-              </div>
-              <div class="team-name">${safeAwayTeam}</div>
-            </div>
+            <div class="team-name">${safeHomeTeam}</div>
+            <button class="odds-btn ${canBet ? '' : 'disabled'} ${team1Odds < team2Odds ? 'favorite' : ''}" 
+                    data-event-id="${event.id}" 
+                    data-selection="team1"
+                    ${!canBet ? 'disabled' : ''}
+                    title="Bet on ${safeHomeTeam}">
+              ${team1Odds.toFixed(2)}
+            </button>
           </div>
-          
-          <div class="event-odds-section">
-            <div class="odds-header">Winner</div>
-            <div class="odds-grid">
-              <button class="odds-card ${canBet ? '' : 'disabled'}" 
-                      data-event-id="${event.id}" 
-                      data-selection="team1"
-                      ${!canBet ? 'disabled' : ''}
-                      title="Bet on ${safeHomeTeam}">
-                <div class="odds-team-name">${safeHomeTeam}</div>
-                <div class="odds-value ${team1Odds < team2Odds ? 'favorite' : ''}">${team1Odds.toFixed(2)}</div>
-              </button>
-              <button class="odds-card ${canBet ? '' : 'disabled'}" 
-                      data-event-id="${event.id}" 
-                      data-selection="team2"
-                      ${!canBet ? 'disabled' : ''}
-                      title="Bet on ${safeAwayTeam}">
-                <div class="odds-team-name">${safeAwayTeam}</div>
-                <div class="odds-value ${team2Odds < team1Odds ? 'favorite' : ''}">${team2Odds.toFixed(2)}</div>
-              </button>
+          <div class="event-team-row">
+            <div class="team-logo-container">
+              <img src="${awayTeamLogo}" alt="${safeAwayTeam}" class="team-logo" 
+                   onerror="this.src='${this.getFallbackLogo(awayTeamName)}'">
             </div>
+            <div class="team-name">${safeAwayTeam}</div>
+            <button class="odds-btn ${canBet ? '' : 'disabled'} ${team2Odds < team1Odds ? 'favorite' : ''}" 
+                    data-event-id="${event.id}" 
+                    data-selection="team2"
+                    ${!canBet ? 'disabled' : ''}
+                    title="Bet on ${safeAwayTeam}">
+              ${team2Odds.toFixed(2)}
+            </button>
           </div>
         </div>
       </div>
@@ -824,8 +888,8 @@ class CS2ModernBettingGame {
   }
 
   attachEventCardListeners() {
-    // Enhanced odds card interactions
-    document.querySelectorAll('.odds-card:not(.disabled)').forEach(card => {
+    // Enhanced odds button interactions
+    document.querySelectorAll('.odds-btn:not(.disabled)').forEach(card => {
       card.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -922,6 +986,154 @@ class CS2ModernBettingGame {
     document.querySelectorAll('.odds-card.selected').forEach(card => {
       card.classList.remove('selected');
     });
+  }
+
+  async openCreditHistory() {
+    const modal = document.getElementById('creditHistoryModal');
+    
+    // Show modal
+    modal.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+    
+    // Load credit history data
+    await this.loadCreditHistory();
+    
+    // Focus close button for accessibility
+    setTimeout(() => {
+      const closeBtn = document.getElementById('closeCreditHistoryBtn');
+      if (closeBtn) closeBtn.focus();
+    }, 100);
+  }
+
+  closeCreditHistory() {
+    const modal = document.getElementById('creditHistoryModal');
+    modal.classList.remove('visible');
+    
+    // Restore background scroll
+    document.body.style.overflow = '';
+  }
+
+  async loadCreditHistory() {
+    const userId = this.casino.username || sessionStorage.getItem('casinoUsername');
+    if (!userId) {
+      console.error('No user ID available for credit history');
+      return;
+    }
+
+    try {
+      const listContainer = document.getElementById('creditHistoryList');
+      
+      // Show loading state
+      listContainer.innerHTML = `
+        <div class="credit-history-loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Loading transaction history...</div>
+        </div>
+      `;
+
+      const serverUrl = this.getServerUrl();
+      const response = await fetch(`${serverUrl}/api/cs2/history?userId=${userId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        this.renderCreditHistory(data);
+      } else {
+        throw new Error(data.error || 'Failed to load credit history');
+      }
+    } catch (error) {
+      console.error('Error loading credit history:', error);
+      this.renderCreditHistoryError(error);
+    }
+  }
+
+  renderCreditHistory(data) {
+    // Update summary stats
+    document.getElementById('summaryCurrentBalance').textContent = data.currentBalance;
+    document.getElementById('summaryTotalWagered').textContent = data.totalWagered;
+    document.getElementById('summaryTotalWon').textContent = data.totalWon;
+    
+    const netProfitElement = document.getElementById('summaryNetProfit');
+    netProfitElement.textContent = data.netProfit > 0 ? `+${data.netProfit}` : data.netProfit;
+    netProfitElement.className = `summary-stat-value ${data.netProfit >= 0 ? 'positive' : 'negative'}`;
+    
+    document.getElementById('summaryWinRate').textContent = `${data.winRate}%`;
+
+    // Render transaction history
+    const listContainer = document.getElementById('creditHistoryList');
+    
+    if (!data.history || data.history.length === 0) {
+      listContainer.innerHTML = `
+        <div class="credit-history-empty">
+          <div class="empty-state-icon">📊</div>
+          <div class="empty-state-text">No transaction history</div>
+          <div class="empty-state-subtext">Start betting to see your credit history here</div>
+        </div>
+      `;
+      return;
+    }
+
+    listContainer.innerHTML = data.history.map(transaction => {
+      return this.renderTransactionItem(transaction);
+    }).join('');
+  }
+
+  renderTransactionItem(transaction) {
+    const iconMap = {
+      'bet_placed': { icon: '→', class: 'bet-placed' },
+      'bet_won': { icon: '↑', class: 'bet-won' },
+      'bet_lost': { icon: '↓', class: 'bet-lost' },
+      'bet_void': { icon: '○', class: 'bet-void' }
+    };
+    
+    const iconInfo = iconMap[transaction.type] || { icon: '?', class: 'unknown' };
+    
+    const amountClass = transaction.amount > 0 ? 'positive' : 
+                       transaction.amount < 0 ? 'negative' : 'neutral';
+    
+    const amountDisplay = transaction.amount > 0 ? `+${transaction.amount}` : 
+                         transaction.amount < 0 ? transaction.amount : '0';
+
+    const date = new Date(transaction.timestamp);
+    const timeDisplay = date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    return `
+      <div class="credit-history-item">
+        <div class="transaction-icon ${iconInfo.class}">
+          ${iconInfo.icon}
+        </div>
+        <div class="transaction-details">
+          <div class="transaction-description">${transaction.description}</div>
+          <div class="transaction-time">${timeDisplay}</div>
+        </div>
+        <div class="transaction-amount">
+          <div class="transaction-amount-value ${amountClass}">
+            ${amountDisplay}
+          </div>
+          <div class="transaction-balance">Balance: ${transaction.balance}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderCreditHistoryError(error) {
+    const listContainer = document.getElementById('creditHistoryList');
+    listContainer.innerHTML = `
+      <div class="credit-history-empty">
+        <div class="empty-state-icon">⚠️</div>
+        <div class="empty-state-text">Error loading history</div>
+        <div class="empty-state-subtext">${error.message}</div>
+      </div>
+    `;
   }
 
   renderBetSelection() {
@@ -1051,7 +1263,7 @@ class CS2ModernBettingGame {
     const placedDate = bet.placedAt ? new Date(bet.placedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
 
     return `
-      <div class="cs2-bet-card ${statusClass}">
+      <div class="cs2-bet-card ${statusClass}" style="overflow: visible !important; flex-shrink: 0 !important;">
         <div class="bet-header">
           <div class="bet-id">#${bet.id.substring(bet.id.length - 8).toUpperCase()}</div>
           <div class="bet-status ${statusClass}">${statusText}</div>
