@@ -252,6 +252,7 @@
   border: 1px solid rgba(255, 193, 7, 0.2);
   border-radius: var(--cs2-radius-md);
   padding: var(--cs2-space-md);
+  margin-top: var(--cs2-space-lg);
   margin-bottom: var(--cs2-space-xl);
   color: var(--cs2-warning);
   font-size: 0.875rem;
@@ -499,8 +500,8 @@
 }
 
 .team-logo-container {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
 }
 
@@ -510,7 +511,7 @@
   border-radius: 50%;
   object-fit: contain;
   background: var(--cs2-bg-elevated);
-  padding: 4px;
+  padding: 3px;
   transition: all var(--cs2-transition-fast);
 }
 
@@ -1051,7 +1052,7 @@
   background: var(--cs2-bg-elevated);
   padding: var(--cs2-space-xs);
   border-radius: var(--cs2-radius-md);
-  margin: 0 var(--cs2-space-xl) var(--cs2-space-lg);
+  margin: var(--cs2-space-md) var(--cs2-space-xl) var(--cs2-space-lg);
   border: 1px solid var(--cs2-border);
 }
 
@@ -1092,12 +1093,14 @@
   background: var(--cs2-bg-card);
   border: 1px solid var(--cs2-border);
   border-radius: var(--cs2-radius-lg);
-  padding: var(--cs2-space-lg);
+  padding: var(--cs2-space-md);
   margin-bottom: var(--cs2-space-md);
   transition: all var(--cs2-transition-fast);
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   flex-shrink: 0;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .cs2-bet-card::before {
@@ -1200,16 +1203,21 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--cs2-space-sm);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
+  overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .bet-detail-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--cs2-space-sm);
+  padding: 4px 6px;
   background: var(--cs2-bg-elevated);
   border-radius: var(--cs2-radius-sm);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .bet-detail-label {
@@ -1441,8 +1449,8 @@
   }
   
   .team-logo-container {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
   }
   
   .team-name {

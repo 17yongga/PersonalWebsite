@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <title>Ask Gary – AI Career Agent</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="styles.css?v=202602051746" />
+  <link rel="stylesheet" href="styles.css?v=202602131450" />
 
   <style>
     :root {
@@ -436,7 +436,57 @@
     .sidebar-title {
       font-size: 0.95rem;
       font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: 12px;
+    }
+
+    .conversation-starters {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .conversation-starter {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(56, 189, 248, 0.05));
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 16px;
+      padding: 10px 14px;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(4px);
+    }
+
+    .conversation-starter::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.1), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .conversation-starter:hover {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(56, 189, 248, 0.08));
+      border-color: rgba(56, 189, 248, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+    }
+
+    .conversation-starter:hover::before {
+      left: 100%;
+    }
+
+    .conversation-starter:active {
+      transform: translateY(-1px) scale(0.98);
+      transition: transform 0.1s ease;
     }
 
     .sidebar-list {
@@ -598,11 +648,13 @@
       <!-- Right: context / instructions -->
       <aside class="panel">
         <div class="sidebar-title" data-i18n="ask_gary.questions_title">Good questions to try</div>
-        <ul class="sidebar-list">
-          <li data-i18n="ask_gary.question_1">"What did Gary do at Capco?"</li>
-          <li data-i18n="ask_gary.question_2">"Summarize Gary's experience with AI and automation."</li>
-          <li data-i18n="ask_gary.question_3">"What projects show Gary's leadership?"</li>
-        </ul>
+        <div class="conversation-starters">
+          <button class="conversation-starter" data-question="What did Gary do at Capco?" data-i18n="ask_gary.question_1">"What did Gary do at Capco?"</button>
+          <button class="conversation-starter" data-question="Summarize Gary's experience with AI and automation." data-i18n="ask_gary.question_2">"Summarize Gary's experience with AI and automation."</button>
+          <button class="conversation-starter" data-question="What projects show Gary's leadership?" data-i18n="ask_gary.question_3">"What projects show Gary's leadership?"</button>
+          <button class="conversation-starter" data-question="Tell me about Gary's technical skills and programming languages." data-i18n="ask_gary.question_4">"Tell me about Gary's technical skills and programming languages."</button>
+          <button class="conversation-starter" data-question="What kind of consulting projects has Gary worked on?" data-i18n="ask_gary.question_5">"What kind of consulting projects has Gary worked on?"</button>
+        </div>
 
         <div class="sidebar-title" style="margin-top: 16px;" data-i18n="ask_gary.how_it_works_title">How it works</div>
         <ul class="sidebar-list">
@@ -620,6 +672,7 @@
   </main>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="js/i18n.js"></script>
+  <script src="js/animations.js"></script>
   <script src="ask-gary.js"></script>
 </body>
 </html>

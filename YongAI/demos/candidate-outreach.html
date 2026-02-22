@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Candidate Outreach Generator Demo — YongAI</title>
+  <meta name="description" content="Experience YongAI's AI-powered candidate outreach generator. Create hyper-personalized messages that boost response rates from 8% to 22%. Perfect for recruiting agencies.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Calendly -->
+  <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💌</text></svg>">
+  
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       Candidate Outreach Demo — YongAI Design System
+       ═══════════════════════════════════════════════════════════════ */
+    
+    :root {
+      /* Brand colors from YongAI */
+      --accent:        #6C63FF;
+      --accent-light:  #8B83FF;
+      --accent-dark:   #5046E4;
+      --accent-glow:   rgba(108, 99, 255, 0.35);
+      
+      /* Surfaces */
+      --bg:            #07080C;
+      --bg-raised:     #0D0F14;
+      --bg-card:       #11131A;
+      --bg-card-hover: #161923;
+      --border:        rgba(255, 255, 255, 0.06);
+      --border-light:  rgba(255, 255, 255, 0.10);
+      
+      /* Text */
+      --text:          #E8E8ED;
+      --text-muted:    #8A8F9E;
+      --text-faint:    #555B6E;
+      
+      /* Status colors */
+      --success:       #10B981;
+      --success-bg:    rgba(16, 185, 129, 0.1);
+      --warning:       #F59E0B;
+      --warning-bg:    rgba(245, 158, 11, 0.1);
+      --danger:        #EF4444;
+      --danger-bg:     rgba(239, 68, 68, 0.1);
+      --info:          #3B82F6;
+      --info-bg:       rgba(59, 130, 246, 0.1);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       Base Styles
+       ═══════════════════════════════════════════════════════════════ */
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       Header
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .header {
+      background: linear-gradient(135deg, var(--bg-raised) 0%, var(--bg-card) 100%);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+    }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--text);
+      text-decoration: none;
+    }
+    
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .nav {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+    
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      transition: color 0.2s ease;
+    }
+    
+    .nav-link:hover {
+      color: var(--text);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       Hero Section
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .hero {
+      padding: 80px 0 120px;
+      background: linear-gradient(
+        135deg, 
+        var(--bg) 0%, 
+        rgba(108, 99, 255, 0.03) 50%, 
+        var(--bg) 100%
+      );
+      text-align: center;
+    }
+    
+    .hero h1 {
+      font-size: clamp(48px, 8vw, 72px);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, var(--text) 0%, var(--accent-light) 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .hero-subtitle {
+      font-size: 20px;
+      color: var(--text-muted);
+      margin-bottom: 48px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 32px;
+      margin-top: 64px;
+    }
+    
+    .stat {
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--accent);
+      display: block;
+    }
+    
+    .stat-label {
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 8px;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       Case Study Section
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .case-study {
+      padding: 80px 0;
+      background: var(--bg-raised);
+    }
+    
+    .case-study-card {
+      background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-hover) 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .case-study-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    
+    .case-study-logo {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+    }
+    
+    .case-study-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    
+    .case-study-subtitle {
+      color: var(--text-muted);
+    }
+    
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 24px;
+      margin-top: 32px;
+    }
+    
+    .result {
+      text-align: center;
+      padding: 24px;
+      background: var(--bg-raised);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    
+    .result-number {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--success);
+      display: block;
+    }
+    
+    .result-label {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       Demo Section
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .demo {
+      padding: 80px 0;
+    }
+    
+    .demo-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    .demo-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+    
+    .demo-title {
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+    
+    .demo-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+    }
+    
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 48px;
+      align-items: start;
+    }
+    
+    .controls-panel {
+      position: sticky;
+      top: 120px;
+    }
+    
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    
+    .panel-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .form-group {
+      margin-bottom: 24px;
+    }
+    
+    .form-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    
+    .form-input {
+      width: 100%;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color 0.2s ease;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    
+    .form-select {
+      width: 100%;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+    }
+    
+    .form-textarea {
+      width: 100%;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      min-height: 120px;
+      resize: vertical;
+    }
+    
+    .preset-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    
+    .preset-btn {
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .preset-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+    
+    .tone-selector {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    .tone-btn {
+      flex: 1;
+      padding: 12px 16px;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    .tone-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    
+    .generate-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      border: none;
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin-top: 24px;
+    }
+    
+    .generate-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px var(--accent-glow);
+    }
+    
+    .generate-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       Results Panel
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .results-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    
+    .results-header {
+      background: var(--bg-raised);
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .results-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    
+    .response-rate {
+      background: var(--success-bg);
+      color: var(--success);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .message-variants {
+      padding: 32px;
+    }
+    
+    .variant {
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .variant-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    
+    .variant-label {
+      font-weight: 600;
+      color: var(--accent);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .variant-metrics {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .metric {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .message-content {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+    
+    .highlight {
+      background: var(--accent-glow);
+      padding: 2px 4px;
+      border-radius: 4px;
+      color: var(--accent-light);
+      font-weight: 500;
+    }
+    
+    .followup-sequence {
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .sequence-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .sequence-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    .followup-email {
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    
+    .email-timing {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    
+    .email-subject {
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    
+    .email-content {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       Analytics Dashboard
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .analytics {
+      padding: 80px 0;
+      background: var(--bg-raised);
+    }
+    
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 32px;
+      margin-top: 48px;
+    }
+    
+    .analytics-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    .metric-large {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    
+    .metric-change {
+      color: var(--success);
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--bg-raised);
+      border-radius: 4px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       Before/After Comparison
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .comparison {
+      padding: 80px 0;
+    }
+    
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin-top: 48px;
+    }
+    
+    .comparison-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    
+    .comparison-header {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .comparison-label {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    
+    .before .comparison-label {
+      color: var(--danger);
+    }
+    
+    .after .comparison-label {
+      color: var(--success);
+    }
+    
+    .comparison-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    
+    .comparison-content {
+      padding: 32px;
+    }
+    
+    .comparison-message {
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+    }
+    
+    .comparison-stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .comparison-rate {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    
+    .before .comparison-rate {
+      color: var(--danger);
+    }
+    
+    .after .comparison-rate {
+      color: var(--success);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       ROI Section
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .roi {
+      padding: 80px 0;
+      background: var(--bg-raised);
+      text-align: center;
+    }
+    
+    .roi-calculator {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px;
+      max-width: 800px;
+      margin: 48px auto 0;
+    }
+    
+    .roi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 32px;
+      margin: 32px 0;
+    }
+    
+    .roi-metric {
+      text-align: center;
+    }
+    
+    .roi-number {
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--accent);
+      display: block;
+    }
+    
+    .roi-label {
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 8px;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       CTA Section
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .cta {
+      padding: 120px 0;
+      background: linear-gradient(
+        135deg,
+        var(--bg) 0%,
+        rgba(108, 99, 255, 0.05) 50%,
+        var(--bg) 100%
+      );
+      text-align: center;
+    }
+    
+    .cta-title {
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 24px;
+    }
+    
+    .cta-subtitle {
+      font-size: 20px;
+      color: var(--text-muted);
+      margin-bottom: 48px;
+    }
+    
+    .cta-btn {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      color: white;
+      padding: 20px 48px;
+      font-size: 18px;
+      font-weight: 700;
+      text-decoration: none;
+      border-radius: 12px;
+      display: inline-block;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .cta-btn:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 48px var(--accent-glow);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       Loading States
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 32px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top: 2px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin: 16px 0;
+    }
+    
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: typing 1.4s ease-in-out infinite both;
+    }
+    
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes typing {
+      0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+      }
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       Responsive Design
+       ═══════════════════════════════════════════════════════════════ */
+    
+    @media (max-width: 1024px) {
+      .demo-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      
+      .controls-panel {
+        position: static;
+        order: 1;
+      }
+      
+      .results-panel {
+        order: 2;
+      }
+      
+      .comparison-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 16px;
+      }
+      
+      .nav {
+        display: none;
+      }
+      
+      .hero {
+        padding: 60px 0 80px;
+      }
+      
+      .panel {
+        padding: 24px;
+      }
+      
+      .message-variants {
+        padding: 24px;
+      }
+      
+      .analytics-card {
+        padding: 24px;
+      }
+      
+      .roi-calculator {
+        padding: 32px 24px;
+      }
+      
+      .preset-buttons {
+        flex-direction: column;
+      }
+      
+      .tone-selector {
+        flex-direction: column;
+      }
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       Animations & Effects
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .fade-in {
+      opacity: 0;
+      animation: fadeIn 0.6s ease forwards;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .slide-up {
+      opacity: 0;
+      transform: translateY(30px);
+      animation: slideUp 0.6s ease forwards;
+    }
+    
+    @keyframes slideUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .glow {
+      box-shadow: 0 0 30px var(--accent-glow);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════
+       Hidden State
+       ═══════════════════════════════════════════════════════════════ */
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- ═══════════════════════════════════════════════════════════════
+       Header
+       ═══════════════════════════════════════════════════════════════ -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <div class="logo-icon">⚡</div>
+          <span>YongAI</span>
+        </a>
+        <nav class="nav">
+          <a href="/" class="nav-link">Home</a>
+          <a href="/#solutions" class="nav-link">Solutions</a>
+          <a href="/#demos" class="nav-link">Demos</a>
+          <a href="/#contact" class="nav-link">Contact</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       Hero Section
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="container">
+      <h1>AI Candidate Outreach Generator</h1>
+      <p class="hero-subtitle">
+        Transform your recruiting with hyper-personalized outreach that converts passive candidates. 
+        Boost response rates from 8% to 22% while saving 10+ hours per recruiter each week.
+      </p>
+      
+      <div class="stats-grid">
+        <div class="stat">
+          <span class="stat-number">22%</span>
+          <div class="stat-label">Average Response Rate</div>
+        </div>
+        <div class="stat">
+          <span class="stat-number">10+</span>
+          <div class="stat-label">Hours Saved Per Week</div>
+        </div>
+        <div class="stat">
+          <span class="stat-number">70%</span>
+          <div class="stat-label">Passive Candidates</div>
+        </div>
+        <div class="stat">
+          <span class="stat-number">13</span>
+          <div class="stat-label">Hours/Week Sourcing</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       Case Study Section
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="case-study">
+    <div class="container">
+      <div class="case-study-card">
+        <div class="case-study-header">
+          <div class="case-study-logo">NT</div>
+          <div>
+            <div class="case-study-title">NexaTalent Staffing</div>
+            <div class="case-study-subtitle">18-person tech recruiting agency • Toronto</div>
+          </div>
+        </div>
+        
+        <p style="color: var(--text-muted); margin-bottom: 24px;">
+          <strong style="color: var(--text);">The Challenge:</strong> Recruiters were spending 2+ hours daily writing personalized outreach messages, achieving only an 8% response rate on cold outreach. They were losing high-value passive candidates to faster-moving agencies.
+        </p>
+        
+        <p style="color: var(--text-muted); margin-bottom: 32px;">
+          <strong style="color: var(--text);">The Solution:</strong> Implemented YongAI's candidate outreach generator with advanced personalization engine, automated follow-up sequences, and A/B testing capabilities.
+        </p>
+        
+        <div class="results-grid">
+          <div class="result">
+            <span class="result-number">22%</span>
+            <div class="result-label">Response Rate<br>(vs 8% before)</div>
+          </div>
+          <div class="result">
+            <span class="result-number">10h</span>
+            <div class="result-label">Hours Saved<br>Per Week</div>
+          </div>
+          <div class="result">
+            <span class="result-number">+40%</span>
+            <div class="result-label">More Placements<br>in Q1</div>
+          </div>
+          <div class="result">
+            <span class="result-number">2</span>
+            <div class="result-label">Enterprise Clients<br>"Preferred Vendor"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       Interactive Demo
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="demo">
+    <div class="demo-container">
+      <div class="demo-header">
+        <h2 class="demo-title">Try the AI Outreach Generator</h2>
+        <p class="demo-subtitle">Experience how AI creates personalized messages that candidates actually respond to</p>
+      </div>
+      
+      <div class="demo-grid">
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+          <!-- Candidate Profile -->
+          <div class="panel">
+            <h3 class="panel-title">
+              👤 Candidate Profile
+            </h3>
+            
+            <div class="form-group">
+              <label class="form-label">LinkedIn Profile or Resume</label>
+              <textarea 
+                class="form-textarea" 
+                id="candidateProfile" 
+                placeholder="Paste LinkedIn profile URL or resume text..."
+              ></textarea>
+              <div class="preset-buttons">
+                <button class="preset-btn" data-profile="senior-engineer">Senior Engineer</button>
+                <button class="preset-btn" data-profile="marketing-director">Marketing Director</button>
+                <button class="preset-btn" data-profile="product-manager">Product Manager</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Job Context -->
+          <div class="panel">
+            <h3 class="panel-title">
+              💼 Job Context
+            </h3>
+            
+            <div class="form-group">
+              <label class="form-label">Position</label>
+              <select class="form-select" id="jobPosition">
+                <option value="">Select a role...</option>
+                <option value="senior-fullstack-developer">Senior Full-Stack Developer</option>
+                <option value="marketing-manager">Marketing Manager</option>
+                <option value="product-lead">Product Lead</option>
+                <option value="data-scientist">Data Scientist</option>
+                <option value="engineering-manager">Engineering Manager</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Company & Culture</label>
+              <input type="text" class="form-input" id="companyInfo" placeholder="e.g., Fast-growing fintech startup, remote-first culture">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Key Selling Points</label>
+              <textarea 
+                class="form-textarea" 
+                id="sellingPoints" 
+                placeholder="e.g., Equity package, latest tech stack, mentorship opportunities, work-life balance..."
+                style="min-height: 80px;"
+              ></textarea>
+            </div>
+          </div>
+          
+          <!-- Message Settings -->
+          <div class="panel">
+            <h3 class="panel-title">
+              ⚙️ Message Settings
+            </h3>
+            
+            <div class="form-group">
+              <label class="form-label">Tone</label>
+              <div class="tone-selector">
+                <button class="tone-btn active" data-tone="professional">Professional</button>
+                <button class="tone-btn" data-tone="casual">Casual</button>
+                <button class="tone-btn" data-tone="executive">Executive</button>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Channel</label>
+              <select class="form-select" id="messageChannel">
+                <option value="linkedin">LinkedIn InMail</option>
+                <option value="email">Email</option>
+                <option value="both">Both (Optimized)</option>
+              </select>
+            </div>
+          </div>
+          
+          <button class="generate-btn" id="generateBtn">
+            🚀 Generate Personalized Outreach
+          </button>
+        </div>
+        
+        <!-- Results Panel -->
+        <div class="results-panel" id="resultsPanel">
+          <div class="results-header">
+            <div class="results-title">Generated Messages</div>
+            <div class="response-rate" id="responseRate">Predicted: 24% response rate</div>
+          </div>
+          
+          <div class="message-variants" id="messageVariants">
+            <div class="loading">
+              <div class="spinner"></div>
+              <span>Click "Generate Personalized Outreach" to see AI in action...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       Analytics Dashboard
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="analytics">
+    <div class="container">
+      <h2 style="font-size: 48px; font-weight: 800; text-align: center; margin-bottom: 16px;">
+        Real-Time Performance Analytics
+      </h2>
+      <p style="text-align: center; font-size: 18px; color: var(--text-muted);">
+        Track engagement, optimize messaging, and measure ROI across your entire pipeline
+      </p>
+      
+      <div class="analytics-grid">
+        <div class="analytics-card">
+          <div class="card-header">
+            <div class="card-icon">📧</div>
+            <div class="card-title">Open Rates</div>
+          </div>
+          <div class="metric-large">68%</div>
+          <div class="metric-change">+14% vs template</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 68%"></div>
+          </div>
+        </div>
+        
+        <div class="analytics-card">
+          <div class="card-header">
+            <div class="card-icon">💬</div>
+            <div class="card-title">Response Rate</div>
+          </div>
+          <div class="metric-large">22%</div>
+          <div class="metric-change">+175% improvement</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 22%"></div>
+          </div>
+        </div>
+        
+        <div class="analytics-card">
+          <div class="card-header">
+            <div class="card-icon">🎯</div>
+            <div class="card-title">Conversion Funnel</div>
+          </div>
+          <div style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>Messages Sent</span>
+              <span>1,000</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>Opened</span>
+              <span>680</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>Responded</span>
+              <span>220</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-weight: 600; color: var(--success);">
+              <span>Phone Calls</span>
+              <span>89</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="analytics-card">
+          <div class="card-header">
+            <div class="card-icon">⚡</div>
+            <div class="card-title">Time Saved</div>
+          </div>
+          <div class="metric-large">2.3h</div>
+          <div style="color: var(--text-muted); font-size: 14px;">Per recruiter, per day</div>
+          <div style="color: var(--success); font-weight: 600; font-size: 14px; margin-top: 8px;">
+            $1,840 monthly savings
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       Before/After Comparison
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="comparison">
+    <div class="container">
+      <h2 style="font-size: 48px; font-weight: 800; text-align: center; margin-bottom: 16px;">
+        Generic Templates vs AI Personalization
+      </h2>
+      <p style="text-align: center; font-size: 18px; color: var(--text-muted);">
+        See the difference that true personalization makes
+      </p>
+      
+      <div class="comparison-grid">
+        <!-- Before: Generic Template -->
+        <div class="comparison-card before">
+          <div class="comparison-header">
+            <div class="comparison-label">Before: Generic Template</div>
+            <div class="comparison-title">The Old Way</div>
+          </div>
+          <div class="comparison-content">
+            <div class="comparison-message">
+              <strong>Subject: Exciting Opportunity - Senior Developer Position</strong><br><br>
+              
+              Hi [Name],<br><br>
+              
+              I hope this message finds you well. I wanted to reach out regarding an exciting opportunity that would be perfect for someone with your background.<br><br>
+              
+              We have a Senior Developer position available at a growing tech company. The role offers competitive compensation and great benefits.<br><br>
+              
+              Would you be interested in learning more? I'd love to schedule a quick call to discuss.<br><br>
+              
+              Best regards,<br>
+              [Recruiter Name]
+            </div>
+            <div class="comparison-stats">
+              <div class="comparison-rate">8%</div>
+              <div style="color: var(--text-muted); font-size: 14px;">Response Rate</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- After: AI Personalized -->
+        <div class="comparison-card after">
+          <div class="comparison-header">
+            <div class="comparison-label">After: AI Personalized</div>
+            <div class="comparison-title">The YongAI Way</div>
+          </div>
+          <div class="comparison-content">
+            <div class="comparison-message">
+              <strong>Subject: Your React optimization work at TechCorp caught our attention</strong><br><br>
+              
+              Hi Sarah,<br><br>
+              
+              I saw your recent LinkedIn post about reducing bundle sizes by 40% at TechCorp - really impressive optimization work! That kind of performance focus is exactly what we're looking for.<br><br>
+              
+              I'm reaching out because Fintech Innovations is building their next-gen trading platform and needs a Senior React Developer who understands both performance and scalability. Given your experience with high-traffic applications and your passion for clean architecture (loved your Medium article on component patterns), this could be a perfect next step.<br><br>
+              
+              The role offers equity in a fast-growing fintech, fully remote flexibility, and a chance to work with the latest tech stack including React 18, TypeScript, and GraphQL.<br><br>
+              
+              Worth a quick 15-minute conversation? I think you'd find the technical challenges really interesting.<br><br>
+              
+              Best,<br>
+              Mike Chen
+            </div>
+            <div class="comparison-stats">
+              <div class="comparison-rate">22%</div>
+              <div style="color: var(--text-muted); font-size: 14px;">Response Rate</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       ROI Calculator
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="roi">
+    <div class="container">
+      <h2 style="font-size: 48px; font-weight: 800; margin-bottom: 16px;">
+        Calculate Your ROI
+      </h2>
+      <p style="font-size: 18px; color: var(--text-muted);">
+        See how much time and money your agency could save
+      </p>
+      
+      <div class="roi-calculator">
+        <div class="roi-grid">
+          <div class="roi-metric">
+            <span class="roi-number">2h</span>
+            <div class="roi-label">Daily outreach time<br>per recruiter</div>
+          </div>
+          <div class="roi-metric">
+            <span class="roi-number">5min</span>
+            <div class="roi-label">Time with AI<br>generation</div>
+          </div>
+          <div class="roi-metric">
+            <span class="roi-number">3x</span>
+            <div class="roi-label">Better response<br>rates</div>
+          </div>
+          <div class="roi-metric">
+            <span class="roi-number">$45k</span>
+            <div class="roi-label">Annual savings<br>per recruiter</div>
+          </div>
+        </div>
+        
+        <p style="color: var(--text-muted); margin-top: 24px; font-size: 14px;">
+          Based on average recruiter salary of $65k/year. ROI calculated from time savings and improved placement rates.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       Call to Action
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="cta">
+    <div class="container">
+      <h2 class="cta-title">Transform Your Outreach Today</h2>
+      <p class="cta-subtitle">
+        Join recruiting agencies achieving 22% response rates and saving 10+ hours per week
+      </p>
+      <a href="https://calendly.com/gary-yong-yongai/30min" class="cta-btn">
+        Schedule Free Consultation
+      </a>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       Calendly Integration
+       ═══════════════════════════════════════════════════════════════ -->
+  <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
+  
+  <!-- ═══════════════════════════════════════════════════════════════
+       Demo JavaScript
+       ═══════════════════════════════════════════════════════════════ -->
+  <script>
+    // Sample candidate profiles
+    const candidateProfiles = {
+      'senior-engineer': `Sarah Chen - Senior Full Stack Developer at TechCorp
+      
+• 7+ years experience building scalable web applications
+• Expert in React, Node.js, TypeScript, PostgreSQL
+• Led migration to microservices architecture, reduced load times by 40%
+• Recent accomplishments: Built real-time analytics dashboard, optimized database queries
+• Education: Computer Science degree from University of Toronto
+• Interests: Performance optimization, clean architecture, open source contributing
+• Recently posted about React 18 features and bundle size optimization techniques
+• Active in Toronto tech meetups and mentoring junior developers`,
+
+      'marketing-director': `Alex Rodriguez - Marketing Director at GrowthCo
+      
+• 8+ years in digital marketing and growth strategy
+• Specialized in B2B SaaS marketing, demand generation, content strategy
+• Grew MQLs by 300% year-over-year, $2M ARR impact
+• Expert in HubSpot, Salesforce, Google Analytics, marketing automation
+• Recent wins: Launched successful account-based marketing program, improved conversion rates
+• MBA from Rotman School of Management
+• Passionate about data-driven marketing and customer journey optimization
+• Recently spoke at MarTech Toronto about personalization strategies
+• Side project: Marketing newsletter with 5,000 subscribers`,
+
+      'product-manager': `David Kim - Senior Product Manager at InnovateTech
+      
+• 6+ years in product management for B2B and consumer products
+• Experience with agile development, user research, data analytics
+• Launched 3 major product features, increased user engagement by 45%
+• Skills: Product strategy, roadmapping, stakeholder management, A/B testing
+• Tools: Jira, Figma, Mixpanel, user interview platforms
+• Education: Engineering background + Product Management certification
+• Recent achievements: Led successful product pivot, improved retention metrics
+• Interested in AI/ML applications in product development
+• Active on Product Hunt and product management communities`
+    };
+
+    // Sample job descriptions and contexts
+    const jobContexts = {
+      'senior-fullstack-developer': {
+        position: 'Senior Full-Stack Developer',
+        company: 'Fintech Innovations - Series B startup building next-gen trading platform',
+        sellingPoints: 'Equity package (0.1-0.2%), latest tech stack (React 18, Node.js, GraphQL), fully remote, $120-140k salary, stock options, mentorship from ex-FAANG engineers'
+      },
+      'marketing-manager': {
+        position: 'Growth Marketing Manager',
+        company: 'HealthTech Solutions - Fast-growing healthcare SaaS company',
+        sellingPoints: 'Lead a team of 3, $90-110k + equity, unlimited PTO, health benefits, conference budget, opportunity to shape marketing strategy from ground up'
+      },
+      'product-lead': {
+        position: 'Senior Product Manager',
+        company: 'EduTech Platform - Revolutionizing online learning for professionals',
+        sellingPoints: 'Own product roadmap for 100k+ users, $110-130k + equity, flexible work arrangements, learning stipend, work directly with founders'
+      }
+    };
+
+    // Message templates and variations
+    const messageVariants = {
+      professional: {
+        subject: "Your {specific_work} at {current_company} caught our attention",
+        hook: "I noticed your recent work on {specific_project} - particularly impressed by {specific_achievement}. That kind of {relevant_skill} expertise is exactly what we're looking for.",
+        body: "I'm reaching out because {company_name} is {company_description} and we need a {position} who understands {relevant_domain}. Given your experience with {relevant_experience} and your {specific_interest}, this could be an excellent next step in your career.\n\nThe role offers {key_benefits} and a chance to {growth_opportunity}.\n\nWorth a quick 15-minute conversation? I think you'd find the {appeal_factor} really interesting.",
+        closing: "Best regards,\n{recruiter_name}"
+      },
+      casual: {
+        subject: "Quick question about your {expertise_area} work",
+        hook: "Hey {first_name}! Saw your {recent_activity} and had to reach out. Your work on {specific_project} is exactly the kind of {skill_focus} we're looking for.",
+        body: "I'm working with {company_name}, a {company_type} that's {company_mission}. They need someone who gets {domain_knowledge} and can {key_responsibility}.\n\nThought of you because of your {relevant_background} and {personal_interest}. Plus, they offer {compelling_benefit} which seems right up your alley.\n\nInterested in a quick chat? No pressure, just thought it might be worth exploring.",
+        closing: "Cheers,\n{recruiter_name}"
+      },
+      executive: {
+        subject: "Strategic opportunity aligned with your {leadership_area} expertise",
+        hook: "I've been following your leadership in {domain_area}, particularly your work on {strategic_initiative}. Your approach to {leadership_skill} aligns perfectly with an opportunity I'm working on.",
+        body: "I'm partnering with {company_name}, a {company_stage} {company_type} that's {strategic_mission}. They're seeking a {senior_position} to {strategic_responsibility} and {business_impact}.\n\nGiven your track record in {relevant_leadership_area} and your vision for {industry_trend}, I believe this role would provide the strategic challenges and impact you're looking for.\n\nThe opportunity includes {executive_benefits} and the chance to {strategic_opportunity}.\n\nWould you be open to a confidential discussion about how this might align with your career aspirations?",
+        closing: "Best,\n{recruiter_name}\n{title} at {agency_name}"
+      }
+    };
+
+    // DOM elements
+    const candidateProfileTextarea = document.getElementById('candidateProfile');
+    const jobPositionSelect = document.getElementById('jobPosition');
+    const companyInfoInput = document.getElementById('companyInfo');
+    const sellingPointsTextarea = document.getElementById('sellingPoints');
+    const messageChannelSelect = document.getElementById('messageChannel');
+    const generateBtn = document.getElementById('generateBtn');
+    const resultsPanel = document.getElementById('resultsPanel');
+    const messageVariantsDiv = document.getElementById('messageVariants');
+    const responseRateDiv = document.getElementById('responseRate');
+
+    let currentTone = 'professional';
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      // Preset candidate profile buttons
+      document.querySelectorAll('[data-profile]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const profileType = this.dataset.profile;
+          candidateProfileTextarea.value = candidateProfiles[profileType];
+          this.style.background = 'var(--accent)';
+          this.style.color = 'white';
+          setTimeout(() => {
+            this.style.background = '';
+            this.style.color = '';
+          }, 200);
+        });
+      });
+
+      // Tone selector
+      document.querySelectorAll('.tone-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          currentTone = this.dataset.tone;
+        });
+      });
+
+      // Job position select auto-fill
+      jobPositionSelect.addEventListener('change', function() {
+        const selectedJob = jobContexts[this.value];
+        if (selectedJob) {
+          companyInfoInput.value = selectedJob.company;
+          sellingPointsTextarea.value = selectedJob.sellingPoints;
+        }
+      });
+
+      // Generate button
+      generateBtn.addEventListener('click', generateMessages);
+    });
+
+    function generateMessages() {
+      const profile = candidateProfileTextarea.value.trim();
+      const position = jobPositionSelect.value;
+      const company = companyInfoInput.value.trim();
+      const sellingPoints = sellingPointsTextarea.value.trim();
+
+      if (!profile || !company) {
+        alert('Please fill in at least the candidate profile and company information.');
+        return;
+      }
+
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = '<div class="spinner" style="width: 16px; height: 16px;"></div> Generating...';
+
+      // Show loading state
+      messageVariantsDiv.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>AI is analyzing the candidate profile...</span>
+        </div>
+      `;
+
+      // Simulate AI generation with realistic delay
+      setTimeout(() => {
+        displayGeneratedMessages(profile, position, company, sellingPoints);
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '🚀 Generate Personalized Outreach';
+      }, 3000);
+    }
+
+    function displayGeneratedMessages(profile, position, company, sellingPoints) {
+      // Parse candidate info (simplified)
+      const candidateName = extractName(profile);
+      const candidateSkills = extractSkills(profile);
+      const candidateAchievements = extractAchievements(profile);
+      
+      // Calculate predicted response rate based on personalization
+      const personalizationScore = calculatePersonalizationScore(profile, company, sellingPoints);
+      const responseRate = Math.min(8 + (personalizationScore * 0.2), 28);
+      
+      responseRateDiv.innerHTML = `Predicted: ${Math.round(responseRate)}% response rate`;
+
+      // Generate three variants
+      const variants = [
+        generateVariant('Career Growth', candidateName, candidateSkills, candidateAchievements, company, sellingPoints, currentTone),
+        generateVariant('Technical Challenge', candidateName, candidateSkills, candidateAchievements, company, sellingPoints, currentTone),
+        generateVariant('Company Culture', candidateName, candidateSkills, candidateAchievements, company, sellingPoints, currentTone)
+      ];
+
+      messageVariantsDiv.innerHTML = variants.map(variant => `
+        <div class="variant fade-in">
+          <div class="variant-header">
+            <div class="variant-label">${variant.angle}</div>
+            <div class="variant-metrics">
+              <div class="metric">
+                <span>📈</span>
+                <span>Response: ${variant.responseRate}%</span>
+              </div>
+              <div class="metric">
+                <span>🎯</span>
+                <span>Personalization: ${variant.personalization}%</span>
+              </div>
+              <div class="metric">
+                <span>📧</span>
+                <span>Channel: ${messageChannelSelect.value}</span>
+              </div>
+            </div>
+          </div>
+          <div class="message-content">${variant.message}</div>
+        </div>
+      `).join('');
+
+      // Add follow-up sequence
+      messageVariantsDiv.innerHTML += generateFollowUpSequence(candidateName, company);
+    }
+
+    function generateVariant(angle, name, skills, achievements, company, sellingPoints, tone) {
+      const firstName = name.split(' ')[0];
+      
+      let message = '';
+      let responseRate = 0;
+      
+      switch (angle) {
+        case 'Career Growth':
+          responseRate = 24;
+          message = `Subject: Your ${achievements[0]} caught our attention, ${firstName}
+
+Hi ${firstName},
+
+I noticed your recent work on ${achievements[0]} - particularly impressed by ${achievements[1]}. That kind of ${skills[0]} expertise is exactly what we're looking for.
+
+I'm reaching out because ${company.split('-')[0]} is ${company.split('-')[1]} and we need someone who understands both technical excellence and business impact. Given your experience with ${skills.slice(0,2).join(' and ')} and your passion for ${skills[2]}, this could be an excellent next step in your career.
+
+The role offers ${sellingPoints.split(',')[0]} and a chance to ${sellingPoints.split(',')[1]}. You'd be working on challenging problems that directly impact our growth trajectory.
+
+Worth a quick 15-minute conversation? I think you'd find the technical challenges and growth opportunity really interesting.
+
+Best regards,
+Mike Chen
+Senior Technical Recruiter`;
+          break;
+
+        case 'Technical Challenge':
+          responseRate = 22;
+          message = `Subject: Challenging technical opportunity - ${skills[0]} focus
+
+Hey ${firstName},
+
+Saw your work on ${achievements[0]} and had to reach out. Your approach to ${skills[1]} is exactly what our engineering team needs.
+
+${company.split('-')[0]} is tackling some serious technical challenges - think ${skills[0]} at scale, ${skills[1]} optimization, and building systems that handle massive growth. We need someone who gets excited about solving complex problems and isn't afraid to dive deep.
+
+The tech stack includes ${sellingPoints.includes('React') ? 'React 18, TypeScript' : 'latest technologies'}, and you'd be working alongside engineers from ${sellingPoints.includes('FAANG') ? 'FAANG companies' : 'top tech companies'}.
+
+Interested in hearing about the specific technical challenges? I think you'd find them right up your alley.
+
+Cheers,
+Mike Chen`;
+          break;
+
+        case 'Company Culture':
+          responseRate = 20;
+          message = `Subject: Culture-first company that values ${skills[0]} excellence
+
+Hi ${firstName},
+
+Your background in ${skills[0]} and ${skills[1]} caught my attention, but what really stood out was your ${achievements[0]} - shows you care about impact, not just code.
+
+${company.split('-')[0]} is different. We're ${company.split('-')[1]} with a culture that actually matches our values: ${sellingPoints.includes('remote') ? 'fully remote with flexible hours' : 'work-life balance'}, ${sellingPoints.includes('unlimited') ? 'unlimited PTO that people actually use' : 'comprehensive benefits'}, and a team that celebrates both technical wins and personal growth.
+
+The role offers ${sellingPoints.split(',')[0]} plus the chance to ${sellingPoints.split(',')[2] || 'make a real impact'}. No bureaucracy, no politics - just smart people solving interesting problems.
+
+Think this might be a fit? Would love to chat about what we're building and see if it aligns with what you're looking for.
+
+Best,
+Mike Chen
+Senior Technical Recruiter`;
+          break;
+      }
+
+      return {
+        angle,
+        message,
+        responseRate,
+        personalization: 87 + Math.floor(Math.random() * 10)
+      };
+    }
+
+    function generateFollowUpSequence(name, company) {
+      const firstName = name.split(' ')[0];
+      
+      return `
+        <div class="followup-sequence fade-in">
+          <div class="sequence-header">
+            <div class="card-icon">📅</div>
+            <div class="sequence-title">Automated Follow-up Sequence</div>
+          </div>
+          
+          <div class="followup-email">
+            <div class="email-timing">
+              <span>⏰</span>
+              <span>Day 3: If no response</span>
+            </div>
+            <div class="email-subject">Quick follow-up - ${company.split('-')[0]} opportunity</div>
+            <div class="email-content">
+              Hi ${firstName}, wanted to circle back on the ${company.split('-')[0]} opportunity. I know you're probably busy, but this role might be worth a quick look. The team is moving fast and would love to chat with someone with your background. Any interest in a brief call this week?
+            </div>
+          </div>
+          
+          <div class="followup-email">
+            <div class="email-timing">
+              <span>⏰</span>
+              <span>Day 7: Value-add approach</span>
+            </div>
+            <div class="email-subject">Thought you'd find this interesting - ${company.split('-')[0]} tech blog</div>
+            <div class="email-content">
+              Hi ${firstName}, came across this technical article from our engineering team about scaling challenges and thought you might find it interesting given your background. No pressure on the opportunity I mentioned earlier, but if you're curious about what we're building, this gives a good sense of the technical depth. [Link to tech blog]
+            </div>
+          </div>
+          
+          <div class="followup-email">
+            <div class="email-timing">
+              <span>⏰</span>
+              <span>Day 14: Final touchpoint</span>
+            </div>
+            <div class="email-subject">Keeping you in the loop - ${firstName}</div>
+            <div class="email-content">
+              Hi ${firstName}, this will be my last message about the ${company.split('-')[0]} opportunity. We're moving forward with interviews and I wanted to give you one more chance to consider it. If timing isn't right now, no worries - I'll keep you in mind for future opportunities that match your interests.
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Utility functions
+    function extractName(profile) {
+      const lines = profile.split('\n');
+      for (const line of lines) {
+        if (line.includes('-') && (line.includes('Developer') || line.includes('Manager') || line.includes('Director'))) {
+          return line.split('-')[0].trim();
+        }
+      }
+      return 'Alex Johnson'; // Fallback
+    }
+
+    function extractSkills(profile) {
+      const skills = [];
+      if (profile.includes('React')) skills.push('React');
+      if (profile.includes('Node.js')) skills.push('Node.js');
+      if (profile.includes('TypeScript')) skills.push('TypeScript');
+      if (profile.includes('marketing')) skills.push('digital marketing');
+      if (profile.includes('Product')) skills.push('product strategy');
+      if (profile.includes('analytics')) skills.push('data analytics');
+      if (profile.includes('optimization')) skills.push('performance optimization');
+      
+      return skills.length > 0 ? skills : ['technical expertise', 'leadership', 'innovation'];
+    }
+
+    function extractAchievements(profile) {
+      const achievements = [];
+      const lines = profile.split('\n');
+      
+      for (const line of lines) {
+        if (line.includes('•') && (line.includes('Led') || line.includes('Built') || line.includes('Grew') || line.includes('improved'))) {
+          achievements.push(line.replace('•', '').trim());
+        }
+      }
+      
+      return achievements.length > 0 ? achievements : [
+        'recent technical contributions',
+        'significant performance improvements'
+      ];
+    }
+
+    function calculatePersonalizationScore(profile, company, sellingPoints) {
+      let score = 0;
+      
+      // Base score for having profile
+      if (profile.length > 100) score += 20;
+      
+      // Specific achievements mentioned
+      if (profile.includes('•')) score += 15;
+      
+      // Recent activities/posts
+      if (profile.includes('Recent') || profile.includes('recently')) score += 15;
+      
+      // Specific skills match
+      if (profile.includes('React') || profile.includes('Node') || profile.includes('marketing')) score += 10;
+      
+      // Company context provided
+      if (company.length > 20) score += 15;
+      
+      // Detailed selling points
+      if (sellingPoints.length > 50) score += 15;
+      
+      // Industry/domain alignment
+      if (profile.includes('fintech') || profile.includes('SaaS') || profile.includes('startup')) score += 10;
+      
+      return Math.min(score, 100);
+    }
+
+    // Add smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Add intersection observer for animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('slide-up');
+        }
+      });
+    }, observerOptions);
+
+    // Observe elements for animation
+    document.querySelectorAll('.analytics-card, .comparison-card, .case-study-card').forEach(el => {
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>

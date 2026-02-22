@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <link rel="icon" type="image/png" href="/img/logo-dark.png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Enterprise AI Playbook: 5 Steps I Use With Every Client – Gary Yong</title>
+    <meta name="description" content="A proven methodology for implementing AI in enterprise environments, with real examples from client engagements." />
+    <meta name="author" content="Gary Yong" />
+    <meta property="og:title" content="The Enterprise AI Playbook: 5 Steps I Use With Every Client" />
+    <meta property="og:description" content="After implementing AI solutions across finance, healthcare, and retail, I've distilled my methodology into a repeatable framework." />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://gary-yong.com/blog/enterprise-ai-playbook.html" />
+    <link rel="stylesheet" href="../styles.css?v=202602051746" />
+    <style>
+      .blog-illustration {
+        display: block;
+        max-width: 700px;
+        width: 100%;
+        margin: 40px auto;
+        opacity: 0;
+        animation: fadeInIllustration 0.8s ease forwards;
+      }
+      .blog-illustration.hero-illustration {
+        max-width: 800px;
+        margin: 30px auto 40px;
+      }
+      .blog-illustration.section-illustration {
+        max-width: 500px;
+        margin: 30px auto;
+      }
+      @keyframes fadeInIllustration {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reading-progress">
+      <div class="reading-progress-bar" id="reading-progress"></div>
+    </div>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="../index.html" class="logo">
+          <img src="../img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
+          <img src="../img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
+        </a>
+
+        <nav class="nav nav-desktop">
+          <a href="../index.html" data-i18n="nav.home">Home</a>
+          <a href="../projects.html" data-i18n="nav.projects">Projects</a>
+          <a href="../experience.html" data-i18n="nav.experience">Experience</a>
+          <a href="../about.html" data-i18n="nav.about">About</a>
+          <a href="../skills.html" data-i18n="nav.skills">Skills</a>
+          <a href="../blog.html" class="active" data-i18n="nav.blog">Blog</a>
+        </nav>
+
+        <div class="header-actions">
+          <button id="lang-toggle" class="btn btn-ghost lang-toggle" aria-label="Switch language">
+            中文
+          </button>
+          <button id="theme-toggle" class="btn btn-ghost theme-toggle" aria-label="Toggle theme">
+            ☀️
+          </button>
+          <button class="icon-button mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+      </div>
+      
+      <nav class="nav-mobile" aria-label="Mobile navigation">
+        <div class="nav-mobile-inner">
+          <a href="../index.html" data-i18n="nav.home">Home</a>
+          <a href="../projects.html" data-i18n="nav.projects">Projects</a>
+          <a href="../experience.html" data-i18n="nav.experience">Experience</a>
+          <a href="../about.html" data-i18n="nav.about">About</a>
+          <a href="../skills.html" data-i18n="nav.skills">Skills</a>
+          <a href="../blog.html" data-i18n="nav.blog">Blog</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <article class="blog-article">
+        <nav class="blog-nav">
+          <a href="../blog.html" data-i18n="blog.back_to_blog">← Back to Blog</a>
+        </nav>
+
+        <header class="blog-header">
+          <h1 data-i18n="blog.post4.title">The Enterprise AI Playbook: 5 Steps I Use With Every Client</h1>
+          <div class="blog-meta-row">
+            <span class="category-tag consulting" data-i18n="blog.post4.category">Consulting</span>
+            <span class="author-name" data-i18n="blog.post4.author">Gary Yong</span>
+            <span class="publish-date" data-i18n="blog.post4.date">January 15, 2025</span>
+            <span class="reading-time" data-i18n="blog.post4.read_time">9 min read</span>
+          </div>
+        </header>
+
+        <img src="/blog/img/master-plan.svg" class="blog-illustration hero-illustration" alt="Enterprise AI Playbook">
+
+        <div class="blog-content">
+          <p data-i18n="blog.post4.content.intro_p1">After implementing AI solutions across finance, healthcare, retail, and manufacturing, I've learned that successful AI projects follow a predictable pattern. The technology varies, the business contexts differ, but the methodology remains consistent.</p>
+
+          <p data-i18n-html="blog.post4.content.intro_p2">This is the exact 5-step framework I use with every client—refined through dozens of engagements, countless failures, and the hard-earned wisdom that comes from turning AI experiments into business value. <strong>It works because it prioritizes business outcomes over technical sophistication.</strong></p>
+
+          <blockquote>
+            <p data-i18n-html="blog.post4.content.intro_quote"><em>The goal isn't to implement the most advanced AI possible. It's to implement AI that delivers measurable business value within realistic constraints.</em></p>
+          </blockquote>
+
+          <h2 data-i18n="blog.post4.content.step1_title">Step 1: Process Audit — Understanding What Actually Happens</h2>
+          <img src="/blog/img/detailed-analysis.svg" class="blog-illustration section-illustration" alt="Process Audit">
+
+          <p data-i18n="blog.post4.content.step1_p1">Before we talk about AI, we talk about work. I spend the first week of every engagement shadowing employees, mapping workflows, and understanding the gap between "how we're supposed to do things" and "how things actually get done."</p>
+
+          <h3 data-i18n="blog.post4.content.step1_what_looking_title">What I'm Looking For:</h3>
+          <ul>
+            <li data-i18n-html="blog.post4.content.step1_bullets.0"><strong>Repetitive tasks</strong> that consume significant time</li>
+            <li data-i18n-html="blog.post4.content.step1_bullets.1"><strong>Decision points</strong> where humans apply consistent criteria</li>
+            <li data-i18n-html="blog.post4.content.step1_bullets.2"><strong>Information bottlenecks</strong> where data flows slowly between systems</li>
+            <li data-i18n-html="blog.post4.content.step1_bullets.3"><strong>Quality control steps</strong> that could benefit from automated checking</li>
+          </ul>
+
+          <h3 data-i18n="blog.post4.content.step1_example_title">Real Example: Regional Bank Loan Processing</h3>
+          <p data-i18n="blog.post4.content.step1_example_p1">A regional bank wanted to "use AI for loan approvals." After the process audit, I discovered their real problem wasn't approval decisions—it was that loan officers spent 3-4 hours per application manually gathering customer financial data from multiple systems and documents.</p>
+
+          <p data-i18n="blog.post4.content.step1_example_p2">The AI opportunity wasn't in making approval decisions (that required human judgment) but in automating data collection and validation. We built an AI system that extracts financial data from documents and cross-references it with internal systems, reducing manual work from 4 hours to 30 minutes per application.</p>
+
+          <p data-i18n-html="blog.post4.content.step1_result"><strong>Result:</strong> 87% reduction in processing time, 40% increase in loan officer productivity, zero change to approval workflows.</p>
+
+          <h2 data-i18n="blog.post4.content.step2_title">Step 2: Opportunity Scoring — The ROI Reality Check</h2>
+          <img src="/blog/img/growth-curve.svg" class="blog-illustration section-illustration" alt="Opportunity Scoring">
+
+          <p data-i18n="blog.post4.content.step2_p1">Not every AI opportunity is worth pursuing. I use a scoring framework that evaluates potential projects across four dimensions:</p>
+
+          <h3 data-i18n="blog.post4.content.step2_dive_title">The DIVE Framework:</h3>
+          <img src="/blog/img/report.svg" class="blog-illustration section-illustration" alt="DIVE Framework">
+
+          <p data-i18n-html="blog.post4.content.step2_data_title"><strong>Data Availability (0-25 points)</strong></p>
+          <ul>
+            <li data-i18n="blog.post4.content.step2_data_bullets.0">Is the necessary data already being collected?</li>
+            <li data-i18n="blog.post4.content.step2_data_bullets.1">What's the quality and consistency?</li>
+            <li data-i18n="blog.post4.content.step2_data_bullets.2">How accessible is it for AI training?</li>
+          </ul>
+
+          <p data-i18n-html="blog.post4.content.step2_impact_title"><strong>Impact Potential (0-25 points)</strong></p>
+          <ul>
+            <li data-i18n="blog.post4.content.step2_impact_bullets.0">How much time/cost could automation save?</li>
+            <li data-i18n="blog.post4.content.step2_impact_bullets.1">Would improvements unlock new revenue opportunities?</li>
+            <li data-i18n="blog.post4.content.step2_impact_bullets.2">Are there quality improvements beyond efficiency?</li>
+          </ul>
+
+          <p data-i18n-html="blog.post4.content.step2_validation_title"><strong>Validation Complexity (0-25 points)</strong></p>
+          <ul>
+            <li data-i18n="blog.post4.content.step2_validation_bullets.0">How easily can we measure success?</li>
+            <li data-i18n="blog.post4.content.step2_validation_bullets.1">Are the business rules clear and consistent?</li>
+            <li data-i18n="blog.post4.content.step2_validation_bullets.2">Can we start with a limited pilot?</li>
+          </ul>
+
+          <p data-i18n-html="blog.post4.content.step2_execution_title"><strong>Execution Feasibility (0-25 points)</strong></p>
+          <ul>
+            <li data-i18n="blog.post4.content.step2_execution_bullets.0">Do we have stakeholder buy-in?</li>
+            <li data-i18n="blog.post4.content.step2_execution_bullets.1">Are integration requirements manageable?</li>
+            <li data-i18n="blog.post4.content.step2_execution_bullets.2">What's the change management complexity?</li>
+          </ul>
+
+          <h3 data-i18n="blog.post4.content.step2_example_title">Real Example: Manufacturing Quality Control</h3>
+          <p data-i18n="blog.post4.content.step2_example_p1">A manufacturer wanted AI-powered visual inspection of products. Here's how it scored:</p>
+          <ul>
+            <li data-i18n-html="blog.post4.content.step2_example_bullets.0"><strong>Data:</strong> 20/25 (thousands of existing images, well-labeled defects)</li>
+            <li data-i18n-html="blog.post4.content.step2_example_bullets.1"><strong>Impact:</strong> 23/25 (could reduce inspection time by 70%, catch defects humans miss)</li>
+            <li data-i18n-html="blog.post4.content.step2_example_bullets.2"><strong>Validation:</strong> 22/25 (clear success metrics, easy to compare AI vs human results)</li>
+            <li data-i18n-html="blog.post4.content.step2_example_bullets.3"><strong>Execution:</strong> 18/25 (some resistance from quality team, integration challenges)</li>
+          </ul>
+
+          <p data-i18n-html="blog.post4.content.step2_result"><strong>Total: 83/100 — Green light for full implementation.</strong></p>
+
+          <p data-i18n="blog.post4.content.step2_conclusion">This systematic scoring prevents the common mistake of pursuing technically interesting projects that don't deliver business value.</p>
+
+          <h2 data-i18n="blog.post4.content.step3_title">Step 3: Pilot Selection — Starting Small, Thinking Big</h2>
+
+          <p data-i18n="blog.post4.content.step3_p1">The highest-scoring opportunity isn't always the best pilot. I select pilots based on three criteria:</p>
+
+          <h3 data-i18n="blog.post4.content.step3_goldilocks_title">The Goldilocks Principle:</h3>
+          <ul>
+            <li data-i18n-html="blog.post4.content.step3_goldilocks_bullets.0"><strong>Not too simple:</strong> Won't demonstrate AI's true potential</li>
+            <li data-i18n-html="blog.post4.content.step3_goldilocks_bullets.1"><strong>Not too complex:</strong> Too many variables for initial implementation</li>
+            <li data-i18n-html="blog.post4.content.step3_goldilocks_bullets.2"><strong>Just right:</strong> Meaningful business impact with manageable scope</li>
+          </ul>
+
+          <h3 data-i18n="blog.post4.content.step3_example_title">Real Example: Healthcare Documentation</h3>
+          <p data-i18n="blog.post4.content.step3_example_p1">A healthcare system had three AI opportunities: automated diagnosis support (too complex for pilot), appointment scheduling optimization (too simple), and clinical notes summarization (just right).</p>
+
+          <p data-i18n="blog.post4.content.step3_example_p2">The pilot focused on summarizing patient encounter notes for specialist referrals. It was contained (only referral docs), measurable (time savings, referral quality), and valuable (specialists spent 30% less time reading background information).</p>
+
+          <p data-i18n-html="blog.post4.content.step3_result"><strong>Pilot results:</strong> 45% reduction in referral review time, 23% improvement in referral accuracy, 92% physician satisfaction score.</p>
+
+          <p data-i18n="blog.post4.content.step3_conclusion">Success with the pilot gave us credibility and budget for the more ambitious diagnosis support system.</p>
+
+          <h2 data-i18n="blog.post4.content.step4_title">Step 4: Build & Test — The MVP Mindset</h2>
+
+          <p data-i18n="blog.post4.content.step4_p1">Enterprise AI projects fail when they try to solve everything at once. I build AI solutions like software products: minimum viable product first, then iterate based on real usage.</p>
+
+          <h3 data-i18n="blog.post4.content.step4_philosophy_title">My Build Philosophy:</h3>
+          <ul>
+            <li data-i18n-html="blog.post4.content.step4_philosophy_bullets.0"><strong>Start with existing tools:</strong> ChatGPT API, Claude, established ML services</li>
+            <li data-i18n-html="blog.post4.content.step4_philosophy_bullets.1"><strong>Custom only when necessary:</strong> Most problems don't need custom models</li>
+            <li data-i18n-html="blog.post4.content.step4_philosophy_bullets.2"><strong>Human-in-the-loop always:</strong> AI suggests, humans decide (at least initially)</li>
+            <li data-i18n-html="blog.post4.content.step4_philosophy_bullets.3"><strong>Measure everything:</strong> Usage patterns, accuracy rates, user satisfaction</li>
+          </ul>
+
+          <h3 data-i18n="blog.post4.content.step4_example_title">Real Example: Insurance Claims Processing</h3>
+          <p data-i18n="blog.post4.content.step4_example_p1">An insurance company wanted AI to automatically approve/deny claims. Instead of building a full automation system, we started with an AI assistant that flagged unusual claims and suggested next steps.</p>
+
+          <p data-i18n-html="blog.post4.content.step4_example_phase1"><strong>Phase 1 MVP:</strong> AI reads claim documents, extracts key information, flags potential issues. Claims adjusters still make all decisions but with better information faster.</p>
+
+          <p data-i18n-html="blog.post4.content.step4_example_results_title"><strong>Results after 3 months:</strong></p>
+          <ul>
+            <li data-i18n="blog.post4.content.step4_example_results.0">35% reduction in claim processing time</li>
+            <li data-i18n="blog.post4.content.step4_example_results.1">18% improvement in fraud detection</li>
+            <li data-i18n="blog.post4.content.step4_example_results.2">90% adjuster adoption rate</li>
+          </ul>
+
+          <p data-i18n="blog.post4.content.step4_conclusion">The success of Phase 1 built trust for Phase 2: automated approval of simple, low-risk claims. We're now processing 40% of claims with minimal human intervention.</p>
+
+          <h2 data-i18n="blog.post4.content.step5_title">Step 5: Scale & Monitor — From Pilot to Platform</h2>
+
+          <p data-i18n="blog.post4.content.step5_p1">Scaling AI requires shifting from project thinking to product thinking. You're not just expanding a successful pilot—you're building an AI capability that will evolve and improve over time.</p>
+
+          <h3 data-i18n="blog.post4.content.step5_checklist_title">Scaling Checklist:</h3>
+
+          <p data-i18n-html="blog.post4.content.step5_technical_title"><strong>Technical Infrastructure:</strong></p>
+          <ul>
+            <li data-i18n="blog.post4.content.step5_technical_bullets.0">API endpoints that can handle production load</li>
+            <li data-i18n="blog.post4.content.step5_technical_bullets.1">Data pipelines for retraining and updates</li>
+            <li data-i18n="blog.post4.content.step5_technical_bullets.2">Monitoring for model performance degradation</li>
+            <li data-i18n="blog.post4.content.step5_technical_bullets.3">Security and compliance frameworks</li>
+          </ul>
+
+          <p data-i18n-html="blog.post4.content.step5_organizational_title"><strong>Organizational Change:</strong></p>
+          <ul>
+            <li data-i18n="blog.post4.content.step5_organizational_bullets.0">Training programs for expanded user base</li>
+            <li data-i18n="blog.post4.content.step5_organizational_bullets.1">Updated job descriptions and performance metrics</li>
+            <li data-i18n="blog.post4.content.step5_organizational_bullets.2">Process documentation and governance</li>
+            <li data-i18n="blog.post4.content.step5_organizational_bullets.3">Feedback loops for continuous improvement</li>
+          </ul>
+
+          <h3 data-i18n="blog.post4.content.step5_example_title">Real Example: Retail Inventory Optimization</h3>
+          <p data-i18n="blog.post4.content.step5_example_p1">A retail chain piloted AI-powered inventory forecasting in 5 stores. After proving a 20% reduction in stockouts and 15% decrease in overstock, we scaled to 150 stores.</p>
+
+          <p data-i18n-html="blog.post4.content.step5_challenges_title"><strong>Scaling challenges we solved:</strong></p>
+          <ul>
+            <li data-i18n-html="blog.post4.content.step5_challenges.0"><strong>Data quality:</strong> Built automated data validation for different store formats</li>
+            <li data-i18n-html="blog.post4.content.step5_challenges.1"><strong>Change management:</strong> Trained 150+ store managers on new forecasting process</li>
+            <li data-i18n-html="blog.post4.content.step5_challenges.2"><strong>Performance monitoring:</strong> Dashboard tracking forecast accuracy by store, region, and product category</li>
+            <li data-i18n-html="blog.post4.content.step5_challenges.3"><strong>Continuous improvement:</strong> Monthly model retraining with new sales data</li>
+          </ul>
+
+          <p data-i18n-html="blog.post4.content.step5_results_title"><strong>Full-scale results (after 12 months):</strong></p>
+          <ul>
+            <li data-i18n="blog.post4.content.step5_results.0">$2.3M annual savings from reduced overstock</li>
+            <li data-i18n="blog.post4.content.step5_results.1">$1.8M additional revenue from prevented stockouts</li>
+            <li data-i18n="blog.post4.content.step5_results.2">22% improvement in inventory turnover</li>
+          </ul>
+
+          <h2 data-i18n="blog.post4.content.patterns_title">Common Patterns Across Industries</h2>
+
+          <p data-i18n="blog.post4.content.patterns_p1">While every client is unique, I see consistent patterns in what makes AI projects successful:</p>
+
+          <h3 data-i18n="blog.post4.content.winners_title">Winners Focus On:</h3>
+          <ul>
+            <li data-i18n-html="blog.post4.content.winners_bullets.0"><strong>Augmentation over automation:</strong> AI helping humans work better, not replacing them</li>
+            <li data-i18n-html="blog.post4.content.winners_bullets.1"><strong>Process improvement:</strong> Using AI to eliminate bottlenecks and inefficiencies</li>
+            <li data-i18n-html="blog.post4.content.winners_bullets.2"><strong>Data quality:</strong> Investing in clean, consistent, accessible data</li>
+            <li data-i18n-html="blog.post4.content.winners_bullets.3"><strong>Change management:</strong> Preparing people for new workflows</li>
+          </ul>
+
+          <h3 data-i18n="blog.post4.content.failures_title">Common Failure Points:</h3>
+          <ul>
+            <li data-i18n="blog.post4.content.failures_bullets.0">Skipping the process audit (building solutions for assumed problems)</li>
+            <li data-i18n="blog.post4.content.failures_bullets.1">Pursuing technically impressive but business-irrelevant projects</li>
+            <li data-i18n="blog.post4.content.failures_bullets.2">Underestimating data preparation time</li>
+            <li data-i18n="blog.post4.content.failures_bullets.3">Ignoring user adoption and change management</li>
+          </ul>
+
+          <h2 data-i18n="blog.post4.content.roadmap_title">Your AI Implementation Roadmap</h2>
+
+          <p data-i18n="blog.post4.content.roadmap_p1">If you're ready to implement AI in your organization, start with these questions:</p>
+
+          <ol>
+            <li data-i18n-html="blog.post4.content.roadmap_questions.0"><strong>What processes consume the most time/resources?</strong> (Step 1 prep)</li>
+            <li data-i18n-html="blog.post4.content.roadmap_questions.1"><strong>Where do we have good data already?</strong> (Step 2 foundation)</li>
+            <li data-i18n-html="blog.post4.content.roadmap_questions.2"><strong>What's a contained problem we could solve in 8-12 weeks?</strong> (Step 3 pilot)</li>
+            <li data-i18n-html="blog.post4.content.roadmap_questions.3"><strong>Who are our AI champions and skeptics?</strong> (Step 4 change management)</li>
+            <li data-i18n-html="blog.post4.content.roadmap_questions.4"><strong>How will we measure success?</strong> (Step 5 monitoring)</li>
+          </ol>
+
+          <p data-i18n="blog.post4.content.roadmap_p2">This framework has guided successful AI implementations worth millions in business value. It works because it respects both the power of AI and the complexity of organizational change.</p>
+
+          <p data-i18n-html="blog.post4.content.roadmap_remember"><strong>Remember:</strong> The goal isn't to deploy the most sophisticated AI possible. It's to deploy AI that solves real problems, delivers measurable value, and sets the foundation for your organization's AI-powered future.</p>
+
+          <blockquote>
+            <p data-i18n-html="blog.post4.content.cta"><em>Ready to implement AI in your organization? I've guided dozens of companies through this exact framework. Let's discuss how it applies to your specific challenges and opportunities.</em></p>
+          </blockquote>
+        </div>
+
+        <div class="blog-share">
+          <button class="share-button" onclick="copyToClipboard()" data-i18n="blog.share.copy_link">📋 Copy Link</button>
+          <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://gary-yong.com/blog/enterprise-ai-playbook.html" target="_blank" class="share-button" data-i18n="blog.share.linkedin">💼 Share on LinkedIn</a>
+          <a href="https://twitter.com/intent/tweet?url=https://gary-yong.com/blog/enterprise-ai-playbook.html&text=The Enterprise AI Playbook: 5 Steps I Use With Every Client" target="_blank" class="share-button" data-i18n="blog.share.twitter">🐦 Share on X</a>
+        </div>
+
+        <section class="related-articles">
+          <h3 data-i18n="blog.related_articles">Related Articles</h3>
+          <div class="related-grid">
+            <article class="related-card">
+              <h4><a href="ai-automation-consulting.html">Why Most AI Projects Fail (And How to Make Yours Succeed)</a></h4>
+              <p>Understanding the real reasons behind AI project failures and building a framework for evaluation and success.</p>
+            </article>
+            <article class="related-card">
+              <h4><a href="from-consultant-to-founder.html">From Big 4 Consulting to AI Startup: What I Learned</a></h4>
+              <p>Lessons from transitioning from enterprise consulting to building an AI-focused practice from scratch.</p>
+            </article>
+          </div>
+        </section>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p data-i18n="footer.copyright">©2026 Gary Yong · Built with love ❤️.</p>
+      </div>
+    </footer>
+
+    <script src="../main.js?v=202602051746"></script>
+    <script src="../js/i18n.js"></script>
+    <script>
+      // Reading progress bar
+      window.addEventListener('scroll', function() {
+        const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+        document.getElementById('reading-progress').style.width = scrolled + '%';
+      });
+
+      // Copy to clipboard
+      function copyToClipboard() {
+        navigator.clipboard.writeText(window.location.href).then(function() {
+          const button = event.target;
+          const originalText = button.textContent;
+          button.textContent = '✅ Copied!';
+          setTimeout(() => {
+            button.textContent = originalText;
+          }, 2000);
+        });
+      }
+    </script>
+  </body>
+</html>

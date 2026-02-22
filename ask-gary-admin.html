@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <link rel="icon" type="image/png" href="/img/logo-dark.png">
+  <meta charset="UTF-8" />
+  <title>Ask Gary Analytics - Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css?v=202602131450" />
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-card: #020617;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --border-subtle: #1f2937;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e293b, #020617 55%);
+      color: var(--text-main);
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .admin-header {
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .admin-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .last-updated {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 55%);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(12px);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .card-icon {
+      font-size: 1.5rem;
+      opacity: 0.7;
+    }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .metric-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .chart-container {
+      margin-top: 16px;
+      min-height: 200px;
+    }
+
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .bar-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+    }
+
+    .bar-label {
+      min-width: 80px;
+      color: var(--text-muted);
+    }
+
+    .bar-visual {
+      flex: 1;
+      height: 20px;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #0ea5e9);
+      border-radius: 10px;
+      transition: width 0.8s ease;
+    }
+
+    .bar-value {
+      min-width: 30px;
+      text-align: right;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .conversations-list {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 12px;
+    }
+
+    .conversation-item {
+      padding: 12px;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.5);
+      font-size: 0.85rem;
+    }
+
+    .conversation-item:last-child {
+      border-bottom: none;
+    }
+
+    .conversation-first {
+      color: var(--text-main);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .conversation-meta {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 200px;
+      color: var(--text-muted);
+    }
+
+    .error {
+      color: var(--error);
+      text-align: center;
+      padding: 20px;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 8px;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .topics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .topic-tag {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      text-align: center;
+      color: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 16px;
+      }
+      
+      .dashboard {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      
+      .admin-header {
+        padding: 12px 16px;
+      }
+      
+      .admin-title {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="admin-header">
+    <div class="admin-title">Ask Gary Analytics</div>
+    <div class="last-updated" id="last-updated">Loading...</div>
+  </header>
+
+  <div class="dashboard">
+    <!-- Total Conversations -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Total Conversations</div>
+        <div class="card-icon">💬</div>
+      </div>
+      <div class="metric-value" id="total-conversations">-</div>
+      <div class="metric-label">Sessions started</div>
+    </div>
+
+    <!-- Average Messages -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Engagement</div>
+        <div class="card-icon">📊</div>
+      </div>
+      <div class="metric-value" id="avg-messages">-</div>
+      <div class="metric-label">Average messages per conversation</div>
+    </div>
+
+    <!-- Completion Rate -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Completion Rate</div>
+        <div class="card-icon">✅</div>
+      </div>
+      <div class="metric-value" id="completion-rate">-%</div>
+      <div class="metric-label">Conversations with 5+ messages</div>
+    </div>
+
+    <!-- Time Distribution -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Peak Hours</div>
+        <div class="card-icon">🕐</div>
+      </div>
+      <div class="chart-container">
+        <div class="bar-chart" id="time-chart">
+          <div class="loading">Loading time distribution...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message Distribution -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Message Distribution</div>
+        <div class="card-icon">📈</div>
+      </div>
+      <div class="chart-container">
+        <div class="bar-chart" id="message-distribution">
+          <div class="loading">Loading message data...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Popular Topics -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Popular Topics</div>
+        <div class="card-icon">🔥</div>
+      </div>
+      <div class="topics-grid" id="topics-grid">
+        <div class="loading">Loading topics...</div>
+      </div>
+    </div>
+
+    <!-- Common First Questions -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Common First Questions</div>
+        <div class="card-icon">❓</div>
+      </div>
+      <div class="bar-chart" id="first-questions">
+        <div class="loading">Loading questions...</div>
+      </div>
+    </div>
+
+    <!-- Recent Conversations -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Recent Conversations</div>
+        <div class="card-icon">🕒</div>
+      </div>
+      <div class="conversations-list" id="recent-conversations">
+        <div class="loading">Loading recent conversations...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = "https://api.gary-yong.com";
+    const API_KEY = "gary2026"; // Simple protection
+
+    let refreshInterval = null;
+
+    async function loadAnalytics() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/admin/analytics?key=${API_KEY}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        updateDashboard(data);
+        
+        document.getElementById('last-updated').textContent = 
+          `Last updated: ${new Date().toLocaleTimeString()}`;
+
+      } catch (error) {
+        console.error('Failed to load analytics:', error);
+        showError('Failed to load analytics data. Please check if the backend is running.');
+      }
+    }
+
+    function updateDashboard(data) {
+      // Basic metrics
+      document.getElementById('total-conversations').textContent = data.total_conversations || 0;
+      document.getElementById('avg-messages').textContent = 
+        data.avg_messages ? data.avg_messages.toFixed(1) : '0.0';
+      document.getElementById('completion-rate').textContent = 
+        data.completion_rate ? `${data.completion_rate.toFixed(0)}%` : '0%';
+
+      // Time distribution chart
+      updateTimeChart(data.time_distribution || {});
+      
+      // Message distribution chart
+      updateMessageDistribution(data.message_distribution || {});
+      
+      // Popular topics
+      updateTopics(data.popular_topics || []);
+      
+      // First questions
+      updateFirstQuestions(data.first_questions || []);
+      
+      // Recent conversations
+      updateRecentConversations(data.recent_conversations || []);
+    }
+
+    function updateTimeChart(timeData) {
+      const container = document.getElementById('time-chart');
+      container.innerHTML = '';
+
+      if (Object.keys(timeData).length === 0) {
+        container.innerHTML = '<div class="loading">No time data available</div>';
+        return;
+      }
+
+      const maxCount = Math.max(...Object.values(timeData));
+      const hours = ['0-6', '6-12', '12-18', '18-24'];
+      
+      hours.forEach(hour => {
+        const count = timeData[hour] || 0;
+        const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
+        
+        const barItem = document.createElement('div');
+        barItem.className = 'bar-item';
+        barItem.innerHTML = `
+          <div class="bar-label">${hour}</div>
+          <div class="bar-visual">
+            <div class="bar-fill" style="width: ${percentage}%"></div>
+          </div>
+          <div class="bar-value">${count}</div>
+        `;
+        container.appendChild(barItem);
+      });
+    }
+
+    function updateMessageDistribution(msgData) {
+      const container = document.getElementById('message-distribution');
+      container.innerHTML = '';
+
+      if (Object.keys(msgData).length === 0) {
+        container.innerHTML = '<div class="loading">No message data available</div>';
+        return;
+      }
+
+      const maxCount = Math.max(...Object.values(msgData));
+      const ranges = ['1', '2-3', '4-5', '6-10', '11+'];
+      
+      ranges.forEach(range => {
+        const count = msgData[range] || 0;
+        const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
+        
+        const barItem = document.createElement('div');
+        barItem.className = 'bar-item';
+        barItem.innerHTML = `
+          <div class="bar-label">${range} msg</div>
+          <div class="bar-visual">
+            <div class="bar-fill" style="width: ${percentage}%"></div>
+          </div>
+          <div class="bar-value">${count}</div>
+        `;
+        container.appendChild(barItem);
+      });
+    }
+
+    function updateTopics(topics) {
+      const container = document.getElementById('topics-grid');
+      container.innerHTML = '';
+
+      if (topics.length === 0) {
+        container.innerHTML = '<div class="loading">No topics found</div>';
+        return;
+      }
+
+      topics.slice(0, 12).forEach(topic => {
+        const tag = document.createElement('div');
+        tag.className = 'topic-tag';
+        tag.textContent = `${topic.topic} (${topic.count})`;
+        container.appendChild(tag);
+      });
+    }
+
+    function updateFirstQuestions(questions) {
+      const container = document.getElementById('first-questions');
+      container.innerHTML = '';
+
+      if (questions.length === 0) {
+        container.innerHTML = '<div class="loading">No questions found</div>';
+        return;
+      }
+
+      const maxCount = Math.max(...questions.map(q => q.count));
+      
+      questions.slice(0, 5).forEach(q => {
+        const percentage = maxCount > 0 ? (q.count / maxCount) * 100 : 0;
+        const truncated = q.question.length > 60 ? 
+          q.question.substring(0, 60) + '...' : q.question;
+        
+        const barItem = document.createElement('div');
+        barItem.className = 'bar-item';
+        barItem.style.marginBottom = '12px';
+        barItem.innerHTML = `
+          <div class="bar-label" style="min-width: 200px; font-size: 0.8rem;" title="${q.question}">
+            ${truncated}
+          </div>
+          <div class="bar-visual">
+            <div class="bar-fill" style="width: ${percentage}%"></div>
+          </div>
+          <div class="bar-value">${q.count}</div>
+        `;
+        container.appendChild(barItem);
+      });
+    }
+
+    function updateRecentConversations(conversations) {
+      const container = document.getElementById('recent-conversations');
+      container.innerHTML = '';
+
+      if (conversations.length === 0) {
+        container.innerHTML = '<div class="loading">No recent conversations</div>';
+        return;
+      }
+
+      conversations.slice(0, 10).forEach(conv => {
+        const item = document.createElement('div');
+        item.className = 'conversation-item';
+        
+        const truncated = conv.first_message && conv.first_message.length > 80 ? 
+          conv.first_message.substring(0, 80) + '...' : (conv.first_message || 'No message');
+          
+        const timeAgo = conv.last_active ? 
+          formatTimeAgo(new Date(conv.last_active * 1000)) : 'Unknown time';
+        
+        item.innerHTML = `
+          <div class="conversation-first">"${truncated}"</div>
+          <div class="conversation-meta">
+            ${conv.message_count} messages • ${timeAgo}
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function formatTimeAgo(date) {
+      const now = new Date();
+      const diff = Math.floor((now - date) / 1000);
+      
+      if (diff < 60) return 'Just now';
+      if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+      return `${Math.floor(diff / 86400)} days ago`;
+    }
+
+    function showError(message) {
+      document.querySelector('.dashboard').innerHTML = `
+        <div class="card" style="grid-column: 1 / -1;">
+          <div class="error">${message}</div>
+        </div>
+      `;
+    }
+
+    // Auto-refresh every 60 seconds
+    function startAutoRefresh() {
+      refreshInterval = setInterval(loadAnalytics, 60000);
+    }
+
+    function stopAutoRefresh() {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+      }
+    }
+
+    // Initialize
+    loadAnalytics();
+    startAutoRefresh();
+
+    // Stop refresh when page is not visible
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopAutoRefresh();
+      } else {
+        startAutoRefresh();
+        loadAnalytics(); // Immediate refresh when returning
+      }
+    });
+  </script>
+</body>
+</html>

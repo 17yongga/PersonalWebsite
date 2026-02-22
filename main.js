@@ -94,4 +94,19 @@ if (mobileToggle && mobileNav) {
       closeMenu();
     }
   });
+
+  // Close menu when clicking outside
+  document.addEventListener("click", (event) => {
+    const isClickInsideNav = mobileNav.contains(event.target);
+    const isClickOnToggle = mobileToggle.contains(event.target);
+    
+    if (!isClickInsideNav && !isClickOnToggle && mobileNav.classList.contains("open")) {
+      closeMenu();
+    }
+  });
 }
+
+// Dynamic copyright year
+document.querySelectorAll('[data-i18n="footer.copyright"]').forEach(el => {
+  el.textContent = el.textContent.replace(/©\d{4}/, `©${new Date().getFullYear()}`);
+});

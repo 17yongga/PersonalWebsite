@@ -7,7 +7,10 @@ class PokerGame {
     this.currentTableId = null;
     this.tableState = null;
     this.mySeat = null;
-    this.pendingTableCreation = null; // Store table creation params for auto-join
+    this.pendingTableCreation = null;
+    this._destroyed = false;
+    this._socketListeners = [];
+    this._pendingBetAction = 'bet';
     this.init();
   }
 
@@ -25,9 +28,8 @@ class PokerGame {
               <i class="fas fa-plus"></i> Create Table
             </button>
           </div>
-          
           <div id="pokerTablesList" class="poker-tables-list">
-            <p class="loading-message">Loading tables...</p>
+            <p class="no-tables">No tables available. Create one to get started!</p>
           </div>
         </div>
 
@@ -37,7 +39,7 @@ class PokerGame {
           <div class="poker-modal-content">
             <div class="poker-modal-header">
               <h3>Create Poker Table</h3>
-              <button id="closeCreateTableBtn" class="btn-close-modal">×</button>
+              <button id="closeCreateTableBtn" class="btn-close-modal">&times;</button>
             </div>
             <div class="poker-modal-body">
               <div class="form-group">
@@ -60,13 +62,10 @@ class PokerGame {
                 <label>Max Buy-In</label>
                 <input type="number" id="maxBuyInInput" value="2000" min="100" step="10">
               </div>
-              <div class="form-group">
-                <label>
-                  <input type="checkbox" id="privateTableCheckbox">
-                  Private Table
-                </label>
+              <div class="form-group checkbox-group">
+                <label><input type="checkbox" id="privateTableCheckbox"> Private Table</label>
               </div>
-              <button id="confirmCreateTableBtn" type="button" class="btn btn-primary">Create Table</button>
+              <button id="confirmCreateTableBtn" type="button" class="btn btn-primary btn-full">Create Table</button>
             </div>
           </div>
         </div>
@@ -77,147 +76,147 @@ class PokerGame {
           <div class="poker-modal-content">
             <div class="poker-modal-header">
               <h3 id="joinTableTitle">Join Table</h3>
-              <button id="closeJoinTableBtn" class="btn-close-modal">×</button>
+              <button id="closeJoinTableBtn" class="btn-close-modal">&times;</button>
             </div>
             <div class="poker-modal-body">
-              <div id="joinTableInfo" class="table-info"></div>
+              <div id="joinTableInfo" class="join-table-info"></div>
               <div class="form-group">
                 <label>Buy-In Amount</label>
                 <input type="number" id="buyInInput" min="400" max="2000" value="400" step="10">
                 <div class="quick-buy-in">
-                  <button class="quick-buy-btn" data-amount="400">Min</button>
-                  <button class="quick-buy-btn" data-amount="1000">Mid</button>
-                  <button class="quick-buy-btn" data-amount="2000">Max</button>
+                  <button class="quick-buy-btn" data-amount="min">Min</button>
+                  <button class="quick-buy-btn" data-amount="mid">Mid</button>
+                  <button class="quick-buy-btn" data-amount="max">Max</button>
                 </div>
               </div>
-              <div id="availableSeats" class="available-seats">
-                <p>Select a seat (or leave empty for auto-assign):</p>
-                <div class="seats-selection"></div>
-              </div>
-              <button id="confirmJoinTableBtn" class="btn btn-primary">Join Table</button>
+              <button id="confirmJoinTableBtn" class="btn btn-primary btn-full">Join Table</button>
             </div>
           </div>
         </div>
 
         <!-- Table View -->
         <div id="pokerTable" class="poker-table-view hidden">
-          <div class="table-header">
-            <div class="table-info-header">
-              <h3 id="tableNameDisplay"></h3>
-              <div class="table-stakes">
-                <span>Blinds: <span id="blindsDisplay"></span></span>
-              </div>
+          <div class="poker-table-top-bar">
+            <div class="poker-table-info">
+              <span id="tableNameDisplay" class="table-name-label"></span>
+              <span class="table-blinds-label">Blinds: <span id="blindsDisplay"></span></span>
             </div>
-            <button id="leaveTableBtn" class="btn btn-secondary">Leave Table</button>
+            <button id="leaveTableBtn" class="btn btn-secondary btn-small">Leave Table</button>
           </div>
 
-          <div class="poker-table-container">
-            <!-- Community Cards -->
-            <div class="community-cards-area">
-              <div class="pot-display">
-                Pot: <span id="potAmount">0</span>
+          <!-- The Poker Table -->
+          <div class="poker-felt-wrapper">
+            <div class="poker-felt">
+              <!-- Pot & Community Cards (center) -->
+              <div class="felt-center">
+                <div class="pot-display">
+                  <span class="pot-icon">💰</span> Pot: <span id="potAmount" class="pot-value">0</span>
+                </div>
+                <div id="communityCards" class="community-cards"></div>
+                <div id="winnerAnnouncement" class="winner-announcement hidden"></div>
               </div>
-              <div id="communityCards" class="community-cards"></div>
-            </div>
 
-            <!-- Player Seats (arranged in a circle) -->
-            <div class="poker-seats-container">
-              <div class="poker-seat" data-seat="0">
-                <div class="seat-info">
-                  <div class="player-name"></div>
-                  <div class="player-chips"></div>
-                  <div class="player-bet"></div>
-                  <div class="seat-indicators"></div>
+              <!-- 6 Seats positioned around the felt -->
+              <div class="poker-seat seat-0" data-seat="0">
+                <div class="seat-cards"></div>
+                <div class="seat-panel">
+                  <div class="seat-name">Seat 1</div>
+                  <div class="seat-chips"></div>
+                  <div class="seat-badge-row"></div>
                 </div>
-                <div class="player-cards"></div>
+                <div class="seat-bet-chip"></div>
               </div>
-              <div class="poker-seat" data-seat="1">
-                <div class="seat-info">
-                  <div class="player-name"></div>
-                  <div class="player-chips"></div>
-                  <div class="player-bet"></div>
-                  <div class="seat-indicators"></div>
+              <div class="poker-seat seat-1" data-seat="1">
+                <div class="seat-cards"></div>
+                <div class="seat-panel">
+                  <div class="seat-name">Seat 2</div>
+                  <div class="seat-chips"></div>
+                  <div class="seat-badge-row"></div>
                 </div>
-                <div class="player-cards"></div>
+                <div class="seat-bet-chip"></div>
               </div>
-              <div class="poker-seat" data-seat="2">
-                <div class="seat-info">
-                  <div class="player-name"></div>
-                  <div class="player-chips"></div>
-                  <div class="player-bet"></div>
-                  <div class="seat-indicators"></div>
+              <div class="poker-seat seat-2" data-seat="2">
+                <div class="seat-cards"></div>
+                <div class="seat-panel">
+                  <div class="seat-name">Seat 3</div>
+                  <div class="seat-chips"></div>
+                  <div class="seat-badge-row"></div>
                 </div>
-                <div class="player-cards"></div>
+                <div class="seat-bet-chip"></div>
               </div>
-              <div class="poker-seat" data-seat="3">
-                <div class="seat-info">
-                  <div class="player-name"></div>
-                  <div class="player-chips"></div>
-                  <div class="player-bet"></div>
-                  <div class="seat-indicators"></div>
+              <div class="poker-seat seat-3" data-seat="3">
+                <div class="seat-cards"></div>
+                <div class="seat-panel">
+                  <div class="seat-name">Seat 4</div>
+                  <div class="seat-chips"></div>
+                  <div class="seat-badge-row"></div>
                 </div>
-                <div class="player-cards"></div>
+                <div class="seat-bet-chip"></div>
               </div>
-              <div class="poker-seat" data-seat="4">
-                <div class="seat-info">
-                  <div class="player-name"></div>
-                  <div class="player-chips"></div>
-                  <div class="player-bet"></div>
-                  <div class="seat-indicators"></div>
+              <div class="poker-seat seat-4" data-seat="4">
+                <div class="seat-cards"></div>
+                <div class="seat-panel">
+                  <div class="seat-name">Seat 5</div>
+                  <div class="seat-chips"></div>
+                  <div class="seat-badge-row"></div>
                 </div>
-                <div class="player-cards"></div>
+                <div class="seat-bet-chip"></div>
               </div>
-              <div class="poker-seat" data-seat="5">
-                <div class="seat-info">
-                  <div class="player-name"></div>
-                  <div class="player-chips"></div>
-                  <div class="player-bet"></div>
-                  <div class="seat-indicators"></div>
+              <div class="poker-seat seat-5" data-seat="5">
+                <div class="seat-cards"></div>
+                <div class="seat-panel">
+                  <div class="seat-name">Seat 6</div>
+                  <div class="seat-chips"></div>
+                  <div class="seat-badge-row"></div>
                 </div>
-                <div class="player-cards"></div>
+                <div class="seat-bet-chip"></div>
               </div>
             </div>
+          </div>
+
+          <!-- Game Status (waiting) -->
+          <div id="gameStatus" class="poker-game-status">
+            <p id="statusMessage">Waiting for players...</p>
+            <button id="startHandBtn" class="btn btn-primary hidden">Deal Cards</button>
           </div>
 
           <!-- Action Controls -->
           <div id="pokerActions" class="poker-actions hidden">
-            <div class="action-info">
-              <div id="actionTimer" class="action-timer"></div>
-              <div id="currentBetInfo" class="current-bet-info"></div>
+            <div class="poker-actions-info">
+              <span id="currentBetInfo"></span>
             </div>
-            <div class="action-buttons">
-              <button id="foldBtn" class="btn-action btn-fold">Fold</button>
-              <button id="checkBtn" class="btn-action btn-check hidden">Check</button>
-              <button id="callBtn" class="btn-action btn-call hidden">Call <span id="callAmount"></span></button>
-              <button id="betBtn" class="btn-action btn-bet hidden">Bet</button>
-              <button id="raiseBtn" class="btn-action btn-raise hidden">Raise</button>
-              <button id="allInBtn" class="btn-action btn-allin">All-In</button>
+            <div class="poker-action-btns">
+              <button id="foldBtn" class="pa-btn pa-fold">Fold</button>
+              <button id="checkBtn" class="pa-btn pa-check hidden">Check</button>
+              <button id="callBtn" class="pa-btn pa-call hidden">Call <span id="callAmount"></span></button>
+              <button id="betBtn" class="pa-btn pa-bet hidden">Bet</button>
+              <button id="raiseBtn" class="pa-btn pa-raise hidden">Raise</button>
+              <button id="allInBtn" class="pa-btn pa-allin">All In</button>
             </div>
-            <div id="betControls" class="bet-controls hidden">
+            <div id="betControls" class="poker-bet-controls hidden">
               <input type="range" id="betSlider" min="0" max="1000" value="0" step="10">
-              <div class="bet-amount-display">
-                <span id="betAmountDisplay">0</span>
-                <div class="quick-bet-presets">
-                  <button class="quick-preset" data-preset="min">Min</button>
-                  <button class="quick-preset" data-preset="pot">Pot</button>
-                  <button class="quick-preset" data-preset="max">Max</button>
+              <div class="bet-ctrl-row">
+                <input type="number" id="betAmountInput" value="0" min="0" step="10">
+                <div class="bet-presets">
+                  <button class="bp-btn" data-preset="min">Min</button>
+                  <button class="bp-btn" data-preset="half">½ Pot</button>
+                  <button class="bp-btn" data-preset="pot">Pot</button>
+                  <button class="bp-btn" data-preset="max">All-In</button>
                 </div>
+                <button id="confirmBetBtn" class="btn btn-primary">Confirm</button>
               </div>
             </div>
           </div>
 
-          <!-- Waiting for Players / Game Status -->
-          <div id="gameStatus" class="game-status">
-            <p id="statusMessage">Waiting for players...</p>
-            <button id="startHandBtn" class="btn btn-primary hidden">Start Hand</button>
-          </div>
-
           <!-- Chat -->
-          <div class="poker-chat-container">
-            <div id="chatMessages" class="chat-messages"></div>
-            <div class="chat-input-container">
-              <input type="text" id="chatInput" placeholder="Type a message..." maxlength="200">
-              <button id="sendChatBtn" class="btn btn-small">Send</button>
+          <div class="poker-chat-section">
+            <div class="poker-chat-toggle-bar" id="chatToggle">💬 Chat</div>
+            <div class="poker-chat-body hidden" id="chatPanel">
+              <div id="chatMessages" class="poker-chat-msgs"></div>
+              <div class="poker-chat-input-row">
+                <input type="text" id="chatInput" placeholder="Type a message..." maxlength="200">
+                <button id="sendChatBtn" class="btn btn-primary btn-small">Send</button>
+              </div>
             </div>
           </div>
         </div>
@@ -228,637 +227,429 @@ class PokerGame {
     this.connectToServer();
   }
 
-  connectToServer() {
-    if (typeof io === 'undefined') {
-      setTimeout(() => this.connectToServer(), 100);
-      return;
-    }
+  // ---- Socket ----
 
+  connectToServer() {
+    if (this._destroyed) return;
     try {
       this.socket = this.casino.getSocket();
-      
       if (!this.socket) {
         const serverUrl = window.CASINO_SERVER_URL || window.location.origin;
         this.socket = io(serverUrl);
       }
-      
       this.setupSocketListeners();
-      
-      if (this.socket.connected) {
-        this.socket.emit('joinPokerLobby');
-      }
-    } catch (error) {
-      console.error('Error connecting to poker server:', error);
-    }
+      if (this.socket.connected) this.socket.emit('joinPokerLobby');
+    } catch (e) { console.error('[Poker] connect error:', e); }
   }
+
+  _on(evt, fn) { this.socket.on(evt, fn); this._socketListeners.push({evt,fn}); }
 
   setupSocketListeners() {
-    if (!this.socket) return;
+    if (!this.socket || this._destroyed) return;
+    for (const {evt,fn} of this._socketListeners) this.socket.off(evt, fn);
+    this._socketListeners = [];
 
-    // Remove all existing listeners to prevent accumulation (like other games do)
-    this.socket.removeAllListeners('connect');
-    this.socket.removeAllListeners('disconnect');
-    this.socket.removeAllListeners('connect_error');
-    this.socket.removeAllListeners('error');
-    this.socket.removeAllListeners('pokerTablesUpdate');
-    this.socket.removeAllListeners('pokerTableCreated');
-    this.socket.removeAllListeners('pokerTableState');
-    this.socket.removeAllListeners('pokerChatMessage');
-    this.socket.removeAllListeners('playerData');
-
-    this.socket.on('connect', () => {
-      this.socket.emit('joinPokerLobby');
+    this._on('connect', () => { if (!this._destroyed) this.socket.emit('joinPokerLobby'); });
+    this._on('pokerTablesUpdate', t => { if (!this._destroyed) this.renderTablesList(t); });
+    this._on('pokerTableCreated', ({tableId}) => {
+      if (this._destroyed) return;
+      const buyIn = this.pendingTableCreation?.minBuyIn;
+      this.pendingTableCreation = null;
+      if (buyIn) this.joinTable(tableId, buyIn, null);
     });
-
-    this.socket.on('pokerTablesUpdate', (tables) => {
-      this.renderTablesList(tables);
-    });
-
-    this.socket.on('pokerTableCreated', ({ tableId }) => {
-      // Auto-join the created table with the minBuyIn that was used to create it
-      const buyIn = this.pendingTableCreation ? this.pendingTableCreation.minBuyIn : null;
-      this.pendingTableCreation = null; // Clear after use
-      if (buyIn) {
-        this.joinTable(tableId, buyIn, null);
-      }
-    });
-
-    this.socket.on('pokerTableState', (state) => {
+    this._on('pokerTableState', state => {
+      if (this._destroyed) return;
       this.tableState = state;
       if (state.tableId === this.currentTableId) {
-        // Show table view BEFORE rendering
-        const lobbyEl = document.getElementById('pokerLobby');
-        const tableEl = document.getElementById('pokerTable');
-        if (lobbyEl && tableEl) {
-          lobbyEl.classList.add('hidden');
-          tableEl.classList.remove('hidden');
-        }
-        try {
-          this.renderTable(state);
-        } catch (error) {
-          console.error('Error in pokerTableState handler:', error);
-        }
+        document.getElementById('pokerLobby')?.classList.add('hidden');
+        document.getElementById('pokerTable')?.classList.remove('hidden');
+        try { this.renderTable(state); } catch(e) { console.error('[Poker] render error:', e); }
       }
     });
-
-    this.socket.on('pokerChatMessage', ({ username, message, timestamp }) => {
-      this.addChatMessage(username, message, timestamp);
-    });
-
-    this.socket.on('error', (error) => {
-      alert(error);
+    this._on('pokerChatMessage', ({username, message}) => {
+      if (!this._destroyed) this.addChatMessage(username, message);
     });
   }
+
+  // ---- Event Listeners ----
 
   attachEventListeners() {
-    // Lobby
-    const createTableBtn = document.getElementById('createTableBtn');
-    createTableBtn?.addEventListener('click', () => {
-      const modal = document.getElementById('createTableModal');
-      modal?.classList.remove('hidden');
+    const $ = id => document.getElementById(id);
+    $('createTableBtn')?.addEventListener('click', () => $('createTableModal')?.classList.remove('hidden'));
+    $('closeCreateTableBtn')?.addEventListener('click', () => $('createTableModal')?.classList.add('hidden'));
+    $('confirmCreateTableBtn')?.addEventListener('click', e => { e.preventDefault(); this.createTable(); });
+    $('closeJoinTableBtn')?.addEventListener('click', () => $('joinTableModal')?.classList.add('hidden'));
+    $('confirmJoinTableBtn')?.addEventListener('click', () => this.confirmJoinTable());
+    document.querySelectorAll('.poker-modal-overlay').forEach(o => o.addEventListener('click', () => o.closest('.poker-modal')?.classList.add('hidden')));
+    $('leaveTableBtn')?.addEventListener('click', () => this.leaveTable());
+    $('startHandBtn')?.addEventListener('click', () => this.startHand());
+    $('foldBtn')?.addEventListener('click', () => this.pokerAction('fold'));
+    $('checkBtn')?.addEventListener('click', () => this.pokerAction('check'));
+    $('callBtn')?.addEventListener('click', () => this.pokerAction('call'));
+    $('betBtn')?.addEventListener('click', () => { this._pendingBetAction = 'bet'; this.showBetControls(); });
+    $('raiseBtn')?.addEventListener('click', () => { this._pendingBetAction = 'raise'; this.showBetControls(); });
+    $('allInBtn')?.addEventListener('click', () => this.pokerAction('allin'));
+    $('confirmBetBtn')?.addEventListener('click', () => {
+      const amt = parseInt($('betAmountInput').value) || 0;
+      if (amt > 0) { this.pokerAction(this._pendingBetAction || 'bet', amt); $('betControls')?.classList.add('hidden'); }
     });
-
-    document.getElementById('closeCreateTableBtn')?.addEventListener('click', () => {
-      document.getElementById('createTableModal').classList.add('hidden');
-    });
-
-    const confirmBtn = document.getElementById('confirmCreateTableBtn');
-    confirmBtn?.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.createTable();
-    });
-
-    document.getElementById('closeJoinTableBtn')?.addEventListener('click', () => {
-      document.getElementById('joinTableModal').classList.add('hidden');
-    });
-
-    document.getElementById('confirmJoinTableBtn')?.addEventListener('click', () => {
-      this.confirmJoinTable();
-    });
-
-    // Table view
-    document.getElementById('leaveTableBtn')?.addEventListener('click', () => {
-      this.leaveTable();
-    });
-
-    document.getElementById('startHandBtn')?.addEventListener('click', () => {
-      this.startHand();
-    });
-
-    // Action buttons
-    document.getElementById('foldBtn')?.addEventListener('click', () => {
-      this.pokerAction('fold');
-    });
-
-    document.getElementById('checkBtn')?.addEventListener('click', () => {
-      this.pokerAction('check');
-    });
-
-    document.getElementById('callBtn')?.addEventListener('click', () => {
-      this.pokerAction('call');
-    });
-
-    document.getElementById('betBtn')?.addEventListener('click', () => {
-      this.showBetControls();
-      this.pokerAction('bet');
-    });
-
-    document.getElementById('raiseBtn')?.addEventListener('click', () => {
-      this.showBetControls();
-      this.pokerAction('raise');
-    });
-
-    document.getElementById('allInBtn')?.addEventListener('click', () => {
-      this.pokerAction('allin');
-    });
-
-    // Bet controls
-    const betSlider = document.getElementById('betSlider');
-    betSlider?.addEventListener('input', (e) => {
-      const amount = parseInt(e.target.value);
-      document.getElementById('betAmountDisplay').textContent = amount;
-    });
-
-    document.querySelectorAll('.quick-preset').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const preset = e.target.dataset.preset;
-        this.setBetPreset(preset);
-      });
-    });
-
-    // Chat
-    document.getElementById('sendChatBtn')?.addEventListener('click', () => {
-      this.sendChatMessage();
-    });
-
-    document.getElementById('chatInput')?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        this.sendChatMessage();
-      }
-    });
-
-    // Quick buy-in buttons
-    document.querySelectorAll('.quick-buy-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const amount = parseInt(e.target.dataset.amount);
-        document.getElementById('buyInInput').value = amount;
-      });
-    });
-
-    // Small blind / Big blind sync
-    document.getElementById('smallBlindInput')?.addEventListener('input', (e) => {
+    const slider = $('betSlider'), numInput = $('betAmountInput');
+    slider?.addEventListener('input', e => { if (numInput) numInput.value = e.target.value; });
+    numInput?.addEventListener('input', e => { if (slider) slider.value = e.target.value; });
+    document.querySelectorAll('.bp-btn').forEach(b => b.addEventListener('click', e => this.setBetPreset(e.target.dataset.preset)));
+    $('chatToggle')?.addEventListener('click', () => $('chatPanel')?.classList.toggle('hidden'));
+    $('sendChatBtn')?.addEventListener('click', () => this.sendChatMessage());
+    $('chatInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') this.sendChatMessage(); });
+    document.querySelectorAll('.quick-buy-btn').forEach(b => b.addEventListener('click', e => {
+      const p = e.target.dataset.amount, t = this.selectedTable; if (!t) return;
+      const inp = $('buyInInput');
+      if (p === 'min') inp.value = t.minBuyIn;
+      else if (p === 'max') inp.value = t.maxBuyIn;
+      else inp.value = Math.floor((t.minBuyIn + t.maxBuyIn) / 2);
+    }));
+    $('smallBlindInput')?.addEventListener('input', e => {
       const sb = parseInt(e.target.value) || 10;
-      document.getElementById('bigBlindInput').value = sb * 2;
-      document.getElementById('minBuyInInput').value = sb * 40;
-      document.getElementById('maxBuyInInput').value = sb * 100;
+      $('bigBlindInput').value = sb * 2;
+      $('minBuyInInput').value = sb * 40;
+      $('maxBuyInInput').value = sb * 200;
     });
   }
 
-  renderTablesList(tables) {
-    const listEl = document.getElementById('pokerTablesList');
-    if (!listEl) return;
+  // ---- Lobby ----
 
-    if (tables.length === 0) {
-      listEl.innerHTML = '<p class="no-tables">No tables available. Create one to get started!</p>';
+  renderTablesList(tables) {
+    const el = document.getElementById('pokerTablesList');
+    if (!el) return;
+    if (!tables || tables.length === 0) {
+      el.innerHTML = '<p class="no-tables">No tables available. Create one to get started!</p>';
       return;
     }
-
-    listEl.innerHTML = tables.map(table => `
-      <div class="poker-table-card" data-table-id="${table.tableId}">
-        <div class="table-card-header">
-          <h4>${table.tableName}</h4>
-          <span class="table-status ${table.gameState}">${table.gameState}</span>
+    el.innerHTML = tables.map(t => `
+      <div class="poker-table-card" data-table-id="${t.tableId}">
+        <div class="ptc-header">
+          <h4>${this.esc(t.tableName)}</h4>
+          <span class="ptc-status ${t.gameState}">${t.gameState === 'waiting' ? 'Open' : 'In Play'}</span>
         </div>
-        <div class="table-card-info">
-          <div class="info-row">
-            <span>Blinds:</span>
-            <span>${table.smallBlind}/${table.bigBlind}</span>
-          </div>
-          <div class="info-row">
-            <span>Buy-In:</span>
-            <span>${table.minBuyIn} - ${table.maxBuyIn}</span>
-          </div>
-          <div class="info-row">
-            <span>Players:</span>
-            <span>${table.playerCount}/${table.maxPlayers}</span>
-          </div>
+        <div class="ptc-stats">
+          <div><span>Blinds</span><span>${t.smallBlind}/${t.bigBlind}</span></div>
+          <div><span>Buy-In</span><span>${t.minBuyIn}-${t.maxBuyIn}</span></div>
+          <div><span>Players</span><span>${t.playerCount}/${t.maxPlayers}</span></div>
         </div>
-        <button class="btn btn-primary btn-join-table" data-table-id="${table.tableId}">
-          Join Table
-        </button>
+        <button class="btn btn-primary btn-full btn-join-table" data-table-id="${t.tableId}">Join Table</button>
       </div>
     `).join('');
-
-    // Attach join table listeners
-    listEl.querySelectorAll('.btn-join-table').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const tableId = e.target.dataset.tableId;
-        const table = tables.find(t => t.tableId === tableId);
-        this.showJoinTableModal(table);
-      });
-    });
+    el.querySelectorAll('.btn-join-table').forEach(b => b.addEventListener('click', e => {
+      const table = tables.find(t => t.tableId === e.target.dataset.tableId);
+      if (table) this.showJoinTableModal(table);
+    }));
   }
 
   showJoinTableModal(table) {
     this.selectedTable = table;
     document.getElementById('joinTableTitle').textContent = `Join ${table.tableName}`;
     document.getElementById('joinTableInfo').innerHTML = `
-      <div class="info-row"><span>Blinds:</span><span>${table.smallBlind}/${table.bigBlind}</span></div>
-      <div class="info-row"><span>Buy-In Range:</span><span>${table.minBuyIn} - ${table.maxBuyIn}</span></div>
-      <div class="info-row"><span>Players:</span><span>${table.playerCount}/${table.maxPlayers}</span></div>
+      <div><span>Blinds:</span><strong>${table.smallBlind}/${table.bigBlind}</strong></div>
+      <div><span>Buy-In:</span><strong>${table.minBuyIn} - ${table.maxBuyIn}</strong></div>
+      <div><span>Players:</span><strong>${table.playerCount}/${table.maxPlayers}</strong></div>
     `;
-    document.getElementById('buyInInput').min = table.minBuyIn;
-    document.getElementById('buyInInput').max = table.maxBuyIn;
-    document.getElementById('buyInInput').value = table.minBuyIn;
+    const inp = document.getElementById('buyInInput');
+    inp.min = table.minBuyIn; inp.max = table.maxBuyIn; inp.value = table.minBuyIn;
     document.getElementById('joinTableModal').classList.remove('hidden');
   }
 
   confirmJoinTable() {
     if (!this.selectedTable) return;
-
     const buyIn = parseInt(document.getElementById('buyInInput').value);
-    const seatSelect = document.querySelector('.seats-selection input[type="radio"]:checked');
-    const seat = seatSelect ? parseInt(seatSelect.value) : null;
-
     if (buyIn < this.selectedTable.minBuyIn || buyIn > this.selectedTable.maxBuyIn) {
       alert(`Buy-in must be between ${this.selectedTable.minBuyIn} and ${this.selectedTable.maxBuyIn}`);
       return;
     }
-
-    this.joinTable(this.selectedTable.tableId, buyIn, seat);
+    this.joinTable(this.selectedTable.tableId, buyIn, null);
     document.getElementById('joinTableModal').classList.add('hidden');
   }
 
   createTable() {
-    const tableName = document.getElementById('tableNameInput').value.trim() || 'My Table';
-    const smallBlind = parseInt(document.getElementById('smallBlindInput').value) || 10;
-    const bigBlind = parseInt(document.getElementById('bigBlindInput').value) || 20;
-    const minBuyIn = parseInt(document.getElementById('minBuyInInput').value) || 400;
-    const maxBuyIn = parseInt(document.getElementById('maxBuyInInput').value) || 2000;
-    const isPrivate = document.getElementById('privateTableCheckbox').checked;
-
-    if (bigBlind !== smallBlind * 2) {
-      alert('Big blind must be exactly 2x the small blind');
-      return;
-    }
-    
-    // Store creation params for auto-join after table is created
-    this.pendingTableCreation = { minBuyIn };
-    
-    this.socket.emit('createPokerTable', {
-      tableName,
-      smallBlind,
-      bigBlind,
-      minBuyIn,
-      maxBuyIn,
-      isPrivate
-    });
-
+    const name = document.getElementById('tableNameInput').value.trim() || 'My Table';
+    const sb = parseInt(document.getElementById('smallBlindInput').value) || 10;
+    const bb = parseInt(document.getElementById('bigBlindInput').value) || 20;
+    const minB = parseInt(document.getElementById('minBuyInInput').value) || 400;
+    const maxB = parseInt(document.getElementById('maxBuyInInput').value) || 2000;
+    const priv = document.getElementById('privateTableCheckbox').checked;
+    if (bb !== sb * 2) { alert('Big blind must be 2x the small blind'); return; }
+    this.pendingTableCreation = { minBuyIn: minB };
+    this.socket.emit('createPokerTable', { tableName: name, smallBlind: sb, bigBlind: bb, minBuyIn: minB, maxBuyIn: maxB, isPrivate: priv });
     document.getElementById('createTableModal').classList.add('hidden');
   }
 
-  joinTable(tableId, buyIn, seat) {
+  joinTable(tableId, buyIn) {
     this.currentTableId = tableId;
-    
-    if (buyIn !== null) {
-      this.socket.emit('joinPokerTable', { tableId, buyIn, seat });
-    }
+    if (buyIn !== null) this.socket.emit('joinPokerTable', { tableId, buyIn, seat: null });
   }
 
   leaveTable() {
     if (!this.currentTableId) return;
-
-    if (confirm('Are you sure you want to leave the table?')) {
-      this.socket.emit('leavePokerTable', { tableId: this.currentTableId });
-      this.currentTableId = null;
-      const pokerLobby = document.getElementById('pokerLobby');
-      const pokerTable = document.getElementById('pokerTable');
-      if (pokerLobby) pokerLobby.classList.remove('hidden');
-      if (pokerTable) pokerTable.classList.add('hidden');
-    }
+    this.socket.emit('leavePokerTable', { tableId: this.currentTableId });
+    this.currentTableId = null; this.mySeat = null;
+    document.getElementById('pokerLobby')?.classList.remove('hidden');
+    document.getElementById('pokerTable')?.classList.add('hidden');
+    this.socket.emit('joinPokerLobby');
   }
 
-  startHand() {
-    if (!this.currentTableId) return;
-    this.socket.emit('startPokerHand', { tableId: this.currentTableId });
-  }
+  startHand() { if (this.currentTableId) this.socket.emit('startPokerHand', { tableId: this.currentTableId }); }
 
   pokerAction(action, amount) {
     if (!this.currentTableId) return;
-
-    if (action === 'bet' || action === 'raise') {
-      amount = parseInt(document.getElementById('betAmountDisplay').textContent) || 0;
-      if (amount <= 0) {
-        alert('Please enter a valid bet amount');
-        return;
-      }
-    }
-
-    this.socket.emit('pokerAction', {
-      tableId: this.currentTableId,
-      action,
-      amount
-    });
+    this.socket.emit('pokerAction', { tableId: this.currentTableId, action, amount: amount || 0 });
+    document.getElementById('betControls')?.classList.add('hidden');
   }
 
   showBetControls() {
-    document.getElementById('betControls').classList.remove('hidden');
+    document.getElementById('betControls')?.classList.remove('hidden');
+    if (!this.tableState?.currentHand) return;
+    const hand = this.tableState.currentHand;
+    const myP = hand.players.find(p => p.socketId === this.socket?.id);
+    if (!myP) return;
+    const minBet = hand.currentBet > 0 ? hand.currentBet * 2 : (this.tableState.bigBlind || 20);
+    const maxBet = myP.chips + (myP.totalBetThisRound || 0);
+    const sl = document.getElementById('betSlider'), inp = document.getElementById('betAmountInput');
+    if (sl) { sl.min = minBet; sl.max = maxBet; sl.value = minBet; }
+    if (inp) inp.value = minBet;
   }
 
   setBetPreset(preset) {
-    if (!this.tableState || !this.tableState.currentHand) return;
-
+    if (!this.tableState?.currentHand) return;
     const hand = this.tableState.currentHand;
-    const myPlayer = this.tableState.players.find(p => p.socketId === this.socket.id);
-    if (!myPlayer) return;
-
-    let amount = 0;
-    switch (preset) {
-      case 'min':
-        amount = hand.currentBet * 2;
-        break;
-      case 'pot':
-        amount = hand.pot;
-        break;
-      case 'max':
-        amount = myPlayer.chips;
-        break;
-    }
-
-    document.getElementById('betSlider').max = myPlayer.chips;
-    document.getElementById('betSlider').value = amount;
-    document.getElementById('betAmountDisplay').textContent = amount;
+    const myP = hand.players.find(p => p.socketId === this.socket?.id);
+    if (!myP) return;
+    const maxBet = myP.chips + (myP.totalBetThisRound || 0);
+    const minBet = hand.currentBet > 0 ? hand.currentBet * 2 : (this.tableState.bigBlind || 20);
+    let amt = minBet;
+    if (preset === 'half') amt = Math.max(Math.floor(hand.pot / 2), minBet);
+    else if (preset === 'pot') amt = Math.max(hand.pot, minBet);
+    else if (preset === 'max') amt = maxBet;
+    amt = Math.min(amt, maxBet);
+    document.getElementById('betSlider').value = amt;
+    document.getElementById('betAmountInput').value = amt;
   }
 
   sendChatMessage() {
     if (!this.currentTableId) return;
-
-    const input = document.getElementById('chatInput');
-    const message = input.value.trim();
-    if (!message) return;
-
-    this.socket.emit('pokerChat', {
-      tableId: this.currentTableId,
-      message
-    });
-
-    input.value = '';
+    const inp = document.getElementById('chatInput');
+    const msg = inp.value.trim(); if (!msg) return;
+    this.socket.emit('pokerChat', { tableId: this.currentTableId, message: msg });
+    inp.value = '';
   }
 
-  addChatMessage(username, message, timestamp) {
-    const chatEl = document.getElementById('chatMessages');
-    if (!chatEl) return;
-
-    const messageEl = document.createElement('div');
-    messageEl.className = 'chat-message';
-    messageEl.innerHTML = `
-      <span class="chat-username">${this.escapeHtml(username)}:</span>
-      <span class="chat-text">${this.escapeHtml(message)}</span>
-    `;
-    chatEl.appendChild(messageEl);
-    chatEl.scrollTop = chatEl.scrollHeight;
+  addChatMessage(username, message) {
+    const el = document.getElementById('chatMessages');
+    if (!el) return;
+    const d = document.createElement('div'); d.className = 'poker-chat-msg';
+    d.innerHTML = `<strong>${this.esc(username)}:</strong> ${this.esc(message)}`;
+    el.appendChild(d); el.scrollTop = el.scrollHeight;
+    while (el.children.length > 100) el.removeChild(el.firstChild);
   }
+
+  // ---- Render Table ----
 
   renderTable(state) {
     if (!state) return;
-
-    try {
-    // Update header
     document.getElementById('tableNameDisplay').textContent = state.tableName;
     document.getElementById('blindsDisplay').textContent = `${state.smallBlind}/${state.bigBlind}`;
 
-    // Update seats
-    // Safety check: ensure seats is an array
-    if (!Array.isArray(state.seats)) {
-      console.error('state.seats is not an array:', state.seats);
-    } else {
-    state.seats.forEach((seatData, index) => {
-      try {
-        const seatEl = document.querySelector(`.poker-seat[data-seat="${index}"]`);
-        if (!seatEl) return;
+    // Find my seat
+    this.mySeat = null;
+    const myInfo = state.players.find(p => p.socketId === this.socket?.id);
+    if (myInfo) this.mySeat = myInfo.seat;
 
-      if (!seatData) {
-        // Empty seat
-        seatEl.classList.remove('occupied');
-        seatEl.querySelector('.player-name').textContent = '';
-        seatEl.querySelector('.player-chips').textContent = '';
-        seatEl.querySelector('.player-bet').textContent = '';
-        seatEl.querySelector('.player-cards').innerHTML = '';
-        seatEl.querySelector('.seat-indicators').innerHTML = '';
-      } else {
-        // Occupied seat
-        seatEl.classList.add('occupied');
-        seatEl.querySelector('.player-name').textContent = seatData.username;
-        seatEl.querySelector('.player-chips').textContent = `${seatData.chips} chips`;
-        seatEl.querySelector('.player-bet').textContent = seatData.betAmount > 0 ? `Bet: ${seatData.betAmount}` : '';
-        
-        // Check if this is me
-        const isMe = this.socket && state.players.find(p => p.socketId === this.socket.id)?.seat === index;
-        if (isMe) {
-          this.mySeat = index;
-          seatEl.classList.add('my-seat');
-        } else {
-          seatEl.classList.remove('my-seat');
-        }
+    // Render each seat
+    for (let i = 0; i < 6; i++) {
+      const seatEl = document.querySelector(`.poker-seat.seat-${i}`);
+      if (!seatEl) continue;
+      const sd = state.seats[i];
+      const hand = state.currentHand;
+      const hp = hand ? hand.players.find(p => p.seat === i) : null;
 
-        // Update indicators (dealer, blinds, etc.)
-        this.updateSeatIndicators(seatEl, state, index);
+      // Reset classes
+      seatEl.className = `poker-seat seat-${i}`;
+      if (!sd) {
+        seatEl.classList.add('empty');
+        seatEl.querySelector('.seat-name').textContent = `Seat ${i+1}`;
+        seatEl.querySelector('.seat-chips').textContent = '';
+        seatEl.querySelector('.seat-cards').innerHTML = '';
+        seatEl.querySelector('.seat-badge-row').innerHTML = '';
+        seatEl.querySelector('.seat-bet-chip').innerHTML = '';
+        continue;
       }
-      } catch (seatError) {
-        console.error(`Error processing seat ${index}:`, seatError);
+
+      seatEl.classList.add('occupied');
+      if (this.mySeat === i) seatEl.classList.add('is-me');
+      if (hp?.isFolded) seatEl.classList.add('folded');
+      if (hp?.isAllIn) seatEl.classList.add('all-in');
+
+      // Active turn
+      if (hand && hand.currentPlayerIndex !== undefined) {
+        const curP = hand.players[hand.currentPlayerIndex];
+        if (curP?.seat === i) seatEl.classList.add('active-turn');
       }
-    });
+
+      seatEl.querySelector('.seat-name').textContent = sd.username;
+      seatEl.querySelector('.seat-chips').textContent = `💰 ${sd.chips}`;
+
+      // Badges (D, SB, BB)
+      let badges = '';
+      if (hand) {
+        const dp = hand.players[hand.dealerPosition];
+        const sbp = hand.players[hand.smallBlindPosition];
+        const bbp = hand.players[hand.bigBlindPosition];
+        if (dp?.seat === i) badges += '<span class="badge badge-d">D</span>';
+        if (sbp?.seat === i) badges += '<span class="badge badge-sb">SB</span>';
+        if (bbp?.seat === i) badges += '<span class="badge badge-bb">BB</span>';
+      }
+      seatEl.querySelector('.seat-badge-row').innerHTML = badges;
+
+      // Bet chip
+      const betAmt = sd.betAmount || 0;
+      seatEl.querySelector('.seat-bet-chip').innerHTML = betAmt > 0
+        ? `<div class="chip-bet"><span class="chip-icon"></span>${betAmt}</div>` : '';
+
+      // Cards
+      this.renderSeatCards(seatEl, hp, i, state.gameState);
     }
 
-    // Update community cards and pot
+    // Community cards & pot
     if (state.currentHand) {
-      const hand = state.currentHand;
-      document.getElementById('potAmount').textContent = hand.pot;
-      this.renderCommunityCards(hand.communityCards);
-      this.renderPlayerCards(state);
+      document.getElementById('potAmount').textContent = state.currentHand.pot;
+      this.renderCommunityCards(state.currentHand.communityCards || []);
       this.updateActionControls(state);
     } else {
       document.getElementById('potAmount').textContent = '0';
-      document.getElementById('communityCards').innerHTML = '';
-      document.getElementById('pokerActions').classList.add('hidden');
-      
-      // Show start button if we have enough players
-      const activePlayers = state.players.filter(p => p.isActive);
-      if (activePlayers.length >= 2 && state.gameState === 'waiting') {
-        document.getElementById('startHandBtn').classList.remove('hidden');
-        document.getElementById('statusMessage').textContent = 'Ready to start. Click Start Hand when ready.';
-      } else {
-        document.getElementById('startHandBtn').classList.add('hidden');
-        document.getElementById('statusMessage').textContent = `Waiting for players... (${activePlayers.length}/2)`;
-      }
+      document.getElementById('communityCards').innerHTML = this.renderPlaceholderCards(5);
+      document.getElementById('pokerActions')?.classList.add('hidden');
+      document.getElementById('betControls')?.classList.add('hidden');
     }
 
-    // Update game status
-    if (state.gameState === 'betting' || state.gameState === 'dealing') {
-      document.getElementById('gameStatus').classList.add('hidden');
+    // Winner
+    this.renderWinners(state);
+
+    // Game status
+    if (state.currentHand && state.gameState !== 'showdown') {
+      document.getElementById('gameStatus')?.classList.add('hidden');
+    } else if (state.gameState === 'showdown') {
+      document.getElementById('gameStatus')?.classList.add('hidden');
     } else {
-      document.getElementById('gameStatus').classList.remove('hidden');
-    }
-    
-    } catch (error) {
-      console.error('Error rendering table:', error);
+      document.getElementById('gameStatus')?.classList.remove('hidden');
+      const active = state.players.filter(p => p.isActive);
+      if (active.length >= 2) {
+        document.getElementById('startHandBtn')?.classList.remove('hidden');
+        document.getElementById('statusMessage').textContent = `${active.length} players ready — click Deal Cards!`;
+      } else {
+        document.getElementById('startHandBtn')?.classList.add('hidden');
+        document.getElementById('statusMessage').textContent = `Waiting for players... (${active.length}/2 minimum)`;
+      }
     }
   }
 
-  updateSeatIndicators(seatEl, state, seatIndex) {
-    const indicatorsEl = seatEl.querySelector('.seat-indicators');
-    if (!state.currentHand) {
-      indicatorsEl.innerHTML = '';
-      return;
-    }
+  // ---- Card Rendering ----
 
-    const hand = state.currentHand;
-    let indicators = [];
+  renderSeatCards(seatEl, hp, seatIdx, gameState) {
+    const container = seatEl.querySelector('.seat-cards');
+    if (!hp || !hp.cards || hp.cards.length === 0) { container.innerHTML = ''; return; }
 
-    // Convert player indices to seat numbers
-    const dealerPlayer = hand.players[hand.dealerPosition];
-    if (dealerPlayer && dealerPlayer.seat === seatIndex) {
-      indicators.push('<span class="indicator dealer">D</span>');
-    }
-    
-    const sbPlayer = hand.players[hand.smallBlindPosition];
-    if (sbPlayer && sbPlayer.seat === seatIndex) {
-      indicators.push('<span class="indicator small-blind">SB</span>');
-    }
-    
-    const bbPlayer = hand.players[hand.bigBlindPosition];
-    if (bbPlayer && bbPlayer.seat === seatIndex) {
-      indicators.push('<span class="indicator big-blind">BB</span>');
-    }
-    
-    if (hand.currentPlayerIndex !== undefined) {
-      const currentPlayer = hand.players[hand.currentPlayerIndex];
-      if (currentPlayer && currentPlayer.seat === seatIndex) {
-        indicators.push('<span class="indicator current-player">●</span>');
+    const isMe = this.mySeat === seatIdx;
+    const isShowdown = gameState === 'showdown';
+    let html = '';
+    for (const card of hp.cards) {
+      if (card === '??' || card === '?') {
+        html += this.cardBackHTML();
+      } else if (isMe || (isShowdown && !hp.isFolded)) {
+        html += this.cardHTML(card, isMe);
+      } else {
+        html += this.cardBackHTML();
       }
     }
+    // Hand label at showdown
+    if (isShowdown && hp.handResult && !hp.isFolded) {
+      html += `<div class="hand-label">${hp.handResult.name}</div>`;
+    }
+    container.innerHTML = html;
+  }
 
-    indicatorsEl.innerHTML = indicators.join('');
+  cardHTML(cardStr, highlight) {
+    if (!cardStr || cardStr.length < 2) return '';
+    const r = cardStr[0], s = cardStr[1];
+    const rankMap = {'2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','T':'10','J':'J','Q':'Q','K':'K','A':'A'};
+    const suitMap = {'h':'♥','d':'♦','c':'♣','s':'♠'};
+    const color = (s === 'h' || s === 'd') ? 'red' : 'black';
+    const cls = `playing-card ${color}${highlight ? ' my-card' : ''}`;
+    return `<div class="${cls}">
+      <div class="card-corner card-tl"><span class="card-rank">${rankMap[r]||r}</span><span class="card-suit-sm">${suitMap[s]||s}</span></div>
+      <div class="card-center-suit">${suitMap[s]||s}</div>
+      <div class="card-corner card-br"><span class="card-rank">${rankMap[r]||r}</span><span class="card-suit-sm">${suitMap[s]||s}</span></div>
+    </div>`;
+  }
+
+  cardBackHTML() {
+    return `<div class="playing-card card-back"><div class="card-back-pattern"></div></div>`;
+  }
+
+  renderPlaceholderCards(n) {
+    let html = '';
+    for (let i = 0; i < n; i++) html += '<div class="playing-card card-placeholder"></div>';
+    return html;
   }
 
   renderCommunityCards(cards) {
-    const container = document.getElementById('communityCards');
-    if (!container) return;
-
-    container.innerHTML = cards.map(card => `
-      <div class="card ${this.getCardSuit(card)}">${this.formatCard(card)}</div>
-    `).join('');
+    const el = document.getElementById('communityCards');
+    if (!el) return;
+    let html = '';
+    for (let i = 0; i < 5; i++) {
+      if (i < cards.length) html += this.cardHTML(cards[i], false);
+      else html += '<div class="playing-card card-placeholder"></div>';
+    }
+    el.innerHTML = html;
   }
 
-  renderPlayerCards(state) {
-    if (!state.currentHand) return;
-
-    state.seats.forEach((seatData, index) => {
-      const seatEl = document.querySelector(`.poker-seat[data-seat="${index}"]`);
-      if (!seatEl || !seatData) return;
-
-      const player = state.currentHand.players.find(p => p.seat === index);
-      if (!player || !player.cards || player.cards.length === 0) {
-        seatEl.querySelector('.player-cards').innerHTML = '';
-        return;
-      }
-
-      const isMe = this.mySeat === index;
-      const isShowdown = state.gameState === 'showdown';
-      
-      // Show cards for me always, for opponents only during showdown
-      const cardsHtml = player.cards.map(card => {
-        if (isMe) {
-          return `<div class="card ${this.getCardSuit(card)} my-card">${this.formatCard(card)}</div>`;
-        } else if (isShowdown && !player.isFolded) {
-          return `<div class="card ${this.getCardSuit(card)} opponent-card">${this.formatCard(card)}</div>`;
-        } else {
-          return `<div class="card opponent-card">🂠</div>`;
-        }
-      }).join('');
-
-      seatEl.querySelector('.player-cards').innerHTML = cardsHtml;
-    });
+  renderWinners(state) {
+    const el = document.getElementById('winnerAnnouncement');
+    if (!el) return;
+    if (state.gameState === 'showdown' && state.currentHand?.winners) {
+      el.innerHTML = state.currentHand.winners.map(w =>
+        `<div class="winner-line">🏆 <strong>${this.esc(w.username)}</strong> wins ${w.amount} — ${w.handName}</div>`
+      ).join('');
+      el.classList.remove('hidden');
+    } else {
+      el.classList.add('hidden'); el.innerHTML = '';
+    }
   }
 
   updateActionControls(state) {
-    if (!state.currentHand) {
-      document.getElementById('pokerActions').classList.add('hidden');
-      return;
-    }
+    const hand = state?.currentHand;
+    if (!hand) { document.getElementById('pokerActions')?.classList.add('hidden'); return; }
+    const myP = hand.players.find(p => p.socketId === this.socket?.id);
+    if (!myP || myP.isFolded || myP.isAllIn) { document.getElementById('pokerActions')?.classList.add('hidden'); return; }
+    const isMyTurn = hand.currentPlayerIndex !== undefined && hand.players[hand.currentPlayerIndex]?.socketId === this.socket?.id;
+    if (!isMyTurn) { document.getElementById('pokerActions')?.classList.add('hidden'); return; }
 
-    const hand = state.currentHand;
-    const myPlayer = hand.players.find(p => p.socketId === this.socket.id);
-    if (!myPlayer || myPlayer.isFolded || myPlayer.isAllIn) {
-      document.getElementById('pokerActions').classList.add('hidden');
-      return;
-    }
-
-    // Check if it's my turn
-    const isMyTurn = hand.currentPlayerIndex !== undefined && 
-                     hand.players[hand.currentPlayerIndex]?.socketId === this.socket.id;
-
-    if (!isMyTurn) {
-      document.getElementById('pokerActions').classList.add('hidden');
-      return;
-    }
-
-    document.getElementById('pokerActions').classList.remove('hidden');
-    document.getElementById('betControls').classList.add('hidden');
-
-    // Update button visibility
-    const canCheck = myPlayer.totalBetThisRound >= hand.currentBet;
-    document.getElementById('checkBtn').classList.toggle('hidden', !canCheck);
-    
-    const callAmount = hand.currentBet - myPlayer.totalBetThisRound;
-    const canCall = callAmount > 0 && callAmount <= myPlayer.chips;
-    document.getElementById('callBtn').classList.toggle('hidden', !canCall);
-    if (canCall) {
-      document.getElementById('callAmount').textContent = callAmount;
-    }
-
-    const canBet = hand.currentBet === 0;
-    document.getElementById('betBtn').classList.toggle('hidden', !canBet);
-
-    const canRaise = hand.currentBet > 0 && myPlayer.chips > callAmount;
-    document.getElementById('raiseBtn').classList.toggle('hidden', !canRaise);
-
-    // Update bet slider
-    const maxBet = myPlayer.chips;
-    document.getElementById('betSlider').max = maxBet;
-    document.getElementById('betSlider').value = Math.min(hand.currentBet * 2, maxBet);
-    document.getElementById('betAmountDisplay').textContent = document.getElementById('betSlider').value;
-
-    // Update current bet info
-    document.getElementById('currentBetInfo').textContent = `Current bet: ${hand.currentBet}, Your bet: ${myPlayer.totalBetThisRound}`;
+    document.getElementById('pokerActions')?.classList.remove('hidden');
+    document.getElementById('betControls')?.classList.add('hidden');
+    const toCall = hand.currentBet - (myP.totalBetThisRound || 0);
+    document.getElementById('checkBtn')?.classList.toggle('hidden', toCall > 0);
+    document.getElementById('callBtn')?.classList.toggle('hidden', toCall <= 0);
+    if (toCall > 0) document.getElementById('callAmount').textContent = Math.min(toCall, myP.chips);
+    document.getElementById('betBtn')?.classList.toggle('hidden', hand.currentBet > 0);
+    document.getElementById('raiseBtn')?.classList.toggle('hidden', hand.currentBet === 0 || myP.chips <= toCall);
+    document.getElementById('currentBetInfo').textContent =
+      `Bet: ${hand.currentBet} · Your bet: ${myP.totalBetThisRound||0} · Chips: ${myP.chips}`;
   }
 
-  formatCard(cardString) {
-    if (!cardString || cardString.length < 2) return '';
-    const rank = cardString[0];
-    const suit = cardString[1];
-    const suitSymbols = { 'h': '♥', 'd': '♦', 'c': '♣', 's': '♠' };
-    return `${rank}${suitSymbols[suit] || ''}`;
-  }
-
-  getCardSuit(cardString) {
-    if (!cardString || cardString.length < 2) return '';
-    const suit = cardString[1];
-    return `suit-${suit}`;
-  }
-
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
+  esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
   destroy() {
-    if (this.currentTableId) {
-      this.leaveTable();
-    }
-    // Clean up socket listeners if needed
+    this._destroyed = true;
+    if (this.socket) for (const {evt,fn} of this._socketListeners) this.socket.off(evt, fn);
+    this._socketListeners = [];
+    if (this.currentTableId && this.socket) this.socket.emit('leavePokerTable', { tableId: this.currentTableId });
+    this.currentTableId = null; this.mySeat = null;
   }
 }
 

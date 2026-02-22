@@ -81,6 +81,7 @@ class TransactionCreate(BaseModel):
     merchant: Optional[str] = None
     category: str
     description: Optional[str] = None
+    is_shared: bool = True
     transaction_date: Optional[datetime] = None
 
 
@@ -92,6 +93,7 @@ class TransactionResponse(BaseModel):
     category: str
     description: Optional[str]
     items: Optional[List[Dict]]
+    is_shared: bool
     transaction_date: datetime
 
     model_config = {"from_attributes": True}
@@ -131,6 +133,8 @@ class UserResponse(BaseModel):
 
 class SpendingSummary(BaseModel):
     total_spent: float
+    shared_spent: float
+    individual_spent: float
     total_budget: float
     remaining_budget: float
     by_category: Dict[str, Dict[str, float]]
@@ -216,6 +220,7 @@ async def create_transaction(
         merchant=transaction.merchant,
         category=transaction.category,
         description=transaction.description,
+        is_shared=transaction.is_shared,
         transaction_date=transaction.transaction_date or datetime.utcnow(),
     )
     db.add(txn)
@@ -276,6 +281,7 @@ async def upload_receipt(
             description=extracted_data.get("description"),
             receipt_image_path=file_path,
             items=extracted_data.get("items", []),
+            is_shared=True,  # Default to shared for receipt uploads
             transaction_date=extracted_data.get("date") or datetime.utcnow(),
         )
         db.add(txn)
@@ -299,6 +305,7 @@ async def get_transactions(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     category: Optional[str] = None,
+    is_shared: Optional[bool] = None,
     limit: int = 100,
     db: AsyncSession = Depends(get_db),
 ):
@@ -310,6 +317,8 @@ async def get_transactions(
         query = query.where(Transaction.transaction_date <= end_date)
     if category:
         query = query.where(Transaction.category == category)
+    if is_shared is not None:
+        query = query.where(Transaction.is_shared == is_shared)
     
     query = query.order_by(Transaction.transaction_date.desc()).limit(limit)
     
@@ -436,11 +445,13 @@ async def get_spending_summary(
     )
     transactions = txn_result.scalars().all()
     
-    # Calculate spending by category
+    # Calculate spending by category and shared/individual split
     spending_by_category = calculate_spending_by_category(transactions)
     
     total_budget = sum(budgets.values())
     total_spent = sum(t.amount for t in transactions)
+    shared_spent = sum(t.amount for t in transactions if t.is_shared)
+    individual_spent = sum(t.amount for t in transactions if not t.is_shared)
     
     by_category = {}
     for category in set(list(budgets.keys()) + list(spending_by_category.keys())):
@@ -454,6 +465,8 @@ async def get_spending_summary(
     
     return SpendingSummary(
         total_spent=total_spent,
+        shared_spent=shared_spent,
+        individual_spent=individual_spent,
         total_budget=total_budget,
         remaining_budget=total_budget - total_spent,
         by_category=by_category,

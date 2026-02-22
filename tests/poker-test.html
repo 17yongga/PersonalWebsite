@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poker UI Visual Test</title>
+  <style>
+    :root {
+      --color-text: #e2e8f0;
+      --color-muted: #94a3b8;
+      --color-primary: #38bdf8;
+      --color-primary-soft: rgba(56, 189, 248, 0.15);
+      --color-surface: #1e293b;
+      --color-bg: #0f172a;
+    }
+    html[data-theme="light"] {
+      --color-text: #1e293b;
+      --color-muted: #64748b;
+      --color-primary: #0284c7;
+      --color-primary-soft: rgba(2, 132, 199, 0.15);
+      --color-surface: #f8fafc;
+      --color-bg: #ffffff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    h1 { text-align: center; margin-bottom: 1rem; color: var(--color-primary); }
+    .controls {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .controls button {
+      padding: 0.5rem 1rem;
+      margin: 0.25rem;
+      border: 2px solid var(--color-primary);
+      border-radius: 8px;
+      background: var(--color-primary-soft);
+      color: var(--color-text);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .controls button:hover {
+      background: var(--color-primary);
+      color: #fff;
+    }
+    .btn { padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: var(--color-primary); color: #fff; }
+    .btn-secondary { background: rgba(148, 163, 184, 0.3); color: var(--color-text); border: 1px solid rgba(148, 163, 184, 0.4); }
+    .btn-small { padding: 0.3rem 0.7rem; font-size: 0.85rem; }
+    .hidden { display: none !important; }
+    .game-view { width: 100%; }
+  </style>
+  <link rel="stylesheet" href="../games/games.css">
+</head>
+<body>
+  <h1>🃏 Poker UI Visual Test</h1>
+  <div class="controls">
+    <button onclick="toggleTheme()">Toggle Light/Dark</button>
+    <button onclick="showLobby()">Show Lobby</button>
+    <button onclick="showTable()">Show Table</button>
+    <button onclick="showShowdown()">Show Showdown</button>
+    <button onclick="showActions()">Show Actions</button>
+  </div>
+
+  <div id="pokerGame" class="game-view">
+    <!-- Poker JS will inject content here -->
+  </div>
+
+  <script>
+    // Mock casino manager and socket
+    const mockSocket = {
+      id: 'mock-socket-1',
+      connected: true,
+      _handlers: {},
+      on(event, handler) { this._handlers[event] = handler; },
+      off(event, handler) { delete this._handlers[event]; },
+      emit(event, data) { 
+        console.log('[Mock Socket] emit:', event, data);
+        if (event === 'joinPokerLobby') {
+          setTimeout(() => {
+            if (this._handlers.pokerTablesUpdate) {
+              this._handlers.pokerTablesUpdate([
+                { tableId: 'poker_1', tableName: 'High Rollers', smallBlind: 25, bigBlind: 50, minBuyIn: 1000, maxBuyIn: 5000, playerCount: 3, maxPlayers: 6, gameState: 'betting' },
+                { tableId: 'poker_2', tableName: 'Beginner Table', smallBlind: 5, bigBlind: 10, minBuyIn: 200, maxBuyIn: 1000, playerCount: 1, maxPlayers: 6, gameState: 'waiting' },
+                { tableId: 'poker_3', tableName: "Gary's Table", smallBlind: 10, bigBlind: 20, minBuyIn: 400, maxBuyIn: 2000, playerCount: 5, maxPlayers: 6, gameState: 'dealing' },
+              ]);
+            }
+          }, 100);
+        }
+      },
+      removeAllListeners() {}
+    };
+
+    window.CASINO_SERVER_URL = 'http://localhost:3001';
+    
+    const mockCasino = {
+      getSocket() { return mockSocket; },
+      credits: 10000,
+      username: 'TestPlayer'
+    };
+
+    // Mock io
+    window.io = function() { return mockSocket; };
+
+    // Load the poker game
+  </script>
+  <script src="../games/poker-casino.js"></script>
+  <script>
+    let pokerGame;
+    
+    function initGame() {
+      pokerGame = new PokerGame(mockCasino);
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+    }
+
+    function showLobby() {
+      document.getElementById('pokerLobby')?.classList.remove('hidden');
+      document.getElementById('pokerTable')?.classList.add('hidden');
+      mockSocket.emit('joinPokerLobby');
+    }
+
+    function showTable() {
+      const handler = mockSocket._handlers.pokerTableState;
+      if (handler) {
+        handler(getMockTableState('betting'));
+      }
+    }
+
+    function showShowdown() {
+      const handler = mockSocket._handlers.pokerTableState;
+      if (handler) {
+        handler(getMockTableState('showdown'));
+      }
+    }
+
+    function showActions() {
+      const handler = mockSocket._handlers.pokerTableState;
+      if (handler) {
+        handler(getMockTableState('myTurn'));
+      }
+    }
+
+    function getMockTableState(scenario) {
+      const base = {
+        tableId: 'poker_1',
+        tableName: 'High Rollers',
+        smallBlind: 25,
+        bigBlind: 50,
+        seats: [
+          { username: 'TestPlayer', chips: 2450, isActive: true, betAmount: 50 },
+          { username: 'Alice', chips: 1800, isActive: true, betAmount: 50 },
+          null,
+          { username: 'Bob', chips: 3200, isActive: true, betAmount: 100 },
+          null,
+          { username: 'Charlie', chips: 900, isActive: true, betAmount: 0 },
+        ],
+        players: [
+          { socketId: 'mock-socket-1', username: 'TestPlayer', seat: 0, chips: 2450, isActive: true },
+          { socketId: 'socket-2', username: 'Alice', seat: 1, chips: 1800, isActive: true },
+          { socketId: 'socket-3', username: 'Bob', seat: 3, chips: 3200, isActive: true },
+          { socketId: 'socket-4', username: 'Charlie', seat: 5, chips: 900, isActive: true },
+        ]
+      };
+
+      if (scenario === 'betting') {
+        base.gameState = 'betting';
+        base.currentHand = {
+          pot: 250,
+          communityCards: ['Ah', 'Kd', '7c'],
+          currentBet: 100,
+          dealerPosition: 0,
+          smallBlindPosition: 1,
+          bigBlindPosition: 2,
+          currentPlayerIndex: 2,
+          phase: 'flop',
+          pots: [],
+          winners: null,
+          players: [
+            { socketId: 'mock-socket-1', username: 'TestPlayer', seat: 0, chips: 2450, isFolded: false, isAllIn: false, betAmount: 50, totalBetThisRound: 50, cards: ['Ac', 'Ks'] },
+            { socketId: 'socket-2', username: 'Alice', seat: 1, chips: 1800, isFolded: false, isAllIn: false, betAmount: 50, totalBetThisRound: 50, cards: ['??', '??'] },
+            { socketId: 'socket-3', username: 'Bob', seat: 3, chips: 3200, isFolded: false, isAllIn: false, betAmount: 100, totalBetThisRound: 100, cards: ['??', '??'] },
+            { socketId: 'socket-4', username: 'Charlie', seat: 5, chips: 900, isFolded: true, isAllIn: false, betAmount: 0, totalBetThisRound: 0, cards: [] },
+          ]
+        };
+      } else if (scenario === 'showdown') {
+        base.gameState = 'showdown';
+        base.currentHand = {
+          pot: 1200,
+          communityCards: ['Ah', 'Kd', '7c', 'Th', '2s'],
+          currentBet: 0,
+          dealerPosition: 0,
+          smallBlindPosition: 1,
+          bigBlindPosition: 2,
+          currentPlayerIndex: undefined,
+          phase: 'showdown',
+          pots: [],
+          winners: [
+            { username: 'TestPlayer', amount: 1200, handName: 'Two Pair', seat: 0 }
+          ],
+          players: [
+            { socketId: 'mock-socket-1', username: 'TestPlayer', seat: 0, chips: 3650, isFolded: false, isAllIn: false, betAmount: 0, totalBetThisRound: 0, cards: ['Ac', 'Ks'], handResult: { name: 'Two Pair' } },
+            { socketId: 'socket-2', username: 'Alice', seat: 1, chips: 1200, isFolded: false, isAllIn: false, betAmount: 0, totalBetThisRound: 0, cards: ['Qh', 'Jh'], handResult: { name: 'One Pair' } },
+            { socketId: 'socket-3', username: 'Bob', seat: 3, chips: 2600, isFolded: true, isAllIn: false, betAmount: 0, totalBetThisRound: 0, cards: [] },
+            { socketId: 'socket-4', username: 'Charlie', seat: 5, chips: 900, isFolded: true, isAllIn: false, betAmount: 0, totalBetThisRound: 0, cards: [] },
+          ]
+        };
+      } else if (scenario === 'myTurn') {
+        base.gameState = 'betting';
+        base.currentHand = {
+          pot: 350,
+          communityCards: ['Ah', 'Kd', '7c', 'Th'],
+          currentBet: 100,
+          dealerPosition: 1,
+          smallBlindPosition: 2,
+          bigBlindPosition: 0,
+          currentPlayerIndex: 0,
+          phase: 'turn',
+          pots: [],
+          winners: null,
+          players: [
+            { socketId: 'mock-socket-1', username: 'TestPlayer', seat: 0, chips: 2400, isFolded: false, isAllIn: false, betAmount: 50, totalBetThisRound: 50, cards: ['Ac', 'Ks'] },
+            { socketId: 'socket-2', username: 'Alice', seat: 1, chips: 1800, isFolded: false, isAllIn: false, betAmount: 100, totalBetThisRound: 100, cards: ['??', '??'] },
+            { socketId: 'socket-3', username: 'Bob', seat: 3, chips: 3200, isFolded: true, isAllIn: false, betAmount: 0, totalBetThisRound: 0, cards: [] },
+            { socketId: 'socket-4', username: 'Charlie', seat: 5, chips: 0, isFolded: false, isAllIn: true, betAmount: 100, totalBetThisRound: 100, cards: ['??', '??'] },
+          ]
+        };
+        base.seats[3].betAmount = 0; // Bob folded
+        base.seats[5].chips = 0;
+        base.seats[5].betAmount = 100;
+      }
+
+      return base;
+    }
+
+    // Initialize
+    initGame();
+  </script>
+</body>
+</html>

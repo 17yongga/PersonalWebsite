@@ -436,8 +436,8 @@
         
         <div class="ag-messages" id="ag-messages">
           <div class="ag-message bot">
-            <p>👋 Hi! I'm Ask Gary, Gary's AI career assistant.</p>
-            <p>Ask me about Gary's experience, skills, or projects!</p>
+            <p>Hey! 👋 I'm Ask Gary — Gary's career wingman.</p>
+            <p>What brings you here? I can tell you about his work, projects, or whatever you're curious about!</p>
           </div>
         </div>
 
@@ -515,6 +515,27 @@
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
+  // Show follow-up suggestion chip
+  function showFollowUpChip(text) {
+    // Remove existing
+    const existing = document.getElementById('ag-follow-up');
+    if (existing) existing.remove();
+
+    const messagesEl = document.getElementById('ag-messages');
+    const chip = document.createElement('div');
+    chip.id = 'ag-follow-up';
+    chip.className = 'ag-suggestion';
+    chip.style.cssText = 'margin: 4px 0 4px 8px; cursor: pointer; animation: fadeIn 0.4s ease;';
+    chip.textContent = text;
+    chip.onclick = () => {
+      chip.remove();
+      document.getElementById('ag-input').value = text;
+      send();
+    };
+    messagesEl.appendChild(chip);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
   // Show typing indicator
   function showTyping() {
     const messagesEl = document.getElementById('ag-messages');
@@ -571,6 +592,11 @@
       const answer = data.answer || "I couldn't find an answer to that. Try asking about Gary's work experience, skills, or projects!";
       addMessageToUI('bot', answer);
       state.messages.push({ role: 'bot', content: answer });
+
+      // Show follow-up suggestion if provided
+      if (data.follow_up) {
+        showFollowUpChip(data.follow_up);
+      }
       
     } catch (error) {
       console.error('Ask Gary Error:', error);

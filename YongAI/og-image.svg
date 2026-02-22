@@ -1,0 +1,44 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#07080C"/>
+      <stop offset="100%" style="stop-color:#11131A"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8B83FF"/>
+      <stop offset="50%" style="stop-color:#6C63FF"/>
+      <stop offset="100%" style="stop-color:#A78BFA"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Grid pattern (subtle) -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  
+  <!-- Lightning bolt icon -->
+  <text x="350" y="200" font-family="Arial, sans-serif" font-size="80" fill="url(#accent)">⚡</text>
+  
+  <!-- Main text -->
+  <text x="450" y="200" font-family="Inter, Arial, sans-serif" font-size="64" font-weight="700" fill="#E8E8ED">Yong</text>
+  <text x="620" y="200" font-family="Inter, Arial, sans-serif" font-size="64" font-weight="700" fill="url(#accent)">AI</text>
+  
+  <!-- Subtitle -->
+  <text x="350" y="280" font-family="Inter, Arial, sans-serif" font-size="32" fill="#8A8F9E">AI Automation Consulting</text>
+  
+  <!-- Description -->
+  <text x="350" y="350" font-family="Inter, Arial, sans-serif" font-size="24" fill="#8A8F9E">AI automation for law firms and recruiting agencies.</text>
+  <text x="350" y="390" font-family="Inter, Arial, sans-serif" font-size="24" fill="#8A8F9E">Cut costs, eliminate bottlenecks, scale what works.</text>
+  
+  <!-- Location -->
+  <text x="350" y="480" font-family="Inter, Arial, sans-serif" font-size="20" fill="#555B6E">📍 Toronto-based</text>
+  
+  <!-- Website -->
+  <text x="350" y="550" font-family="Inter, Arial, sans-serif" font-size="20" fill="url(#accent)">yongai.ca</text>
+</svg>

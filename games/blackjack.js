@@ -501,6 +501,32 @@ class BlackjackGame {
       this.casino.updateCredits(winnings);
     }
 
+    // Record bet history and update stats
+    const resultLabel = winnings > this.currentBet ? 'Win' : winnings === this.currentBet ? 'Push' : 'Loss';
+    const won = winnings > this.currentBet;
+    const isBlackjack = reason === 'blackjack' && playerScore === 21 && this.playerHand.length === 2;
+    
+    this.casino.recordBet('blackjack', this.currentBet, resultLabel, winnings, null, message);
+    
+    // Send stats tracking to server (if not a push)
+    if (winnings !== this.currentBet && this.casino.socket) {
+      this.casino.socket.emit('gameResult', {
+        gameType: 'blackjack',
+        betAmount: this.currentBet,
+        won: won,
+        payout: winnings,
+        result: {
+          playerScore: playerScore,
+          dealerScore: dealerScore,
+          playerCards: this.playerHand.length,
+          dealerCards: this.dealerHand.length,
+          isBlackjack: isBlackjack,
+          reason: reason,
+          message: message
+        }
+      });
+    }
+
     // Disable controls
     document.getElementById('hitBtn').disabled = true;
     document.getElementById('standBtn').disabled = true;

@@ -5,6 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>YongAI — AI Automation Consulting</title>
   <meta name="description" content="AI automation consulting for law firms and recruiting agencies. YongAI delivers enterprise-grade AI solutions — from strategic audits to full implementation and ongoing partnership. Based in Toronto.">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://yongai.ca" />
+  <meta property="og:title" content="YongAI — AI Automation Consulting" />
+  <meta property="og:description" content="AI automation for law firms and recruiting agencies. Cut costs, eliminate bottlenecks, scale what works. Toronto-based." />
+  <meta property="og:image" content="https://yongai.ca/og-image.svg" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://yongai.ca" />
+  <meta property="twitter:title" content="YongAI — AI Automation Consulting" />
+  <meta property="twitter:description" content="AI automation for law firms and recruiting agencies. Cut costs, eliminate bottlenecks, scale what works. Toronto-based." />
+  <meta property="twitter:image" content="https://yongai.ca/og-image.svg" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -23,6 +38,7 @@
       </a>
       <ul class="nav__links">
         <li><a href="#services">Services</a></li>
+        <li><a href="demos/resume-screener.html">Live Demo</a></li>
         <li><a href="#about">About</a></li>
         <li><a href="#testimonials">Results</a></li>
         <li><a href="#contact" class="btn btn--sm">Get Started</a></li>
@@ -35,6 +51,7 @@
     <div class="nav__mobile" id="mobileMenu">
       <ul>
         <li><a href="#services">Services</a></li>
+        <li><a href="demos/resume-screener.html">Live Demo</a></li>
         <li><a href="#about">About</a></li>
         <li><a href="#testimonials">Results</a></li>
         <li><a href="#contact" class="btn btn--sm">Get Started</a></li>
@@ -65,6 +82,10 @@
         <a href="#" onclick="Calendly.initPopupWidget({url: 'https://calendly.com/gary-yong-yongai/30min'});return false;" class="btn btn--primary btn--lg">
           Book a Free Strategy Call
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a href="demos/resume-screener.html" class="btn btn--outline btn--lg">
+          Try Live Demo
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         </a>
         <a href="#services" class="btn btn--ghost btn--lg">See Pricing</a>
       </div>
@@ -278,6 +299,50 @@
     </div>
   </section>
 
+  <!-- ════════════════════════════════════════ LIVE DEMOS ════════════════════════════════════════ -->
+  <section class="demos">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">See It In Action</span>
+        <h2>Try our live AI demos.</h2>
+        <p>Experience what AI automation can do for your business with these interactive examples.</p>
+      </div>
+      <div class="demos__grid">
+        <div class="demo-card reveal">
+          <div class="demo-card__icon">📄</div>
+          <h3>AI Resume Screener</h3>
+          <p>See how AI ranks candidates against job requirements, extracts skills with confidence scores, detects bias, and calculates ROI — with a real agency case study.</p>
+          <a href="/demos/resume-screener.html" class="btn btn--outline">Try It Live</a>
+          <span class="demo-card__tag">For Recruiting Agencies</span>
+        </div>
+        <div class="demo-card reveal">
+          <div class="demo-card__icon">📋</div>
+          <h3>AI Contract Reviewer</h3>
+          <p>Watch AI analyze real contract clauses for risk, flag missing provisions, check Canadian law compliance, and generate redline suggestions — with a law firm case study.</p>
+          <a href="/demos/contract-reviewer.html" class="btn btn--outline">Try It Live</a>
+          <span class="demo-card__tag">For Law Firms</span>
+        </div>
+        <div class="demo-card reveal">
+          <div class="demo-card__icon">💬</div>
+          <h3>AI Client Intake Bot</h3>
+          <p>Experience a 24/7 AI chatbot that handles client consultations, assesses urgency, routes to the right attorney, and books meetings — capturing leads competitors miss.</p>
+          <a href="/demos/client-intake.html" class="btn btn--outline">Try It Live</a>
+          <span class="demo-card__tag">For Law Firms</span>
+        </div>
+        <div class="demo-card reveal">
+          <div class="demo-card__icon">✉️</div>
+          <h3>AI Candidate Outreach</h3>
+          <p>Generate hyper-personalized outreach that gets 22% response rates vs. 8% from templates — with A/B variants, follow-up sequences, and engagement tracking.</p>
+          <a href="/demos/candidate-outreach.html" class="btn btn--outline">Try It Live</a>
+          <span class="demo-card__tag">For Recruiting Agencies</span>
+        </div>
+      </div>
+      <p class="demos__note reveal">
+        <strong>Note:</strong> These demos use simplified models for demonstration. Production implementations include advanced security, custom training, and full integration with your existing systems.
+      </p>
+    </div>
+  </section>
+
   <!-- ════════════════════════════════════════ ABOUT ════════════════════════════════════════ -->
   <section class="about" id="about">
     <div class="container">
@@ -298,51 +363,51 @@
             <span class="about__badge">🧠 AI & LLM Specialist</span>
             <span class="about__badge">🏢 Enterprise Background</span>
             <span class="about__badge">📍 Toronto, Canada</span>
+            <a href="https://www.linkedin.com/in/gary-yong-66a9ba164" target="_blank" class="about__badge" style="color: var(--text-primary); text-decoration: none;">💼 LinkedIn</a>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ════════════════════════════════════════ TESTIMONIALS ════════════════════════════════════════ -->
+  <!-- ════════════════════════════════════════ RESULTS / INDUSTRY DATA ════════════════════════════════════════ -->
   <section class="testimonials" id="testimonials">
     <div class="container">
       <div class="section-header reveal">
-        <span class="section-tag">Client Results</span>
-        <h2>What happens after we work together.</h2>
-        <!-- ⚠️ PLACEHOLDER TESTIMONIALS — Replace with real client feedback once you have it -->
+        <span class="section-tag">What AI Automation Delivers</span>
+        <h2>Real results from industry adoption.</h2>
       </div>
       <div class="testimonials__grid">
         <div class="testimonial reveal">
-          <div class="testimonial__stars">★★★★★</div>
-          <p class="testimonial__quote">"Gary identified automation opportunities we'd been blind to for years. The ROI roadmap alone was worth 10x the audit cost. We cut our intake processing time by 70% in the first month."</p>
+          <div class="testimonial__stars">📊</div>
+          <p class="testimonial__quote">Law firms using AI for contract review see 60% faster processing times and 35% reduction in review costs, according to recent industry studies.</p>
           <div class="testimonial__author">
-            <div class="testimonial__avatar">JM</div>
+            <div class="testimonial__avatar">📈</div>
             <div>
-              <span class="testimonial__name">— Managing Partner</span>
-              <span class="testimonial__company">Mid-Size Law Firm</span>
+              <span class="testimonial__name">— Legal Tech Report</span>
+              <span class="testimonial__company">Contract Review Automation</span>
             </div>
           </div>
         </div>
         <div class="testimonial reveal">
-          <div class="testimonial__stars">★★★★★</div>
-          <p class="testimonial__quote">"We went from a 4-hour manual screening process to a fully automated pipeline in under 3 weeks. Our recruiters couldn't believe it. Gary just gets it — fast, no BS, and actually delivers."</p>
+          <div class="testimonial__stars">🎯</div>
+          <p class="testimonial__quote">Recruiting agencies using AI screening tools report 75% time savings on candidate evaluation and 40% improvement in hire quality.</p>
           <div class="testimonial__author">
-            <div class="testimonial__avatar">SK</div>
+            <div class="testimonial__avatar">📋</div>
             <div>
-              <span class="testimonial__name">— Head of Talent Acquisition</span>
-              <span class="testimonial__company">Recruiting Agency</span>
+              <span class="testimonial__name">— HR Technology Survey</span>
+              <span class="testimonial__company">Talent Acquisition</span>
             </div>
           </div>
         </div>
         <div class="testimonial reveal">
-          <div class="testimonial__stars">★★★★★</div>
-          <p class="testimonial__quote">"Having Gary on retainer is like having a senior AI engineer on staff at a fraction of the cost. He proactively finds new ways to automate our document workflows every month."</p>
+          <div class="testimonial__stars">💰</div>
+          <p class="testimonial__quote">Companies implementing AI document automation see average ROI of 3:1 within the first year, with some achieving 5:1 returns.</p>
           <div class="testimonial__author">
-            <div class="testimonial__avatar">RL</div>
+            <div class="testimonial__avatar">💡</div>
             <div>
-              <span class="testimonial__name">— COO</span>
-              <span class="testimonial__company">Legal Services Firm</span>
+              <span class="testimonial__name">— McKinsey AI Report</span>
+              <span class="testimonial__company">Enterprise Automation</span>
             </div>
           </div>
         </div>
@@ -427,6 +492,7 @@
           <a href="#services">Services</a>
           <a href="#about">About</a>
           <a href="#contact">Contact</a>
+          <a href="https://www.linkedin.com/in/gary-yong-66a9ba164" target="_blank">LinkedIn</a>
           <a href="mailto:gary.yong@yongai.ca">gary.yong@yongai.ca</a>
         </div>
         <p class="footer__copy">&copy; 2026 YongAI. Toronto, Canada. All rights reserved.</p>

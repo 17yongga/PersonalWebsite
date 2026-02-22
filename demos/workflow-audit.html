@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Workflow Consulting | YongAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+            background: #ffffff;
+            color: #1a1a2a;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .full-width {
+            width: 100%;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a2a;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #00c853;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #1a1a2a;
+            margin: 2px 0;
+            transition: 0.3s;
+        }
+
+        /* Sections */
+        .section {
+            padding: 4rem 0;
+        }
+
+        .section-alt {
+            background: #f8f9fa;
+        }
+
+        .section-dark {
+            background: #1a1a2a;
+            color: #ffffff;
+        }
+
+        .section-kicker {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-heading {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a1a2a;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .section-dark .section-heading {
+            color: #ffffff;
+        }
+
+        .section-subtitle {
+            font-size: 1.125rem;
+            color: #6b7280;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 8rem 0 4rem;
+            text-align: center;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.875rem 2rem;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: #00c853;
+            color: #ffffff;
+            border-color: #00c853;
+        }
+
+        .btn-primary:hover {
+            background: #00b04a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 200, 83, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #1a1a2a;
+            border-color: #d1d5db;
+        }
+
+        .btn-outline:hover {
+            background: #f8f9fa;
+            border-color: #9ca3af;
+        }
+
+        .btn-outline-white {
+            background: transparent;
+            color: #ffffff;
+            border-color: #ffffff;
+        }
+
+        .btn-outline-white:hover {
+            background: #ffffff;
+            color: #1a1a2a;
+        }
+
+        /* Geometric Illustration */
+        .hero-illustration {
+            position: absolute;
+            right: 10%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 300px;
+            height: 300px;
+            opacity: 0.1;
+        }
+
+        .geometric-shape {
+            position: absolute;
+            border: 2px solid #00c853;
+        }
+
+        .shape-1 {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            top: 20px;
+            left: 40px;
+        }
+
+        .shape-2 {
+            width: 60px;
+            height: 60px;
+            top: 150px;
+            right: 50px;
+        }
+
+        .shape-3 {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            bottom: 30px;
+            left: 20px;
+        }
+
+        /* Process Steps */
+        .process-steps {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin: 3rem 0;
+            overflow-x: auto;
+            padding: 2rem 0;
+        }
+
+        .process-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 160px;
+            text-align: center;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            border: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+
+        .step-line {
+            position: absolute;
+            height: 2px;
+            background: #e5e7eb;
+            top: 30px;
+            left: 90px;
+            right: -90px;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #1a1a2a;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-desc {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        /* Industry Tabs */
+        .industry-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .industry-tab {
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .industry-tab.active {
+            color: #00c853;
+            border-bottom-color: #00c853;
+        }
+
+        .industry-tab:hover {
+            color: #00c853;
+        }
+
+        /* Workflow Cards */
+        .workflow-content {
+            display: none;
+        }
+
+        .workflow-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .workflow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .workflow-step {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .workflow-step:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-header {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            transition: background 0.3s ease;
+        }
+
+        .step-header:hover {
+            background: #f8f9fa;
+        }
+
+        .step-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .step-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            border: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .step-details h3 {
+            font-weight: 600;
+            color: #1a1a2a;
+            margin-bottom: 0.25rem;
+        }
+
+        .step-details p {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .step-metric {
+            text-align: right;
+            min-width: 150px;
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #00c853;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .step-expand {
+            color: #6b7280;
+            font-size: 1.25rem;
+            transition: transform 0.3s ease;
+        }
+
+        .workflow-step.expanded .step-expand {
+            transform: rotate(180deg);
+        }
+
+        .step-content {
+            display: none;
+            padding: 0 1.5rem 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            background: #f8f9fa;
+        }
+
+        .workflow-step.expanded .step-content {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .pain-points h4 {
+            color: #dc2626;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-solutions h4 {
+            color: #00c853;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pain-point {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #ffffff;
+            border-radius: 6px;
+            border-left: 4px solid #fca5a5;
+        }
+
+        .solution-card {
+            background: #ffffff;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #00c853;
+        }
+
+        .solution-title {
+            font-weight: 600;
+            color: #00c853;
+            margin-bottom: 0.5rem;
+        }
+
+        .solution-desc {
+            color: #6b7280;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .solution-metrics {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .metric-badge {
+            background: rgba(0, 200, 83, 0.1);
+            color: #00c853;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .complexity-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .complexity-low {
+            background: rgba(0, 200, 83, 0.1);
+            color: #00c853;
+        }
+
+        .complexity-medium {
+            background: rgba(251, 146, 60, 0.1);
+            color: #f97316;
+        }
+
+        .complexity-high {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        .citation {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #00c853;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #00c853;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* Bar Chart */
+        .chart-container {
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+        }
+
+        .chart-title {
+            font-weight: 600;
+            color: #1a1a2a;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: end;
+            height: 150px;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, #00c853, rgba(0, 200, 83, 0.6));
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            min-height: 20px;
+        }
+
+        .chart-label {
+            position: absolute;
+            bottom: -1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .feature-card {
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #1a1a2a;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-desc {
+            color: #6b7280;
+        }
+
+        /* CTA Section */
+        .cta-content {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .cta-buttons {
+            margin-top: 2rem;
+        }
+
+        .contact-info {
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1a1a2a;
+            color: #9ca3af;
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .footer-links a {
+            color: #9ca3af;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            color: #ffffff;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; max-height: 0; }
+            to { opacity: 1; max-height: 1000px; }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .nav-links.active {
+                display: flex;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                background: #ffffff;
+                border-top: 1px solid #e5e7eb;
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .hero {
+                padding: 6rem 0 3rem;
+            }
+
+            .section-heading {
+                font-size: 2rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .process-steps {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .industry-tabs {
+                flex-direction: column;
+                border-bottom: none;
+            }
+
+            .industry-tab {
+                border-bottom: 1px solid #e5e7eb;
+                border-radius: 0;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .stat-value {
+                font-size: 2rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .step-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .step-metric {
+                text-align: left;
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-container">
+                <a href="#" class="nav-logo">YongAI</a>
+                <ul class="nav-links">
+                    <li><a href="#approach">Approach</a></li>
+                    <li><a href="#analysis">Analysis</a></li>
+                    <li><a href="#impact">Impact</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="section-kicker">AI WORKFLOW CONSULTING</div>
+            <h1 class="section-heading">Transform your operations with targeted AI automation</h1>
+            <p class="section-subtitle">We analyze your end-to-end business processes to identify where AI creates the most leverage — backed by real industry data and hands-on implementation expertise.</p>
+            
+            <div class="hero-buttons">
+                <a href="#analysis" class="btn btn-primary">Explore the Analysis</a>
+                <a href="#contact" class="btn btn-outline">Book a Consultation</a>
+            </div>
+
+            <!-- Geometric Illustration -->
+            <div class="hero-illustration">
+                <div class="geometric-shape shape-1"></div>
+                <div class="geometric-shape shape-2"></div>
+                <div class="geometric-shape shape-3"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Approach Section -->
+    <section id="approach" class="section section-alt">
+        <div class="container">
+            <div class="section-kicker">OUR METHODOLOGY</div>
+            <h2 class="section-heading" style="text-align: center;">A systematic approach to AI transformation</h2>
+            
+            <div class="process-steps">
+                <div class="process-step">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Discover</div>
+                    <div class="step-desc">Map current workflows</div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Map</div>
+                    <div class="step-desc">Identify pain points</div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Prioritize</div>
+                    <div class="step-desc">Rank by impact & effort</div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Implement</div>
+                    <div class="step-desc">Deploy AI solutions</div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">5</div>
+                    <div class="step-title">Measure</div>
+                    <div class="step-desc">Track ROI & optimize</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Industry Analysis Section -->
+    <section id="analysis" class="section">
+        <div class="container">
+            <div class="section-kicker">INTERACTIVE ANALYSIS</div>
+            <h2 class="section-heading" style="text-align: center;">See what AI can do for your industry</h2>
+            
+            <!-- Industry Tabs -->
+            <div class="industry-tabs">
+                <button class="industry-tab active" data-industry="legal">Legal Services</button>
+                <button class="industry-tab" data-industry="recruiting">Recruiting</button>
+                <button class="industry-tab" data-industry="financial">Financial Services</button>
+            </div>
+
+            <!-- Legal Services Content -->
+            <div class="workflow-content active" id="legal-content">
+                <div class="workflow-steps">
+                    <div class="workflow-step" data-step="0">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">1</div>
+                                <div class="step-details">
+                                    <h3>Client Intake & Onboarding</h3>
+                                    <p>Initial client setup and conflict checking</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">75%</div>
+                                <div class="metric-label">Time Reduction Potential</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Manual form processing: 45 minutes per new client</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>🔍</div>
+                                        <div>Conflict checking requires 20 minutes per case</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>💰</div>
+                                        <div>Fee estimation based on lawyer experience varies 30-40%</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Document Processing Automation</div>
+                                        <div class="solution-desc">OCR + NLP extract client data automatically from intake forms</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">75% time reduction</span>
+                                            <span class="metric-badge">$180/hr savings</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-low">Low Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Automated Conflict Checking</div>
+                                        <div class="solution-desc">AI searches firm database + public records for conflicts</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">60% time reduction</span>
+                                            <span class="metric-badge">95% accuracy</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: Thomson Reuters Legal Executive Institute 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step" data-step="1">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">2</div>
+                                <div class="step-details">
+                                    <h3>Legal Research</h3>
+                                    <p>Case law search and precedent analysis</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">40%</div>
+                                <div class="metric-label">Time Reduction Potential</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Associates spend 6.2 hours/day on research tasks</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⚠️</div>
+                                        <div>Case law searches yield 70% irrelevant results</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>💰</div>
+                                        <div>Research costs average $215/hour for associate time</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">AI Legal Research</div>
+                                        <div class="solution-desc">Natural language queries with contextual understanding</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">40% time reduction</span>
+                                            <span class="metric-badge">85% accuracy improvement</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Case Precedent Analysis</div>
+                                        <div class="solution-desc">AI identifies similar cases and outcome patterns</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">50% faster research</span>
+                                            <span class="metric-badge">$125K annual savings</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-high">High Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: McKinsey Legal Technology Report 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step" data-step="2">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">3</div>
+                                <div class="step-details">
+                                    <h3>Document Drafting</h3>
+                                    <p>Contract and legal document creation</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">65%</div>
+                                <div class="metric-label">Time Reduction Potential</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Contract drafting averages 3.2 hours per document</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⚠️</div>
+                                        <div>Template inconsistencies lead to 15% revision rate</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>💰</div>
+                                        <div>Junior lawyers spend 4 hours/day on routine drafting</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">AI Document Assembly</div>
+                                        <div class="solution-desc">Generate contracts from client parameters and case requirements</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">65% time reduction</span>
+                                            <span class="metric-badge">90% accuracy</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Clause Optimization</div>
+                                        <div class="solution-desc">AI suggests best clauses based on case outcomes</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">30% better outcomes</span>
+                                            <span class="metric-badge">$200K risk reduction</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-high">High Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: Deloitte Legal Operations Survey 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step" data-step="3">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">4</div>
+                                <div class="step-details">
+                                    <h3>Document Review</h3>
+                                    <p>Discovery and contract analysis</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">75%</div>
+                                <div class="metric-label">Cost Reduction Potential</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>💰</div>
+                                        <div>Discovery review costs $1-3 per document reviewed</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Partners spend 2.5 hours/day on document review</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⚠️</div>
+                                        <div>Error rates in manual review reach 8-12%</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">AI Document Review</div>
+                                        <div class="solution-desc">Automated privilege and relevance screening</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">75% cost reduction</span>
+                                            <span class="metric-badge">95% accuracy</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Contract Analysis</div>
+                                        <div class="solution-desc">AI identifies risks and non-standard terms automatically</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">80% faster review</span>
+                                            <span class="metric-badge">$150K annual savings</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-low">Low Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: ILTA Technology Survey 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step" data-step="4">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">5</div>
+                                <div class="step-details">
+                                    <h3>Time Tracking & Billing</h3>
+                                    <p>Revenue capture and client billing</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">96%</div>
+                                <div class="metric-label">Capture Rate Potential</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>💰</div>
+                                        <div>Lawyers capture only 85% of billable time</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Time entry takes 15 minutes daily per lawyer</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⚠️</div>
+                                        <div>Billing adjustments average 8% of total fees</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Automated Time Capture</div>
+                                        <div class="solution-desc">AI tracks activities and suggests time entries</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">96% capture rate</span>
+                                            <span class="metric-badge">$85K revenue recovery</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-low">Low Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Predictive Billing</div>
+                                        <div class="solution-desc">AI forecasts case costs based on similar matters</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">25% budget accuracy</span>
+                                            <span class="metric-badge">15% client satisfaction</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: Thomson Reuters 2024 Legal Operations Report</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recruiting Content -->
+            <div class="workflow-content" id="recruiting-content">
+                <div class="workflow-steps">
+                    <div class="workflow-step" data-step="0">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">1</div>
+                                <div class="step-details">
+                                    <h3>Candidate Sourcing</h3>
+                                    <p>Finding and attracting qualified candidates</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">90%</div>
+                                <div class="metric-label">Screening Automation</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Recruiters spend 60% of time on manual sourcing</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⚠️</div>
+                                        <div>Average 73 applications per position, 85% unqualified</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>📅</div>
+                                        <div>Time-to-fill averages 42 days across industries</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">AI Resume Screening</div>
+                                        <div class="solution-desc">Automated qualification scoring and ranking</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">90% screening automation</span>
+                                            <span class="metric-badge">75% time reduction</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-low">Low Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Passive Candidate Discovery</div>
+                                        <div class="solution-desc">AI searches social/professional networks</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">3x qualified candidates</span>
+                                            <span class="metric-badge">40% better hire quality</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: LinkedIn Global Recruiting Trends 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step" data-step="1">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">2</div>
+                                <div class="step-details">
+                                    <h3>Initial Screening</h3>
+                                    <p>First-stage candidate evaluation</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">70%</div>
+                                <div class="metric-label">Time Savings</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Phone screens take 30 minutes per candidate</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⚠️</div>
+                                        <div>50% of screened candidates don't proceed</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>📅</div>
+                                        <div>Scheduling coordination adds 2-3 days to process</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">AI Video Interviews</div>
+                                        <div class="solution-desc">Automated initial screening with natural language processing</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">70% time savings</span>
+                                            <span class="metric-badge">24/7 availability</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Automated Scheduling</div>
+                                        <div class="solution-desc">AI coordinates availability and books interviews</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">85% scheduling automation</span>
+                                            <span class="metric-badge">2.5 day reduction</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-low">Low Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: Recruiterflow Platform Analytics 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step" data-step="2">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">3</div>
+                                <div class="step-details">
+                                    <h3>Skills Assessment</h3>
+                                    <p>Technical and competency evaluation</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">95%</div>
+                                <div class="metric-label">Grading Automation</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Technical assessments take 2-4 hours to evaluate</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⚠️</div>
+                                        <div>Subjective scoring leads to 25% inconsistency</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>📊</div>
+                                        <div>40% of assessments don't predict job performance</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">AI Code Review</div>
+                                        <div class="solution-desc">Automated technical assessment scoring</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">95% grading automation</span>
+                                            <span class="metric-badge">60% faster evaluation</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Predictive Performance Modeling</div>
+                                        <div class="solution-desc">AI predicts job success probability</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">35% better hire quality</span>
+                                            <span class="metric-badge">50% reduction in early turnover</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-high">High Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: Harvard Business Review Recruiting Analytics 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step" data-step="3">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">4</div>
+                                <div class="step-details">
+                                    <h3>Interview Process</h3>
+                                    <p>Candidate evaluation and decision making</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">80%</div>
+                                <div class="metric-label">Bias Reduction</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Each interview round requires 3-5 hours of coordination</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>📅</div>
+                                        <div>Interview feedback collection takes 2-3 days</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⚠️</div>
+                                        <div>Interviewer bias affects 67% of hiring decisions</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">AI Interview Analysis</div>
+                                        <div class="solution-desc">Real-time sentiment and competency scoring</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">80% bias reduction</span>
+                                            <span class="metric-badge">Real-time insights</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-high">High Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Automated Note-Taking</div>
+                                        <div class="solution-desc">AI transcribes and summarizes interviews</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">100% capture accuracy</span>
+                                            <span class="metric-badge">45 min time savings</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-low">Low Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: Glassdoor Recruiting Statistics 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step" data-step="4">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">5</div>
+                                <div class="step-details">
+                                    <h3>Offer & Onboarding</h3>
+                                    <p>Closing candidates and integration</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">95%</div>
+                                <div class="metric-label">Offer Acceptance Rate</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>📅</div>
+                                        <div>Offer negotiation extends process by 5-7 days</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Onboarding paperwork takes 3-4 hours HR time</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⚠️</div>
+                                        <div>22% of new hires quit within first 45 days</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Dynamic Offer Optimization</div>
+                                        <div class="solution-desc">AI suggests competitive compensation packages</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">95% offer acceptance</span>
+                                            <span class="metric-badge">30% faster closure</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Personalized Onboarding</div>
+                                        <div class="solution-desc">AI creates custom onboarding paths</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">60% faster productivity</span>
+                                            <span class="metric-badge">35% retention improvement</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-low">Low Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: SHRM Onboarding Research 2024</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Services Content -->
+            <div class="workflow-content" id="financial-content">
+                <div class="workflow-steps">
+                    <div class="workflow-step" data-step="0">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">1</div>
+                                <div class="step-details">
+                                    <h3>KYC & Onboarding</h3>
+                                    <p>Client verification and account opening</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">75%</div>
+                                <div class="metric-label">Time Reduction Potential</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>📅</div>
+                                        <div>KYC processing takes 15-20 business days on average</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Manual document verification requires 3-4 hours per client</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⚠️</div>
+                                        <div>Compliance false positives rate reaches 95%</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">AI Document Verification</div>
+                                        <div class="solution-desc">Automated ID and document authenticity checks</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">75% time reduction</span>
+                                            <span class="metric-badge">99.2% accuracy rate</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Risk Assessment Automation</div>
+                                        <div class="solution-desc">AI-driven client risk profiling</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">85% faster processing</span>
+                                            <span class="metric-badge">90% false positive reduction</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-high">High Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: Deloitte Financial Services Technology 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step" data-step="1">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">2</div>
+                                <div class="step-details">
+                                    <h3>Transaction Processing</h3>
+                                    <p>Payment processing and reconciliation</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">99.8%</div>
+                                <div class="metric-label">Fraud Detection Rate</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>⚠️</div>
+                                        <div>Trade settlement errors occur in 0.5% of transactions</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Manual reconciliation takes 4-6 hours daily</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>📅</div>
+                                        <div>Cross-border payments require 2-5 business days</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Real-time Fraud Detection</div>
+                                        <div class="solution-desc">AI monitors transaction patterns for anomalies</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">99.8% fraud detection</span>
+                                            <span class="metric-badge">60% false positive reduction</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Automated Reconciliation</div>
+                                        <div class="solution-desc">AI matches transactions across systems</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">95% automation rate</span>
+                                            <span class="metric-badge">80% time savings</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-low">Low Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: McKinsey Global Banking Operations 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step" data-step="2">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">3</div>
+                                <div class="step-details">
+                                    <h3>Investment Advisory</h3>
+                                    <p>Portfolio management and client advice</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">24/7</div>
+                                <div class="metric-label">Portfolio Monitoring</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Portfolio analysis requires 2-3 hours per client monthly</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Market research aggregation takes 4 hours daily</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>📞</div>
+                                        <div>Client communication frequency drops 40% during busy periods</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Robo-Advisory Services</div>
+                                        <div class="solution-desc">AI-driven portfolio optimization and rebalancing</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">24/7 monitoring</span>
+                                            <span class="metric-badge">15% cost reduction</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-high">High Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Market Intelligence</div>
+                                        <div class="solution-desc">AI aggregates and analyzes market data in real-time</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">70% faster insights</span>
+                                            <span class="metric-badge">Enhanced accuracy</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: BCG Wealth Management Technology 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step" data-step="3">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">4</div>
+                                <div class="step-details">
+                                    <h3>Regulatory Compliance</h3>
+                                    <p>Reporting and audit preparation</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">85%</div>
+                                <div class="metric-label">Reporting Automation</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Compliance reporting requires 40+ hours monthly</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>⚠️</div>
+                                        <div>Regulatory changes tracking is manual and error-prone</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>📅</div>
+                                        <div>Audit preparation takes 3-4 weeks of dedicated effort</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Automated Reporting</div>
+                                        <div class="solution-desc">AI generates regulatory reports from transactional data</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">85% automation rate</span>
+                                            <span class="metric-badge">70% time reduction</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Regulatory Change Monitoring</div>
+                                        <div class="solution-desc">AI tracks and interprets new regulations</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">Real-time alerts</span>
+                                            <span class="metric-badge">100% coverage</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-high">High Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: Thomson Reuters Regulatory Intelligence 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step" data-step="4">
+                        <div class="step-header">
+                            <div class="step-info">
+                                <div class="step-badge">5</div>
+                                <div class="step-details">
+                                    <h3>Customer Support</h3>
+                                    <p>Client service and issue resolution</p>
+                                </div>
+                            </div>
+                            <div class="step-metric">
+                                <div class="metric-value">75%</div>
+                                <div class="metric-label">Query Resolution Rate</div>
+                            </div>
+                            <div class="step-expand">▼</div>
+                        </div>
+                        <div class="step-content">
+                            <div class="content-grid">
+                                <div class="pain-points">
+                                    <h4>⚠️ Current Pain Points</h4>
+                                    <div class="pain-point">
+                                        <div>⏱️</div>
+                                        <div>Average call resolution time is 8.5 minutes</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>📈</div>
+                                        <div>30% of inquiries require escalation to specialists</div>
+                                    </div>
+                                    <div class="pain-point">
+                                        <div>💰</div>
+                                        <div>Support costs average $12 per interaction</div>
+                                    </div>
+                                </div>
+                                <div class="ai-solutions">
+                                    <h4>🤖 AI Solutions</h4>
+                                    <div class="solution-card">
+                                        <div class="solution-title">AI Chatbots</div>
+                                        <div class="solution-desc">Handle routine inquiries and account questions</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">75% query resolution</span>
+                                            <span class="metric-badge">60% cost reduction</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-low">Low Complexity</span>
+                                    </div>
+                                    <div class="solution-card">
+                                        <div class="solution-title">Predictive Customer Service</div>
+                                        <div class="solution-desc">AI identifies issues before customers call</div>
+                                        <div class="solution-metrics">
+                                            <span class="metric-badge">40% proactive resolution</span>
+                                            <span class="metric-badge">25% satisfaction increase</span>
+                                        </div>
+                                        <span class="complexity-badge complexity-medium">Medium Complexity</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="citation">Source: Accenture Financial Services Customer Experience 2024</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Impact Dashboard Section -->
+    <section id="impact" class="section section-alt">
+        <div class="container">
+            <div class="section-kicker">PROJECTED IMPACT</div>
+            <h2 class="section-heading" style="text-align: center;">The numbers speak for themselves</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="annual-savings">$450K</div>
+                    <div class="stat-label">Annual Savings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="time-reduction">58%</div>
+                    <div class="stat-label">Time Reduction</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="months-to-roi">8</div>
+                    <div class="stat-label">Months to ROI</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="quick-wins">3</div>
+                    <div class="stat-label">Quick Wins</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Savings Breakdown by Process Step</div>
+                <div class="chart-bars" id="savings-chart">
+                    <!-- Dynamically populated -->
+                </div>
+                <div class="citation" style="text-align: center; margin-top: 1rem;">Based on published industry benchmarks. Actual results vary based on organization size and current processes.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What's Included Section -->
+    <section class="section">
+        <div class="container">
+            <div class="section-kicker">OUR ENGAGEMENT</div>
+            <h2 class="section-heading" style="text-align: center;">What a discovery session includes</h2>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🗺️</div>
+                    <div class="feature-title">Workflow Mapping</div>
+                    <div class="feature-desc">We map your end-to-end processes to identify every touchpoint</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <div class="feature-title">Stakeholder Interviews</div>
+                    <div class="feature-desc">We talk to your team to uncover hidden bottlenecks</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📋</div>
+                    <div class="feature-title">Implementation Roadmap</div>
+                    <div class="feature-desc">Prioritized plan with ROI projections for each initiative</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛠️</div>
+                    <div class="feature-title">Hands-on Support</div>
+                    <div class="feature-desc">We don't just advise — we help implement</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="section section-alt">
+        <div class="container" style="text-align: center;">
+            <div class="section-kicker">WHO WE ARE</div>
+            <h2 class="section-heading">Expertise you can trust</h2>
+            <p class="section-subtitle">YongAI is led by Gary Yong, a technology consultant with 4+ years of experience across 6 enterprise digital transformation engagements in banking, wealth management, and financial services at Capco. He combines deep process analysis and workshop facilitation skills with hands-on AI implementation capability.</p>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="contact" class="section section-dark">
+        <div class="container">
+            <div class="cta-content">
+                <h2 class="section-heading">Ready to discover where AI fits in your business?</h2>
+                <p class="section-subtitle">Book a free 30-minute discovery session. We'll analyze your workflows and show you exactly where AI can create measurable impact.</p>
+                
+                <div class="cta-buttons">
+                    <a href="https://calendly.com/gary-yong-yongai/30min" class="btn btn-primary" target="_blank">Book Your Free Consultation</a>
+                    <div class="contact-info">gary.yong@yongai.ca</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div>© 2026 YongAI. All rights reserved.</div>
+                <div class="footer-links">
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#contact">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Industry workflow data
+        const workflowData = {
+            legal: {
+                name: 'Legal Services',
+                totalSavings: 540000,
+                timeReduction: 58,
+                roiMonths: 8,
+                quickWins: 3,
+                chartData: [85, 125, 95, 150, 85] // Savings in thousands
+            },
+            recruiting: {
+                name: 'Recruiting',
+                totalSavings: 285000,
+                timeReduction: 72,
+                roiMonths: 6,
+                quickWins: 4,
+                chartData: [75, 45, 60, 35, 70]
+            },
+            financial: {
+                name: 'Financial Services',
+                totalSavings: 630000,
+                timeReduction: 65,
+                roiMonths: 9,
+                quickWins: 2,
+                chartData: [120, 180, 150, 95, 85]
+            }
+        };
+
+        let currentIndustry = 'legal';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeIndustryTabs();
+            initializeWorkflowSteps();
+            initializeMobileMenu();
+            updateDashboard(currentIndustry);
+            updateChart(currentIndustry);
+        });
+
+        function initializeIndustryTabs() {
+            const tabs = document.querySelectorAll('.industry-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const industry = this.dataset.industry;
+                    switchIndustry(industry);
+                });
+            });
+        }
+
+        function switchIndustry(industry) {
+            currentIndustry = industry;
+
+            // Update tabs
+            document.querySelectorAll('.industry-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.industry === industry);
+            });
+
+            // Update content
+            document.querySelectorAll('.workflow-content').forEach(content => {
+                content.classList.toggle('active', content.id === `${industry}-content`);
+            });
+
+            // Update dashboard
+            updateDashboard(industry);
+            updateChart(industry);
+        }
+
+        function initializeWorkflowSteps() {
+            const steps = document.querySelectorAll('.workflow-step');
+            steps.forEach(step => {
+                const header = step.querySelector('.step-header');
+                header.addEventListener('click', function() {
+                    step.classList.toggle('expanded');
+                });
+            });
+        }
+
+        function initializeMobileMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            
+            if (hamburger) {
+                hamburger.addEventListener('click', function() {
+                    navLinks.classList.toggle('active');
+                });
+            }
+
+            // Smooth scroll for navigation links
+            document.querySelectorAll('.nav-links a[href^="#"]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        navLinks.classList.remove('active');
+                    }
+                });
+            });
+        }
+
+        function updateDashboard(industry) {
+            const data = workflowData[industry];
+            
+            // Animate counters
+            animateCounter('annual-savings', 0, data.totalSavings, '$', 'K');
+            animateCounter('time-reduction', 0, data.timeReduction, '', '%');
+            animateCounter('months-to-roi', 0, data.roiMonths, '', '');
+            animateCounter('quick-wins', 0, data.quickWins, '', '');
+        }
+
+        function updateChart(industry) {
+            const data = workflowData[industry];
+            const maxValue = Math.max(...data.chartData);
+            const chartContainer = document.getElementById('savings-chart');
+            
+            chartContainer.innerHTML = data.chartData.map((value, index) => {
+                const height = (value / maxValue) * 100;
+                return `
+                    <div class="chart-bar" style="height: ${height}%">
+                        <div class="chart-label">Step ${index + 1}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function animateCounter(elementId, start, end, prefix = '', suffix = '') {
+            const element = document.getElementById(elementId);
+            const duration = 2000;
+            const startTime = performance.now();
+            
+            function updateCounter(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function
+                const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+                const current = start + (end - start) * easeOutCubic;
+                
+                if (elementId === 'annual-savings') {
+                    element.textContent = prefix + Math.round(current / 1000) + suffix;
+                } else {
+                    element.textContent = prefix + Math.round(current) + suffix;
+                }
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateCounter);
+                }
+            }
+            
+            requestAnimationFrame(updateCounter);
+        }
+
+        // Smooth scroll for hero buttons
+        document.querySelectorAll('a[href^="#"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements for animation
+        document.querySelectorAll('.stat-card, .feature-card, .workflow-step').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>

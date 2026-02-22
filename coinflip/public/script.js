@@ -1,4 +1,4 @@
-const socket = io();
+const socket = io('https://api.gary-yong.com');
 
 // Socket connection handlers
 socket.on('connect', () => {

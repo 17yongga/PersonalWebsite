@@ -6,8 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Casino - Gary's Personal Website</title>
   <meta name="description" content="Play Blackjack, Coinflip, and Roulette at Gary's Casino">
-  <link rel="stylesheet" href="styles.css?v=202602051746">
-  <link rel="stylesheet" href="casino.css">
+  <link rel="stylesheet" href="styles.css?v=202602131450">
+  <link rel="stylesheet" href="casino.css?v=202602151219">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
@@ -67,22 +67,26 @@
 
           <!-- Login Form -->
           <div id="loginForm" class="auth-form">
-            <div class="signin-form">
-              <input type="text" id="loginUsername" placeholder="Username" maxlength="20" autocomplete="username">
-              <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
-              <button id="loginBtn" class="btn btn-primary">Login</button>
-            </div>
+            <form id="loginFormElement" onsubmit="return false;">
+              <div class="signin-form">
+                <input type="text" id="loginUsername" placeholder="Username" maxlength="20" autocomplete="username">
+                <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+                <button id="loginBtn" class="btn btn-primary">Login</button>
+              </div>
+            </form>
             <p id="loginError" class="error-message hidden"></p>
           </div>
 
           <!-- Register Form -->
           <div id="registerForm" class="auth-form hidden">
-            <div class="signin-form">
-              <input type="text" id="registerUsername" placeholder="Username (3-20 characters)" maxlength="20" autocomplete="username">
-              <input type="password" id="registerPassword" placeholder="Password (min 6 characters)" autocomplete="new-password">
-              <input type="password" id="registerPasswordConfirm" placeholder="Confirm Password" autocomplete="new-password">
-              <button id="registerBtn" class="btn btn-primary">Create Account</button>
-            </div>
+            <form id="registerFormElement" onsubmit="return false;">
+              <div class="signin-form">
+                <input type="text" id="registerUsername" placeholder="Username (3-20 characters)" maxlength="20" autocomplete="username">
+                <input type="password" id="registerPassword" placeholder="Password (min 6 characters)" autocomplete="new-password">
+                <input type="password" id="registerPasswordConfirm" placeholder="Confirm Password" autocomplete="new-password">
+                <button id="registerBtn" class="btn btn-primary">Create Account</button>
+              </div>
+            </form>
             <p id="registerError" class="error-message hidden"></p>
             <p id="registerSuccess" class="success-message hidden"></p>
           </div>
@@ -104,7 +108,31 @@
             <span class="credits-label">Credits:</span>
             <span id="creditsAmount" class="credit-amount">0</span>
           </div>
-          <button id="logoutBtn" class="btn btn-secondary btn-small btn-logout">Logout</button>
+          <div class="casino-header-actions">
+            <button id="leaderboardBtn" class="btn btn-secondary btn-small">🏆 Leaderboard</button>
+            <button id="achievementsBtn" class="btn btn-secondary btn-small">
+              🏅 Achievements
+              <span id="achievementBadge" class="achievement-badge hidden">0</span>
+            </button>
+            <button id="statsBtn" class="btn btn-secondary btn-small">📊 My Stats</button>
+            <button id="betHistoryBtn" class="btn btn-secondary btn-small">📈 History</button>
+            
+            <!-- Mobile dropdown toggle -->
+            <button id="mobileMenuToggle" class="mobile-menu-toggle" aria-label="Open menu" onclick="if(typeof casinoManager!=='undefined')casinoManager.toggleMobileMenu()">☰</button>
+            
+            <!-- Mobile dropdown menu -->
+            <div id="mobileActionsDropdown" class="mobile-actions-dropdown">
+              <button id="leaderboardBtnMobile" class="btn btn-secondary btn-small">🏆 Leaderboard</button>
+              <button id="achievementsBtnMobile" class="btn btn-secondary btn-small">
+                🏅 Achievements
+                <span id="achievementBadgeMobile" class="achievement-badge hidden">0</span>
+              </button>
+              <button id="statsBtnMobile" class="btn btn-secondary btn-small">📊 My Stats</button>
+              <button id="betHistoryBtnMobile" class="btn btn-secondary btn-small">📈 History</button>
+            </div>
+            
+            <button id="logoutBtn" class="btn btn-secondary btn-small btn-logout">Logout</button>
+          </div>
         </div>
       </div>
 
@@ -136,6 +164,24 @@
             <p>Bet on Counter-Strike 2 matches</p>
             <button class="btn btn-primary play-btn">Play Now</button>
           </div>
+          <div class="game-card" data-game="poker">
+            <div class="game-icon">🃏</div>
+            <h3>Poker</h3>
+            <p>Texas Hold'em - Up to 6 players</p>
+            <button class="btn btn-primary play-btn">Play Now</button>
+          </div>
+          <div class="game-card" data-game="crash">
+            <div class="game-icon">🚀</div>
+            <h3>Crash</h3>
+            <p>Cash out before the rocket crashes!</p>
+            <button class="btn btn-primary play-btn">Play Now</button>
+          </div>
+          <div class="game-card" data-game="pachinko">
+            <div class="game-icon">🔮</div>
+            <h3>Pachinko</h3>
+            <p>Drop balls and hit big multipliers!</p>
+            <button class="btn btn-primary play-btn">Play Now</button>
+          </div>
         </div>
       </div>
 
@@ -148,13 +194,16 @@
         <div id="coinflipGame" class="game-view hidden"></div>
         <div id="rouletteGame" class="game-view hidden"></div>
         <div id="cs2BettingGame" class="game-view hidden"></div>
+        <div id="pokerGame" class="game-view hidden"></div>
+        <div id="crashGame" class="game-view hidden"></div>
+        <div id="pachinkoGame" class="game-view hidden"></div>
       </div>
     </div>
   </main>
 
   <footer class="site-footer">
     <div class="container">
-      <p>©2025 Gary Yong · Built with love ❤️</p>
+      <p>©2026 Gary Yong · Built with love ❤️</p>
     </div>
   </footer>
 
@@ -170,16 +219,19 @@
   </script>
   <script src="casino-debug-logger.js"></script>
   <script src="main.js?v=202602051746"></script>
-  <script src="casino.js?v=202602070031"></script>
-  <link rel="stylesheet" href="games/games.css">
+  <script src="casino.js?v=202602151219"></script>
+  <link rel="stylesheet" href="games/games.css?v=202602151219">
   <link rel="stylesheet" href="cs2-modern-betting-ui.css">
   <link rel="stylesheet" href="cs2-animations.css">
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-  <script src="games/blackjack.js"></script>
-  <script src="games/coinflip-casino.js"></script>
-  <script src="games/roulette-casino.js"></script>
-  <script src="cs2-betting-modern.js?v=202602070031"></script>
-  <script src="games/cs2-betting-casino.js"></script>
+  <script src="games/blackjack.js?v=202602151247"></script>
+  <script src="games/coinflip-casino.js?v=202602151247"></script>
+  <script src="games/roulette-casino.js?v=202602151247"></script>
+  <script src="cs2-betting-modern.js?v=202602151247"></script>
+  <script src="games/cs2-betting-casino.js?v=202602151247"></script>
+  <script src="games/poker-casino.js?v=202602151247"></script>
+  <script src="games/crash-casino.js?v=202602151247"></script>
+  <script src="games/pachinko-casino.js?v=202602151247"></script>
   <!-- CS2 Team Rankings and Logos are loaded dynamically by cs2-betting-casino.js -->
 
 <!-- Modern UI Scripts - Auto-generated -->

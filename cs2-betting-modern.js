@@ -730,16 +730,15 @@ class CS2ModernBettingGame {
       return;
     }
 
-    // Filter and group events
+    // Filter and group events — hide matches once they've started
     const now = new Date().getTime();
-    const twelveHoursAgo = now - (12 * 60 * 60 * 1000); // 12-hour window
     const upcomingEvents = this.events.filter(event => {
       const eventTime = new Date(event.commenceTime || event.startTime || 0).getTime();
-      const isPast = eventTime < twelveHoursAgo; // Allow recent/live matches within 12h window
+      const hasStarted = eventTime < now;
       const isFinished = event.status === 'finished';
       const hasRealOdds = this.hasValidOdds(event);
       
-      return !isPast && !isFinished && hasRealOdds;
+      return !hasStarted && !isFinished && hasRealOdds;
     });
 
     if (upcomingEvents.length === 0) {
@@ -1032,7 +1031,7 @@ class CS2ModernBettingGame {
       `;
 
       const serverUrl = this.getServerUrl();
-      const response = await fetch(`${serverUrl}/api/cs2/history?userId=${userId}`);
+      const response = await fetch(`${serverUrl}/api/cs2/bets?userId=${userId}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1066,7 +1065,7 @@ class CS2ModernBettingGame {
     // Render transaction history
     const listContainer = document.getElementById('creditHistoryList');
     
-    if (!data.history || data.history.length === 0) {
+    if (!data.bets || data.bets.length === 0) {
       listContainer.innerHTML = `
         <div class="credit-history-empty">
           <div class="empty-state-icon">📊</div>
@@ -1077,7 +1076,7 @@ class CS2ModernBettingGame {
       return;
     }
 
-    listContainer.innerHTML = data.history.map(transaction => {
+    listContainer.innerHTML = data.bets.map(transaction => {
       return this.renderTransactionItem(transaction);
     }).join('');
   }
@@ -1263,7 +1262,7 @@ class CS2ModernBettingGame {
     const placedDate = bet.placedAt ? new Date(bet.placedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
 
     return `
-      <div class="cs2-bet-card ${statusClass}" style="overflow: visible !important; flex-shrink: 0 !important;">
+      <div class="cs2-bet-card ${statusClass}" style="overflow: hidden !important; flex-shrink: 0 !important; box-sizing: border-box !important; max-width: 100% !important;">
         <div class="bet-header">
           <div class="bet-id">#${bet.id.substring(bet.id.length - 8).toUpperCase()}</div>
           <div class="bet-status ${statusClass}">${statusText}</div>

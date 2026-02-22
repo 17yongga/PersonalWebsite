@@ -484,23 +484,24 @@ class CS2BettingGame {
       return;
     }
 
-    // Filter out past matches, finished matches, and matches without real odds
+    // Filter out stale/finished matches and matches without real odds
     const now = new Date().getTime();
     const upcomingEvents = this.events.filter(event => {
       const eventTime = new Date(event.commenceTime || event.startTime || 0).getTime();
-      const isPast = eventTime < now;
+      const hoursSinceStart = (now - eventTime) / (1000 * 60 * 60);
       const isFinished = event.status === 'finished';
       
       // Filter out matches without real odds
-      // A match has real odds if:
-      // 1. hasOdds is explicitly true, OR
-      // 2. odds object exists and has valid odds for BOTH teams (not null/undefined, not placeholder 2.0)
       const hasRealOdds = event.hasOdds === true || 
         (event.odds && 
          event.odds.team1 !== null && event.odds.team1 !== undefined && event.odds.team1 !== 2.0 &&
          event.odds.team2 !== null && event.odds.team2 !== undefined && event.odds.team2 !== 2.0);
       
-      return !isPast && !isFinished && hasRealOdds;
+      // Hide if: finished, OR started more than 12 hours ago, OR no real odds
+      if (isFinished) return false;
+      if (hoursSinceStart > 12) return false;
+      if (!hasRealOdds) return false;
+      return true;
     });
 
     if (upcomingEvents.length === 0) {
@@ -942,9 +943,8 @@ class CS2BettingGame {
       if (data.success) {
         // 🔧 FIX: Update balance correctly to prevent double deduction
         this.currentBalance = data.newBalance;
-        // Sync with casino balance (set directly, don't add)
-        this.casino.credits = this.currentBalance;
-        this.casino.updateCreditsDisplay();
+        // Sync with casino balance (use proper setCredits method for CS2 betting)
+        this.casino.setCredits(this.currentBalance);
         console.log(`[CS2 Betting] Balance updated after bet: ${this.currentBalance} credits`);
 
         // Reload bets (wrap in try-catch to prevent errors from causing navigation)
@@ -1060,6 +1060,11 @@ class CS2BettingGame {
 
       const potentialPayout = bet.potentialPayout || (bet.amount * bet.odds);
 
+      const betAmount = bet.amount || 0;
+      const betOdds = bet.odds || 0;
+      const profit = potentialPayout - betAmount;
+      const placedDate = bet.placedAt ? new Date(bet.placedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
       return `
         <div class="cs2-bet-card ${statusClass}">
           <div class="bet-header">
@@ -1067,12 +1072,22 @@ class CS2BettingGame {
             <span class="bet-status ${statusClass}">${statusText}</span>
           </div>
           <div class="bet-match">${eventName}</div>
-          <div class="bet-selection">Selection: <strong>${selectionName}</strong></div>
-          <div class="bet-details">
-            <div>Stake: <strong>${bet.amount}</strong> credits</div>
-            <div>Odds: <strong>${bet.odds.toFixed(2)}</strong></div>
-            <div>Potential Payout: <strong>${potentialPayout.toFixed(2)}</strong> credits</div>
+          <div class="bet-selection">Pick: <strong>${selectionName}</strong> @ <span style="color:#ff8a5c;font-weight:700;font-family:monospace">${betOdds.toFixed(2)}</span></div>
+          <div class="bet-details-compact" style="display:flex;flex-direction:column;margin-top:8px;background:rgba(30,40,54,0.8);border-radius:10px;overflow:hidden">
+            <div style="display:flex;justify-content:space-between;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.03)">
+              <span style="font-size:0.75rem;color:#9ca3af">Stake</span>
+              <span style="font-size:0.8rem;font-weight:600;font-family:monospace">${betAmount.toLocaleString()} cr</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.03)">
+              <span style="font-size:0.75rem;color:#9ca3af">To Win</span>
+              <span style="font-size:0.8rem;font-weight:600;font-family:monospace;color:#00c853">+${profit.toFixed(0)} cr</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 12px;background:rgba(255,107,53,0.06)">
+              <span style="font-size:0.75rem;color:#9ca3af">Payout</span>
+              <span style="font-size:0.8rem;font-weight:700;font-family:monospace;color:#ff8a5c">${potentialPayout.toFixed(0)} cr</span>
+            </div>
           </div>
+          ${placedDate ? `<div style="margin-top:4px;font-size:0.7rem;color:#6b7280;text-align:right">Placed: ${placedDate}</div>` : ''}
           ${bet.settledAt ? `<div class="bet-settled">Settled: ${new Date(bet.settledAt).toLocaleString()}</div>` : ''}
         </div>
       `;

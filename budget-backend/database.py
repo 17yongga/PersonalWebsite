@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, JSON
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, JSON, Boolean
 from datetime import datetime
 from typing import Optional
 
@@ -37,6 +37,7 @@ class Transaction(Base):
     description = Column(Text)
     receipt_image_path = Column(String)
     items = Column(JSON)  # List of items from receipt
+    is_shared = Column(Boolean, default=True)  # True for shared expenses, False for individual
     transaction_date = Column(DateTime, default=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
     

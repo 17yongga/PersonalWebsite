@@ -1,0 +1,644 @@
+/* Dashboard-Specific Styles */
+
+/* Dashboard Layout */
+.dashboard {
+  max-width: var(--max-width-2xl);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+
+.dashboard-header {
+  margin-bottom: var(--space-8);
+}
+
+.dashboard-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.dashboard-title h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.dashboard-subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.dashboard-layout {
+  display: grid;
+  gap: var(--space-6);
+}
+
+@media (min-width: 1024px) {
+  .dashboard-layout {
+    grid-template-columns: 2fr 1fr;
+    align-items: start;
+  }
+}
+
+/* Portfolio Cards Grid */
+.portfolios-section {
+  margin-bottom: var(--space-8);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.portfolios-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .portfolios-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .portfolios-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Portfolio Card */
+.portfolio-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  cursor: pointer;
+  transition: all var(--transition-medium);
+  position: relative;
+  overflow: hidden;
+}
+
+.portfolio-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--success));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--transition-medium);
+}
+
+.portfolio-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--accent);
+}
+
+.portfolio-card:hover::before {
+  transform: scaleX(1);
+}
+
+.portfolio-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+  gap: var(--space-3);
+}
+
+.portfolio-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.portfolio-name:focus {
+  outline: none;
+  border-bottom: 2px solid var(--accent);
+  background: transparent;
+}
+
+.portfolio-menu {
+  position: relative;
+}
+
+.portfolio-menu-button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.portfolio-menu-button:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.portfolio-value {
+  margin-bottom: var(--space-3);
+}
+
+.portfolio-total {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.portfolio-change {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.portfolio-change.positive {
+  color: var(--success);
+}
+
+.portfolio-change.negative {
+  color: var(--danger);
+}
+
+.portfolio-change.neutral {
+  color: var(--text-secondary);
+}
+
+.portfolio-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.portfolio-stat {
+  text-align: center;
+}
+
+.portfolio-stat-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.portfolio-stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Portfolio Allocation Bar */
+.portfolio-allocation {
+  margin-top: var(--space-4);
+}
+
+.allocation-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.allocation-bar {
+  height: 6px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.allocation-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--success));
+  border-radius: var(--radius-full);
+  transition: width var(--transition-medium);
+}
+
+/* Watchlist Sidebar */
+.watchlist-section {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  height: fit-content;
+  position: sticky;
+  top: var(--space-6);
+}
+
+.watchlist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.watchlist-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.watchlist-add-button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  font-size: 1.25rem;
+  transition: all var(--transition-fast);
+}
+
+.watchlist-add-button:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+/* Watchlist Table */
+.watchlist-table-container {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.watchlist-table {
+  width: 100%;
+}
+
+.watchlist-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--card-bg);
+  padding: var(--space-2) var(--space-1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.watchlist-table tbody td {
+  padding: var(--space-3) var(--space-1);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+
+.watchlist-table tbody tr:hover {
+  background: var(--bg-secondary);
+  cursor: pointer;
+}
+
+.watchlist-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.watchlist-symbol {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.watchlist-price {
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+.watchlist-change {
+  text-align: right;
+  font-weight: 500;
+}
+
+.watchlist-change.positive {
+  color: var(--success);
+}
+
+.watchlist-change.negative {
+  color: var(--danger);
+}
+
+.watchlist-change.neutral {
+  color: var(--text-secondary);
+}
+
+.watchlist-action {
+  text-align: center;
+}
+
+.watchlist-remove {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.watchlist-remove:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+/* Recent Trades */
+.recent-trades-section {
+  margin-top: var(--space-8);
+  grid-column: 1 / -1;
+}
+
+.recent-trades-list {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.trade-item {
+  display: flex;
+  align-items: center;
+  justify-content: between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border);
+  gap: var(--space-4);
+}
+
+.trade-item:last-child {
+  border-bottom: none;
+}
+
+.trade-item:hover {
+  background: var(--bg-secondary);
+}
+
+.trade-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.trade-icon.buy {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.trade-icon.sell {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.trade-details {
+  flex: 1;
+}
+
+.trade-primary {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.trade-secondary {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.trade-amount {
+  text-align: right;
+  font-weight: 600;
+}
+
+.trade-amount.positive {
+  color: var(--success);
+}
+
+.trade-amount.negative {
+  color: var(--danger);
+}
+
+.trade-time {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+/* Market Movers */
+.market-movers {
+  margin-top: var(--space-6);
+}
+
+.movers-tabs {
+  display: flex;
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.mover-tab {
+  background: none;
+  border: none;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-family);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.mover-tab:hover {
+  color: var(--text-primary);
+}
+
+.mover-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.movers-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mover-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.mover-item:hover {
+  background: var(--bg-tertiary);
+  transform: translateX(4px);
+}
+
+.mover-symbol {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mover-change {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.mover-change.positive {
+  color: var(--success);
+}
+
+.mover-change.negative {
+  color: var(--danger);
+}
+
+/* Empty States */
+.empty-portfolios {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--space-12);
+}
+
+.empty-portfolios-icon {
+  font-size: 4rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+  opacity: 0.3;
+}
+
+.empty-portfolios h3 {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.empty-portfolios p {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-6);
+}
+
+.empty-watchlist {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+.empty-watchlist-icon {
+  font-size: 2.5rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+  opacity: 0.3;
+}
+
+.empty-watchlist p {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: var(--space-4);
+}
+
+/* Responsive Design */
+@media (max-width: 1023px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .watchlist-section {
+    position: static;
+    order: 2;
+  }
+  
+  .recent-trades-section {
+    order: 3;
+  }
+}
+
+@media (max-width: 767px) {
+  .dashboard {
+    padding: var(--space-4) var(--space-3);
+  }
+  
+  .dashboard-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+  
+  .portfolios-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .portfolio-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .watchlist-section {
+    padding: var(--space-4);
+  }
+  
+  .portfolio-card {
+    padding: var(--space-4);
+  }
+  
+  .trade-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+  
+  .trade-amount,
+  .trade-time {
+    text-align: left;
+  }
+}
+
+/* Loading States */
+.portfolio-card.loading {
+  pointer-events: none;
+}
+
+.portfolio-card.loading .portfolio-total,
+.portfolio-card.loading .portfolio-change,
+.portfolio-card.loading .portfolio-stat-value {
+  background: var(--skeleton-base);
+  color: transparent;
+  border-radius: var(--radius-sm);
+  animation: loading 1.5s infinite;
+}
+
+.watchlist-table.loading tbody td {
+  background: var(--skeleton-base);
+  color: transparent;
+  border-radius: var(--radius-sm);
+  animation: loading 1.5s infinite;
+}

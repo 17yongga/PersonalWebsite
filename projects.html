@@ -12,7 +12,7 @@
       name="description"
       content="Selected projects by Gary Yong showcasing practical experience and problem solving."
     />
-    <link rel="stylesheet" href="styles.css?v=202602051746" />
+    <link rel="stylesheet" href="styles.css?v=202602131450" />
   </head>
   <body>
     <header class="site-header">
@@ -81,7 +81,153 @@
       <header class="section-header animate-fade-up">
         <h2 data-i18n="projects.title">Projects</h2>
       </header>
+
+      <!-- Recent Projects -->
       <div class="grid grid-3">
+      
+      <!-- Mini Games -->
+      <article class="card project-card project-card-split animate-fade-up">
+        <header class="project-card-header">
+          <div class="project-card-heading">
+            <h3 data-i18n="projects.minigames.title">Mini Games – Real-time Multiplayer Party Games</h3>
+            <p class="meta" data-i18n="projects.minigames.meta">
+              Tech: Node.js · Socket.io · JavaScript · Mobile-first · Real-time multiplayer
+            </p>
+          </div>
+          <div class="project-actions">
+            <a href="https://api.gary-yong.com/play/" class="btn btn-primary btn-pill" data-i18n="projects.minigames.cta_demo">Play now</a>
+          </div>
+        </header>
+
+        <div class="project-card-main">
+          <ul class="bullets">
+            <li data-i18n="projects.minigames.bullets.0">Built a mobile-first multiplayer party game platform with 7 games — Reaction Race, Trivia Blitz, Tap Frenzy, Word Scramble, Emoji Match, Math Blitz, and Simon Says.</li>
+            <li data-i18n="projects.minigames.bullets.1">Plugin architecture makes adding new games trivial — each game is an independent server module + client module with standardized event interfaces.</li>
+            <li data-i18n="projects.minigames.bullets.2">Features room codes, shareable invite links, AI bots (3 difficulty levels), player reconnection with grace periods, and no login required.</li>
+          </ul>
+
+          <ul class="tags">
+            <li>Multiplayer</li>
+            <li>Socket.io</li>
+            <li>Mobile-first</li>
+            <li>Plugin architecture</li>
+            <li>AI bots</li>
+          </ul>
+        </div>
+
+        <div class="project-card-media">
+          <img src="img/casino-screenshot.jpg" alt="Mini Games party game platform" />
+        </div>
+      </article>
+
+      <!-- Casino -->
+      <article class="card project-card project-card-split animate-fade-up">
+        <header class="project-card-header">
+          <div class="project-card-heading">
+            <h3 data-i18n="projects.casino.title">Fantasy Casino – Multiplayer Gaming Platform</h3>
+            <p class="meta" data-i18n="projects.casino.meta">
+              Tech: Node.js · Socket.io · JavaScript · Real-time multiplayer
+            </p>
+          </div>
+          <div class="project-actions">
+            <a href="https://gary-yong.com/casino.html" class="btn btn-primary btn-pill" data-i18n="projects.casino.cta_demo">Live demo</a>
+          </div>
+        </header>
+
+        <div class="project-card-main">
+          <ul class="bullets">
+            <li data-i18n="projects.casino.bullets.0">Fantasy Casino — A side project built for fun with friends. Full-stack multiplayer gaming platform with 7 mini-games, real-time Socket.io connections, and a complete Texas Hold'em poker engine.</li>
+            <li data-i18n="projects.casino.bullets.1">No real money — purely for entertainment and learning. Features live chat, friend systems, and synchronized game states across multiple players.</li>
+            <li data-i18n="projects.casino.bullets.2">Built custom game engines for poker, blackjack, slots, and other casino games with proper game logic, state management, and anti-cheat measures.</li>
+          </ul>
+
+          <ul class="tags">
+            <li>Multiplayer gaming</li>
+            <li>Socket.io</li>
+            <li>Node.js</li>
+            <li>Real-time</li>
+            <li>Game engines</li>
+          </ul>
+        </div>
+
+        <div class="project-card-media">
+          <img src="img/casino-screenshot.jpg" alt="Fantasy Casino gaming interface" />
+        </div>
+      </article>
+
+      <!-- FinSync Budget -->
+      <article class="card project-card project-card-split animate-fade-up">
+        <header class="project-card-header">
+          <div class="project-card-heading">
+            <h3 data-i18n="projects.finsync.title">FinSync Budget – Personal Finance Manager</h3>
+            <p class="meta" data-i18n="projects.finsync.meta">
+              Tech: Python · Flask · SQLite · Chart.js · Personal Project
+            </p>
+          </div>
+          <div class="project-actions">
+            <a href="https://gary-yong.com/budget/index.html" class="btn btn-primary btn-pill" data-i18n="projects.finsync.cta_demo">Live demo</a>
+          </div>
+        </header>
+
+        <div class="project-card-main">
+          <ul class="bullets">
+            <li data-i18n="projects.finsync.bullets.0">Built a comprehensive personal finance tracking application with expense categorization, budget planning, and visual analytics.</li>
+            <li data-i18n="projects.finsync.bullets.1">Features transaction import, automated categorization, monthly/yearly budget tracking, and detailed spending insights with interactive charts.</li>
+            <li data-i18n="projects.finsync.bullets.2">Implemented secure data handling, export functionality, and responsive design for managing finances across devices.</li>
+          </ul>
+
+          <ul class="tags">
+            <li>Personal finance</li>
+            <li>Python Flask</li>
+            <li>Data visualization</li>
+            <li>Budget tracking</li>
+            <li>SQLite</li>
+          </ul>
+        </div>
+
+        <div class="project-card-media">
+          <img src="img/budget-screenshot.jpg" alt="FinSync Budget dashboard" />
+        </div>
+      </article>
+
+      <!-- Voice AI Pipeline -->
+      <article class="card project-card project-card-split animate-fade-up">
+        <header class="project-card-header">
+          <div class="project-card-heading">
+            <h3 data-i18n="projects.voice_ai.title">Voice AI Pipeline – Speech Processing System</h3>
+            <p class="meta" data-i18n="projects.voice_ai.meta">
+              Tech: Python · OpenAI Whisper · Text-to-Speech · Audio Processing
+            </p>
+          </div>
+        </header>
+
+        <div class="project-card-main">
+          <ul class="bullets">
+            <li data-i18n="projects.voice_ai.bullets.0">Developed a complete voice processing pipeline combining speech recognition, AI response generation, and text-to-speech for natural voice interactions.</li>
+            <li data-i18n="projects.voice_ai.bullets.1">Integrated OpenAI Whisper for transcription, GPT for conversation processing, and ElevenLabs for voice synthesis with custom voice training.</li>
+            <li data-i18n="projects.voice_ai.bullets.2">Built modular architecture supporting multiple voice models, conversation context, and real-time audio streaming for responsive voice applications.</li>
+          </ul>
+
+          <ul class="tags">
+            <li>Voice AI</li>
+            <li>Speech recognition</li>
+            <li>Audio processing</li>
+            <li>OpenAI Whisper</li>
+            <li>TTS</li>
+          </ul>
+        </div>
+
+        <div class="project-card-media">
+          <img src="img/ask-gary-1.png" alt="Voice AI Pipeline workflow diagram" />
+        </div>
+      </article>
+
+      </div>
+
+      <!-- Previous Projects -->
+      <div style="margin-top: 2rem;">
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-secondary);" data-i18n="projects.previous_title">Previous Projects</h3>
+        <div class="grid grid-3">
       
       <!-- Ask Gary -->
       <article class="card project-card project-card-split animate-fade-up">
@@ -326,18 +472,20 @@
       </article>
 
       </div>
+      </div>
     </div>
     </section>
   </main>
 
     <footer class="site-footer">
       <div class="container">
-        <p data-i18n="footer.copyright">©2025 Gary Yong · Built with love ❤️.</p>
+        <p data-i18n="footer.copyright">©2026 Gary Yong · Built with love ❤️.</p>
       </div>
     </footer>
 
     <script src="main.js?v=202602051746"></script>
     <script src="js/i18n.js"></script>
+    <script src="js/animations.js"></script>
     <script src="ask-gary-widget.js"></script>
   </body>
 </html>

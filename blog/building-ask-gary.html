@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <link rel="icon" type="image/png" href="/img/logo-dark.png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>I Built an AI Clone of Myself — Here's What Happened – Gary Yong</title>
+    <meta name="description" content="The story behind building Ask Gary, the technical decisions made, and the surprising insights from user interactions." />
+    <meta name="author" content="Gary Yong" />
+    <meta property="og:title" content="I Built an AI Clone of Myself — Here's What Happened" />
+    <meta property="og:description" content="Creating Ask Gary was supposed to be a fun portfolio piece. Instead, it became a fascinating experiment in conversational AI and user psychology." />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://gary-yong.com/blog/building-ask-gary.html" />
+    <link rel="stylesheet" href="../styles.css?v=202602051746" />
+    <style>
+      .blog-illustration {
+        display: block;
+        max-width: 700px;
+        width: 100%;
+        margin: 40px auto;
+        opacity: 0;
+        animation: fadeInIllustration 0.8s ease forwards;
+      }
+      .blog-illustration.hero-illustration {
+        max-width: 800px;
+        margin: 30px auto 40px;
+      }
+      .blog-illustration.section-illustration {
+        max-width: 500px;
+        margin: 30px auto;
+      }
+      @keyframes fadeInIllustration {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reading-progress">
+      <div class="reading-progress-bar" id="reading-progress"></div>
+    </div>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="../index.html" class="logo">
+          <img src="../img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
+          <img src="../img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
+        </a>
+
+        <nav class="nav nav-desktop">
+          <a href="../index.html" data-i18n="nav.home">Home</a>
+          <a href="../projects.html" data-i18n="nav.projects">Projects</a>
+          <a href="../experience.html" data-i18n="nav.experience">Experience</a>
+          <a href="../about.html" data-i18n="nav.about">About</a>
+          <a href="../skills.html" data-i18n="nav.skills">Skills</a>
+          <a href="../blog.html" class="active" data-i18n="nav.blog">Blog</a>
+        </nav>
+
+        <div class="header-actions">
+          <button id="lang-toggle" class="btn btn-ghost lang-toggle" aria-label="Switch language">
+            中文
+          </button>
+          <button id="theme-toggle" class="btn btn-ghost theme-toggle" aria-label="Toggle theme">
+            ☀️
+          </button>
+          <button class="icon-button mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+      </div>
+      
+      <nav class="nav-mobile" aria-label="Mobile navigation">
+        <div class="nav-mobile-inner">
+          <a href="../index.html" data-i18n="nav.home">Home</a>
+          <a href="../projects.html" data-i18n="nav.projects">Projects</a>
+          <a href="../experience.html" data-i18n="nav.experience">Experience</a>
+          <a href="../about.html" data-i18n="nav.about">About</a>
+          <a href="../skills.html" data-i18n="nav.skills">Skills</a>
+          <a href="../blog.html" data-i18n="nav.blog">Blog</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <article class="blog-article">
+        <nav class="blog-nav">
+          <a href="../blog.html" data-i18n="blog.back_to_blog">← Back to Blog</a>
+        </nav>
+
+        <header class="blog-header">
+          <h1 data-i18n="blog.post5.title">I Built an AI Clone of Myself — Here's What Happened</h1>
+          <div class="blog-meta-row">
+            <span class="category-tag tech-projects" data-i18n="blog.post5.category">Tech Projects</span>
+            <span class="author-name" data-i18n="blog.post5.author">Gary Yong</span>
+            <span class="publish-date" data-i18n="blog.post5.date">January 28, 2025</span>
+            <span class="reading-time" data-i18n="blog.post5.read_time">7 min read</span>
+          </div>
+        </header>
+
+        <img src="/blog/img/thought-process.svg" class="blog-illustration hero-illustration" alt="Building an AI Clone">
+
+        <div class="blog-content">
+          <p data-i18n-html="blog.post5.content.intro_p1">What started as a weekend coding project to add some personality to my portfolio has turned into one of the most educational AI experiments I've ever conducted. <strong>"Ask Gary"</strong> was supposed to be a simple chatbot that could answer basic questions about my background. Six months and 2,000+ conversations later, it's taught me more about human-AI interaction than any industry report ever could.</p>
+
+          <p data-i18n="blog.post5.content.intro_p2">Here's the story of building an AI version of myself, the technical decisions that shaped it, and the fascinating insights from watching people interact with my digital twin.</p>
+
+          <h2 data-i18n="blog.post5.content.brief_title">The Original Brief (To Myself)</h2>
+
+          <p data-i18n="blog.post5.content.brief_p1">The concept was straightforward: create an AI assistant that could handle the basic questions I get asked repeatedly—my background, experience, project details, and availability. Think of it as an interactive FAQ that could engage in natural conversation.</p>
+
+          <p data-i18n="blog.post5.content.brief_p2">My requirements were simple:</p>
+          <ul>
+            <li data-i18n-html="blog.post5.content.brief_bullets.0"><strong>Conversational:</strong> More engaging than static text</li>
+            <li data-i18n-html="blog.post5.content.brief_bullets.1"><strong>Accurate:</strong> Only provide information I'd actually share</li>
+            <li data-i18n-html="blog.post5.content.brief_bullets.2"><strong>Progressive:</strong> Get smarter over time based on interactions</li>
+            <li data-i18n-html="blog.post5.content.brief_bullets.3"><strong>Authentic:</strong> Sound like me, not a generic chatbot</li>
+          </ul>
+
+          <p data-i18n="blog.post5.content.brief_p3">Little did I know that last requirement would be the most challenging and interesting part of the entire project.</p>
+
+          <h2 data-i18n="blog.post5.content.architecture_title">Technical Architecture: Keeping It Simple (But Scalable)</h2>
+
+          <img src="/blog/img/server-cluster.svg" class="blog-illustration section-illustration" alt="Technical Architecture">
+
+          <h3 data-i18n="blog.post5.content.stack_title">The Core Stack</h3>
+          <p data-i18n="blog.post5.content.stack_p1">I built Ask Gary using a surprisingly minimal tech stack:</p>
+
+          <ul>
+            <li data-i18n-html="blog.post5.content.stack_bullets.0"><strong>Frontend:</strong> Vanilla JavaScript with a custom widget</li>
+            <li data-i18n-html="blog.post5.content.stack_bullets.1"><strong>Backend:</strong> Node.js with Express</li>
+            <li data-i18n-html="blog.post5.content.stack_bullets.2"><strong>AI Engine:</strong> OpenAI's GPT-4 with custom prompts</li>
+            <li data-i18n-html="blog.post5.content.stack_bullets.3"><strong>Memory:</strong> Session-based conversation history</li>
+            <li data-i18n-html="blog.post5.content.stack_bullets.4"><strong>Hosting:</strong> AWS EC2 with PM2 for process management</li>
+          </ul>
+
+          <p data-i18n="blog.post5.content.stack_p2">The beauty of this setup is its simplicity. No complex vector databases, no fine-tuned models, no microservices architecture. Just clean, maintainable code that does exactly what it needs to do.</p>
+
+          <h3 data-i18n="blog.post5.content.personality_title">The Personality Challenge</h3>
+          <p data-i18n="blog.post5.content.personality_p1">The hardest part wasn't the technical implementation—it was teaching an AI to sound like me. How do you distill your communication style, humor, and personality quirks into prompt engineering?</p>
+
+          <p data-i18n="blog.post5.content.personality_p2">I started by analyzing my own writing patterns. I read through hundreds of my emails, Slack messages, and LinkedIn posts, looking for consistent patterns:</p>
+
+          <ul>
+            <li data-i18n="blog.post5.content.personality_bullets.0">I tend to use specific examples rather than generic statements</li>
+            <li data-i18n="blog.post5.content.personality_bullets.1">I'm direct but friendly, professional but not stiff</li>
+            <li data-i18n="blog.post5.content.personality_bullets.2">I often use analogies to explain technical concepts</li>
+            <li data-i18n="blog.post5.content.personality_bullets.3">I ask clarifying questions rather than making assumptions</li>
+          </ul>
+
+          <p data-i18n="blog.post5.content.personality_p3">These insights became the foundation of Ask Gary's system prompt, which I refined over dozens of iterations based on how natural the conversations felt.</p>
+
+          <h3 data-i18n="blog.post5.content.engagement_title">Progressive Engagement: The Secret Sauce</h3>
+          <p data-i18n="blog.post5.content.engagement_p1">Here's where Ask Gary gets interesting. Instead of treating every interaction as isolated, it builds context over the course of a conversation. The system tracks:</p>
+
+          <ul>
+            <li data-i18n="blog.post5.content.engagement_bullets.0">What information the user has already received</li>
+            <li data-i18n="blog.post5.content.engagement_bullets.1">The level of technical detail they seem comfortable with</li>
+            <li data-i18n="blog.post5.content.engagement_bullets.2">Whether they're asking personal, professional, or technical questions</li>
+            <li data-i18n="blog.post5.content.engagement_bullets.3">How engaged they are (based on follow-up questions)</li>
+          </ul>
+
+          <p data-i18n="blog.post5.content.engagement_p2">This allows Ask Gary to provide increasingly personalized responses. If someone asks about my AI experience and then follows up with technical questions, the system recognizes they want deeper detail. If they ask personal questions, it shifts to a more casual tone.</p>
+
+          <h2 data-i18n="blog.post5.content.patterns_title">What People Actually Ask (And What Surprised Me)</h2>
+
+          <img src="/blog/img/data-trends.svg" class="blog-illustration section-illustration" alt="Conversation Patterns">
+
+          <p data-i18n="blog.post5.content.patterns_p1">After thousands of conversations, I've learned that people interact with AI differently than I expected. Here are the most fascinating patterns:</p>
+
+          <h3 data-i18n="blog.post5.content.testing_title">The "Testing" Phase</h3>
+          <p data-i18n="blog.post5.content.testing_p1">Almost everyone starts by testing the AI's knowledge boundaries. Common first questions:</p>
+          <ul>
+            <li data-i18n="blog.post5.content.testing_bullets.0">"What's Gary's favorite color?" (Answer: I don't have one, but I like colors that work well in data visualizations)</li>
+            <li data-i18n="blog.post5.content.testing_bullets.1">"Where did Gary go to school?" (McMaster University)</li>
+            <li data-i18n="blog.post5.content.testing_bullets.2">"What's Gary's biggest weakness?" (I over-engineer solutions sometimes)</li>
+          </ul>
+
+          <p data-i18n="blog.post5.content.testing_p2">People want to understand what the AI knows and how accurately it represents me before asking more meaningful questions.</p>
+
+          <h3 data-i18n="blog.post5.content.coaching_title">The Career Coaching Conversations</h3>
+          <p data-i18n="blog.post5.content.coaching_p1">This was completely unexpected. About 30% of conversations turn into career advice discussions. People ask:</p>
+          <ul>
+            <li data-i18n="blog.post5.content.coaching_bullets.0">"How do I break into consulting?"</li>
+            <li data-i18n="blog.post5.content.coaching_bullets.1">"Should I specialize in AI or stay generalist?"</li>
+            <li data-i18n="blog.post5.content.coaching_bullets.2">"What's the best way to transition from X to Y?"</li>
+          </ul>
+
+          <p data-i18n="blog.post5.content.coaching_p2">Ask Gary has become an impromptu career counselor, drawing on my experiences to provide personalized advice. These are often the longest, most engaged conversations.</p>
+
+          <h3 data-i18n="blog.post5.content.technical_title">The Technical Deep Dives</h3>
+          <p data-i18n="blog.post5.content.technical_p1">Engineers love to get technical. They ask about architecture decisions, trade-offs in AI implementations, and specific methodologies. These conversations often last 20+ messages as people probe deeper into technical details.</p>
+
+          <p data-i18n="blog.post5.content.technical_p2">What's interesting is how the AI adapts its explanations based on the user's background. When someone asks about machine learning model selection, Ask Gary gauges their expertise level and adjusts accordingly.</p>
+
+          <h2 data-i18n="blog.post5.content.uncanny_title">The Uncanny Valley of Conversation</h2>
+
+          <p data-i18n="blog.post5.content.uncanny_p1">One unexpected challenge has been managing user expectations about what Ask Gary can and cannot do. Some people forget they're talking to an AI and ask questions that require real-time information or personal opinions I haven't programmed in.</p>
+
+          <p data-i18n="blog.post5.content.uncanny_p2">The solution was to make the AI's limitations transparent and even leverage them as conversation starters. When Ask Gary doesn't know something, it says so honestly and suggests how the user could get the real answer (often by contacting me directly).</p>
+
+          <blockquote>
+            <p data-i18n-html="blog.post5.content.uncanny_quote"><em>"I don't have access to Gary's calendar, but I can tell you he's usually most responsive to LinkedIn messages for scheduling discussions about AI consulting projects."</em></p>
+          </blockquote>
+
+          <h2 data-i18n="blog.post5.content.business_title">Unexpected Business Impact</h2>
+
+          <img src="/blog/img/business-decisions.svg" class="blog-illustration section-illustration" alt="Business Impact">
+
+          <p data-i18n="blog.post5.content.business_p1">What started as a portfolio piece has turned into a legitimate business tool. Ask Gary has:</p>
+
+          <ul>
+            <li data-i18n-html="blog.post5.content.business_bullets.0"><strong>Qualified leads:</strong> Many conversations end with "How do I hire Gary for a project?"</li>
+            <li data-i18n-html="blog.post5.content.business_bullets.1"><strong>Built relationships:</strong> People feel like they know me before we ever speak</li>
+            <li data-i18n-html="blog.post5.content.business_bullets.2"><strong>Saved time:</strong> I no longer answer the same basic questions repeatedly</li>
+            <li data-i18n-html="blog.post5.content.business_bullets.3"><strong>Provided insights:</strong> I understand what people want to know about my work</li>
+          </ul>
+
+          <p data-i18n="blog.post5.content.business_p2">Three client relationships started with Ask Gary conversations. People appreciated the ability to learn about my approach and experience before committing to a sales call.</p>
+
+          <h2 data-i18n="blog.post5.content.lessons_title">Lessons Learned (And What I'd Do Differently)</h2>
+
+          <h3 data-i18n="blog.post5.content.version2_title">Version 2.0 Wishlist</h3>
+          <p data-i18n="blog.post5.content.version2_p1">If I were rebuilding Ask Gary today, I'd add:</p>
+
+          <ul>
+            <li data-i18n-html="blog.post5.content.version2_bullets.0"><strong>Voice interface:</strong> Many people want to talk rather than type</li>
+            <li data-i18n-html="blog.post5.content.version2_bullets.1"><strong>Better memory:</strong> Remember users across sessions</li>
+            <li data-i18n-html="blog.post5.content.version2_bullets.2"><strong>Visual responses:</strong> Show relevant work samples or diagrams</li>
+            <li data-i18n-html="blog.post5.content.version2_bullets.3"><strong>Scheduling integration:</strong> Direct booking for consultations</li>
+          </ul>
+
+          <h3 data-i18n="blog.post5.content.human_title">The Human Touch Still Matters</h3>
+          <p data-i18n="blog.post5.content.human_p1">As sophisticated as Ask Gary has become, the most meaningful conversations still happen when people connect with me directly. The AI is excellent at providing information and initial engagement, but it can't replace human connection for complex discussions.</p>
+
+          <p data-i18n="blog.post5.content.human_p2">Ask Gary works best as a bridge—introducing people to my work and approach, then seamlessly transitioning to human interaction when appropriate.</p>
+
+          <h2 data-i18n="blog.post5.content.psychology_title">The Psychology of Talking to Yourself</h2>
+
+          <p data-i18n="blog.post5.content.psychology_p1">Here's something I didn't anticipate: interacting with an AI version of myself has been surprisingly reflective. Reading conversations helps me understand how others perceive my communication style and what aspects of my work resonate most with people.</p>
+
+          <p data-i18n="blog.post5.content.psychology_p2">It's also shown me patterns in my own thinking that I wasn't aware of. Ask Gary consistently structures responses in ways that mirror how I approach complex problems—breaking them down, providing context, offering practical next steps. Seeing this pattern externalized has made me more intentional about how I communicate.</p>
+
+          <h2 data-i18n="blog.post5.content.future_title">What's Next for Ask Gary</h2>
+
+          <p data-i18n="blog.post5.content.future_p1">The experiment continues. I'm exploring ways to make Ask Gary even more useful while maintaining the authentic, personal feel that makes it engaging. The goal isn't to replace human interaction but to enhance it—providing better context for meaningful conversations.</p>
+
+          <p data-i18n-html="blog.post5.content.future_p2">If you haven't tried Ask Gary yet, I encourage you to <a href="../ask-gary.html">give it a conversation</a>. Ask it anything you're curious about regarding AI, consulting, or career transitions. You might be surprised by how natural it feels to talk to an AI version of someone you've never met.</p>
+
+          <p data-i18n-html="blog.post5.content.future_p3"><strong>And if you're building your own AI assistant,</strong> remember that the technology is just the beginning. The real challenge—and the real opportunity—is in capturing the human nuances that make conversations genuinely helpful and engaging.</p>
+        </div>
+
+        <div class="blog-share">
+          <button class="share-button" onclick="copyToClipboard()" data-i18n="blog.share.copy_link">📋 Copy Link</button>
+          <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://gary-yong.com/blog/building-ask-gary.html" target="_blank" class="share-button" data-i18n="blog.share.linkedin">💼 Share on LinkedIn</a>
+          <a href="https://twitter.com/intent/tweet?url=https://gary-yong.com/blog/building-ask-gary.html&text=I Built an AI Clone of Myself — Here's What Happened" target="_blank" class="share-button" data-i18n="blog.share.twitter">🐦 Share on X</a>
+        </div>
+
+        <section class="related-articles">
+          <h3 data-i18n="blog.related_articles">Related Articles</h3>
+          <div class="related-grid">
+            <article class="related-card">
+              <h4><a href="ai-automation-consulting.html">Why Most AI Projects Fail (And How to Make Yours Succeed)</a></h4>
+              <p>Insights from implementing AI solutions for enterprise clients and what makes the difference between success and failure.</p>
+            </article>
+            <article class="related-card">
+              <h4><a href="enterprise-ai-playbook.html">The Enterprise AI Playbook: 5 Steps I Use With Every Client</a></h4>
+              <p>The methodology behind successful AI implementations, distilled from real client engagements.</p>
+            </article>
+          </div>
+        </section>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p data-i18n="footer.copyright">©2026 Gary Yong · Built with love ❤️.</p>
+      </div>
+    </footer>
+
+    <script src="../main.js?v=202602051746"></script>
+    <script src="../js/i18n.js"></script>
+    <script>
+      // Reading progress bar
+      window.addEventListener('scroll', function() {
+        const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+        document.getElementById('reading-progress').style.width = scrolled + '%';
+      });
+
+      // Copy to clipboard
+      function copyToClipboard() {
+        navigator.clipboard.writeText(window.location.href).then(function() {
+          const button = event.target;
+          const originalText = button.textContent;
+          button.textContent = '✅ Copied!';
+          setTimeout(() => {
+            button.textContent = originalText;
+          }, 2000);
+        });
+      }
+    </script>
+  </body>
+</html>

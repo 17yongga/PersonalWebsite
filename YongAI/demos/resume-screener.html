@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Resume Screener Platform Demo — YongAI</title>
+  <meta name="description" content="Experience YongAI's enterprise AI recruiting platform. Process 60-70% more applications, reduce time-to-hire by 35%, and save 20-40% on cost-per-hire.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Calendly -->
+  <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  
+  <style>
+    :root {
+      /* Brand colors from YongAI */
+      --accent:        #6C63FF;
+      --accent-light:  #8B83FF;
+      --accent-dark:   #5046E4;
+      --accent-glow:   rgba(108, 99, 255, 0.35);
+      
+      /* Surfaces */
+      --bg:            #07080C;
+      --bg-raised:     #0D0F14;
+      --bg-card:       #11131A;
+      --bg-card-hover: #161923;
+      --border:        rgba(255, 255, 255, 0.06);
+      --border-light:  rgba(255, 255, 255, 0.10);
+      
+      /* Text */
+      --text:          #E8E8ED;
+      --text-muted:    #8A8F9E;
+      --text-faint:    #555B6E;
+      
+      /* Status colors */
+      --success:       #10B981;
+      --success-bg:    rgba(16, 185, 129, 0.1);
+      --warning:       #F59E0B;
+      --warning-bg:    rgba(245, 158, 11, 0.1);
+      --danger:        #EF4444;
+      --danger-bg:     rgba(239, 68, 68, 0.1);
+      
+      /* Typography */
+      --fs-hero:   clamp(2.5rem, 4vw, 3.5rem);
+      --fs-h2:     clamp(1.5rem, 2.5vw, 2rem);
+      --fs-h3:     clamp(1.15rem, 1.5vw, 1.35rem);
+      --fs-body:   1rem;
+      --fs-small:  0.875rem;
+      
+      --radius:    12px;
+      --radius-lg: 20px;
+      --radius-sm: 8px;
+      
+      --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+      
+      --nav-h: 72px;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    body {
+      font-family: var(--font-main);
+      font-size: var(--fs-body);
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    .accent { color: var(--accent); }
+    .accent-gradient {
+      background: linear-gradient(135deg, var(--accent-light), var(--accent), #A78BFA);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    /* ── Buttons ────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 8px;
+      font-family: var(--font-main);
+      font-weight: 600; 
+      font-size: 0.95rem;
+      border: none; 
+      border-radius: var(--radius);
+      padding: 12px 28px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    
+    .btn--primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+    .btn--primary:hover {
+      background: var(--accent-light);
+      box-shadow: 0 0 40px var(--accent-glow);
+      transform: translateY(-2px);
+    }
+    
+    .btn--outline {
+      background: transparent;
+      border: 1.5px solid var(--border-light);
+      color: var(--text);
+    }
+    .btn--outline:hover {
+      border-color: var(--accent);
+      color: var(--accent-light);
+      background: rgba(108, 99, 255, 0.06);
+    }
+    
+    .btn--large {
+      padding: 16px 36px;
+      font-size: 1.1rem;
+    }
+    
+    .btn--success {
+      background: var(--success);
+      color: #fff;
+    }
+    
+    /* ── Navigation ─────────────────────────────────────────────── */
+    .nav {
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      right: 0;
+      height: var(--nav-h);
+      z-index: 1000;
+      background: rgba(7, 8, 12, 0.95);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .nav__inner {
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between;
+      height: 100%;
+    }
+    
+    .nav__logo {
+      display: flex; 
+      align-items: center; 
+      gap: 8px;
+      font-weight: 700; 
+      font-size: 1.25rem;
+      text-decoration: none;
+      color: var(--text);
+    }
+    
+    .nav__logo-icon { font-size: 1.5rem; }
+    
+    .nav__back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    .nav__back:hover { color: var(--text); }
+    
+    /* ── Stats Bar ──────────────────────────────────────────────── */
+    .stats-bar {
+      background: linear-gradient(135deg, rgba(108, 99, 255, 0.1), rgba(108, 99, 255, 0.05));
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+      margin-top: var(--nav-h);
+    }
+    
+    .stats-container {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent-light);
+      font-family: var(--font-mono);
+      display: block;
+    }
+    
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    
+    @media (max-width: 768px) {
+      .stats-container { gap: 24px; }
+      .stat-number { font-size: 1.5rem; }
+    }
+    
+    /* ── Demo Header ────────────────────────────────────────────── */
+    .demo-header {
+      padding: 60px 0 40px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .demo-header h1 {
+      font-size: var(--fs-hero);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    
+    .demo-header p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      margin: 0 auto 32px;
+    }
+    
+    .demo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--accent-light);
+      background: rgba(108, 99, 255, 0.08);
+      border: 1px solid rgba(108, 99, 255, 0.2);
+      border-radius: 100px;
+      padding: 6px 16px;
+      margin-bottom: 24px;
+      font-family: var(--font-mono);
+    }
+    
+    .pulse-dot {
+      width: 6px; 
+      height: 6px; 
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+      50%      { box-shadow: 0 0 0 6px transparent; }
+    }
+    
+    /* ── Job Description Input ──────────────────────────────────── */
+    .job-input-section {
+      padding: 40px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .job-input-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .job-input-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    
+    .job-input-header h2 {
+      font-size: var(--fs-h2);
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    
+    .job-input-header p {
+      color: var(--text-muted);
+    }
+    
+    .job-description-input {
+      width: 100%;
+      min-height: 200px;
+      background: var(--bg-raised);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 16px;
+      font-family: var(--font-main);
+      font-size: 0.9rem;
+      color: var(--text);
+      resize: vertical;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    
+    .job-description-input::placeholder {
+      color: var(--text-faint);
+    }
+    
+    .job-description-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+    }
+    
+    .job-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .sample-job-btn {
+      font-size: 0.8rem;
+      padding: 8px 16px;
+      color: var(--accent);
+      background: rgba(108, 99, 255, 0.1);
+      border: 1px solid rgba(108, 99, 255, 0.2);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sample-job-btn:hover {
+      background: rgba(108, 99, 255, 0.15);
+    }
+    
+    /* ── Multi-Candidate View ───────────────────────────────────── */
+    .candidates-section {
+      padding: 60px 0;
+    }
+    
+    .section-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    
+    .section-header h2 {
+      font-size: var(--fs-h2);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    
+    .section-header p {
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .candidates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    
+    .candidate-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      position: relative;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .candidate-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      border-color: var(--accent);
+    }
+    
+    .candidate-card.selected {
+      border-color: var(--accent);
+      background: var(--bg-card-hover);
+    }
+    
+    .candidate-rank {
+      position: absolute;
+      top: -12px;
+      left: 24px;
+      background: var(--accent);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+    
+    .candidate-header {
+      margin-bottom: 16px;
+    }
+    
+    .candidate-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    
+    .candidate-title {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    .candidate-score {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-raised);
+      border-radius: var(--radius-sm);
+    }
+    
+    .score-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    
+    .score-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+    }
+    
+    .score-excellent { color: var(--success); }
+    .score-good { color: var(--warning); }
+    .score-poor { color: var(--danger); }
+    
+    .candidate-highlights {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .highlight-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    
+    .highlight-icon {
+      color: var(--success);
+      font-size: 0.9rem;
+    }
+    
+    /* ── Detailed Analysis ──────────────────────────────────────── */
+    .detailed-analysis {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 32px;
+    }
+    
+    .detailed-analysis.show {
+      display: grid;
+      animation: slideIn 0.5s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .analysis-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+    
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    
+    .skills-detailed {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .skill-detailed {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: var(--bg-raised);
+      border-radius: var(--radius-sm);
+      border-left: 3px solid var(--accent);
+    }
+    
+    .skill-info {
+      flex: 1;
+    }
+    
+    .skill-name-detailed {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    
+    .skill-experience {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    
+    .skill-confidence-detailed {
+      font-size: 0.9rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--success);
+    }
+    
+    .cultural-fit {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .fit-metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: var(--bg-raised);
+      border-radius: var(--radius-sm);
+    }
+    
+    .metric-name {
+      font-weight: 500;
+    }
+    
+    .metric-score {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .metric-value {
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+    
+    .bias-indicator {
+      background: var(--success-bg);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-top: 16px;
+      text-align: center;
+    }
+    
+    .bias-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    
+    .bias-text {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--success);
+      margin-bottom: 4px;
+    }
+    
+    .bias-detail {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    
+    /* ── Case Study ─────────────────────────────────────────────── */
+    .case-study-section {
+      padding: 80px 0;
+      background: linear-gradient(135deg, rgba(108, 99, 255, 0.05), rgba(108, 99, 255, 0.02));
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .case-study-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .case-study-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    
+    .case-study-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    
+    .case-study-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    
+    .case-study-subtitle {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .case-study-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+    
+    .case-study-story {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    
+    .story-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+    
+    .story-header {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+    
+    .story-text {
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    
+    .case-study-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .metric-value-large {
+      font-size: 2.5rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--success);
+      margin-bottom: 8px;
+    }
+    
+    .metric-label-large {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    .timeline {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+    
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .timeline-item:last-child {
+      border-bottom: none;
+    }
+    
+    .timeline-date {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--accent);
+      font-weight: 600;
+      min-width: 80px;
+    }
+    
+    .timeline-content {
+      flex: 1;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+      .case-study-content {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* ── ROI Calculator ─────────────────────────────────────────── */
+    .roi-calculator-section {
+      padding: 80px 0;
+    }
+    
+    .roi-calculator {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .calculator-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    
+    .calculator-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    
+    .calculator-subtitle {
+      color: var(--text-muted);
+    }
+    
+    .calculator-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .input-label {
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    .calculator-input {
+      background: var(--bg-raised);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-family: var(--font-main);
+      font-size: 1rem;
+      color: var(--text);
+    }
+    
+    .calculator-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+    }
+    
+    .roi-results {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    
+    .roi-result-card {
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .roi-result-value {
+      font-size: 2rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--success);
+      margin-bottom: 8px;
+    }
+    
+    .roi-result-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    .roi-cta {
+      text-align: center;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(108, 99, 255, 0.1), rgba(108, 99, 255, 0.05));
+      border-radius: var(--radius);
+    }
+    
+    @media (max-width: 768px) {
+      .calculator-inputs {
+        grid-template-columns: 1fr;
+      }
+      .roi-results {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* ── ATS Integration Preview ────────────────────────────────── */
+    .ats-integration-section {
+      padding: 80px 0;
+      border-top: 1px solid var(--border);
+    }
+    
+    .ats-preview {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-top: 32px;
+    }
+    
+    .ats-header {
+      background: var(--bg-raised);
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .ats-title {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .ats-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--success);
+    }
+    
+    .ats-content {
+      padding: 24px;
+    }
+    
+    .ats-workflow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .workflow-step {
+      flex: 1;
+      text-align: center;
+      padding: 16px;
+      background: var(--bg-raised);
+      border-radius: var(--radius);
+      position: relative;
+    }
+    
+    .workflow-step:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -24px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent);
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    
+    .workflow-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      display: block;
+    }
+    
+    .workflow-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .workflow-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    
+    /* ── Before/After Comparison ────────────────────────────────── */
+    .before-after-section {
+      padding: 80px 0;
+      background: linear-gradient(135deg, rgba(108, 99, 255, 0.03), rgba(108, 99, 255, 0.01));
+    }
+    
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 32px;
+    }
+    
+    .comparison-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      position: relative;
+    }
+    
+    .comparison-panel.before {
+      border-color: var(--danger);
+    }
+    
+    .comparison-panel.after {
+      border-color: var(--success);
+    }
+    
+    .comparison-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    
+    .comparison-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    
+    .comparison-panel.before .comparison-badge {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+    
+    .comparison-panel.after .comparison-badge {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+    
+    .comparison-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .comparison-subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    .comparison-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .comparison-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-raised);
+      border-radius: var(--radius);
+    }
+    
+    .step-number {
+      background: var(--accent);
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    
+    .step-content {
+      flex: 1;
+    }
+    
+    .step-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .step-time {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    
+    .comparison-total {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    
+    .total-time {
+      font-size: 2rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      margin-bottom: 4px;
+    }
+    
+    .comparison-panel.before .total-time {
+      color: var(--danger);
+    }
+    
+    .comparison-panel.after .total-time {
+      color: var(--success);
+    }
+    
+    .total-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    
+    @media (max-width: 768px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* ── Final CTA ──────────────────────────────────────────────── */
+    .final-cta-section {
+      padding: 80px 0;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+    
+    .final-cta {
+      background: linear-gradient(135deg, rgba(108, 99, 255, 0.1), rgba(108, 99, 255, 0.05));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 60px 40px;
+      position: relative;
+      overflow: hidden;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .cta-glow {
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      height: 400px;
+      background: var(--accent);
+      filter: blur(160px);
+      opacity: 0.1;
+      pointer-events: none;
+    }
+    
+    .cta-content {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .final-cta h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    
+    .final-cta p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    
+    .cta-guarantee {
+      font-size: 0.9rem;
+      color: var(--text-faint);
+      font-style: italic;
+    }
+    
+    /* ── Utilities ──────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+    
+    @media (max-width: 768px) {
+      .ats-workflow {
+        flex-direction: column;
+        gap: 24px;
+      }
+      
+      .workflow-step:not(:last-child)::after {
+        content: "↓";
+        right: 50%;
+        transform: translateX(50%);
+        bottom: -32px;
+        top: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ════════════════════════════════════════ NAVIGATION ════════════════════════════════════════ -->
+  <nav class="nav">
+    <div class="nav__inner container">
+      <a href="../" class="nav__logo">
+        <span class="nav__logo-icon">⚡</span>
+        <span>Yong<span class="accent">AI</span></span>
+      </a>
+      <a href="../" class="nav__back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Back to YongAI
+      </a>
+    </div>
+  </nav>
+
+  <!-- ════════════════════════════════════════ STATS BAR ════════════════════════════════════════ -->
+  <div class="stats-bar">
+    <div class="container">
+      <div class="stats-container">
+        <div class="stat-item">
+          <span class="stat-number">60-70%</span>
+          <span class="stat-label">More Applications Processed</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">35%</span>
+          <span class="stat-label">Faster Time-to-Hire</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">20-40%</span>
+          <span class="stat-label">Lower Cost-per-Hire</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">3-6mo</span>
+          <span class="stat-label">Typical ROI Timeline</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════ HEADER ════════════════════════════════════════ -->
+  <header class="demo-header">
+    <div class="container">
+      <div class="demo-badge">
+        <span class="pulse-dot"></span>
+        Enterprise Demo Platform
+      </div>
+      <h1>AI Recruiting Platform</h1>
+      <p>Experience the complete AI recruiting pipeline that's helping agencies process 3x more candidates, reduce screening time by 75%, and win enterprise clients who value speed.</p>
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════ JOB INPUT ════════════════════════════════════════ -->
+  <section class="job-input-section">
+    <div class="container">
+      <div class="job-input-panel">
+        <div class="job-input-header">
+          <h2>Step 1: Define Your Requirements</h2>
+          <p>Paste your job description to see how AI matches candidates against specific requirements</p>
+        </div>
+        
+        <textarea 
+          class="job-description-input" 
+          id="job-description"
+          placeholder="Paste your job description here...
+
+We are seeking a Senior Software Engineer with 5+ years of experience in full-stack development. Must have strong expertise in React, Node.js, and cloud platforms (AWS/Azure). Experience with microservices architecture and team leadership preferred. Bachelor's degree in Computer Science or equivalent experience required."
+        ></textarea>
+        
+        <div class="job-actions">
+          <button class="sample-job-btn" onclick="loadSampleJob('software')">Software Engineer</button>
+          <button class="sample-job-btn" onclick="loadSampleJob('marketing')">Marketing Manager</button>
+          <button class="sample-job-btn" onclick="loadSampleJob('sales')">Sales Director</button>
+          <button class="btn btn--primary" onclick="analyzeJob()">Analyze Candidates</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ CANDIDATES ════════════════════════════════════════ -->
+  <section class="candidates-section" id="candidates-section" style="display: none;">
+    <div class="container">
+      <div class="section-header">
+        <h2>AI-Ranked Candidate Pipeline</h2>
+        <p>Our AI automatically scores and ranks candidates against your job requirements. Click any candidate to see detailed analysis.</p>
+      </div>
+      
+      <div class="candidates-grid" id="candidates-grid">
+        <!-- Candidates will be populated here -->
+      </div>
+      
+      <div class="detailed-analysis" id="detailed-analysis">
+        <div class="analysis-panel">
+          <div class="panel-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Skills & Experience Analysis
+          </div>
+          <div class="skills-detailed" id="skills-detailed">
+            <!-- Skills will be populated here -->
+          </div>
+        </div>
+        
+        <div class="analysis-panel">
+          <div class="panel-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            Cultural Fit & Soft Skills
+          </div>
+          <div class="cultural-fit" id="cultural-fit">
+            <!-- Cultural fit metrics will be populated here -->
+          </div>
+          
+          <div class="bias-indicator">
+            <div class="bias-icon">🛡️</div>
+            <div class="bias-text">Bias-Free Analysis</div>
+            <div class="bias-detail">AI removes unconscious bias based on names, schools, or demographics</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ CASE STUDY ════════════════════════════════════════ -->
+  <section class="case-study-section">
+    <div class="container">
+      <div class="case-study-container">
+        <div class="case-study-header">
+          <div class="case-study-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Client Success Story
+          </div>
+          <h2 class="case-study-title">How Apex Talent Group 3x'd Their Volume</h2>
+          <p class="case-study-subtitle">A 25-person recruiting agency in Toronto transformed their screening process and won 2 enterprise clients who valued their speed.</p>
+        </div>
+        
+        <div class="case-study-content">
+          <div class="case-study-story">
+            <div class="story-section">
+              <div class="story-header">The Challenge</div>
+              <div class="story-text">
+                Apex Talent Group was drowning in resumes. With 200+ applications per role and 4-5 hours of manual screening per posting, they were placing only 40 candidates per month. Worse, they were losing deals to faster competitors who could deliver shortlists within 24 hours.
+              </div>
+            </div>
+            
+            <div class="story-section">
+              <div class="story-header">The Solution</div>
+              <div class="story-text">
+                We implemented a complete AI screening pipeline that automated 90% of their initial screening process. The system could rank 200 candidates in under 10 minutes, identifying the top 10 matches with detailed analysis and custom interview questions.
+              </div>
+            </div>
+            
+            <div class="story-section">
+              <div class="story-header">The Results</div>
+              <div class="story-text">
+                Within 3 months, Apex was processing 3x the volume with the same team. They won 2 major enterprise clients specifically because of their speed, and their placement rate improved by 35% due to better candidate matching.
+              </div>
+            </div>
+          </div>
+          
+          <div class="case-study-metrics">
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <div class="metric-value-large">75%</div>
+                <div class="metric-label-large">Reduction in Screening Time</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-value-large">35%</div>
+                <div class="metric-label-large">Better Placement Rate</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-value-large">40%</div>
+                <div class="metric-label-large">Lower Cost-per-Hire</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-value-large">3x</div>
+                <div class="metric-label-large">Volume Processed</div>
+              </div>
+            </div>
+            
+            <div class="timeline">
+              <div class="panel-header">Implementation Timeline</div>
+              <div class="timeline-item">
+                <div class="timeline-date">Week 1</div>
+                <div class="timeline-content">Initial setup and data integration with existing ATS</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-date">Week 2</div>
+                <div class="timeline-content">Team training and first batch of candidates processed</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-date">Month 1</div>
+                <div class="timeline-content">Full deployment, processing 600+ candidates per week</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-date">Month 3</div>
+                <div class="timeline-content">Won first enterprise client, ROI achieved</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-date">Month 6</div>
+                <div class="timeline-content">Second enterprise client, 3x volume capacity reached</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ ROI CALCULATOR ════════════════════════════════════ -->
+  <section class="roi-calculator-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Calculate Your ROI</h2>
+        <p>See how much your agency could save with AI screening</p>
+      </div>
+      
+      <div class="roi-calculator">
+        <div class="calculator-header">
+          <h3 class="calculator-title">ROI Calculator</h3>
+          <p class="calculator-subtitle">Input your current numbers to see projected savings</p>
+        </div>
+        
+        <div class="calculator-inputs">
+          <div class="input-group">
+            <label class="input-label">Resumes per Month</label>
+            <input type="number" class="calculator-input" id="resumes-month" value="800" oninput="calculateROI()">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Avg. Recruiter Hourly Rate ($)</label>
+            <input type="number" class="calculator-input" id="hourly-rate" value="45" oninput="calculateROI()">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Minutes per Resume (Current)</label>
+            <input type="number" class="calculator-input" id="time-per-resume" value="15" oninput="calculateROI()">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Team Size</label>
+            <input type="number" class="calculator-input" id="team-size" value="8" oninput="calculateROI()">
+          </div>
+        </div>
+        
+        <div class="roi-results">
+          <div class="roi-result-card">
+            <div class="roi-result-value" id="monthly-savings">$9,000</div>
+            <div class="roi-result-label">Monthly Savings</div>
+          </div>
+          <div class="roi-result-card">
+            <div class="roi-result-value" id="annual-savings">$108,000</div>
+            <div class="roi-result-label">Annual Savings</div>
+          </div>
+          <div class="roi-result-card">
+            <div class="roi-result-value" id="payback-period">2.1</div>
+            <div class="roi-result-label">Payback (Months)</div>
+          </div>
+        </div>
+        
+        <div class="roi-cta">
+          <p><strong>Based on industry averages:</strong> 75% time reduction, 30% cost savings, 35% faster hiring</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ ATS INTEGRATION ══════════════════════════════════ -->
+  <section class="ats-integration-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Seamless ATS Integration</h2>
+        <p>Works with your existing systems - Bullhorn, Greenhouse, Lever, JobDiva, and more</p>
+      </div>
+      
+      <div class="ats-preview">
+        <div class="ats-header">
+          <div class="ats-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="9"/>
+              <rect x="14" y="3" width="7" height="5"/>
+              <rect x="14" y="12" width="7" height="9"/>
+              <rect x="3" y="16" width="7" height="5"/>
+            </svg>
+            Bullhorn Integration
+          </div>
+          <div class="ats-status">
+            <div style="width: 8px; height: 8px; background: var(--success); border-radius: 50%;"></div>
+            Connected
+          </div>
+        </div>
+        <div class="ats-content">
+          <div class="ats-workflow">
+            <div class="workflow-step">
+              <span class="workflow-icon">📥</span>
+              <div class="workflow-title">Auto-Sync</div>
+              <div class="workflow-desc">New candidates automatically pulled from ATS</div>
+            </div>
+            <div class="workflow-step">
+              <span class="workflow-icon">🤖</span>
+              <div class="workflow-title">AI Analysis</div>
+              <div class="workflow-desc">Resume analyzed & scored in under 30 seconds</div>
+            </div>
+            <div class="workflow-step">
+              <span class="workflow-icon">📊</span>
+              <div class="workflow-title">Smart Ranking</div>
+              <div class="workflow-desc">Candidates ranked by fit score with insights</div>
+            </div>
+            <div class="workflow-step">
+              <span class="workflow-icon">📤</span>
+              <div class="workflow-title">Push Back</div>
+              <div class="workflow-desc">Results & notes synced back to your ATS</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ BEFORE/AFTER ═════════════════════════════════════ -->
+  <section class="before-after-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Transform Your Workflow</h2>
+        <p>See the dramatic difference AI makes to your screening process</p>
+      </div>
+      
+      <div class="comparison-grid">
+        <div class="comparison-panel before">
+          <div class="comparison-header">
+            <div class="comparison-badge">BEFORE</div>
+            <h3 class="comparison-title">Manual Screening</h3>
+            <p class="comparison-subtitle">The old way of doing things</p>
+          </div>
+          
+          <div class="comparison-steps">
+            <div class="comparison-step">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <div class="step-title">Download & Read Resume</div>
+                <div class="step-time">3-4 minutes per resume</div>
+              </div>
+            </div>
+            <div class="comparison-step">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <div class="step-title">Manual Skill Extraction</div>
+                <div class="step-time">5-7 minutes per resume</div>
+              </div>
+            </div>
+            <div class="comparison-step">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <div class="step-title">Compare Against Job Requirements</div>
+                <div class="step-time">3-5 minutes per resume</div>
+              </div>
+            </div>
+            <div class="comparison-step">
+              <div class="step-number">4</div>
+              <div class="step-content">
+                <div class="step-title">Write Notes & Score</div>
+                <div class="step-time">2-3 minutes per resume</div>
+              </div>
+            </div>
+            <div class="comparison-step">
+              <div class="step-number">5</div>
+              <div class="step-content">
+                <div class="step-title">Prepare Interview Questions</div>
+                <div class="step-time">5-8 minutes per candidate</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="comparison-total">
+            <div class="total-time">15-20 min</div>
+            <div class="total-label">per resume</div>
+          </div>
+        </div>
+        
+        <div class="comparison-panel after">
+          <div class="comparison-header">
+            <div class="comparison-badge">AFTER</div>
+            <h3 class="comparison-title">AI-Powered Screening</h3>
+            <p class="comparison-subtitle">The YongAI way</p>
+          </div>
+          
+          <div class="comparison-steps">
+            <div class="comparison-step">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <div class="step-title">Automatic Resume Parsing</div>
+                <div class="step-time">5 seconds per resume</div>
+              </div>
+            </div>
+            <div class="comparison-step">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <div class="step-title">AI Skill & Experience Extraction</div>
+                <div class="step-time">10 seconds per resume</div>
+              </div>
+            </div>
+            <div class="comparison-step">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <div class="step-title">Intelligent Job Matching</div>
+                <div class="step-time">5 seconds per resume</div>
+              </div>
+            </div>
+            <div class="comparison-step">
+              <div class="step-number">4</div>
+              <div class="step-content">
+                <div class="step-title">Automated Scoring & Notes</div>
+                <div class="step-time">5 seconds per resume</div>
+              </div>
+            </div>
+            <div class="comparison-step">
+              <div class="step-number">5</div>
+              <div class="step-content">
+                <div class="step-title">Custom Interview Question Generation</div>
+                <div class="step-time">5 seconds per candidate</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="comparison-total">
+            <div class="total-time">30 sec</div>
+            <div class="total-label">per resume</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ FINAL CTA ════════════════════════════════════════ -->
+  <section class="final-cta-section">
+    <div class="container">
+      <div class="final-cta">
+        <div class="cta-glow"></div>
+        <div class="cta-content">
+          <h2>Ready to <span class="accent-gradient">3x Your Volume?</span></h2>
+          <p>Join the recruiting agencies already using AI to process more candidates, win more deals, and scale faster than ever before.</p>
+          <div class="cta-buttons">
+            <a href="#" onclick="Calendly.initPopupWidget({url: 'https://calendly.com/gary-yong-yongai/30min'});return false;" class="btn btn--primary btn--large">
+              Book Strategy Call
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            </a>
+            <a href="mailto:gary.yong@yongai.ca?subject=AI Recruiting Platform Demo Request" class="btn btn--outline btn--large">
+              Request Demo
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
+          </div>
+          <p class="cta-guarantee">💼 Free consultation • No commitment • ROI typically within 3-6 months</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scripts -->
+  <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
+  <script>
+    // Sample job descriptions
+    const sampleJobs = {
+      software: `Senior Software Engineer - Full Stack
+
+We are seeking a Senior Software Engineer with 5+ years of experience in full-stack development. Must have strong expertise in React, Node.js, and cloud platforms (AWS/Azure). Experience with microservices architecture and team leadership preferred.
+
+Key Requirements:
+• 5+ years full-stack development experience
+• Expert-level React and Node.js skills
+• AWS/Azure cloud platform experience  
+• Experience with microservices architecture
+• Team leadership and mentoring experience
+• Bachelor's degree in Computer Science or equivalent
+
+Preferred Qualifications:
+• Docker/Kubernetes experience
+• CI/CD pipeline implementation
+• Database optimization experience
+• Agile development methodology`,
+
+      marketing: `Digital Marketing Manager
+
+Looking for an experienced Digital Marketing Manager to lead our marketing campaigns and drive growth. Must have 3+ years in digital marketing with proven ROI track record.
+
+Key Requirements:  
+• 3+ years digital marketing experience
+• Google Ads and Facebook Ads expertise
+• SEO/SEM strategy and implementation
+• Marketing automation platforms (HubSpot, Marketo)
+• Analytics and data-driven decision making
+• Content marketing and social media management
+
+Preferred Qualifications:
+• MBA or Marketing degree
+• B2B SaaS marketing experience
+• Growth hacking experience
+• Team management experience`,
+
+      sales: `Sales Director - Enterprise
+
+Seeking an Enterprise Sales Director to build and lead our enterprise sales team. Must have 7+ years in B2B software sales with $1M+ quota achievement.
+
+Key Requirements:
+• 7+ years enterprise B2B software sales
+• Consistent $1M+ quota achievement  
+• Team building and leadership experience
+• CRM management (Salesforce preferred)
+• Solution selling methodology
+• C-level relationship building
+
+Preferred Qualifications:
+• Previous sales management role
+• SaaS/cloud software experience
+• Large enterprise deal experience ($100K+)
+• MBA or business degree`
+    };
+
+    // Sample candidates data
+    const candidatesData = [
+      {
+        rank: 1,
+        name: "Sarah Johnson",
+        title: "Senior Software Engineer",
+        score: 94,
+        scoreClass: "score-excellent",
+        highlights: [
+          "8+ years full-stack experience",
+          "React & Node.js expert",
+          "AWS certified architect", 
+          "Team leadership at scale"
+        ],
+        skills: [
+          { name: "React", experience: "5+ years", confidence: 95 },
+          { name: "Node.js", experience: "6+ years", confidence: 92 },
+          { name: "AWS", experience: "4+ years", confidence: 88 },
+          { name: "Team Leadership", experience: "3+ years", confidence: 85 },
+          { name: "Microservices", experience: "4+ years", confidence: 90 },
+          { name: "Docker", experience: "3+ years", confidence: 82 }
+        ],
+        culturalFit: [
+          { name: "Team Collaboration", score: 92 },
+          { name: "Problem Solving", score: 89 },
+          { name: "Communication", score: 91 },
+          { name: "Adaptability", score: 88 }
+        ]
+      },
+      {
+        rank: 2,
+        name: "Michael Chen",
+        title: "Full Stack Developer",
+        score: 87,
+        scoreClass: "score-excellent",
+        highlights: [
+          "6 years full-stack development",
+          "Strong React & Python skills",
+          "Cloud deployment experience",
+          "Open source contributor"
+        ],
+        skills: [
+          { name: "React", experience: "4+ years", confidence: 90 },
+          { name: "Python", experience: "6+ years", confidence: 94 },
+          { name: "AWS", experience: "2+ years", confidence: 76 },
+          { name: "Docker", experience: "3+ years", confidence: 85 },
+          { name: "PostgreSQL", experience: "5+ years", confidence: 88 },
+          { name: "Git", experience: "6+ years", confidence: 92 }
+        ],
+        culturalFit: [
+          { name: "Team Collaboration", score: 85 },
+          { name: "Problem Solving", score: 94 },
+          { name: "Communication", score: 82 },
+          { name: "Adaptability", score: 89 }
+        ]
+      },
+      {
+        rank: 3,
+        name: "Emily Rodriguez",
+        title: "Frontend Engineer",
+        score: 78,
+        scoreClass: "score-good",
+        highlights: [
+          "4 years React development",
+          "UI/UX design background",
+          "Performance optimization expert",
+          "Remote team experience"
+        ],
+        skills: [
+          { name: "React", experience: "4+ years", confidence: 93 },
+          { name: "JavaScript", experience: "5+ years", confidence: 91 },
+          { name: "CSS/SASS", experience: "5+ years", confidence: 89 },
+          { name: "Node.js", experience: "2+ years", confidence: 72 },
+          { name: "AWS", experience: "1+ years", confidence: 65 },
+          { name: "UI/UX Design", experience: "3+ years", confidence: 87 }
+        ],
+        culturalFit: [
+          { name: "Team Collaboration", score: 90 },
+          { name: "Problem Solving", score: 85 },
+          { name: "Communication", score: 88 },
+          { name: "Adaptability", score: 92 }
+        ]
+      },
+      {
+        rank: 4,
+        name: "David Kim",
+        title: "Backend Developer",
+        score: 73,
+        scoreClass: "score-good",
+        highlights: [
+          "5 years backend development",
+          "Strong database expertise",
+          "API design specialist",
+          "Startup experience"
+        ],
+        skills: [
+          { name: "Node.js", experience: "5+ years", confidence: 88 },
+          { name: "PostgreSQL", experience: "5+ years", confidence: 92 },
+          { name: "API Design", experience: "4+ years", confidence: 89 },
+          { name: "React", experience: "1+ years", confidence: 58 },
+          { name: "AWS", experience: "2+ years", confidence: 74 },
+          { name: "Docker", experience: "2+ years", confidence: 78 }
+        ],
+        culturalFit: [
+          { name: "Team Collaboration", score: 78 },
+          { name: "Problem Solving", score: 91 },
+          { name: "Communication", score: 75 },
+          { name: "Adaptability", score: 83 }
+        ]
+      },
+      {
+        rank: 5,
+        name: "Jennifer Park",
+        title: "Junior Developer",
+        score: 61,
+        scoreClass: "score-poor",
+        highlights: [
+          "2 years development experience",
+          "Recent bootcamp graduate",
+          "Eager to learn and grow",
+          "Strong foundational skills"
+        ],
+        skills: [
+          { name: "React", experience: "2+ years", confidence: 75 },
+          { name: "JavaScript", experience: "2+ years", confidence: 78 },
+          { name: "HTML/CSS", experience: "2+ years", confidence: 82 },
+          { name: "Node.js", experience: "1+ years", confidence: 65 },
+          { name: "AWS", experience: "0.5+ years", confidence: 45 },
+          { name: "Git", experience: "2+ years", confidence: 73 }
+        ],
+        culturalFit: [
+          { name: "Team Collaboration", score: 88 },
+          { name: "Problem Solving", score: 72 },
+          { name: "Communication", score: 85 },
+          { name: "Adaptability", score: 91 }
+        ]
+      }
+    ];
+
+    let selectedCandidate = null;
+
+    // Load sample job description
+    function loadSampleJob(type) {
+      document.getElementById('job-description').value = sampleJobs[type];
+    }
+
+    // Analyze job and show candidates
+    function analyzeJob() {
+      const jobDescription = document.getElementById('job-description').value;
+      if (!jobDescription.trim()) {
+        alert('Please enter a job description first.');
+        return;
+      }
+
+      // Show candidates section
+      document.getElementById('candidates-section').style.display = 'block';
+      
+      // Scroll to candidates section
+      document.getElementById('candidates-section').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+
+      // Populate candidates
+      populateCandidates();
+    }
+
+    // Populate candidates grid
+    function populateCandidates() {
+      const candidatesGrid = document.getElementById('candidates-grid');
+      candidatesGrid.innerHTML = '';
+
+      candidatesData.forEach(candidate => {
+        const candidateCard = document.createElement('div');
+        candidateCard.className = 'candidate-card';
+        candidateCard.onclick = () => selectCandidate(candidate);
+        
+        const highlightsHTML = candidate.highlights.map(highlight => 
+          `<div class="highlight-item">
+            <span class="highlight-icon">✓</span>
+            ${highlight}
+          </div>`
+        ).join('');
+
+        candidateCard.innerHTML = `
+          <div class="candidate-rank">#${candidate.rank}</div>
+          <div class="candidate-header">
+            <div class="candidate-name">${candidate.name}</div>
+            <div class="candidate-title">${candidate.title}</div>
+          </div>
+          <div class="candidate-score">
+            <span class="score-label">Match Score</span>
+            <span class="score-value ${candidate.scoreClass}">${candidate.score}%</span>
+          </div>
+          <div class="candidate-highlights">
+            ${highlightsHTML}
+          </div>
+        `;
+
+        candidatesGrid.appendChild(candidateCard);
+      });
+    }
+
+    // Select candidate for detailed analysis
+    function selectCandidate(candidate) {
+      selectedCandidate = candidate;
+      
+      // Update selected state
+      document.querySelectorAll('.candidate-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      event.currentTarget.classList.add('selected');
+
+      // Show detailed analysis
+      document.getElementById('detailed-analysis').classList.add('show');
+      
+      // Populate skills analysis
+      const skillsContainer = document.getElementById('skills-detailed');
+      skillsContainer.innerHTML = '';
+      
+      candidate.skills.forEach(skill => {
+        const skillDiv = document.createElement('div');
+        skillDiv.className = 'skill-detailed';
+        skillDiv.innerHTML = `
+          <div class="skill-info">
+            <div class="skill-name-detailed">${skill.name}</div>
+            <div class="skill-experience">${skill.experience} experience</div>
+          </div>
+          <div class="skill-confidence-detailed">${skill.confidence}%</div>
+        `;
+        skillsContainer.appendChild(skillDiv);
+      });
+
+      // Populate cultural fit
+      const culturalFitContainer = document.getElementById('cultural-fit');
+      culturalFitContainer.innerHTML = '';
+      
+      candidate.culturalFit.forEach(metric => {
+        const metricDiv = document.createElement('div');
+        metricDiv.className = 'fit-metric';
+        metricDiv.innerHTML = `
+          <span class="metric-name">${metric.name}</span>
+          <div class="metric-score">
+            <span class="metric-value">${metric.score}%</span>
+          </div>
+        `;
+        culturalFitContainer.appendChild(metricDiv);
+      });
+    }
+
+    // ROI Calculator
+    function calculateROI() {
+      const resumesMonth = parseInt(document.getElementById('resumes-month').value) || 0;
+      const hourlyRate = parseFloat(document.getElementById('hourly-rate').value) || 0;
+      const timePerResume = parseInt(document.getElementById('time-per-resume').value) || 0;
+      const teamSize = parseInt(document.getElementById('team-size').value) || 0;
+
+      // Calculate current monthly cost
+      const currentMonthlyHours = (resumesMonth * timePerResume) / 60;
+      const currentMonthlyCost = currentMonthlyHours * hourlyRate;
+      
+      // Calculate AI-powered cost (75% time reduction)
+      const aiMonthlyHours = currentMonthlyHours * 0.25;
+      const aiMonthlyCost = aiMonthlyHours * hourlyRate;
+      
+      // Calculate savings
+      const monthlySavings = currentMonthlyCost - aiMonthlyCost;
+      const annualSavings = monthlySavings * 12;
+      
+      // Estimate implementation cost (simplified)
+      const implementationCost = teamSize * 500; // Example: $500 per team member setup
+      const monthlyPlatformCost = teamSize * 200; // Example: $200 per team member per month
+      
+      const paybackPeriod = implementationCost / (monthlySavings - monthlyPlatformCost);
+
+      // Update display
+      document.getElementById('monthly-savings').textContent = `$${monthlySavings.toLocaleString()}`;
+      document.getElementById('annual-savings').textContent = `$${annualSavings.toLocaleString()}`;
+      document.getElementById('payback-period').textContent = `${Math.max(0.1, paybackPeriod).toFixed(1)}`;
+    }
+
+    // Initialize ROI calculator
+    calculateROI();
+  </script>
+</body>
+</html>

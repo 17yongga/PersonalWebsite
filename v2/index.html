@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gary Yong — V2 Prototype</title>
+  <link rel="icon" type="image/png" href="/img/logo-dark.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/nav.css" />
+  <link rel="stylesheet" href="css/hero.css" />
+  <link rel="stylesheet" href="css/timeline.css" />
+  <link rel="stylesheet" href="css/projects.css" />
+  <link rel="stylesheet" href="css/gallery.css" />
+</head>
+<body>
+
+  <!-- ============ NAVIGATION ============ -->
+  <header class="nav-header" id="nav">
+    <div class="container flex items-center justify-between">
+      <a href="#" class="nav-logo">
+        <img src="/img/logo-dark.png" alt="GY" class="nav-logo-img" />
+      </a>
+
+      <nav class="nav-links">
+        <a href="#work">Work</a>
+        <a href="#projects">Projects</a>
+        <a href="#about">About</a>
+        <a href="/blog.html">Blog</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="mailto:yonggary329@gmail.com" class="btn btn-ghost btn-sm hide-mobile">Get in touch</a>
+        <button class="hamburger-btn show-mobile" id="hamburger-btn" aria-label="Toggle menu">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ MOBILE MENU OVERLAY ============ -->
+  <div class="mobile-menu-overlay" id="mobile-menu">
+    <div class="mobile-menu-content">
+      <nav class="mobile-nav-links">
+        <a href="#work" class="mobile-nav-link">Work</a>
+        <a href="#projects" class="mobile-nav-link">Projects</a>
+        <a href="#about" class="mobile-nav-link">About</a>
+        <a href="/blog.html" class="mobile-nav-link">Blog</a>
+        <a href="mailto:yonggary329@gmail.com" class="mobile-nav-link mobile-nav-cta">Get in touch</a>
+      </nav>
+    </div>
+  </div>
+
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="hero">
+    <canvas class="hero-bg-canvas"></canvas>
+    <div class="container">
+      <div class="hero-content">
+        <p class="label reveal">Technology Consultant · Toronto</p>
+
+        <h1 class="text-hero reveal">
+          <span class="hero-name">Gary Yong</span>
+        </h1>
+
+        <p class="hero-subtitle reveal">
+          Technology Consultant at Capco. I help banks modernize, and I build things on the side.
+        </p>
+
+        <div class="hero-actions reveal flex gap-md flex-wrap">
+          <a href="#projects" class="btn btn-primary btn-lg pulse-glow">View Projects</a>
+          <a href="/Gary_Resume.pdf" class="btn btn-ghost btn-lg">Download Resume</a>
+        </div>
+
+        <div class="hero-stats reveal flex gap-xl">
+          <div class="hero-stat">
+            <span class="hero-stat-number">6</span>
+            <span class="hero-stat-label">Engagements</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-number">4+</span>
+            <span class="hero-stat-label">Years Consulting</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-number">5K+</span>
+            <span class="hero-stat-label">Hours Automated</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-scroll-indicator">
+        <span>Scroll to explore</span>
+        <div class="scroll-line"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============ WORK TIMELINE ============ -->
+  <section class="section" id="work">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="label">Experience</p>
+        <h2>Where I've made impact</h2>
+      </div>
+
+      <div class="timeline">
+
+        <div class="timeline-item reveal-left">
+          <div class="timeline-marker"></div>
+          <div class="timeline-content">
+            <div class="timeline-meta">
+              <span class="tag">Current</span>
+              <span class="text-muted text-small">Sept 2021 — Present</span>
+            </div>
+            <h3>Implementation Consultant</h3>
+            <p class="text-accent text-small" style="font-weight:600; margin-bottom: 0.5rem;">Capco</p>
+            <p class="text-secondary">6 engagements across Tier-1 global banks. Led CCaaS migration analysis, ran 30+ digital transformation workshops, built reconciliation automation saving 5,000+ hours annually.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item reveal-right">
+          <div class="timeline-marker"></div>
+          <div class="timeline-content">
+            <div class="timeline-meta">
+              <span class="text-muted text-small">2021</span>
+            </div>
+            <h3>PM Intern</h3>
+            <p class="text-accent text-small" style="font-weight:600; margin-bottom: 0.5rem;">PepsiCo Foods Canada</p>
+            <p class="text-secondary">Drove 30% sales increase through UI changes. Conducted causal impact analysis on social media campaigns.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item reveal-left">
+          <div class="timeline-marker"></div>
+          <div class="timeline-content">
+            <div class="timeline-meta">
+              <span class="text-muted text-small">2020</span>
+            </div>
+            <h3>Product Management Intern</h3>
+            <p class="text-accent text-small" style="font-weight:600; margin-bottom: 0.5rem;">Electro Source</p>
+            <p class="text-secondary">Built MVP remote collaboration platform. Led Scrum ceremonies and conducted 10+ client interviews.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item reveal-right">
+          <div class="timeline-marker"></div>
+          <div class="timeline-content">
+            <div class="timeline-meta">
+              <span class="text-muted text-small">2019</span>
+            </div>
+            <h3>SWE Intern</h3>
+            <p class="text-accent text-small" style="font-weight:600; margin-bottom: 0.5rem;">Accenture</p>
+            <p class="text-secondary">Built Hyperledger blockchain application with React Native frontend and AWS Cognito auth.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item reveal-left">
+          <div class="timeline-marker"></div>
+          <div class="timeline-content">
+            <div class="timeline-meta">
+              <span class="text-muted text-small">2019</span>
+            </div>
+            <h3>Supply Chain Analyst</h3>
+            <p class="text-accent text-small" style="font-weight:600; margin-bottom: 0.5rem;">Loblaw</p>
+            <p class="text-secondary">Delivered $1M+ savings via IoT pallet tracking. Designed and deployed on-site prototype.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item reveal-right">
+          <div class="timeline-marker"></div>
+          <div class="timeline-content">
+            <div class="timeline-meta">
+              <span class="text-muted text-small">2018</span>
+            </div>
+            <h3>Automation Specialist</h3>
+            <p class="text-accent text-small" style="font-weight:600; margin-bottom: 0.5rem;">PureLiving China</p>
+            <p class="text-secondary">Built VBA automation achieving 1,600% efficiency gain. Supported $800K in sales operations.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============ PROJECT GALLERY ============ -->
+  <section class="section" id="projects">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="label">Selected Work</p>
+        <h2>Things I've built</h2>
+      </div>
+
+      <div class="project-grid stagger">
+
+        <a href="#" class="project-card">
+          <div class="project-card-image">
+            <img src="/img/askgary-screenshot.jpg" alt="Ask Gary AI">
+            <div class="project-card-overlay">
+              <span class="btn btn-sm btn-primary">View Project →</span>
+            </div>
+          </div>
+          <div class="project-card-info">
+            <div class="flex gap-xs flex-wrap" style="margin-bottom: 0.5rem;">
+              <span class="tag">AI</span>
+              <span class="tag">RAG</span>
+              <span class="tag">Full-Stack</span>
+            </div>
+            <h3>Ask Gary — AI-Powered Portfolio Assistant</h3>
+            <p class="text-secondary text-small">RAG chatbot trained on my experience. GPT-4 + custom knowledge base, 2,000+ conversations served.</p>
+          </div>
+        </a>
+
+        <a href="#" class="project-card">
+          <div class="project-card-image">
+            <img src="/img/casino-screenshot.jpg" alt="Fantasy Casino">
+            <div class="project-card-overlay">
+              <span class="btn btn-sm btn-primary">View Project →</span>
+            </div>
+          </div>
+          <div class="project-card-info">
+            <div class="flex gap-xs flex-wrap" style="margin-bottom: 0.5rem;">
+              <span class="tag">Real-time</span>
+              <span class="tag">Multiplayer</span>
+            </div>
+            <h3>Fantasy Casino — Multiplayer Gaming Platform</h3>
+            <p class="text-secondary text-small">7 games including full Texas Hold'em engine. Socket.io real-time, 50+ concurrent players.</p>
+          </div>
+        </a>
+
+        <a href="#" class="project-card">
+          <div class="project-card-image">
+            <img src="/img/budget-screenshot.jpg" alt="Budget App">
+            <div class="project-card-overlay">
+              <span class="btn btn-sm btn-primary">View Project →</span>
+            </div>
+          </div>
+          <div class="project-card-info">
+            <div class="flex gap-xs flex-wrap" style="margin-bottom: 0.5rem;">
+              <span class="tag">Finance</span>
+              <span class="tag">Dashboard</span>
+            </div>
+            <h3>Budget Tracker — Personal Finance Dashboard</h3>
+            <p class="text-secondary text-small">Interactive budgeting tool with category tracking, trend analysis, and visual spending breakdowns.</p>
+          </div>
+        </a>
+
+        <a href="#" class="project-card">
+          <div class="project-card-image" style="background: linear-gradient(135deg, var(--color-bg-card), var(--color-accent-soft)); display:flex; align-items:center; justify-content:center; min-height:220px;">
+            <span style="font-size: 3rem;">🎮</span>
+            <div class="project-card-overlay">
+              <span class="btn btn-sm btn-primary">View Project →</span>
+            </div>
+          </div>
+          <div class="project-card-info">
+            <div class="flex gap-xs flex-wrap" style="margin-bottom: 0.5rem;">
+              <span class="tag">Multiplayer</span>
+              <span class="tag">Mobile-first</span>
+            </div>
+            <h3>Mini Games — Real-time Party Games</h3>
+            <p class="text-secondary text-small">7 multiplayer party games with plugin architecture. AI bots, room codes, zero login required.</p>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============ PERSONAL GALLERY ============ -->
+  <section class="section" id="about">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="label">Beyond Work</p>
+        <h2>Who I am outside the office</h2>
+      </div>
+
+      <div class="personal-intro reveal">
+        <p class="text-h4" style="max-width: 700px; line-height: 1.6;">
+          When I'm not consulting or coding, you'll find me bouldering at the local climbing gym, 
+          running through Toronto's neighborhoods, or taking photos of the city. I believe the best 
+          problem-solvers are the most curious people.
+        </p>
+      </div>
+
+      <div class="gallery-grid stagger">
+        <div class="gallery-item gallery-tall">
+          <div class="gallery-placeholder">🧗 Climbing</div>
+        </div>
+        <div class="gallery-item">
+          <div class="gallery-placeholder">📸 Photography</div>
+        </div>
+        <div class="gallery-item">
+          <div class="gallery-placeholder">🏃 Running</div>
+        </div>
+        <div class="gallery-item gallery-wide">
+          <div class="gallery-placeholder">🏙️ Toronto</div>
+        </div>
+      </div>
+
+      <p class="text-muted text-small reveal" style="margin-top: var(--space-lg); text-align: center;">
+        Photo placeholders — Gary, drop your best shots here and I'll make them shine ✨
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner flex justify-between items-center flex-wrap gap-lg">
+        <p class="text-muted text-small">©2026 Gary Yong · Built with love ❤️</p>
+        <div class="flex gap-lg">
+          <a href="https://www.linkedin.com/in/gary-yong-66a9ba164/" class="text-muted text-small">LinkedIn</a>
+          <a href="https://github.com/17yongga" class="text-muted text-small">GitHub</a>
+          <a href="mailto:yonggary329@gmail.com" class="text-muted text-small">Email</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+
+  <script src="js/reveal.js"></script>
+  <script src="js/hero-bg.js"></script>
+  <script>
+    /* Theme toggle (temporary for prototype) */
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 't') {
+        const html = document.documentElement;
+        html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+      }
+    });
+  </script>
+</body>
+</html>

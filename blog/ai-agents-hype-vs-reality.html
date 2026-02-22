@@ -87,6 +87,26 @@
         font-style: italic;
         color: var(--color-muted);
       }
+      .blog-illustration {
+        display: block;
+        max-width: 700px;
+        width: 100%;
+        margin: 40px auto;
+        opacity: 0;
+        animation: fadeInIllustration 0.8s ease forwards;
+      }
+      .blog-illustration.hero-illustration {
+        max-width: 800px;
+        margin: 30px auto 40px;
+      }
+      .blog-illustration.section-illustration {
+        max-width: 500px;
+        margin: 30px auto;
+      }
+      @keyframes fadeInIllustration {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
     </style>
   </head>
   <body>
@@ -145,6 +165,8 @@
           <span data-i18n="blog.post1.read_time">⏱️ 5 min read</span>
         </div>
 
+        <img src="/blog/img/artificial-intelligence.svg" class="blog-illustration hero-illustration" alt="AI Agents: Hype vs Reality">
+
         <div class="blog-content">
           <p data-i18n-html="blog.post1.content.intro1">Last week, I saw an ad claiming AI agents could "replace 20 employees overnight." On platforms like <a href="https://www.moltbook.com" target="_blank">Moltbook</a>—a social network where AI bots interact autonomously—people are posting about agents "starting religions" and developing their own thoughts. Meanwhile, my inbox is flooded with pitches for "revolutionary AI workforce solutions."</p>
 
@@ -153,6 +175,8 @@
           <p data-i18n="blog.post1.content.intro3">As someone who's spent years implementing AI solutions across enterprise environments, I've witnessed both spectacular successes and spectacular failures. Here's what I've learned about separating hype from reality.</p>
 
           <h2 data-i18n="blog.post1.content.section1_title">What's Actually Working</h2>
+
+          <img src="/blog/img/predictive-analytics.svg" class="blog-illustration section-illustration" alt="AI Augmentation Working">
 
           <p data-i18n="blog.post1.content.section1_p1">Let's start with a success story. I recently worked with a major bank deploying Google's conversational AI for their contact center. The system combines voice bots with real-time speech analytics—and the results were impressive: 40% reduction in call resolution time and measurably improved customer satisfaction.</p>
 
@@ -163,6 +187,8 @@
           <p data-i18n="blog.post1.content.section1_p4">This isn't flashy disruption. It's practical, measurable improvement that directly impacts both the bottom line and customer experience.</p>
 
           <h2 data-i18n="blog.post1.content.section2_title">Where It Goes Wrong</h2>
+
+          <img src="/blog/img/robotics.svg" class="blog-illustration section-illustration" alt="When AI Goes Wrong">
 
           <p data-i18n="blog.post1.content.section2_p1">Not every implementation succeeds. I've observed a consistent pattern: systems work beautifully in controlled testing, then fall apart when they encounter the messy exceptions that define real business operations.</p>
 
@@ -175,6 +201,8 @@
           </ul>
 
           <h2 data-i18n="blog.post1.content.section3_title">A Practical Evaluation Framework</h2>
+
+          <img src="/blog/img/real-time-analytics.svg" class="blog-illustration section-illustration" alt="Evaluation Framework">
 
           <p data-i18n="blog.post1.content.section3_p1">Before greenlighting any AI agent project, I ask three questions:</p>
 
@@ -220,7 +248,7 @@
 
     <footer class="site-footer">
       <div class="container">
-        <p data-i18n="footer.copyright">©2025 Gary Yong · Built with love ❤️.</p>
+        <p data-i18n="footer.copyright">©2026 Gary Yong · Built with love ❤️.</p>
       </div>
     </footer>
 

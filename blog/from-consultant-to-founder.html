@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <link rel="icon" type="image/png" href="/img/logo-dark.png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>From Consulting to AI Side Project: What I'm Learning – Gary Yong</title>
+    <meta name="description" content="What happens when a consultant at a Big 4 firm starts building an AI practice on the side — the mindset shifts, the surprises, and the lessons so far." />
+    <meta name="author" content="Gary Yong" />
+    <meta property="og:title" content="From Consulting to AI Side Project: What I'm Learning" />
+    <meta property="og:description" content="Personal reflections on exploring AI entrepreneurship while still working in consulting, and the mindset shifts required." />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://gary-yong.com/blog/from-consultant-to-founder.html" />
+    <link rel="stylesheet" href="../styles.css?v=202602051746" />
+    <style>
+      .blog-illustration {
+        display: block;
+        max-width: 700px;
+        width: 100%;
+        margin: 40px auto;
+        opacity: 0;
+        animation: fadeInIllustration 0.8s ease forwards;
+      }
+      .blog-illustration.hero-illustration {
+        max-width: 800px;
+        margin: 30px auto 40px;
+      }
+      .blog-illustration.section-illustration {
+        max-width: 500px;
+        margin: 30px auto;
+      }
+      @keyframes fadeInIllustration {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reading-progress">
+      <div class="reading-progress-bar" id="reading-progress"></div>
+    </div>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="../index.html" class="logo">
+          <img src="../img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
+          <img src="../img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
+        </a>
+
+        <nav class="nav nav-desktop">
+          <a href="../index.html" data-i18n="nav.home">Home</a>
+          <a href="../projects.html" data-i18n="nav.projects">Projects</a>
+          <a href="../experience.html" data-i18n="nav.experience">Experience</a>
+          <a href="../about.html" data-i18n="nav.about">About</a>
+          <a href="../skills.html" data-i18n="nav.skills">Skills</a>
+          <a href="../blog.html" class="active" data-i18n="nav.blog">Blog</a>
+        </nav>
+
+        <div class="header-actions">
+          <button id="lang-toggle" class="btn btn-ghost lang-toggle" aria-label="Switch language">
+            中文
+          </button>
+          <button id="theme-toggle" class="btn btn-ghost theme-toggle" aria-label="Toggle theme">
+            ☀️
+          </button>
+          <button class="icon-button mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+      </div>
+      
+      <nav class="nav-mobile" aria-label="Mobile navigation">
+        <div class="nav-mobile-inner">
+          <a href="../index.html" data-i18n="nav.home">Home</a>
+          <a href="../projects.html" data-i18n="nav.projects">Projects</a>
+          <a href="../experience.html" data-i18n="nav.experience">Experience</a>
+          <a href="../about.html" data-i18n="nav.about">About</a>
+          <a href="../skills.html" data-i18n="nav.skills">Skills</a>
+          <a href="../blog.html" data-i18n="nav.blog">Blog</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <article class="blog-article">
+        <nav class="blog-nav">
+          <a href="../blog.html" data-i18n="blog.back_to_blog">← Back to Blog</a>
+        </nav>
+
+        <header class="blog-header">
+          <h1 data-i18n="blog.post3.title">From Consulting to AI Side Project: What I'm Learning</h1>
+          <div class="blog-meta-row">
+            <span class="category-tag career" data-i18n="blog.post3.category">Career</span>
+            <span class="author-name" data-i18n="blog.post3.author">Gary Yong</span>
+            <span class="publish-date" data-i18n="blog.post3.date">February 5, 2025</span>
+            <span class="reading-time" data-i18n="blog.post3.read_time">6 min read</span>
+          </div>
+        </header>
+
+        <img src="/blog/img/career-progress.svg" class="blog-illustration hero-illustration" alt="From Consulting to AI Side Project">
+
+        <div class="blog-content">
+          <p data-i18n-html="blog.post3.content.intro_p1">I'm currently an Implementation Consultant at Capco, working with major banks and financial institutions on complex transformation projects. It's challenging work that I genuinely enjoy. But over the past year, I've been exploring something on the side: <strong>YongAI</strong>, an AI consulting initiative that applies everything I've learned in enterprise consulting to helping organizations actually adopt AI.</p>
+
+          <p data-i18n="blog.post3.content.intro_p2">I haven't quit my day job. I'm not writing this from a garage somewhere, burning through savings. This is about what happens when a consultant starts thinking like a builder — and the surprising lessons that come from straddling both worlds.</p>
+
+          <h2 data-i18n="blog.post3.content.section1_title">The Mindset Shift: From Optimization to Creation</h2>
+
+          <img src="/blog/img/innovative.svg" class="blog-illustration section-illustration" alt="Mindset Shift">
+
+          <p data-i18n="blog.post3.content.section1_p1">In my consulting work, I'm a problem-solver. Clients come with established businesses, existing processes, and clear (if complex) challenges. My job is to diagnose issues, design solutions, and optimize what already exists. I've gotten good at this — give me an underperforming process and I can map inefficiencies, propose improvements, and deliver measurable results.</p>
+
+          <p data-i18n-html="blog.post3.content.section1_p2">Building something from scratch is a completely different muscle. With YongAI, there are no existing processes to optimize because <em>nothing exists yet</em>. Every framework, every offering, every potential client relationship has to be created from zero. This shift from "fixing what's broken" to "building what doesn't exist" requires a different kind of thinking.</p>
+
+          <blockquote>
+            <p data-i18n-html="blog.post3.content.section1_quote"><em>In consulting, the hardest question is usually "How do we fix this?" When you're building something new, it's "What should I build?" — and that question has infinite possible answers.</em></p>
+          </blockquote>
+
+          <h2 data-i18n="blog.post3.content.section2_title">Why Consultants Are Well-Positioned for This</h2>
+
+          <img src="/blog/img/success-factors.svg" class="blog-illustration section-illustration" alt="Consultant Advantages">
+
+          <p data-i18n="blog.post3.content.section2_intro">The more I explore the AI space, the more I realize that consulting provides excellent preparation — but not for the reasons you might expect.</p>
+
+          <h3 data-i18n="blog.post3.content.subsection1_title">We're Used to Ambiguous Problems</h3>
+          <p data-i18n="blog.post3.content.subsection1_p1">Consultants thrive in unclear situations. Clients rarely come to us saying "Here's exactly what's wrong and exactly how to fix it." They say things like "Our sales are down, our employees seem unhappy, and we're losing market share." We're trained to work backwards from vague problems to specific, actionable solutions.</p>
+
+          <p data-i18n="blog.post3.content.subsection1_p2">This skill translates directly to the AI space, where organizations know they "need AI" but have no idea where to start. When someone says "We think we need AI but we're not sure what kind," I don't panic — I grab my trusty framework and start asking clarifying questions. That's just Tuesday for a consultant.</p>
+
+          <h3 data-i18n="blog.post3.content.subsection2_title">We Know How to Build Trust Quickly</h3>
+          <p data-i18n="blog.post3.content.subsection2_p1">Consultants are professional outsiders. We walk into organizations where we know nobody, understand little about the industry specifics, and somehow need to gain enough trust that executives will listen to our recommendations on massive changes.</p>
+
+          <p data-i18n="blog.post3.content.subsection2_p2">This ability to build credibility quickly is incredibly relevant when talking to organizations about AI. There's a lot of hype and a lot of skepticism. Being able to position yourself as someone who understands both the technology and the business reality — that's a consulting superpower.</p>
+
+          <h3 data-i18n="blog.post3.content.subsection3_title">We're Comfortable Being Wrong (Then Adapting)</h3>
+          <p data-i18n="blog.post3.content.subsection3_p1">Good consultants know that initial hypotheses are usually wrong. You start with educated guesses, test them against reality, and pivot when the data says you're off track. This "strong opinions, weakly held" mindset is essential when exploring new territory.</p>
+
+          <p data-i18n="blog.post3.content.subsection3_p2">My original thinking for YongAI focused heavily on building custom AI solutions. But the more conversations I had, the more I realized most organizations don't need custom models — they need help integrating existing AI tools into their workflows and building the organizational capability to use them. That realization reshaped my entire approach.</p>
+
+          <h2 data-i18n="blog.post3.content.section3_title">The Traps I'm Watching Out For</h2>
+
+          <p data-i18n="blog.post3.content.section3_intro">Not everything from consulting translates well. Here are the tendencies I've noticed in myself that I'm actively trying to counteract:</p>
+
+          <h3 data-i18n="blog.post3.content.trap1_title">Over-Engineering Everything</h3>
+          <p data-i18n="blog.post3.content.trap1_p1">Consultants are trained to deliver polished, comprehensive solutions. We create detailed frameworks, beautiful presentations, and thorough documentation. When you're exploring a new venture, this perfectionism can be paralyzing.</p>
+
+          <p data-i18n="blog.post3.content.trap1_p2">I caught myself spending weeks building elaborate positioning documents before I'd even validated the core idea with real people. Those documents were thorough, well-researched, and premature. Conversations with actual prospects taught me more about what the market needs than any amount of desk research.</p>
+
+          <h3 data-i18n="blog.post3.content.trap2_title">Defaulting to "Analysis Mode"</h3>
+          <p data-i18n="blog.post3.content.trap2_p1">When faced with uncertainty, consultants gather more data. We run surveys, conduct interviews, and build models until we feel confident. When you're exploring something new, this can become a comfortable hiding place — an excuse to keep researching instead of actually doing.</p>
+
+          <p data-i18n="blog.post3.content.trap2_p2">I've had to push myself to move from analysis to action faster than feels natural. Sometimes the answer comes from a 15-minute conversation, not a six-week research project.</p>
+
+          <h3 data-i18n="blog.post3.content.trap3_title">Underestimating the Emotional Difference</h3>
+          <p data-i18n="blog.post3.content.trap3_p1">Consulting projects have defined timelines, clear success metrics, and built-in ending points. When a project goes sideways, there's usually shared accountability. Building your own thing is emotionally different — every win and every setback feels personal in a way that client work doesn't.</p>
+
+          <p data-i18n="blog.post3.content.trap3_p2">Learning to treat feedback as market data rather than personal rejection has been an ongoing calibration.</p>
+
+          <h2 data-i18n="blog.post3.content.section4_title">What I'm Taking Away So Far</h2>
+
+          <img src="/blog/img/next-steps.svg" class="blog-illustration section-illustration" alt="Key Takeaways">
+
+          <p data-i18n-html="blog.post3.content.section4_takeaway1"><strong>Start conversations before you're ready.</strong> Consultants are used to feeling fully prepared before presenting to clients. When exploring a new direction, "ready enough" beats "perfect." I should have started talking to people about this idea months earlier than I did.</p>
+
+          <p data-i18n-html="blog.post3.content.section4_takeaway2"><strong>Your network is your unfair advantage.</strong> Those years of building relationships with executives, understanding their challenges, and proving your competence? That's not just a career asset — it's a launchpad. The trust you've already built opens doors that cold outreach never could.</p>
+
+          <p data-i18n-html="blog.post3.content.section4_takeaway3"><strong>The gap in the market is real.</strong> Through my consulting work, I've seen firsthand how many organizations struggle with AI adoption — not because the technology isn't there, but because they lack the structured approach to evaluate, implement, and scale it. That's a consulting problem, not a tech problem. And consultants are uniquely equipped to solve it.</p>
+
+          <h2 data-i18n="blog.post3.content.section5_title">Where This Goes</h2>
+
+          <p data-i18n="blog.post3.content.section5_p1">I don't have a dramatic "I quit my job" story. What I have is a growing conviction that the intersection of enterprise consulting and AI implementation is where I can create the most value. My experience at Capco — running workshops, mapping processes, managing complex stakeholder environments — is directly applicable to helping organizations navigate AI adoption.</p>
+
+          <p data-i18n="blog.post3.content.section5_p2">YongAI is still early. I'm learning, experimenting, and figuring out what the right offering looks like. But the foundation is solid: deep consulting methodology applied to the most transformative technology of our generation.</p>
+
+          <p data-i18n="blog.post3.content.section5_p3">For other consultants who see the same opportunity — you don't have to make a dramatic leap. Start exploring. Have conversations. Build something small on the side. The skills you've developed solving complex business problems are exactly what the AI space needs right now.</p>
+
+          <p data-i18n-html="blog.post3.content.section5_conclusion"><strong>The best part?</strong> All those years of helping other people build better businesses are preparing you to build something meaningful of your own.</p>
+        </div>
+
+        <div class="blog-share">
+          <button class="share-button" onclick="copyToClipboard()" data-i18n="blog.share.copy_link">📋 Copy Link</button>
+          <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://gary-yong.com/blog/from-consultant-to-founder.html" target="_blank" class="share-button" data-i18n="blog.share.linkedin">💼 Share on LinkedIn</a>
+          <a href="https://twitter.com/intent/tweet?url=https://gary-yong.com/blog/from-consultant-to-founder.html&text=From Consulting to AI Side Project: What I'm Learning" target="_blank" class="share-button" data-i18n="blog.share.twitter">🐦 Share on X</a>
+        </div>
+
+        <section class="related-articles">
+          <h3 data-i18n="blog.related_articles">Related Articles</h3>
+          <div class="related-grid">
+            <article class="related-card">
+              <h4><a href="ai-automation-consulting.html" data-i18n="blog.post2.title">Why Most AI Projects Fail (And How to Make Yours Succeed)</a></h4>
+              <p data-i18n="blog.post2.excerpt">Drawing from consulting experience to understand the real reasons AI projects fail and build a practical evaluation framework.</p>
+            </article>
+            <article class="related-card">
+              <h4><a href="enterprise-ai-playbook.html" data-i18n="blog.post4.title">The Enterprise AI Playbook: 5 Steps I Use With Every Client</a></h4>
+              <p data-i18n="blog.post4.excerpt">The exact methodology I developed through years of consulting, now applied to AI implementations.</p>
+            </article>
+          </div>
+        </section>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p data-i18n="footer.copyright">©2026 Gary Yong · Built with love ❤️.</p>
+      </div>
+    </footer>
+
+    <script src="../main.js?v=202602051746"></script>
+    <script src="../js/i18n.js"></script>
+    <script>
+      // Reading progress bar
+      window.addEventListener('scroll', function() {
+        const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+        document.getElementById('reading-progress').style.width = scrolled + '%';
+      });
+
+      // Copy to clipboard
+      function copyToClipboard() {
+        navigator.clipboard.writeText(window.location.href).then(function() {
+          const button = event.target;
+          const originalText = button.textContent;
+          button.textContent = '✅ Copied!';
+          setTimeout(() => {
+            button.textContent = originalText;
+          }, 2000);
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -79,6 +79,39 @@ class RouletteGame {
       </div>
     `;
 
+    // On mobile, fix layout: reorder DOM + apply inline styles to override any cached CSS
+    if (window.innerWidth <= 768) {
+      const gameArea = gameView.querySelector('.roulette-game-area');
+      const bettingSection = gameArea.querySelector('.betting-section-roulette');
+      const wheelSection = gameArea.querySelector('.roulette-wheel-section');
+      const display = gameArea.querySelector('.digital-roulette-display');
+      const rouletteDisplay = gameArea.querySelector('.roulette-display');
+      const colorIndicator = gameArea.querySelector('.color-indicator');
+      const historySection = gameArea.querySelector('.roulette-history-section');
+      
+      if (gameArea && bettingSection) {
+        // Reorder: betting first
+        gameArea.insertBefore(bettingSection, gameArea.firstChild);
+        
+        // Force flex column layout (override any cached grid CSS)
+        gameArea.style.cssText = 'display:flex!important;flex-direction:column!important;gap:1rem;margin-top:1rem;';
+        
+        // Center and constrain the display
+        if (wheelSection) wheelSection.style.cssText = 'width:100%;text-align:center;';
+        if (display) display.style.cssText = 'padding:1rem;min-height:auto;display:flex;flex-direction:column;align-items:center;';
+        if (rouletteDisplay) rouletteDisplay.style.cssText = 'width:160px;height:160px;margin:0 auto;';
+        if (colorIndicator) colorIndicator.style.cssText = 'width:60px;height:60px;min-width:60px;min-height:60px;margin-top:0.5rem;border-radius:50%;aspect-ratio:1/1;flex-shrink:0;';
+      }
+      
+      // Fix history: horizontal scroll strip instead of vertical list
+      if (historySection) {
+        const historyGrid = historySection.querySelector('.history-grid');
+        if (historyGrid) {
+          historyGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.5rem;max-height:200px;overflow-y:auto;padding:0.5rem;';
+        }
+      }
+    }
+
     this.createWheel();
     this.attachEventListeners();
     
@@ -146,48 +179,13 @@ class RouletteGame {
   setupSocketListeners() {
     if (!this.socket) return;
 
-    // Remove all existing listeners to prevent duplicates
-    this.socket.removeAllListeners('connect');
-    this.socket.removeAllListeners('disconnect');
-    this.socket.removeAllListeners('connect_error');
-    this.socket.removeAllListeners('error');
-    this.socket.removeAllListeners('playerData');
+    // Remove only roulette-specific listeners to prevent duplicates
+    // DO NOT remove 'connect', 'playerData', 'error' — those are managed by casino.js
     this.socket.removeAllListeners('rouletteState');
     this.socket.removeAllListeners('rouletteBetsUpdate');
     this.socket.removeAllListeners('rouletteSpinStart');
     this.socket.removeAllListeners('rouletteSpinResult');
     this.socket.removeAllListeners('nextSpinTime');
-
-    this.socket.on('connect', () => {
-      if (this.casino.username) {
-        this.socket.emit('joinCasino', { username: this.casino.username });
-      }
-    });
-
-    this.socket.on('connect_error', (error) => {
-      console.error('Roulette connection error:', error);
-      // Show error message in the UI instead of alert
-      const wheelSection = document.querySelector('.roulette-wheel-section');
-      if (wheelSection) {
-        const errorMsg = document.createElement('div');
-        errorMsg.style.cssText = 'color: #ef4444; padding: 1rem; text-align: center; background: rgba(239, 68, 68, 0.1); border-radius: 8px; margin: 1rem 0;';
-        errorMsg.textContent = 'Unable to connect to roulette server. Please make sure the server is running on port 3001.';
-        wheelSection.appendChild(errorMsg);
-      }
-    });
-
-    this.socket.on('playerData', (data) => {
-      const oldBalance = this.casino.credits;
-      this.casino.credits = data.credits;
-      this.casino.updateCreditsDisplay();
-      
-      if (window.casinoDebugLogger) {
-        window.casinoDebugLogger.logBalanceUpdate(oldBalance, data.credits, 'socket', {
-          game: 'roulette',
-          source: 'playerData event'
-        });
-      }
-    });
 
     this.socket.on('rouletteState', (state) => {
       this.allBets = state.currentBets || {};
@@ -251,8 +249,14 @@ class RouletteGame {
           
           const playerId = this.socket.id;
           if (results[playerId]) {
-            this.casino.credits = results[playerId].newCredits;
-            this.casino.updateCreditsDisplay();
+            // Record bet history
+            const bet = results[playerId].bet;
+            if (bet) {
+              const payout = results[playerId].won ? results[playerId].winnings : 0;
+              const mult = bet.color === 'green' ? 14 : 2;
+              this.casino.recordBet('roulette', bet.amount, results[playerId].won ? 'Win' : 'Loss', payout, results[playerId].won ? mult : 0, `${bet.color} → ${winningColor}`);
+            }
+            // DON'T manually set credits - the server sends playerData event with correct balance
             this.currentBet = null;
             this.updateCurrentBetDisplay();
           }
@@ -272,16 +276,6 @@ class RouletteGame {
       this.updateNextSpinTimer();
     });
 
-    this.socket.on('error', (message) => {
-      console.error('[Roulette] Socket error:', message);
-      if (window.casinoDebugLogger) {
-        window.casinoDebugLogger.logError(new Error(message), {
-          context: 'roulette socket error',
-          game: 'roulette'
-        });
-      }
-      this.showTemporaryMessage(message, 'error');
-    });
   }
 
   attachEventListeners() {
@@ -627,13 +621,16 @@ class RouletteGame {
       return;
     }
 
-    let html = '<div class="history-grid">';
+    const isMobile = window.innerWidth <= 768;
+    const gridStyle = isMobile ? 'style="display:flex;flex-wrap:wrap;gap:0.4rem;max-height:180px;overflow-y:auto;padding:0.5rem;"' : '';
+    const itemStyle = isMobile ? 'style="width:44px;height:44px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;font-size:0.85rem;font-weight:bold;aspect-ratio:1/1;"' : '';
+    
+    let html = `<div class="history-grid" ${gridStyle}>`;
     this.history.forEach((result, index) => {
       const colorClass = result.color;
       html += `
-        <div class="history-item ${colorClass}" title="Number: ${result.number}, Color: ${result.color}">
+        <div class="history-item ${colorClass}" ${itemStyle} title="Number: ${result.number}, Color: ${result.color}">
           <span class="history-number">${result.number}</span>
-          <span class="history-color-indicator ${colorClass}"></span>
         </div>
       `;
     });
@@ -649,14 +646,8 @@ class RouletteGame {
       this.timerInterval = null;
     }
     
-    // Remove all listeners but DON'T disconnect the shared socket
-    // The socket is shared with the casino manager and other games
+    // Only remove ROULETTE-SPECIFIC listeners — don't touch shared ones (connect, playerData, error)
     if (this.socket) {
-      this.socket.removeAllListeners('connect');
-      this.socket.removeAllListeners('disconnect');
-      this.socket.removeAllListeners('connect_error');
-      this.socket.removeAllListeners('error');
-      this.socket.removeAllListeners('playerData');
       this.socket.removeAllListeners('rouletteState');
       this.socket.removeAllListeners('rouletteBetsUpdate');
       this.socket.removeAllListeners('rouletteSpinStart');

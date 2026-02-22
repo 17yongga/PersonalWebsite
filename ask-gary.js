@@ -82,13 +82,21 @@ function showLoading() {
   loadingMsg.className = "chat-message bot";
   loadingMsg.id = "loading-indicator";
   loadingMsg.style.opacity = "0";
-  loadingMsg.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+  loadingMsg.innerHTML = `
+    <div class="thinking-indicator">
+      <span data-i18n="ask_gary.thinking">Ask Gary is thinking</span>
+      <div class="typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  `;
   chatWindow.appendChild(loadingMsg);
   
   // Animate in
   requestAnimationFrame(() => {
-    loadingMsg.style.transition = "opacity 0.3s ease-out";
+    loadingMsg.style.transition = "opacity 0.3s ease-out, transform 0.3s ease-out";
     loadingMsg.style.opacity = "1";
+    loadingMsg.style.transform = "translateY(0) scale(1)";
   });
   
   // Smooth scroll
@@ -251,6 +259,24 @@ userInput.addEventListener("keypress", (event) => {
   }
 });
 
+// Conversation starters
+document.addEventListener("DOMContentLoaded", () => {
+  const conversationStarters = document.querySelectorAll(".conversation-starter");
+  conversationStarters.forEach(starter => {
+    starter.addEventListener("click", () => {
+      const question = starter.getAttribute("data-question");
+      if (question && !isLoading) {
+        userInput.value = question;
+        userInput.style.height = "auto";
+        userInput.style.height = `${Math.min(userInput.scrollHeight, 140)}px`;
+        userInput.focus();
+        // Small delay so user sees the text appear before sending
+        setTimeout(() => sendMessage(), 150);
+      }
+    });
+  });
+});
+
 // Wake up backend on page load to prevent first-request failures
 wakeUpBackend();
 
@@ -260,39 +286,56 @@ userInput.focus();
 // Add typing indicator styles
 const style = document.createElement("style");
 style.textContent = `
-  .typing-indicator {
+  .thinking-indicator {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 0;
+    gap: 8px;
+    padding: 2px 0;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.9rem;
   }
   
-  .typing-indicator span {
-    width: 8px;
-    height: 8px;
+  .typing-dots {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  
+  .typing-dots span {
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: var(--accent);
     display: inline-block;
-    animation: typing 1.4s infinite ease-in-out;
+    animation: thinking 1.4s infinite ease-in-out;
   }
   
-  .typing-indicator span:nth-child(1) {
+  .typing-dots span:nth-child(1) {
     animation-delay: -0.32s;
   }
   
-  .typing-indicator span:nth-child(2) {
+  .typing-dots span:nth-child(2) {
     animation-delay: -0.16s;
   }
   
-  @keyframes typing {
+  .typing-dots span:nth-child(3) {
+    animation-delay: 0s;
+  }
+  
+  @keyframes thinking {
     0%, 80%, 100% {
-      transform: scale(0.8);
-      opacity: 0.5;
+      transform: scale(0.7);
+      opacity: 0.4;
     }
     40% {
       transform: scale(1);
       opacity: 1;
     }
+  }
+  
+  #loading-indicator {
+    transform: translateY(10px) scale(0.95);
   }
 `;
 document.head.appendChild(style);

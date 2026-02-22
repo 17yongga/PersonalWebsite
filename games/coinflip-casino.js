@@ -219,14 +219,7 @@ class CoinflipGame {
   setupSocketListeners() {
     if (!this.socket) return;
 
-    // Remove all existing listeners to prevent duplicates
-    this.socket.removeAllListeners('connect');
-    this.socket.removeAllListeners('disconnect');
-    this.socket.removeAllListeners('connect_error');
-    this.socket.removeAllListeners('reconnect_attempt');
-    this.socket.removeAllListeners('reconnect_failed');
-    this.socket.removeAllListeners('error');
-    this.socket.removeAllListeners('playerData');
+    // Only remove COINFLIP-SPECIFIC listeners — don't touch shared ones (connect, playerData, error)
     this.socket.removeAllListeners('availableRooms');
     this.socket.removeAllListeners('roomCreated');
     this.socket.removeAllListeners('joinedRoom');
@@ -236,73 +229,17 @@ class CoinflipGame {
     this.socket.removeAllListeners('opponentLeft');
     this.socket.removeAllListeners('leftRoom');
 
-    this.socket.on('connect', () => {
-      // Clear connection timeout
-      if (this.connectionTimeout) {
-        clearTimeout(this.connectionTimeout);
-        this.connectionTimeout = null;
-      }
-      this.updateConnectionStatus('Connected', true);
-      // Join game with casino username and current credits
+    // Coinflip needs to join game on connect — use a named handler we can track
+    this._onConnect = () => {
       if (this.casino.username) {
         this.socket.emit('joinGame', this.casino.username, this.casino.credits);
       }
-    });
-
-    this.socket.on('disconnect', (reason) => {
-      console.log('Coinflip: Disconnected', reason);
-      if (reason === 'io server disconnect') {
-        // Server disconnected the client, don't try to reconnect
-        this.updateConnectionStatus('Disconnected by server - Please refresh', false);
-      } else {
-        // Client-side disconnect, will try to reconnect
-        this.updateConnectionStatus('Disconnected - Reconnecting...', false);
-      }
-    });
-
-    this.socket.on('connect_error', (error) => {
-      console.error('Coinflip connection error:', error);
-      // Don't show error immediately - socket.io will try to reconnect
-      // The timeout will handle showing the error if connection fails
-    });
-
-    this.socket.on('reconnect_attempt', (attemptNumber) => {
-      console.log(`Coinflip: Reconnection attempt ${attemptNumber}`);
-      this.updateConnectionStatus(`Connecting... (attempt ${attemptNumber})`, false);
-    });
-
-    this.socket.on('reconnect_failed', () => {
-      console.error('Coinflip: Reconnection failed');
-      this.updateConnectionStatus('Connection failed - Make sure casino server is running', false);
-    });
-
-    this.socket.on('error', (message) => {
-      console.error('[Coinflip] Socket error:', message);
-      if (window.casinoDebugLogger) {
-        window.casinoDebugLogger.logError(new Error(message), {
-          context: 'coinflip socket error',
-          game: 'coinflip'
-        });
-      }
-      this.showTemporaryMessage(message, 'error');
-    });
-
-    this.socket.on('playerData', (data) => {
-      const oldBalance = this.casino.credits;
-      // Only update credits if they're higher (server might have old data)
-      // Or if we don't have credits yet (initial load)
-      if (this.casino.credits === 0 || data.credits > this.casino.credits) {
-        this.casino.credits = data.credits;
-        this.casino.updateCreditsDisplay();
-        
-        if (window.casinoDebugLogger) {
-          window.casinoDebugLogger.logBalanceUpdate(oldBalance, data.credits, 'socket', {
-            game: 'coinflip',
-            source: 'playerData event'
-          });
-        }
-      }
-    });
+    };
+    this.socket.on('connect', this._onConnect);
+    // If already connected, join now
+    if (this.socket.connected && this.casino.username) {
+      this.socket.emit('joinGame', this.casino.username, this.casino.credits);
+    }
 
     this.socket.on('availableRooms', (rooms) => {
       this.updateRoomList(rooms);
@@ -312,8 +249,7 @@ class CoinflipGame {
       this.currentRoomId = roomId;
       this.isCreator = true;
       this.gameFinished = false;
-      this.casino.credits = credits;
-      this.casino.updateCreditsDisplay();
+      // Don't manually set credits - server sends playerData event with correct balance
       this.showGameRoom(roomId, betAmount, choice);
     });
 
@@ -340,8 +276,10 @@ class CoinflipGame {
       this.showCoinFlipResult(coinResult, results, choices);
       const playerId = this.socket.id;
       if (results[playerId]) {
-        this.casino.credits = results[playerId].newCredits;
-        this.casino.updateCreditsDisplay();
+        const won = results[playerId].won;
+        const payout = won ? results[playerId].winnings : 0;
+        this.casino.recordBet('coinflip', betAmount, won ? 'Win' : 'Loss', payout, 2, `${coinResult}`);
+        // Don't manually set credits - server sends playerData event with correct balance
       }
     });
 
@@ -858,16 +796,9 @@ class CoinflipGame {
       this.connectionTimeout = null;
     }
     
-    // Remove all listeners but DON'T disconnect the shared socket
-    // The socket is shared with the casino manager and other games
+    // Only remove COINFLIP-SPECIFIC listeners — don't touch shared ones
     if (this.socket) {
-      this.socket.removeAllListeners('connect');
-      this.socket.removeAllListeners('disconnect');
-      this.socket.removeAllListeners('connect_error');
-      this.socket.removeAllListeners('reconnect_attempt');
-      this.socket.removeAllListeners('reconnect_failed');
-      this.socket.removeAllListeners('error');
-      this.socket.removeAllListeners('playerData');
+      if (this._onConnect) this.socket.off('connect', this._onConnect);
       this.socket.removeAllListeners('availableRooms');
       this.socket.removeAllListeners('roomCreated');
       this.socket.removeAllListeners('joinedRoom');

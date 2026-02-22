@@ -1,0 +1,126 @@
+/* Trading Platform Theme Variables */
+
+[data-theme="light"] {
+  /* Background colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  
+  /* Text colors */
+  --text-primary: #1a1a2e;
+  --text-secondary: #6c757d;
+  
+  /* Brand colors - financial theme */
+  --accent: #2563eb;        /* blue - financial/trust */
+  --accent-hover: #1d4ed8;
+  --success: #10b981;       /* green - profit */
+  --danger: #ef4444;        /* red - loss */
+  --warning: #f59e0b;       /* amber - warning */
+  
+  /* UI elements */
+  --border: #dee2e6;
+  --card-bg: #ffffff;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --input-bg: #ffffff;
+  --navbar-bg: #1a1a2e;
+  
+  /* Component specific */
+  --modal-backdrop: rgba(0, 0, 0, 0.5);
+  --toast-bg: #ffffff;
+  --skeleton-base: #f1f5f9;
+  --skeleton-highlight: #e2e8f0;
+}
+
+[data-theme="dark"] {
+  /* Background colors */
+  --bg-primary: #0f0f1a;
+  --bg-secondary: #1a1a2e;
+  --bg-tertiary: #2d2d44;
+  
+  /* Text colors */
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  
+  /* Brand colors - financial theme */
+  --accent: #3b82f6;        /* blue - financial/trust */
+  --accent-hover: #60a5fa;
+  --success: #34d399;       /* green - profit */
+  --danger: #f87171;        /* red - loss */
+  --warning: #fbbf24;       /* amber - warning */
+  
+  /* UI elements */
+  --border: #374151;
+  --card-bg: #1e1e32;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --input-bg: #2d2d44;
+  --navbar-bg: #0a0a15;
+  
+  /* Component specific */
+  --modal-backdrop: rgba(0, 0, 0, 0.75);
+  --toast-bg: #1e1e32;
+  --skeleton-base: #1e293b;
+  --skeleton-highlight: #334155;
+}
+
+/* Common variables (theme-independent) */
+:root {
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  
+  /* Spacing scale */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  
+  /* Border radius */
+  --radius-sm: 0.375rem;  /* 6px */
+  --radius-md: 0.5rem;    /* 8px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  /* Transitions */
+  --transition-fast: 150ms ease-out;
+  --transition-medium: 250ms ease-out;
+  --transition-slow: 350ms ease-out;
+  
+  /* Animation durations (for use in animation declarations) */
+  --duration-fast: 150ms;
+  --duration-medium: 250ms;
+  --duration-slow: 350ms;
+  
+  /* Z-index scale */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-modal: 1040;
+  --z-popover: 1060;
+  --z-tooltip: 1080;
+  
+  /* Breakpoints (for use in JS) */
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+  --bp-2xl: 1536px;
+  
+  /* Layout */
+  --max-width-sm: 640px;
+  --max-width-md: 768px;
+  --max-width-lg: 1024px;
+  --max-width-xl: 1280px;
+  --max-width-2xl: 1400px;
+}

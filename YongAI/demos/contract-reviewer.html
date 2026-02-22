@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Contract Clause Reviewer - Transform Your Legal Practice | YongAI</title>
+    <meta name="description" content="See how AI contract review delivers 60% faster analysis, catches missed clauses, and saves law firms $180K+ annually. Live demo + ROI calculator.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #07080C;
+            --bg-secondary: #11131A;
+            --bg-tertiary: #1A1D26;
+            --accent: #6C63FF;
+            --accent-light: #A78BFA;
+            --accent-dark: #4F46E5;
+            --text-primary: #ffffff;
+            --text-secondary: #9CA3AF;
+            --text-muted: #6B7280;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --border: #374151;
+            --border-light: #4B5563;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 60px 0 40px;
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.1), rgba(167, 139, 250, 0.05));
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+            padding: 30px;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--accent);
+            display: block;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Demo Section */
+        .demo-section {
+            padding: 60px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .section-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .contract-selector {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .contract-selector h3 {
+            color: var(--accent);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .contract-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .contract-option {
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contract-option:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .contract-option.selected {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.15), rgba(167, 139, 250, 0.1));
+        }
+
+        .contract-option h4 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .contract-option p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .contract-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .contract-preview {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .contract-preview h3 {
+            color: var(--accent);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .contract-text {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            font-family: 'Georgia', serif;
+        }
+
+        .contract-text strong {
+            color: var(--text-primary);
+        }
+
+        .contract-text p {
+            margin-bottom: 15px;
+        }
+
+        /* Analyze Button */
+        .analyze-section {
+            text-align: center;
+            margin: 50px 0;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(108, 99, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(108, 99, 255, 0.5);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Loading Animation */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 8, 12, 0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-content {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            padding: 50px;
+            text-align: center;
+            border: 1px solid var(--border);
+            min-width: 450px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 30px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            background: var(--border);
+            border-radius: 12px;
+            height: 12px;
+            margin: 30px 0 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 12px;
+        }
+
+        .progress-text {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-top: 15px;
+        }
+
+        /* Results Section */
+        .results {
+            display: none;
+        }
+
+        .results-header {
+            text-align: center;
+            margin: 60px 0 40px;
+        }
+
+        .results-header h2 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .results-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: transform 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .stat-label {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .high-risk { color: var(--danger); }
+        .medium-risk { color: var(--warning); }
+        .low-risk { color: var(--success); }
+
+        /* Analysis Results */
+        .analysis-results {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid var(--border);
+            margin-bottom: 40px;
+            box-shadow: var(--shadow);
+        }
+
+        .analysis-results h3 {
+            color: var(--accent);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .clause-item {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--success);
+            transition: transform 0.2s ease;
+        }
+
+        .clause-item:hover {
+            transform: translateX(5px);
+        }
+
+        .clause-item.medium { border-left-color: var(--warning); }
+        .clause-item.high { border-left-color: var(--danger); }
+
+        .clause-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .clause-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        .clause-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .risk-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .risk-low {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .risk-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .risk-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .compliance-badge {
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: rgba(108, 99, 255, 0.2);
+            color: var(--accent-light);
+        }
+
+        .clause-summary {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .clause-suggestion {
+            background: rgba(108, 99, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            color: var(--accent-light);
+            font-size: 0.95rem;
+            border-left: 3px solid var(--accent);
+        }
+
+        .clause-suggestion strong {
+            color: var(--accent);
+        }
+
+        .case-law {
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: var(--success);
+            border-left: 2px solid var(--success);
+        }
+
+        /* Comparison Section */
+        .comparison-section {
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            border-radius: 24px;
+            padding: 50px;
+            margin: 60px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .comparison-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        }
+
+        .comparison-section h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .time-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .time-stat {
+            text-align: center;
+        }
+
+        .time-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            display: block;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .time-label {
+            opacity: 0.95;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* Case Study Section */
+        .case-study {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            padding: 50px;
+            margin: 60px 0;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .case-study h3 {
+            color: var(--accent);
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .case-study-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+
+        .case-study-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .case-study-content h4 {
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .case-study-content p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .metric-item {
+            text-align: center;
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 16px;
+        }
+
+        .metric-item .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--success);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .metric-item .label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ROI Calculator */
+        .roi-calculator {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            padding: 50px;
+            margin: 60px 0;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .roi-calculator h3 {
+            color: var(--accent);
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .calculator-inputs {
+            background: var(--bg-tertiary);
+            padding: 30px;
+            border-radius: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .calculator-results {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(108, 99, 255, 0.1));
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 15px;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .result-value {
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .result-value.highlight {
+            color: var(--success);
+            font-size: 1.8rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+            padding: 80px 0;
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.1), rgba(167, 139, 250, 0.05));
+            border-radius: 24px;
+            margin: 60px 0;
+        }
+
+        .cta-section h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-button {
+            padding: 18px 35px;
+            border-radius: 16px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            color: white;
+            box-shadow: 0 10px 30px rgba(108, 99, 255, 0.4);
+        }
+
+        .cta-secondary {
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(108, 99, 255, 0.5);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .case-study-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .calculator-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .time-stats {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .clause-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .loading-content {
+                min-width: 300px;
+                padding: 30px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .cta-button {
+                width: 280px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .stats-bar {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .slide-up {
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Feature Icons */
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>AI Contract Clause Reviewer</h1>
+            <p>Transform your legal practice with enterprise-grade AI that delivers 60% faster contract review, catches critical missed clauses, and saves law firms $180K+ annually.</p>
+            
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-number">3.9x</span>
+                    <span class="stat-label">Higher ROI with AI Strategy</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">63%</span>
+                    <span class="stat-label">Faster Document Review</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">12h/week</span>
+                    <span class="stat-label">Time Freed Per Attorney</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">2x</span>
+                    <span class="stat-label">More Relevant Cases Found</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Section -->
+        <div class="demo-section">
+            <div class="section-header">
+                <h2>See AI-Powered Contract Analysis in Action</h2>
+                <p>Experience the same technology that helped Morrison & Associates cut review time by 60% and save $180K annually. Choose a real contract type below:</p>
+            </div>
+
+            <div class="demo-grid">
+                <div class="contract-selector">
+                    <h3>
+                        <svg class="feature-icon" viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                        </svg>
+                        Select Contract Type
+                    </h3>
+                    <div class="contract-options">
+                        <div class="contract-option selected" data-contract="nda">
+                            <h4>Mutual Non-Disclosure Agreement</h4>
+                            <p>Technology company NDA with confidentiality provisions</p>
+                            <div class="contract-meta">
+                                <span>🔍 12 clauses</span>
+                                <span>⚖️ Delaware law</span>
+                                <span>📄 PIPEDA compliance</span>
+                            </div>
+                        </div>
+                        <div class="contract-option" data-contract="employment">
+                            <h4>Executive Employment Agreement</h4>
+                            <p>CTO employment contract with equity and non-compete</p>
+                            <div class="contract-meta">
+                                <span>🔍 15 clauses</span>
+                                <span>⚖️ Ontario ESA</span>
+                                <span>💼 Executive level</span>
+                            </div>
+                        </div>
+                        <div class="contract-option" data-contract="lease">
+                            <h4>Commercial Office Lease</h4>
+                            <p>5-year office lease with renewal options and CAM charges</p>
+                            <div class="contract-meta">
+                                <span>🔍 18 clauses</span>
+                                <span>⚖️ Commercial tenancy</span>
+                                <span>🏢 5,000 sq ft</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contract-preview">
+                    <h3>
+                        <svg class="feature-icon" viewBox="0 0 24 24">
+                            <path d="M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2M15,18V16H6V18H15M18,14V12H6V14H18Z" />
+                        </svg>
+                        Contract Preview
+                    </h3>
+                    <div class="contract-text" id="contractText">
+                        <!-- Contract content will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="analyze-section">
+                <button class="analyze-btn" onclick="startAnalysis()">
+                    <span id="btnText">🚀 Analyze Contract with AI</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading Animation -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <h3>Analyzing Contract with Enterprise AI</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Initializing AI analysis engine...</div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results" id="results">
+            <div class="results-header">
+                <h2>AI Analysis Complete</h2>
+                <p>Comprehensive clause-by-clause review with risk assessment, compliance checking, and strategic recommendations</p>
+            </div>
+
+            <!-- Dashboard -->
+            <div class="dashboard">
+                <div class="stat-card">
+                    <div class="stat-number high-risk" id="highRiskCount">0</div>
+                    <div class="stat-label">High Risk Issues</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number medium-risk" id="mediumRiskCount">0</div>
+                    <div class="stat-label">Medium Risk Issues</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number low-risk" id="lowRiskCount">0</div>
+                    <div class="stat-label">Low Risk Issues</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" style="color: var(--accent);" id="missingCount">0</div>
+                    <div class="stat-label">Missing Clauses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" style="color: var(--success);" id="complianceCount">0</div>
+                    <div class="stat-label">Compliance Checks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" style="color: var(--warning);" id="timeToReview">0</div>
+                    <div class="stat-label">Minutes vs 4+ Hours</div>
+                </div>
+            </div>
+
+            <!-- Detailed Analysis -->
+            <div class="analysis-results">
+                <h3>
+                    <svg class="feature-icon" viewBox="0 0 24 24">
+                        <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z" />
+                    </svg>
+                    Detailed Clause Analysis
+                </h3>
+                <div id="analysisContent">
+                    <!-- Analysis results will be populated here -->
+                </div>
+            </div>
+
+            <!-- Time Comparison -->
+            <div class="comparison-section">
+                <h3>Efficiency Transformation</h3>
+                <div class="time-stats">
+                    <div class="time-stat">
+                        <span class="time-number" id="manualTime">4.5</span>
+                        <span class="time-label">Hours (Manual Review)</span>
+                    </div>
+                    <div class="time-stat">
+                        <span class="time-number" id="aiTime">3</span>
+                        <span class="time-label">Minutes (AI Review)</span>
+                    </div>
+                    <div class="time-stat">
+                        <span class="time-number" id="efficiency">98%</span>
+                        <span class="time-label">Time Saved</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Case Study -->
+        <div class="case-study">
+            <h3>Real Results: Morrison & Associates Case Study</h3>
+            <p class="case-study-subtitle">How a 12-lawyer Toronto commercial law firm transformed their contract review process</p>
+            
+            <div class="case-study-grid">
+                <div class="case-study-content">
+                    <h4>The Challenge</h4>
+                    <p><strong>Morrison & Associates</strong>, a 12-lawyer commercial law firm in Toronto, was facing a critical bottleneck. Two junior associates were spending 15+ hours per week on routine contract review, frequently missing critical clauses, and slow turnaround times were causing client dissatisfaction.</p>
+                    
+                    <p>The partners faced a difficult choice: hire a third associate at $85K+/year plus overhead, or explore AI implementation at a fraction of the cost.</p>
+
+                    <h4>The Decision</h4>
+                    <p>After evaluating options, Morrison & Associates chose to implement YongAI's AI contract review system with a comprehensive clause library - a $12K one-time investment versus $120K+ annually for another associate.</p>
+                </div>
+                
+                <div class="case-study-content">
+                    <h4>The Implementation</h4>
+                    <p>YongAI's team worked with Morrison & Associates to:</p>
+                    <ul style="color: var(--text-secondary); margin-left: 20px; line-height: 1.7;">
+                        <li>Customize AI models for Canadian law and Ontario regulations</li>
+                        <li>Build firm-specific clause libraries and precedents</li>
+                        <li>Train associates on AI-assisted workflow</li>
+                        <li>Integrate with existing document management systems</li>
+                    </ul>
+
+                    <h4>The Results</h4>
+                    <p>Within the first month, the AI system caught 3 liability clauses that manual review had missed. Associates were freed from routine review to focus on high-value strategic work, and client satisfaction scores improved significantly.</p>
+                </div>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <span class="number">60%</span>
+                    <span class="label">Faster Review</span>
+                </div>
+                <div class="metric-item">
+                    <span class="number">$180K</span>
+                    <span class="label">Annual Savings</span>
+                </div>
+                <div class="metric-item">
+                    <span class="number">12h/week</span>
+                    <span class="label">Time Freed</span>
+                </div>
+                <div class="metric-item">
+                    <span class="number">0</span>
+                    <span class="label">Missed Clauses</span>
+                </div>
+                <div class="metric-item">
+                    <span class="number">25%</span>
+                    <span class="label">Client Satisfaction ↑</span>
+                </div>
+                <div class="metric-item">
+                    <span class="number">3x</span>
+                    <span class="label">Capacity Increase</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROI Calculator -->
+        <div class="roi-calculator">
+            <h3>Calculate Your Firm's ROI</h3>
+            <div class="calculator-grid">
+                <div class="calculator-inputs">
+                    <h4 style="color: var(--accent); margin-bottom: 25px; font-size: 1.3rem;">Enter Your Current Metrics</h4>
+                    
+                    <div class="input-group">
+                        <label for="hoursPerWeek">Hours spent on contract review per week:</label>
+                        <input type="number" id="hoursPerWeek" value="15" min="1" max="100">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="hourlyRate">Average associate hourly rate (CAD):</label>
+                        <input type="number" id="hourlyRate" value="150" min="50" max="500">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="numAssociates">Number of associates doing contract review:</label>
+                        <input type="number" id="numAssociates" value="2" min="1" max="20">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="implementationCost">AI implementation cost (CAD):</label>
+                        <input type="number" id="implementationCost" value="12000" min="5000" max="50000">
+                    </div>
+                </div>
+                
+                <div class="calculator-results">
+                    <h4 style="color: var(--success); margin-bottom: 25px; font-size: 1.3rem;">Your Projected Savings</h4>
+                    
+                    <div class="result-item">
+                        <span class="result-label">Current annual cost:</span>
+                        <span class="result-value" id="currentCost">$234,000</span>
+                    </div>
+                    
+                    <div class="result-item">
+                        <span class="result-label">Time saved per week:</span>
+                        <span class="result-value" id="timeSaved">9 hours</span>
+                    </div>
+                    
+                    <div class="result-item">
+                        <span class="result-label">Annual time savings:</span>
+                        <span class="result-value" id="annualTimeSaved">468 hours</span>
+                    </div>
+                    
+                    <div class="result-item">
+                        <span class="result-label">Annual cost savings:</span>
+                        <span class="result-value highlight" id="annualSavings">$140,400</span>
+                    </div>
+                    
+                    <div class="result-item">
+                        <span class="result-label">ROI payback period:</span>
+                        <span class="result-value" id="paybackPeriod">1.0 months</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section">
+            <h3>See How This Transforms Your Practice</h3>
+            <p>Join leading law firms who've already transformed their contract review process. Book a personalized strategy call to see how YongAI can deliver similar results for your firm.</p>
+            
+            <div class="cta-buttons">
+                <a href="https://calendly.com/gary-yong-yongai/30min" class="cta-button cta-primary" target="_blank">
+                    📅 Book Free Strategy Call
+                </a>
+                <a href="https://yongai.ca" class="cta-button cta-secondary">
+                    🌐 Visit YongAI.ca
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Contract data with realistic legal content
+        const contracts = {
+            nda: {
+                title: "Mutual Non-Disclosure Agreement",
+                text: `<p><strong>MUTUAL NON-DISCLOSURE AGREEMENT</strong></p>
+                <p>This Mutual Non-Disclosure Agreement ("Agreement") is entered into on _________, 2024 by and between <strong>TechCorp Inc.</strong>, a Delaware corporation ("Company A") and <strong>InnovateLab LLC</strong>, a California limited liability company ("Company B"), collectively referred to as the "Parties".</p>
+                
+                <p><strong>RECITALS</strong><br>
+                WHEREAS, the Parties wish to explore a potential business relationship related to artificial intelligence software development; and<br>
+                WHEREAS, each Party may disclose certain confidential and proprietary information to the other Party;</p>
+
+                <p><strong>1. CONFIDENTIAL INFORMATION.</strong> For purposes of this Agreement, "Confidential Information" shall include all information or proprietary materials (whether oral, written, electronic or in any other form) disclosed by one party to the other, including but not limited to: technical data, trade secrets, know-how, research, product plans, products, services, customers, customer lists, markets, software, source code, developments, inventions, processes, formulas, technology, designs, drawings, engineering, hardware configuration information, marketing strategies, finances, or other business information.</p>
+
+                <p><strong>2. NON-DISCLOSURE AND NON-USE.</strong> Each party agrees to: (a) hold all Confidential Information in strict confidence; (b) not disclose any Confidential Information to third parties without prior written consent; (c) use Confidential Information solely for evaluating potential business relationships; and (d) take reasonable precautions to prevent unauthorized disclosure.</p>
+
+                <p><strong>3. TERM.</strong> This Agreement shall remain in effect for a period of three (3) years from the date of execution, unless terminated earlier by mutual written consent of the parties.</p>
+
+                <p><strong>4. RETURN OF INFORMATION.</strong> Upon termination of this Agreement or upon written request, each party shall promptly return or destroy all materials containing or embodying Confidential Information and all copies thereof.</p>
+
+                <p><strong>5. GOVERNING LAW.</strong> This Agreement shall be governed by and construed in accordance with the laws of the Province of Ontario, Canada, without regard to conflict of law principles.</p>`,
+                
+                analysis: [
+                    {
+                        title: "Confidential Information Definition - Overly Broad",
+                        risk: "high",
+                        summary: "The definition of 'Confidential Information' lacks standard exclusions for publicly available information, independently developed materials, and information received from third parties. This could create enforceability issues.",
+                        suggestion: "Add standard exclusions: (a) information that is or becomes publicly available through no breach of this Agreement; (b) information independently developed without use of Confidential Information; (c) information rightfully received from third parties without confidentiality obligations; (d) information required to be disclosed by law.",
+                        compliance: "PIPEDA",
+                        caselaw: "Ref: Cadbury Schweppes Inc. v. FBI Foods Ltd. [1999] 1 SCR 142 - Courts require reasonable limitations on confidentiality scope."
+                    },
+                    {
+                        title: "Missing Injunctive Relief Provision",
+                        risk: "high",
+                        summary: "No provision for immediate injunctive relief in case of breach. Confidentiality breaches require urgent remedies that monetary damages cannot adequately address.",
+                        suggestion: "Add clause: 'Each Party acknowledges that breach of this Agreement would cause irreparable harm for which monetary damages would be inadequate. Therefore, each Party shall be entitled to seek injunctive relief and other equitable remedies without the necessity of posting a bond.'",
+                        compliance: "Ontario Courts of Justice Act",
+                        caselaw: "Ref: International Corona Resources Ltd. v. LAC Minerals Ltd. [1989] 2 SCR 574"
+                    },
+                    {
+                        title: "Non-Disclosure Obligations Structure",
+                        risk: "medium",
+                        summary: "While comprehensive, the non-disclosure clause should specify different treatment for different types of information and include procedures for inadvertent disclosure.",
+                        suggestion: "Add tiered confidentiality periods based on information sensitivity and include 30-day cure period for inadvertent disclosure with notice requirements.",
+                        compliance: "Contract Law",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Term Duration Assessment",
+                        risk: "medium",
+                        summary: "Three-year confidentiality period may be excessive for rapidly evolving technology information but appropriate for trade secrets. Consider differentiated terms.",
+                        suggestion: "Implement tiered confidentiality: 1 year for business plans/strategies, 3 years for technical specifications, 5 years for trade secrets and proprietary algorithms.",
+                        compliance: "",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Return of Information Clause",
+                        risk: "low",
+                        summary: "Standard return provision present but should be enhanced to address modern digital environments including cloud storage and backup systems.",
+                        suggestion: "Specify treatment of electronic copies in backup systems, cloud storage, and derivative works. Add certification requirements for destruction of information.",
+                        compliance: "",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Governing Law - Jurisdiction Mismatch",
+                        risk: "medium",
+                        summary: "Ontario law governs but parties are Delaware and California entities. This choice may create enforcement challenges if disputes arise in other jurisdictions.",
+                        suggestion: "Consider Delaware law (Company A's jurisdiction) or add exclusive jurisdiction clause for Ontario courts with service provisions.",
+                        compliance: "",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Missing: Residual Knowledge Clause",
+                        risk: "medium",
+                        summary: "No provision addressing employee retention of general ideas, concepts, and know-how that cannot be practically erased from memory.",
+                        suggestion: "Add: 'Nothing herein shall prevent either Party's employees from using general skills, knowledge, know-how, and techniques that are retained in the unaided memory of such employees.'",
+                        compliance: "Employment Law",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Missing: Survival Clause",
+                        risk: "medium",
+                        summary: "No explicit statement about which provisions survive termination of the agreement, creating potential ambiguity about ongoing obligations.",
+                        suggestion: "Add survival clause specifying that confidentiality obligations, return of information requirements, and dispute resolution provisions survive termination.",
+                        compliance: "",
+                        caselaw: ""
+                    }
+                ],
+                stats: { high: 2, medium: 4, low: 1, missing: 2, compliance: 3, timeToReview: 3.2 }
+            },
+
+            employment: {
+                title: "Executive Employment Agreement",
+                text: `<p><strong>EXECUTIVE EMPLOYMENT AGREEMENT</strong></p>
+                <p>This Executive Employment Agreement ("Agreement") is entered into between <strong>GlobalTech Solutions Inc.</strong>, a Delaware corporation ("Company"), and <strong>Sarah M. Johnson</strong> ("Executive"), effective January 1, 2024.</p>
+
+                <p><strong>RECITALS</strong><br>
+                WHEREAS, Company desires to employ Executive as Chief Technology Officer; and<br>
+                WHEREAS, Executive is willing to accept such employment subject to the terms and conditions herein;</p>
+
+                <p><strong>1. POSITION AND DUTIES.</strong> Company hereby employs Executive as Chief Technology Officer, reporting directly to the Chief Executive Officer. Executive shall devote her full business time, attention, and efforts to the performance of her duties hereunder and shall not engage in any other business activity, employment, or consulting arrangement without Company's prior written consent.</p>
+
+                <p><strong>2. TERM.</strong> This Agreement shall commence on January 1, 2024, and shall continue for an initial term of three (3) years, automatically renewing for additional one (1) year periods unless either party provides ninety (90) days written notice of non-renewal.</p>
+
+                <p><strong>3. COMPENSATION AND BENEFITS.</strong><br>
+                <strong>(a) Base Salary:</strong> Company shall pay Executive an annual base salary of CAD $350,000, payable bi-weekly in accordance with Company's standard payroll practices.<br>
+                <strong>(b) Annual Bonus:</strong> Executive shall be eligible for an annual performance bonus of up to 50% of base salary, based on achievement of performance objectives established annually by the Board of Directors.<br>
+                <strong>(c) Benefits:</strong> Executive shall participate in all employee benefit plans generally available to senior executives.</p>
+
+                <p><strong>4. STOCK OPTIONS.</strong> Subject to Board approval, Executive shall receive stock options to purchase 25,000 shares of Company common stock at fair market value, vesting 25% annually over four years, subject to continued employment.</p>
+
+                <p><strong>5. TERMINATION FOR CAUSE.</strong> Company may terminate Executive's employment immediately for "Cause," defined as: (a) willful and continued failure to perform assigned duties after written notice and 30-day cure period; (b) willful misconduct materially injurious to Company; (c) breach of fiduciary duty to Company; (d) conviction of a felony or crime involving moral turpitude; or (e) material breach of this Agreement.</p>
+
+                <p><strong>6. RESTRICTIVE COVENANTS.</strong><br>
+                <strong>(a) Non-Compete:</strong> During employment and for twelve (12) months thereafter, Executive shall not directly or indirectly engage in any business that competes with Company's AI software products within North America.<br>
+                <strong>(b) Non-Solicitation:</strong> For eighteen (18) months after termination, Executive shall not solicit Company employees or customers.</p>
+
+                <p><strong>7. INTELLECTUAL PROPERTY.</strong> All inventions, discoveries, improvements, and works of authorship conceived or made by Executive during employment relating to Company's business shall be the exclusive property of Company. Executive hereby assigns all rights therein to Company.</p>
+
+                <p><strong>8. SEVERANCE.</strong> If terminated without Cause, Executive shall receive: (a) continued base salary for twelve (12) months; (b) COBRA premium payments for twelve (12) months; and (c) acceleration of 50% of unvested stock options, subject to execution of a release agreement.</p>`,
+
+                analysis: [
+                    {
+                        title: "Non-Compete Clause - Geographic Overreach",
+                        risk: "high",
+                        summary: "The non-compete restriction covering all of North America is likely unenforceable under Canadian employment law and several U.S. state laws. Courts scrutinize geographic scope against legitimate business interests.",
+                        suggestion: "Limit geographic scope to specific metropolitan areas where Company has operations, major customers, or sales activities. Consider reducing to 'Greater Toronto Area and Silicon Valley' or similar specific markets.",
+                        compliance: "Ontario Employment Standards Act",
+                        caselaw: "Ref: Lyons v. Multari, 2000 CanLII 5816 (ON CA) - Geographic restrictions must be reasonable and limited to areas of legitimate business interest."
+                    },
+                    {
+                        title: "Intellectual Property Assignment - Overbroad Scope",
+                        risk: "high",
+                        summary: "The IP assignment clause captures ALL inventions during employment without limiting to work-related innovations. This violates several provincial employment laws and may be unenforceable.",
+                        suggestion: "Limit assignment to inventions: (a) developed during work hours; (b) using Company resources; (c) relating to Company's business; or (d) arising from assigned duties. Add specific exclusion for personal inventions unrelated to Company's business.",
+                        compliance: "Ontario Employment Standards Act",
+                        caselaw: "Ref: Progressive Custom Packaging Ltd. v. Cammisuli, 2005 BCSC 1079 - IP assignments must be reasonable in scope."
+                    },
+                    {
+                        title: "Performance Bonus Structure - Insufficient Detail",
+                        risk: "medium",
+                        summary: "Performance objectives for 50% bonus are left to future Board discretion without guidelines. This creates uncertainty and potential for disputes over bonus calculations.",
+                        suggestion: "Establish objective, measurable performance criteria in Schedule A or require Board to set criteria by March 31 annually. Include revenue targets, technical milestones, and team development metrics with specific weighting.",
+                        compliance: "",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Termination for Cause Definition - Cure Period Inconsistency",
+                        risk: "medium",
+                        summary: "Cure period provided only for failure to perform duties but not for other cause events. The 'willful misconduct' standard lacks specificity and could lead to disputes.",
+                        suggestion: "Provide 30-day cure periods for all remediable breaches. Define 'willful misconduct' more specifically and 'material breach' with concrete examples. Add requirement for written notice of all cause events.",
+                        compliance: "Employment Standards",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Stock Option Vesting - Acceleration Provisions",
+                        risk: "low",
+                        summary: "Stock options include reasonable vesting schedule but lack provisions for acceleration upon change of control or involuntary termination without cause.",
+                        suggestion: "Add double-trigger acceleration (change of control + involuntary termination) and pro-rata vesting for termination without cause after one year of service.",
+                        compliance: "",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Non-Solicitation Period - Duration Concerns",
+                        risk: "medium",
+                        summary: "18-month non-solicitation period may be excessive for employee restrictions under Canadian law. Customer non-solicitation should distinguish between different types of customer relationships.",
+                        suggestion: "Reduce employee non-solicitation to 12 months. Limit customer non-solicitation to customers Executive had material contact with in the 24 months prior to termination.",
+                        compliance: "Provincial Employment Law",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Missing: Constructive Dismissal Protection",
+                        risk: "medium",
+                        summary: "No provision addressing material changes to role, compensation, or reporting structure that could constitute constructive dismissal under Canadian employment law.",
+                        suggestion: "Add clause defining constructive dismissal triggers: material reduction in compensation, change in reporting relationship, relocation >50km, or substantial change in duties without consent.",
+                        compliance: "Common Law",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Missing: Notice Period Enhancement",
+                        risk: "low",
+                        summary: "Severance provision meets minimum standards but doesn't address reasonable notice periods that may exceed statutory minimums for senior executive roles.",
+                        suggestion: "Consider 18-24 month severance period for senior executive level, or reference to common law reasonable notice standards in addition to statutory minimums.",
+                        compliance: "Employment Standards Act",
+                        caselaw: ""
+                    }
+                ],
+                stats: { high: 2, medium: 4, low: 2, missing: 2, compliance: 4, timeToReview: 4.8 }
+            },
+
+            lease: {
+                title: "Commercial Office Lease Agreement",
+                text: `<p><strong>COMMERCIAL LEASE AGREEMENT</strong></p>
+                <p>This Lease Agreement ("Lease") is entered into on January 15, 2024, between <strong>Metropolitan Properties LLC</strong>, an Ontario limited liability company ("Landlord") and <strong>StartupHub Technologies Inc.</strong>, a Delaware corporation ("Tenant") for office premises located at <strong>123 Business Center Drive, Suite 400, Toronto, Ontario M5V 3A1</strong>.</p>
+
+                <p><strong>1. PREMISES AND TERM.</strong> Landlord leases to Tenant approximately 5,000 rentable square feet of office space on the 4th floor of the building ("Premises"), including rights to use common areas, parking (10 spaces), and building amenities. The lease term shall be sixty (60) months, commencing February 1, 2024, and ending January 31, 2029.</p>
+
+                <p><strong>2. RENT AND ADDITIONAL CHARGES.</strong><br>
+                <strong>(a) Base Rent:</strong> Monthly base rent of CAD $12,500 ($30.00 per sq ft annually), payable in advance on the first day of each month.<br>
+                <strong>(b) Rent Escalation:</strong> Base rent shall increase by 3% annually on each lease anniversary.<br>
+                <strong>(c) Additional Rent:</strong> Tenant shall pay Tenant's Proportionate Share (8.33%) of Operating Expenses, including utilities, maintenance, insurance, property taxes, and management fees.</p>
+
+                <p><strong>3. SECURITY DEPOSIT.</strong> Tenant shall provide a security deposit of CAD $37,500 (equal to three months' base rent) upon lease execution, to be held as security for performance of Tenant's obligations.</p>
+
+                <p><strong>4. PERMITTED USE.</strong> The Premises may be used for general office purposes, software development, and related business activities. No retail sales, manufacturing, food service, or other industrial activities permitted without Landlord's written consent.</p>
+
+                <p><strong>5. MAINTENANCE AND REPAIRS.</strong><br>
+                <strong>(a) Tenant Responsibilities:</strong> Interior maintenance, non-structural repairs, HVAC maintenance within the Premises, electrical systems serving the Premises exclusively.<br>
+                <strong>(b) Landlord Responsibilities:</strong> Structural elements, building envelope, common area maintenance, elevator service, and building-wide systems.</p>
+
+                <p><strong>6. INSURANCE.</strong> Tenant shall maintain: (a) comprehensive general liability insurance with minimum coverage of CAD $2,000,000 naming Landlord as additional insured; (b) property insurance covering Tenant's personal property and improvements; and (c) business interruption insurance.</p>
+
+                <p><strong>7. DEFAULT AND REMEDIES.</strong> Events of default include: failure to pay rent within ten (10) days of written notice; violation of lease terms not cured within thirty (30) days of written notice; bankruptcy or insolvency; and abandonment of Premises. Upon default, Landlord may terminate this Lease with thirty (30) days written notice.</p>
+
+                <p><strong>8. ASSIGNMENT AND SUBLETTING.</strong> Tenant may not assign this Lease or sublet the Premises without Landlord's prior written consent, which shall not be unreasonably withheld. Landlord may condition consent upon reviewing assignee/subtenant financial statements and maintaining lease terms.</p>
+
+                <p><strong>9. RENEWAL OPTION.</strong> Provided Tenant is not in default, Tenant shall have the option to renew this Lease for one additional five-year term at fair market rent, exercisable by written notice given no later than nine (9) months prior to lease expiration.</p>`,
+
+                analysis: [
+                    {
+                        title: "Rent Escalation - Fixed vs Market-Based",
+                        risk: "medium",
+                        summary: "Fixed 3% annual increases may significantly exceed market rate adjustments during economic downturns or low inflation periods, creating above-market rent burden for a 5-year term.",
+                        suggestion: "Replace with Consumer Price Index (CPI) based increases capped at 2-4% annually, or implement market rate adjustments every 3 years based on comparable properties. This provides more balanced risk allocation.",
+                        compliance: "",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Security Deposit - Excessive Amount",
+                        risk: "medium",
+                        summary: "Three months' rent security deposit is above market standard (typically 1-2 months) for established businesses and may create unnecessary cash flow strain.",
+                        suggestion: "Negotiate reduction to 2 months' rent for creditworthy tenant, or implement step-down provision (2 months after Year 2, 1 month after Year 4) based on payment performance.",
+                        compliance: "",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Assignment Rights - Overly Restrictive",
+                        risk: "medium",
+                        summary: "Assignment clause lacks specific criteria for Landlord consent and doesn't address modern business needs like corporate restructuring, mergers, or affiliate transfers.",
+                        suggestion: "Add specific consent criteria (net worth requirements, credit rating). Include carve-outs for transfers to affiliates, mergers, or sale of substantially all assets. Add recapture rights if rental premiums involved.",
+                        compliance: "",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Operating Expense Escalations - Lack of Controls",
+                        risk: "medium",
+                        summary: "No caps on annual operating expense increases or exclusions for capital improvements, management fees, or Landlord-benefiting expenses. This creates unlimited cost exposure.",
+                        suggestion: "Add controllable expense cap (5% annually), exclude capital improvements benefiting Landlord, limit management fees to 3% of gross rents, and require annual expense reconciliation with supporting documentation.",
+                        compliance: "",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Default Cure Periods - Standard Commercial Terms",
+                        risk: "low",
+                        summary: "Cure periods are within market standards (10 days for monetary, 30 days for non-monetary defaults) and provide reasonable opportunity to remedy breaches.",
+                        suggestion: "Consider extending monetary cure period to 15 days and non-monetary to 45 days for complex issues. Add 'chronic default' provision for repeated late payments.",
+                        compliance: "",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Insurance Requirements - Adequate Coverage",
+                        risk: "low",
+                        summary: "$2M liability coverage meets current market standards for office space. Property and business interruption insurance requirements are appropriate.",
+                        suggestion: "Consider adding cyber liability insurance requirement given technology business operations. Specify annual insurance certificate delivery requirements.",
+                        compliance: "",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Missing: Force Majeure Clause",
+                        risk: "high",
+                        summary: "No force majeure provisions to address unforeseeable events (pandemics, natural disasters, government orders) that could prevent business operations or rent payment ability.",
+                        suggestion: "Add comprehensive force majeure clause with rent abatement during involuntary closure periods >30 days, notice requirements, and mitigation obligations for both parties.",
+                        compliance: "Commercial Tenancies Act",
+                        caselaw: "Ref: Businesses affected by COVID-19 lockdowns sought rent relief - having clear force majeure terms prevents disputes."
+                    },
+                    {
+                        title: "Missing: Early Termination Rights",
+                        risk: "medium",
+                        summary: "No early termination options for rapidly growing or downsizing technology companies. 5-year commitment creates significant inflexibility for startup business model.",
+                        suggestion: "Include early termination right exercisable after 36 months with 6-month notice and termination fee equal to 6 months' rent, or downsizing right if headcount falls below threshold.",
+                        compliance: "",
+                        caselaw: ""
+                    },
+                    {
+                        title: "Missing: Technology Infrastructure Rights",
+                        risk: "medium",
+                        summary: "No specific provisions for technology infrastructure modifications, telecommunications equipment, or server room installations critical for software development business.",
+                        suggestion: "Add rights to install telecommunications equipment, server racks, and enhanced electrical/cooling systems subject to Landlord approval and restoration obligations.",
+                        compliance: "Building Code",
+                        caselaw: ""
+                    }
+                ],
+                stats: { high: 1, medium: 5, low: 2, missing: 3, compliance: 2, timeToReview: 5.5 }
+            }
+        };
+
+        let currentContract = 'nda';
+
+        // Initialize contract preview
+        document.getElementById('contractText').innerHTML = contracts[currentContract].text;
+
+        // Contract selection functionality
+        document.querySelectorAll('.contract-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.contract-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                currentContract = this.dataset.contract;
+                document.getElementById('contractText').innerHTML = contracts[currentContract].text;
+            });
+        });
+
+        // ROI Calculator functionality
+        function updateROI() {
+            const hoursPerWeek = parseFloat(document.getElementById('hoursPerWeek').value) || 0;
+            const hourlyRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+            const numAssociates = parseFloat(document.getElementById('numAssociates').value) || 0;
+            const implementationCost = parseFloat(document.getElementById('implementationCost').value) || 0;
+
+            // Calculations based on 60% time savings
+            const weeklyHours = hoursPerWeek * numAssociates;
+            const currentAnnualCost = weeklyHours * hourlyRate * 52;
+            const timeSavedPerWeek = weeklyHours * 0.6; // 60% savings
+            const annualTimeSaved = timeSavedPerWeek * 52;
+            const annualSavings = annualTimeSaved * hourlyRate;
+            const paybackMonths = implementationCost / (annualSavings / 12);
+
+            // Update display
+            document.getElementById('currentCost').textContent = formatCurrency(currentAnnualCost);
+            document.getElementById('timeSaved').textContent = timeSavedPerWeek.toFixed(1) + ' hours';
+            document.getElementById('annualTimeSaved').textContent = Math.round(annualTimeSaved) + ' hours';
+            document.getElementById('annualSavings').textContent = formatCurrency(annualSavings);
+            document.getElementById('paybackPeriod').textContent = paybackMonths.toFixed(1) + ' months';
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-CA', { 
+                style: 'currency', 
+                currency: 'CAD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0 
+            }).format(amount);
+        }
+
+        // Add event listeners to calculator inputs
+        ['hoursPerWeek', 'hourlyRate', 'numAssociates', 'implementationCost'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateROI);
+        });
+
+        // Initialize ROI calculator
+        updateROI();
+
+        // Analysis functionality
+        function startAnalysis() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const analyzeBtn = document.querySelector('.analyze-btn');
+            
+            analyzeBtn.disabled = true;
+            document.getElementById('btnText').textContent = '🔄 Analyzing...';
+            loadingOverlay.style.display = 'flex';
+            
+            const steps = [
+                'Loading enterprise AI models...',
+                'Parsing contract structure and clauses...',
+                'Identifying key provisions and terms...',
+                'Analyzing risk factors and vulnerabilities...',
+                'Cross-referencing legal precedent database...',
+                'Checking compliance with Ontario/Canadian law...',
+                'Evaluating missing standard provisions...',
+                'Running comparative market analysis...',
+                'Generating strategic recommendations...',
+                'Finalizing comprehensive analysis report...'
+            ];
+            
+            let currentStep = 0;
+            let progress = 0;
+            
+            const interval = setInterval(() => {
+                if (progress < 100) {
+                    progress += Math.random() * 8 + 7;
+                    if (progress > 100) progress = 100;
+                    
+                    progressFill.style.width = progress + '%';
+                    
+                    if (currentStep < steps.length && progress > (currentStep + 1) * 10) {
+                        currentStep++;
+                    }
+                    
+                    if (currentStep < steps.length) {
+                        progressText.textContent = steps[currentStep];
+                    }
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        loadingOverlay.style.display = 'none';
+                        showResults();
+                        analyzeBtn.disabled = false;
+                        document.getElementById('btnText').textContent = '🔄 Analyze Another Contract';
+                    }, 800);
+                }
+            }, 400);
+        }
+
+        function showResults() {
+            const resultsDiv = document.getElementById('results');
+            const contract = contracts[currentContract];
+            
+            // Update dashboard stats
+            document.getElementById('highRiskCount').textContent = contract.stats.high;
+            document.getElementById('mediumRiskCount').textContent = contract.stats.medium;
+            document.getElementById('lowRiskCount').textContent = contract.stats.low;
+            document.getElementById('missingCount').textContent = contract.stats.missing;
+            document.getElementById('complianceCount').textContent = contract.stats.compliance;
+            document.getElementById('timeToReview').textContent = contract.stats.timeToReview;
+
+            // Update comparison metrics
+            document.getElementById('manualTime').textContent = (contract.stats.timeToReview * 1.5).toFixed(1);
+            document.getElementById('aiTime').textContent = contract.stats.timeToReview;
+            const efficiency = Math.round(((contract.stats.timeToReview * 1.5 - contract.stats.timeToReview) / (contract.stats.timeToReview * 1.5)) * 100);
+            document.getElementById('efficiency').textContent = efficiency + '%';
+            
+            // Generate analysis content
+            let analysisHTML = '';
+            contract.analysis.forEach(item => {
+                const riskClass = item.risk === 'high' ? 'high' : item.risk === 'medium' ? 'medium' : 'low';
+                const badgeClass = `risk-${item.risk}`;
+                
+                const complianceBadge = item.compliance ? 
+                    `<span class="compliance-badge">${item.compliance}</span>` : '';
+                
+                const caselawSection = item.caselaw ? 
+                    `<div class="case-law"><strong>Legal Precedent:</strong> ${item.caselaw}</div>` : '';
+                
+                analysisHTML += `
+                    <div class="clause-item ${riskClass}">
+                        <div class="clause-header">
+                            <div class="clause-title">${item.title}</div>
+                            <div class="clause-meta">
+                                <div class="risk-badge ${badgeClass}">${item.risk} risk</div>
+                                ${complianceBadge}
+                            </div>
+                        </div>
+                        <div class="clause-summary">${item.summary}</div>
+                        <div class="clause-suggestion"><strong>Strategic Recommendation:</strong> ${item.suggestion}</div>
+                        ${caselawSection}
+                    </div>
+                `;
+            });
+            
+            document.getElementById('analysisContent').innerHTML = analysisHTML;
+            resultsDiv.style.display = 'block';
+            resultsDiv.classList.add('fade-in');
+            
+            // Smooth scroll to results
+            setTimeout(() => {
+                resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+        }
+
+        // Add some smooth scrolling for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

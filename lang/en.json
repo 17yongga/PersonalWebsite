@@ -149,6 +149,46 @@
   },
   "projects": {
     "title": "Projects",
+    "previous_title": "Previous Projects",
+    "casino": {
+      "title": "Fantasy Casino – Multiplayer Gaming Platform",
+      "meta": "Tech: Node.js · Socket.io · JavaScript · Real-time multiplayer",
+      "bullets": [
+        "Fantasy Casino — A side project built for fun with friends. Full-stack multiplayer gaming platform with 7 mini-games, real-time Socket.io connections, and a complete Texas Hold'em poker engine.",
+        "No real money — purely for entertainment and learning. Features live chat, friend systems, and synchronized game states across multiple players.",
+        "Built custom game engines for poker, blackjack, slots, and other casino games with proper game logic, state management, and anti-cheat measures."
+      ],
+      "cta_demo": "Live demo"
+    },
+    "finsync": {
+      "title": "FinSync Budget – Personal Finance Manager",
+      "meta": "Tech: Python · Flask · SQLite · Chart.js · Personal Project",
+      "bullets": [
+        "Built a comprehensive personal finance tracking application with expense categorization, budget planning, and visual analytics.",
+        "Features transaction import, automated categorization, monthly/yearly budget tracking, and detailed spending insights with interactive charts.",
+        "Implemented secure data handling, export functionality, and responsive design for managing finances across devices."
+      ],
+      "cta_demo": "Live demo"
+    },
+    "voice_ai": {
+      "title": "Voice AI Pipeline – Speech Processing System",
+      "meta": "Tech: Python · OpenAI Whisper · Text-to-Speech · Audio Processing",
+      "bullets": [
+        "Developed a complete voice processing pipeline combining speech recognition, AI response generation, and text-to-speech for natural voice interactions.",
+        "Integrated OpenAI Whisper for transcription, GPT for conversation processing, and ElevenLabs for voice synthesis with custom voice training.",
+        "Built modular architecture supporting multiple voice models, conversation context, and real-time audio streaming for responsive voice applications."
+      ]
+    },
+    "yongai": {
+      "title": "YongAI – AI Consulting Business",
+      "meta": "Business: AI Automation · Consulting · Client Solutions",
+      "bullets": [
+        "Founded YongAI to help small and medium businesses implement practical AI automation solutions that deliver measurable value.",
+        "Specializes in workflow automation, customer service chatbots, and data processing solutions tailored to each client's specific needs and technical capabilities.",
+        "Combines consulting expertise with hands-on development to deliver end-to-end AI solutions from strategy to implementation."
+      ],
+      "cta_demo": "Visit YongAI"
+    },
     "ask_gary": {
       "title": "Ask Gary – Personal AI Career Chatbot",
       "meta": "Tech: FastAPI · Python · OpenAI · Vanilla JS · AWS EC2/S3",
@@ -260,6 +300,12 @@
     "subtitle": "",
     "read_more": "Read more →",
     "back_to_blog": "← Back to Blog",
+    "related_articles": "Related Articles",
+    "share": {
+      "copy_link": "📋 Copy Link",
+      "linkedin": "💼 Share on LinkedIn",
+      "twitter": "🐦 Share on X"
+    },
     "post1": {
       "title": "The AI Agent Hype vs. Reality: A Practitioner's Guide for 2026",
       "meta": "February 5, 2026 · AI, Technology",
@@ -308,6 +354,370 @@
         "cta_question": "What's your experience with AI agents?",
         "cta_text": "I'd love to hear your stories. Connect with me on <a href=\"https://www.linkedin.com/in/gary-yong-66a9ba164\" target=\"_blank\">LinkedIn</a> to continue the conversation."
       }
+    },
+    "post2": {
+      "title": "Why Most AI Projects Fail (And How to Make Yours Succeed)",
+      "meta": "February 10, 2025 · AI & Automation",
+      "excerpt": "Drawing from enterprise consulting experience, learn the real reasons AI projects fail and get a practical evaluation framework.",
+      "category": "AI & Automation",
+      "author": "Gary Yong",
+      "date": "February 10, 2025",
+      "read_time": "8 min read",
+      "content": {
+        "intro_p1": "<strong>The AI hype is real, but so is the failure rate.</strong> After implementing AI solutions for clients across finance, healthcare, and retail at Capco, I've seen the same pattern repeat: organizations rush to adopt AI, invest heavily in technology, and then watch their projects fizzle out after a few months.",
+        "intro_p2": "The statistics are sobering. Industry reports suggest that <strong>85% of AI projects fail to deliver meaningful business value</strong>. But here's the thing—it's rarely about the technology itself. The failures happen long before you choose between TensorFlow and PyTorch.",
+        "section1_title": "The Real Culprits Behind AI Project Failures",
+        "subsection1_title": "1. The Solution-in-Search-of-a-Problem Syndrome",
+        "subsection1_p1": "I can't count how many discovery calls start with \"We want to implement AI\" rather than \"We have this business problem.\" Last year, I worked with a mid-sized insurance company whose executive team was convinced they needed an AI chatbot. Three weeks of process analysis revealed their real issue: customer service reps were spending 60% of their time manually looking up policy information in legacy systems.",
+        "subsection1_p2": "The solution wasn't AI—it was better data integration. We built a simple dashboard that aggregated customer data from three systems into one view. Customer response time improved by 40%, and the project cost 80% less than the proposed chatbot.",
+        "subsection2_title": "2. Ignoring the People Side of Change",
+        "subsection2_p1": "Technology is the easy part. People are complex. In my experience, the most sophisticated AI system will fail if your team isn't prepared for how it changes their daily work.",
+        "subsection2_p2": "At a healthcare client, we built an AI tool that could flag potential diagnosis errors in medical records. The technology worked brilliantly in testing—95% accuracy, lightning-fast processing. But six months post-launch, adoption was stuck at 12%. Why? The doctors felt the system was questioning their expertise rather than supporting it.",
+        "subsection2_p3": "We redesigned the interface to position AI suggestions as \"additional considerations\" rather than \"error alerts.\" Adoption jumped to 78% within two months. Same technology, different framing.",
+        "subsection3_title": "3. Underestimating Data Quality and Governance",
+        "subsection3_p1": "Here's a harsh truth: <strong>AI amplifies the quality of your data—both good and bad.</strong> Garbage in, garbage out, but faster and at scale.",
+        "subsection3_p2": "I worked with a retail client who wanted to implement demand forecasting AI. Their historical sales data was a mess—different product SKUs, inconsistent naming conventions, missing seasonal data. They wanted to launch in 12 weeks. We spent 16 weeks just cleaning and standardizing their data before we could even start training models.",
+        "section2_title": "The Gary Yong Framework for AI Readiness",
+        "section2_intro": "After implementing dozens of AI projects, I've developed a framework that helps organizations honestly assess their readiness. I call it the <strong>PRIME framework</strong>:",
+        "prime_p_title": "P - Process Clarity",
+        "prime_p_desc": "Before automating anything, you need to understand your current processes deeply. Can your team clearly articulate the steps involved in the work AI will assist with? Are these processes documented and standardized?",
+        "prime_p_flag": "<strong>Red flag:</strong> If different people do the same job differently, AI will struggle to provide consistent value.",
+        "prime_r_title": "R - Resource Commitment",
+        "prime_r_desc": "AI isn't a one-time purchase—it's an ongoing investment. Do you have dedicated budget for data infrastructure, model maintenance, and team training? Are key stakeholders prepared to spend 20-30% of their time on the project for the first six months?",
+        "prime_r_flag": "<strong>Red flag:</strong> If AI is being funded from \"leftover\" budget or treated as a side project, it will fail.",
+        "prime_i_title": "I - Integration Planning",
+        "prime_i_desc": "How will AI fit into your existing technology stack? What systems need to talk to each other? Who owns the integration process?",
+        "prime_i_flag": "<strong>Red flag:</strong> If your IT team learns about the AI project in the implementation phase, you're in trouble.",
+        "prime_m_title": "M - Measurement Strategy",
+        "prime_m_desc": "What specific metrics will prove success? How will you track them? What's your baseline performance?",
+        "prime_m_flag": "<strong>Red flag:</strong> If success is defined as \"improved efficiency\" without specific numbers, you can't prove ROI.",
+        "prime_e_title": "E - Expectation Management",
+        "prime_e_desc": "AI isn't magic. It won't replace human judgment, solve all your problems, or deliver results overnight. Are stakeholders' expectations realistic?",
+        "prime_e_flag": "<strong>Red flag:</strong> If anyone uses the phrase \"AI will solve everything,\" run the other direction.",
+        "section3_title": "A Real Success Story",
+        "section3_p1": "Let me share a project that got it right. A financial services client approached me with a specific problem: their loan underwriters were spending 3-4 hours per application manually reviewing financial documents and cross-referencing data points.",
+        "section3_p2": "We scored high on all PRIME dimensions: clear processes (documented underwriting guidelines), committed resources (dedicated budget and team), solid integration plan (API access to core systems), specific metrics (reduce review time to under 1 hour while maintaining approval accuracy), and realistic expectations (AI assists, humans decide).",
+        "section3_p3": "The result? We built an AI system that pre-populates application reviews with key data points and flags potential issues. Average review time dropped to 45 minutes, approval accuracy improved by 12%, and the underwriters love it because it eliminates tedious data entry and lets them focus on complex decision-making.",
+        "section4_title": "Your Next Steps",
+        "section4_intro": "If you're considering an AI project, start with these questions:",
+        "section4_q1": "<strong>What specific business problem are we solving?</strong> If you can't answer this in one sentence, stop and clarify first.",
+        "section4_q2": "<strong>How do we currently handle this process?</strong> Document everything, measure everything.",
+        "section4_q3": "<strong>Who will be affected by this change?</strong> Talk to them early and often.",
+        "section4_q4": "<strong>What data do we need, and what's its current quality?</strong> Be brutal in your assessment.",
+        "section4_q5": "<strong>How will we measure success?</strong> Set specific, measurable goals.",
+        "section4_conclusion": "AI can deliver transformational results—but only when implemented thoughtfully, strategically, and with deep respect for the human elements of change. The technology has never been more capable. The question is: are you ready for it?",
+        "cta": "<em>Want to explore whether AI is right for your organization? I help companies navigate this exact journey. Let's talk about your specific challenges and build a roadmap that actually delivers results.</em>"
+      }
+    },
+    "post3": {
+      "title": "From Consulting to AI Side Project: What I'm Learning",
+      "meta": "February 5, 2025 · Career, Business",
+      "excerpt": "Insights from transitioning between consulting and entrepreneurship, and how both experiences shaped my approach to technology projects.",
+      "category": "Career",
+      "author": "Gary Yong",
+      "date": "February 5, 2025",
+      "read_time": "6 min read",
+      "content": {
+        "intro_p1": "I'm currently an Implementation Consultant at Capco, working with major banks and financial institutions on complex transformation projects. It's challenging work that I genuinely enjoy. But over the past year, I've been exploring something on the side: <strong>YongAI</strong>, an AI consulting initiative that applies everything I've learned in enterprise consulting to helping organizations actually adopt AI.",
+        "intro_p2": "I haven't quit my day job. I'm not writing this from a garage somewhere, burning through savings. This is about what happens when a consultant starts thinking like a builder — and the surprising lessons that come from straddling both worlds.",
+        "section1_title": "The Mindset Shift: From Optimization to Creation",
+        "section1_p1": "In my consulting work, I'm a problem-solver. Clients come with established businesses, existing processes, and clear (if complex) challenges. My job is to diagnose issues, design solutions, and optimize what already exists. I've gotten good at this — give me an underperforming process and I can map inefficiencies, propose improvements, and deliver measurable results.",
+        "section1_p2": "Building something from scratch is a completely different muscle. With YongAI, there are no existing processes to optimize because <em>nothing exists yet</em>. Every framework, every offering, every potential client relationship has to be created from zero. This shift from \"fixing what's broken\" to \"building what doesn't exist\" requires a different kind of thinking.",
+        "section1_quote": "<em>In consulting, the hardest question is usually \"How do we fix this?\" When you're building something new, it's \"What should I build?\" — and that question has infinite possible answers.</em>",
+        "section2_title": "Why Consultants Are Well-Positioned for This",
+        "section2_intro": "The more I explore the AI space, the more I realize that consulting provides excellent preparation — but not for the reasons you might expect.",
+        "subsection1_title": "We're Used to Ambiguous Problems",
+        "subsection1_p1": "Consultants thrive in unclear situations. Clients rarely come to us saying \"Here's exactly what's wrong and exactly how to fix it.\" They say things like \"Our sales are down, our employees seem unhappy, and we're losing market share.\" We're trained to work backwards from vague problems to specific, actionable solutions.",
+        "subsection1_p2": "This skill translates directly to the AI space, where organizations know they \"need AI\" but have no idea where to start. When someone says \"We think we need AI but we're not sure what kind,\" I don't panic — I grab my trusty framework and start asking clarifying questions. That's just Tuesday for a consultant.",
+        "subsection2_title": "We Know How to Build Trust Quickly",
+        "subsection2_p1": "Consultants are professional outsiders. We walk into organizations where we know nobody, understand little about the industry specifics, and somehow need to gain enough trust that executives will listen to our recommendations on massive changes.",
+        "subsection2_p2": "This ability to build credibility quickly is incredibly relevant when talking to organizations about AI. There's a lot of hype and a lot of skepticism. Being able to position yourself as someone who understands both the technology and the business reality — that's a consulting superpower.",
+        "subsection3_title": "We're Comfortable Being Wrong (Then Adapting)",
+        "subsection3_p1": "Good consultants know that initial hypotheses are usually wrong. You start with educated guesses, test them against reality, and pivot when the data says you're off track. This \"strong opinions, weakly held\" mindset is essential when exploring new territory.",
+        "subsection3_p2": "My original thinking for YongAI focused heavily on building custom AI solutions. But the more conversations I had, the more I realized most organizations don't need custom models — they need help integrating existing AI tools into their workflows and building the organizational capability to use them. That realization reshaped my entire approach.",
+        "section3_title": "The Traps I'm Watching Out For",
+        "section3_intro": "Not everything from consulting translates well. Here are the tendencies I've noticed in myself that I'm actively trying to counteract:",
+        "trap1_title": "Over-Engineering Everything",
+        "trap1_p1": "Consultants are trained to deliver polished, comprehensive solutions. We create detailed frameworks, beautiful presentations, and thorough documentation. When you're exploring a new venture, this perfectionism can be paralyzing.",
+        "trap1_p2": "I caught myself spending weeks building elaborate positioning documents before I'd even validated the core idea with real people. Those documents were thorough, well-researched, and premature. Conversations with actual prospects taught me more about what the market needs than any amount of desk research.",
+        "trap2_title": "Defaulting to \"Analysis Mode\"",
+        "trap2_p1": "When faced with uncertainty, consultants gather more data. We run surveys, conduct interviews, and build models until we feel confident. When you're exploring something new, this can become a comfortable hiding place — an excuse to keep researching instead of actually doing.",
+        "trap2_p2": "I've had to push myself to move from analysis to action faster than feels natural. Sometimes the answer comes from a 15-minute conversation, not a six-week research project.",
+        "trap3_title": "Underestimating the Emotional Difference",
+        "trap3_p1": "Consulting projects have defined timelines, clear success metrics, and built-in ending points. When a project goes sideways, there's usually shared accountability. Building your own thing is emotionally different — every win and every setback feels personal in a way that client work doesn't.",
+        "trap3_p2": "Learning to treat feedback as market data rather than personal rejection has been an ongoing calibration.",
+        "section4_title": "What I'm Taking Away So Far",
+        "section4_takeaway1": "<strong>Start conversations before you're ready.</strong> Consultants are used to feeling fully prepared before presenting to clients. When exploring a new direction, \"ready enough\" beats \"perfect.\" I should have started talking to people about this idea months earlier than I did.",
+        "section4_takeaway2": "<strong>Your network is your unfair advantage.</strong> Those years of building relationships with executives, understanding their challenges, and proving your competence? That's not just a career asset — it's a launchpad. The trust you've already built opens doors that cold outreach never could.",
+        "section4_takeaway3": "<strong>The gap in the market is real.</strong> Through my consulting work, I've seen firsthand how many organizations struggle with AI adoption — not because the technology isn't there, but because they lack the structured approach to evaluate, implement, and scale it. That's a consulting problem, not a tech problem. And consultants are uniquely equipped to solve it.",
+        "section5_title": "Where This Goes",
+        "section5_p1": "I don't have a dramatic \"I quit my job\" story. What I have is a growing conviction that the intersection of enterprise consulting and AI implementation is where I can create the most value. My experience at Capco — running workshops, mapping processes, managing complex stakeholder environments — is directly applicable to helping organizations navigate AI adoption.",
+        "section5_p2": "YongAI is still early. I'm learning, experimenting, and figuring out what the right offering looks like. But the foundation is solid: deep consulting methodology applied to the most transformative technology of our generation.",
+        "section5_p3": "For other consultants who see the same opportunity — you don't have to make a dramatic leap. Start exploring. Have conversations. Build something small on the side. The skills you've developed solving complex business problems are exactly what the AI space needs right now.",
+        "section5_conclusion": "<strong>The best part?</strong> All those years of helping other people build better businesses are preparing you to build something meaningful of your own."
+      }
+    },
+    "post4": {
+      "title": "The Enterprise AI Playbook: 5 Steps I Use With Every Client",
+      "meta": "January 15, 2025 · AI Strategy, Consulting",
+      "excerpt": "A proven methodology for evaluating, planning, and implementing AI solutions in enterprise environments, with real case studies.",
+      "category": "Consulting",
+      "author": "Gary Yong",
+      "date": "January 15, 2025",
+      "read_time": "9 min read",
+      "content": {
+        "intro_p1": "After implementing AI solutions across finance, healthcare, retail, and manufacturing, I've learned that successful AI projects follow a predictable pattern. The technology varies, the business contexts differ, but the methodology remains consistent.",
+        "intro_p2": "This is the exact 5-step framework I use with every client—refined through dozens of engagements, countless failures, and the hard-earned wisdom that comes from turning AI experiments into business value. <strong>It works because it prioritizes business outcomes over technical sophistication.</strong>",
+        "intro_quote": "<em>The goal isn't to implement the most advanced AI possible. It's to implement AI that delivers measurable business value within realistic constraints.</em>",
+        "step1_title": "Step 1: Process Audit — Understanding What Actually Happens",
+        "step1_p1": "Before we talk about AI, we talk about work. I spend the first week of every engagement shadowing employees, mapping workflows, and understanding the gap between \"how we're supposed to do things\" and \"how things actually get done.\"",
+        "step1_what_looking_title": "What I'm Looking For:",
+        "step1_bullets": {
+          "0": "<strong>Repetitive tasks</strong> that consume significant time",
+          "1": "<strong>Decision points</strong> where humans apply consistent criteria",
+          "2": "<strong>Information bottlenecks</strong> where data flows slowly between systems",
+          "3": "<strong>Quality control steps</strong> that could benefit from automated checking"
+        },
+        "step1_example_title": "Real Example: Regional Bank Loan Processing",
+        "step1_example_p1": "A regional bank wanted to \"use AI for loan approvals.\" After the process audit, I discovered their real problem wasn't approval decisions—it was that loan officers spent 3-4 hours per application manually gathering customer financial data from multiple systems and documents.",
+        "step1_example_p2": "The AI opportunity wasn't in making approval decisions (that required human judgment) but in automating data collection and validation. We built an AI system that extracts financial data from documents and cross-references it with internal systems, reducing manual work from 4 hours to 30 minutes per application.",
+        "step1_result": "<strong>Result:</strong> 87% reduction in processing time, 40% increase in loan officer productivity, zero change to approval workflows.",
+        "step2_title": "Step 2: Opportunity Scoring — The ROI Reality Check",
+        "step2_p1": "Not every AI opportunity is worth pursuing. I use a scoring framework that evaluates potential projects across four dimensions:",
+        "step2_dive_title": "The DIVE Framework:",
+        "step2_data_title": "<strong>Data Availability (0-25 points)</strong>",
+        "step2_data_bullets": {
+          "0": "Is the necessary data already being collected?",
+          "1": "What's the quality and consistency?",
+          "2": "How accessible is it for AI training?"
+        },
+        "step2_impact_title": "<strong>Impact Potential (0-25 points)</strong>",
+        "step2_impact_bullets": {
+          "0": "How much time/cost could automation save?",
+          "1": "Would improvements unlock new revenue opportunities?",
+          "2": "Are there quality improvements beyond efficiency?"
+        },
+        "step2_validation_title": "<strong>Validation Complexity (0-25 points)</strong>",
+        "step2_validation_bullets": {
+          "0": "How easily can we measure success?",
+          "1": "Are the business rules clear and consistent?",
+          "2": "Can we start with a limited pilot?"
+        },
+        "step2_execution_title": "<strong>Execution Feasibility (0-25 points)</strong>",
+        "step2_execution_bullets": {
+          "0": "Do we have stakeholder buy-in?",
+          "1": "Are integration requirements manageable?",
+          "2": "What's the change management complexity?"
+        },
+        "step2_example_title": "Real Example: Manufacturing Quality Control",
+        "step2_example_p1": "A manufacturer wanted AI-powered visual inspection of products. Here's how it scored:",
+        "step2_example_bullets": {
+          "0": "<strong>Data:</strong> 20/25 (thousands of existing images, well-labeled defects)",
+          "1": "<strong>Impact:</strong> 23/25 (could reduce inspection time by 70%, catch defects humans miss)",
+          "2": "<strong>Validation:</strong> 22/25 (clear success metrics, easy to compare AI vs human results)",
+          "3": "<strong>Execution:</strong> 18/25 (some resistance from quality team, integration challenges)"
+        },
+        "step2_result": "<strong>Total: 83/100 — Green light for full implementation.</strong>",
+        "step2_conclusion": "This systematic scoring prevents the common mistake of pursuing technically interesting projects that don't deliver business value.",
+        "step3_title": "Step 3: Pilot Selection — Starting Small, Thinking Big",
+        "step3_p1": "The highest-scoring opportunity isn't always the best pilot. I select pilots based on three criteria:",
+        "step3_goldilocks_title": "The Goldilocks Principle:",
+        "step3_goldilocks_bullets": {
+          "0": "<strong>Not too simple:</strong> Won't demonstrate AI's true potential",
+          "1": "<strong>Not too complex:</strong> Too many variables for initial implementation",
+          "2": "<strong>Just right:</strong> Meaningful business impact with manageable scope"
+        },
+        "step3_example_title": "Real Example: Healthcare Documentation",
+        "step3_example_p1": "A healthcare system had three AI opportunities: automated diagnosis support (too complex for pilot), appointment scheduling optimization (too simple), and clinical notes summarization (just right).",
+        "step3_example_p2": "The pilot focused on summarizing patient encounter notes for specialist referrals. It was contained (only referral docs), measurable (time savings, referral quality), and valuable (specialists spent 30% less time reading background information).",
+        "step3_result": "<strong>Pilot results:</strong> 45% reduction in referral review time, 23% improvement in referral accuracy, 92% physician satisfaction score.",
+        "step3_conclusion": "Success with the pilot gave us credibility and budget for the more ambitious diagnosis support system.",
+        "step4_title": "Step 4: Build & Test — The MVP Mindset",
+        "step4_p1": "Enterprise AI projects fail when they try to solve everything at once. I build AI solutions like software products: minimum viable product first, then iterate based on real usage.",
+        "step4_philosophy_title": "My Build Philosophy:",
+        "step4_philosophy_bullets": {
+          "0": "<strong>Start with existing tools:</strong> ChatGPT API, Claude, established ML services",
+          "1": "<strong>Custom only when necessary:</strong> Most problems don't need custom models",
+          "2": "<strong>Human-in-the-loop always:</strong> AI suggests, humans decide (at least initially)",
+          "3": "<strong>Measure everything:</strong> Usage patterns, accuracy rates, user satisfaction"
+        },
+        "step4_example_title": "Real Example: Insurance Claims Processing",
+        "step4_example_p1": "An insurance company wanted AI to automatically approve/deny claims. Instead of building a full automation system, we started with an AI assistant that flagged unusual claims and suggested next steps.",
+        "step4_example_phase1": "<strong>Phase 1 MVP:</strong> AI reads claim documents, extracts key information, flags potential issues. Claims adjusters still make all decisions but with better information faster.",
+        "step4_example_results_title": "<strong>Results after 3 months:</strong>",
+        "step4_example_results": {
+          "0": "35% reduction in claim processing time",
+          "1": "18% improvement in fraud detection",
+          "2": "90% adjuster adoption rate"
+        },
+        "step4_conclusion": "The success of Phase 1 built trust for Phase 2: automated approval of simple, low-risk claims. We're now processing 40% of claims with minimal human intervention.",
+        "step5_title": "Step 5: Scale & Monitor — From Pilot to Platform",
+        "step5_p1": "Scaling AI requires shifting from project thinking to product thinking. You're not just expanding a successful pilot—you're building an AI capability that will evolve and improve over time.",
+        "step5_checklist_title": "Scaling Checklist:",
+        "step5_technical_title": "<strong>Technical Infrastructure:</strong>",
+        "step5_technical_bullets": {
+          "0": "API endpoints that can handle production load",
+          "1": "Data pipelines for retraining and updates",
+          "2": "Monitoring for model performance degradation",
+          "3": "Security and compliance frameworks"
+        },
+        "step5_organizational_title": "<strong>Organizational Change:</strong>",
+        "step5_organizational_bullets": {
+          "0": "Training programs for expanded user base",
+          "1": "Updated job descriptions and performance metrics",
+          "2": "Process documentation and governance",
+          "3": "Feedback loops for continuous improvement"
+        },
+        "step5_example_title": "Real Example: Retail Inventory Optimization",
+        "step5_example_p1": "A retail chain piloted AI-powered inventory forecasting in 5 stores. After proving a 20% reduction in stockouts and 15% decrease in overstock, we scaled to 150 stores.",
+        "step5_challenges_title": "<strong>Scaling challenges we solved:</strong>",
+        "step5_challenges": {
+          "0": "<strong>Data quality:</strong> Built automated data validation for different store formats",
+          "1": "<strong>Change management:</strong> Trained 150+ store managers on new forecasting process",
+          "2": "<strong>Performance monitoring:</strong> Dashboard tracking forecast accuracy by store, region, and product category",
+          "3": "<strong>Continuous improvement:</strong> Monthly model retraining with new sales data"
+        },
+        "step5_results_title": "<strong>Full-scale results (after 12 months):</strong>",
+        "step5_results": {
+          "0": "$2.3M annual savings from reduced overstock",
+          "1": "$1.8M additional revenue from prevented stockouts",
+          "2": "22% improvement in inventory turnover"
+        },
+        "patterns_title": "Common Patterns Across Industries",
+        "patterns_p1": "While every client is unique, I see consistent patterns in what makes AI projects successful:",
+        "winners_title": "Winners Focus On:",
+        "winners_bullets": {
+          "0": "<strong>Augmentation over automation:</strong> AI helping humans work better, not replacing them",
+          "1": "<strong>Process improvement:</strong> Using AI to eliminate bottlenecks and inefficiencies",
+          "2": "<strong>Data quality:</strong> Investing in clean, consistent, accessible data",
+          "3": "<strong>Change management:</strong> Preparing people for new workflows"
+        },
+        "failures_title": "Common Failure Points:",
+        "failures_bullets": {
+          "0": "Skipping the process audit (building solutions for assumed problems)",
+          "1": "Pursuing technically impressive but business-irrelevant projects",
+          "2": "Underestimating data preparation time",
+          "3": "Ignoring user adoption and change management"
+        },
+        "roadmap_title": "Your AI Implementation Roadmap",
+        "roadmap_p1": "If you're ready to implement AI in your organization, start with these questions:",
+        "roadmap_questions": {
+          "0": "<strong>What processes consume the most time/resources?</strong> (Step 1 prep)",
+          "1": "<strong>Where do we have good data already?</strong> (Step 2 foundation)",
+          "2": "<strong>What's a contained problem we could solve in 8-12 weeks?</strong> (Step 3 pilot)",
+          "3": "<strong>Who are our AI champions and skeptics?</strong> (Step 4 change management)",
+          "4": "<strong>How will we measure success?</strong> (Step 5 monitoring)"
+        },
+        "roadmap_p2": "This framework has guided successful AI implementations worth millions in business value. It works because it respects both the power of AI and the complexity of organizational change.",
+        "roadmap_remember": "<strong>Remember:</strong> The goal isn't to deploy the most sophisticated AI possible. It's to deploy AI that solves real problems, delivers measurable value, and sets the foundation for your organization's AI-powered future.",
+        "cta": "<em>Ready to implement AI in your organization? I've guided dozens of companies through this exact framework. Let's discuss how it applies to your specific challenges and opportunities.</em>"
+      }
+    },
+    "post5": {
+      "title": "I Built an AI Clone of Myself — Here's What Happened",
+      "meta": "January 28, 2025 · Tech Projects",
+      "excerpt": "Creating Ask Gary was supposed to be a fun portfolio piece. Instead, it became a fascinating experiment in conversational AI and user psychology.",
+      "category": "Tech Projects",
+      "author": "Gary Yong",
+      "date": "January 28, 2025",
+      "read_time": "7 min read",
+      "content": {
+        "intro_p1": "What started as a weekend coding project to add some personality to my portfolio has turned into one of the most educational AI experiments I've ever conducted. <strong>\"Ask Gary\"</strong> was supposed to be a simple chatbot that could answer basic questions about my background. Six months and 2,000+ conversations later, it's taught me more about human-AI interaction than any industry report ever could.",
+        "intro_p2": "Here's the story of building an AI version of myself, the technical decisions that shaped it, and the fascinating insights from watching people interact with my digital twin.",
+        "brief_title": "The Original Brief (To Myself)",
+        "brief_p1": "The concept was straightforward: create an AI assistant that could handle the basic questions I get asked repeatedly—my background, experience, project details, and availability. Think of it as an interactive FAQ that could engage in natural conversation.",
+        "brief_p2": "My requirements were simple:",
+        "brief_bullets": {
+          "0": "<strong>Conversational:</strong> More engaging than static text",
+          "1": "<strong>Accurate:</strong> Only provide information I'd actually share",
+          "2": "<strong>Progressive:</strong> Get smarter over time based on interactions",
+          "3": "<strong>Authentic:</strong> Sound like me, not a generic chatbot"
+        },
+        "brief_p3": "Little did I know that last requirement would be the most challenging and interesting part of the entire project.",
+        "architecture_title": "Technical Architecture: Keeping It Simple (But Scalable)",
+        "stack_title": "The Core Stack",
+        "stack_p1": "I built Ask Gary using a surprisingly minimal tech stack:",
+        "stack_bullets": {
+          "0": "<strong>Frontend:</strong> Vanilla JavaScript with a custom widget",
+          "1": "<strong>Backend:</strong> Node.js with Express",
+          "2": "<strong>AI Engine:</strong> OpenAI's GPT-4 with custom prompts",
+          "3": "<strong>Memory:</strong> Session-based conversation history",
+          "4": "<strong>Hosting:</strong> AWS EC2 with PM2 for process management"
+        },
+        "stack_p2": "The beauty of this setup is its simplicity. No complex vector databases, no fine-tuned models, no microservices architecture. Just clean, maintainable code that does exactly what it needs to do.",
+        "personality_title": "The Personality Challenge",
+        "personality_p1": "The hardest part wasn't the technical implementation—it was teaching an AI to sound like me. How do you distill your communication style, humor, and personality quirks into prompt engineering?",
+        "personality_p2": "I started by analyzing my own writing patterns. I read through hundreds of my emails, Slack messages, and LinkedIn posts, looking for consistent patterns:",
+        "personality_bullets": {
+          "0": "I tend to use specific examples rather than generic statements",
+          "1": "I'm direct but friendly, professional but not stiff",
+          "2": "I often use analogies to explain technical concepts",
+          "3": "I ask clarifying questions rather than making assumptions"
+        },
+        "personality_p3": "These insights became the foundation of Ask Gary's system prompt, which I refined over dozens of iterations based on how natural the conversations felt.",
+        "engagement_title": "Progressive Engagement: The Secret Sauce",
+        "engagement_p1": "Here's where Ask Gary gets interesting. Instead of treating every interaction as isolated, it builds context over the course of a conversation. The system tracks:",
+        "engagement_bullets": {
+          "0": "What information the user has already received",
+          "1": "The level of technical detail they seem comfortable with",
+          "2": "Whether they're asking personal, professional, or technical questions",
+          "3": "How engaged they are (based on follow-up questions)"
+        },
+        "engagement_p2": "This allows Ask Gary to provide increasingly personalized responses. If someone asks about my AI experience and then follows up with technical questions, the system recognizes they want deeper detail. If they ask personal questions, it shifts to a more casual tone.",
+        "patterns_title": "What People Actually Ask (And What Surprised Me)",
+        "patterns_p1": "After thousands of conversations, I've learned that people interact with AI differently than I expected. Here are the most fascinating patterns:",
+        "testing_title": "The \"Testing\" Phase",
+        "testing_p1": "Almost everyone starts by testing the AI's knowledge boundaries. Common first questions:",
+        "testing_bullets": {
+          "0": "\"What's Gary's favorite color?\" (Answer: I don't have one, but I like colors that work well in data visualizations)",
+          "1": "\"Where did Gary go to school?\" (McMaster University)",
+          "2": "\"What's Gary's biggest weakness?\" (I over-engineer solutions sometimes)"
+        },
+        "testing_p2": "People want to understand what the AI knows and how accurately it represents me before asking more meaningful questions.",
+        "coaching_title": "The Career Coaching Conversations",
+        "coaching_p1": "This was completely unexpected. About 30% of conversations turn into career advice discussions. People ask:",
+        "coaching_bullets": {
+          "0": "\"How do I break into consulting?\"",
+          "1": "\"Should I specialize in AI or stay generalist?\"",
+          "2": "\"What's the best way to transition from X to Y?\""
+        },
+        "coaching_p2": "Ask Gary has become an impromptu career counselor, drawing on my experiences to provide personalized advice. These are often the longest, most engaged conversations.",
+        "technical_title": "The Technical Deep Dives",
+        "technical_p1": "Engineers love to get technical. They ask about architecture decisions, trade-offs in AI implementations, and specific methodologies. These conversations often last 20+ messages as people probe deeper into technical details.",
+        "technical_p2": "What's interesting is how the AI adapts its explanations based on the user's background. When someone asks about machine learning model selection, Ask Gary gauges their expertise level and adjusts accordingly.",
+        "uncanny_title": "The Uncanny Valley of Conversation",
+        "uncanny_p1": "One unexpected challenge has been managing user expectations about what Ask Gary can and cannot do. Some people forget they're talking to an AI and ask questions that require real-time information or personal opinions I haven't programmed in.",
+        "uncanny_p2": "The solution was to make the AI's limitations transparent and even leverage them as conversation starters. When Ask Gary doesn't know something, it says so honestly and suggests how the user could get the real answer (often by contacting me directly).",
+        "uncanny_quote": "<em>\"I don't have access to Gary's calendar, but I can tell you he's usually most responsive to LinkedIn messages for scheduling discussions about AI consulting projects.\"</em>",
+        "business_title": "Unexpected Business Impact",
+        "business_p1": "What started as a portfolio piece has turned into a legitimate business tool. Ask Gary has:",
+        "business_bullets": {
+          "0": "<strong>Qualified leads:</strong> Many conversations end with \"How do I hire Gary for a project?\"",
+          "1": "<strong>Built relationships:</strong> People feel like they know me before we ever speak",
+          "2": "<strong>Saved time:</strong> I no longer answer the same basic questions repeatedly",
+          "3": "<strong>Provided insights:</strong> I understand what people want to know about my work"
+        },
+        "business_p2": "Three client relationships started with Ask Gary conversations. People appreciated the ability to learn about my approach and experience before committing to a sales call.",
+        "lessons_title": "Lessons Learned (And What I'd Do Differently)",
+        "version2_title": "Version 2.0 Wishlist",
+        "version2_p1": "If I were rebuilding Ask Gary today, I'd add:",
+        "version2_bullets": {
+          "0": "<strong>Voice interface:</strong> Many people want to talk rather than type",
+          "1": "<strong>Better memory:</strong> Remember users across sessions",
+          "2": "<strong>Visual responses:</strong> Show relevant work samples or diagrams",
+          "3": "<strong>Scheduling integration:</strong> Direct booking for consultations"
+        },
+        "human_title": "The Human Touch Still Matters",
+        "human_p1": "As sophisticated as Ask Gary has become, the most meaningful conversations still happen when people connect with me directly. The AI is excellent at providing information and initial engagement, but it can't replace human connection for complex discussions.",
+        "human_p2": "Ask Gary works best as a bridge—introducing people to my work and approach, then seamlessly transitioning to human interaction when appropriate.",
+        "psychology_title": "The Psychology of Talking to Yourself",
+        "psychology_p1": "Here's something I didn't anticipate: interacting with an AI version of myself has been surprisingly reflective. Reading conversations helps me understand how others perceive my communication style and what aspects of my work resonate most with people.",
+        "psychology_p2": "It's also shown me patterns in my own thinking that I wasn't aware of. Ask Gary consistently structures responses in ways that mirror how I approach complex problems—breaking them down, providing context, offering practical next steps. Seeing this pattern externalized has made me more intentional about how I communicate.",
+        "future_title": "What's Next for Ask Gary",
+        "future_p1": "The experiment continues. I'm exploring ways to make Ask Gary even more useful while maintaining the authentic, personal feel that makes it engaging. The goal isn't to replace human interaction but to enhance it—providing better context for meaningful conversations.",
+        "future_p2": "If you haven't tried Ask Gary yet, I encourage you to <a href=\"../ask-gary.html\">give it a conversation</a>. Ask it anything you're curious about regarding AI, consulting, or career transitions. You might be surprised by how natural it feels to talk to an AI version of someone you've never met.",
+        "future_p3": "<strong>And if you're building your own AI assistant,</strong> remember that the technology is just the beginning. The real challenge—and the real opportunity—is in capturing the human nuances that make conversations genuinely helpful and engaging."
+      }
     }
   },
   "contact": {
@@ -330,10 +740,13 @@
     "sources": "Sources: resume_2025.txt",
     "input_placeholder": "Ask something about Gary's experience, skills, or projects…",
     "send_button": "Send",
+    "thinking": "Ask Gary is thinking",
     "questions_title": "Good questions to try",
     "question_1": "\"What did Gary do at Capco?\"",
     "question_2": "\"Summarize Gary's experience with AI and automation.\"",
     "question_3": "\"What projects show Gary's leadership?\"",
+    "question_4": "\"Tell me about Gary's technical skills and programming languages.\"",
+    "question_5": "\"What kind of consulting projects has Gary worked on?\"",
     "how_it_works_title": "How it works",
     "how_1": "Answers are grounded only in Gary's resumes and career docs.",
     "how_2": "Top‑K relevant chunks are retrieved for each question.",
@@ -341,7 +754,7 @@
     "hint": "This page is backed by a FastAPI service and a retrieval‑augmented generation pipeline using OpenAI embeddings and a lightweight in‑memory index."
   },
   "footer": {
-    "copyright": "©2025 Gary Yong · Built with love ❤️."
+    "copyright": "©2026 Gary Yong · Built with love ❤️."
   },
   "common": {
     "loading": "Loading...",

@@ -3,16 +3,134 @@
   <head>
     <link rel="icon" type="image/png" href="/img/logo-dark.png">
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Gary Yong – Blog & Writing</title>
-    <meta
-      name="description"
-      content="Articles and writing by Gary Yong about technology and projects."
-    />
-    <link rel="stylesheet" href="styles.css?v=202602051746" />
+    <meta name="description" content="Articles and writing by Gary Yong about technology and projects." />
+    <link rel="stylesheet" href="styles.css?v=202602131450" />
+    <style>
+      .blog-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 28px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      @media (max-width: 768px) {
+        .blog-grid { grid-template-columns: 1fr; }
+      }
+      .blog-card {
+        background: rgba(15, 23, 42, 0.96);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        display: flex;
+        flex-direction: column;
+      }
+      .blog-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0, 212, 255, 0.08);
+        border-color: rgba(0, 212, 255, 0.3);
+      }
+      .blog-card-illustration {
+        width: 100%;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.08) 0%, rgba(14, 165, 233, 0.05) 50%, rgba(30, 41, 59, 0.8) 100%);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+        padding: 24px;
+      }
+      .blog-card-illustration img {
+        max-height: 160px;
+        max-width: 80%;
+        width: auto;
+        height: auto;
+        transition: transform 0.3s ease;
+      }
+      .blog-card:hover .blog-card-illustration img {
+        transform: scale(1.05);
+      }
+      .blog-card-body {
+        padding: 24px 28px 28px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .blog-card-body h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+      .blog-card-body .meta {
+        font-size: 0.8rem;
+        color: rgba(148, 163, 184, 0.7);
+        margin-bottom: 12px;
+      }
+      .blog-card-body .excerpt {
+        font-size: 0.92rem;
+        color: rgba(203, 213, 225, 0.85);
+        line-height: 1.6;
+        margin-bottom: 16px;
+        flex: 1;
+      }
+      .blog-card-body .read-link {
+        color: #00d4ff;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: color 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .blog-card-body .read-link:hover {
+        color: #38bdf8;
+      }
+      .blog-card-body .read-link::after {
+        content: '→';
+        transition: transform 0.2s;
+      }
+      .blog-card:hover .read-link::after {
+        transform: translateX(4px);
+      }
+      .blog-tag {
+        display: inline-block;
+        font-size: 0.7rem;
+        padding: 3px 10px;
+        border-radius: 20px;
+        background: rgba(0, 212, 255, 0.1);
+        color: #00d4ff;
+        font-weight: 600;
+        margin-right: 6px;
+        margin-bottom: 10px;
+      }
+      /* Light theme overrides */
+      [data-theme="light"] .blog-card {
+        background: #ffffff;
+        border-color: rgba(148, 163, 184, 0.25);
+      }
+      [data-theme="light"] .blog-card:hover {
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        border-color: rgba(0, 150, 200, 0.3);
+      }
+      [data-theme="light"] .blog-card-illustration {
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.06) 0%, rgba(14, 165, 233, 0.04) 50%, rgba(241, 245, 249, 0.8) 100%);
+        border-bottom-color: rgba(148, 163, 184, 0.15);
+      }
+      [data-theme="light"] .blog-card-body h3 {
+        color: #1e293b;
+      }
+      [data-theme="light"] .blog-card-body .meta {
+        color: rgba(100, 116, 139, 0.8);
+      }
+      [data-theme="light"] .blog-card-body .excerpt {
+        color: rgba(51, 65, 85, 0.85);
+      }
+    </style>
   </head>
   <body>
     <header class="site-header">
@@ -21,8 +139,6 @@
   <img src="img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
   <img src="img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
 </a>
-
-    <!-- Desktop navigation -->
     <nav class="nav nav-desktop">
       <a href="index.html" data-i18n="nav.home">Home</a>
       <a href="projects.html" data-i18n="nav.projects">Projects</a>
@@ -31,38 +147,14 @@
       <a href="skills.html" data-i18n="nav.skills">Skills</a>
       <a href="blog.html" data-i18n="nav.blog">Blog</a>
     </nav>
-
-    <!-- Right controls: lang + theme + mobile toggle -->
     <div class="header-actions">
-      <button
-        id="lang-toggle"
-        class="btn btn-ghost lang-toggle"
-        aria-label="Switch language"
-      >
-        中文
-      </button>
-      <button
-        id="theme-toggle"
-        class="btn btn-ghost theme-toggle"
-        aria-label="Toggle theme"
-      >
-        ☀️
-      </button>
-
-      <!-- Mobile menu button -->
-      <button
-        class="icon-button mobile-menu-toggle"
-        aria-label="Toggle navigation"
-        aria-expanded="false"
-      >
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
+      <button id="lang-toggle" class="btn btn-ghost lang-toggle" aria-label="Switch language">中文</button>
+      <button id="theme-toggle" class="btn btn-ghost theme-toggle" aria-label="Toggle theme">☀️</button>
+      <button class="icon-button mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
       </button>
     </div>
   </div>
-
-  <!-- Mobile navigation panel -->
   <nav class="nav-mobile" aria-label="Mobile navigation">
     <div class="nav-mobile-inner">
       <a href="index.html" data-i18n="nav.home">Home</a>
@@ -75,25 +167,104 @@
   </nav>
 </header>
 
-
     <main>
       <section class="section">
         <div class="container">
           <header class="section-header animate-fade-up">
             <h2 data-i18n="blog.title">Blog &amp; Writing</h2>
-            <p data-i18n="blog.subtitle"></p>
           </header>
-          <div class="grid grid-2">
-            <article class="card animate-fade-up">
-              <h3 data-i18n="blog.post1.title">The AI Agent Hype vs. Reality: A Practitioner's Guide for 2026</h3>
-              <p class="meta" data-i18n="blog.post1.meta">February 5, 2026 · AI, Technology</p>
-              <p data-i18n="blog.post1.excerpt">
-                Cut through the noise and understand what AI agents can actually deliver. Real examples of successes, failures, and a practical framework for evaluation.
-              </p>
-              <a href="blog/ai-agents-hype-vs-reality.html" class="text-link" data-i18n="blog.read_more">Read more →</a>
-            </article>
 
-            <!-- More posts coming soon -->
+          <div class="blog-grid">
+
+            <a href="blog/ai-agents-hype-vs-reality.html" style="text-decoration:none;">
+              <article class="blog-card animate-fade-up">
+                <div class="blog-card-illustration">
+                  <img src="/blog/img/artificial-intelligence.svg" alt="AI Hype vs Reality">
+                </div>
+                <div class="blog-card-body">
+                  <div>
+                    <span class="blog-tag">AI</span>
+                    <span class="blog-tag">Technology</span>
+                  </div>
+                  <h3 data-i18n="blog.post1.title">The AI Agent Hype vs. Reality: A Practitioner's Guide for 2026</h3>
+                  <p class="meta" data-i18n="blog.post1.meta">February 5, 2026</p>
+                  <p class="excerpt" data-i18n="blog.post1.excerpt">Cut through the noise and understand what AI agents can actually deliver. Real examples of successes, failures, and a practical framework for evaluation.</p>
+                  <span class="read-link" data-i18n="blog.read_more">Read more</span>
+                </div>
+              </article>
+            </a>
+
+            <a href="blog/ai-automation-consulting.html" style="text-decoration:none;">
+              <article class="blog-card animate-fade-up">
+                <div class="blog-card-illustration">
+                  <img src="/blog/img/launching.svg" alt="AI Projects">
+                </div>
+                <div class="blog-card-body">
+                  <div>
+                    <span class="blog-tag">AI</span>
+                    <span class="blog-tag">Automation</span>
+                  </div>
+                  <h3 data-i18n="blog.post2.title">Why Most AI Projects Fail (And How to Make Yours Succeed)</h3>
+                  <p class="meta" data-i18n="blog.post2.meta">February 10, 2025</p>
+                  <p class="excerpt" data-i18n="blog.post2.excerpt">Drawing from enterprise consulting experience, learn the real reasons AI projects fail and get a practical evaluation framework.</p>
+                  <span class="read-link" data-i18n="blog.read_more">Read more</span>
+                </div>
+              </article>
+            </a>
+
+            <a href="blog/from-consultant-to-founder.html" style="text-decoration:none;">
+              <article class="blog-card animate-fade-up">
+                <div class="blog-card-illustration">
+                  <img src="/blog/img/stepping-up.svg" alt="Career Journey">
+                </div>
+                <div class="blog-card-body">
+                  <div>
+                    <span class="blog-tag">Career</span>
+                    <span class="blog-tag">Business</span>
+                  </div>
+                  <h3 data-i18n="blog.post3.title">From Consulting to AI Side Project: What I'm Learning</h3>
+                  <p class="meta" data-i18n="blog.post3.meta">February 5, 2025</p>
+                  <p class="excerpt" data-i18n="blog.post3.excerpt">What happens when a consultant starts building an AI practice on the side — the mindset shifts, the surprises, and the lessons so far.</p>
+                  <span class="read-link" data-i18n="blog.read_more">Read more</span>
+                </div>
+              </article>
+            </a>
+
+            <a href="blog/enterprise-ai-playbook.html" style="text-decoration:none;">
+              <article class="blog-card animate-fade-up">
+                <div class="blog-card-illustration">
+                  <img src="/blog/img/master-plan.svg" alt="AI Playbook">
+                </div>
+                <div class="blog-card-body">
+                  <div>
+                    <span class="blog-tag">AI Strategy</span>
+                    <span class="blog-tag">Consulting</span>
+                  </div>
+                  <h3 data-i18n="blog.post4.title">The Enterprise AI Playbook: 5 Steps I Use With Every Client</h3>
+                  <p class="meta" data-i18n="blog.post4.meta">February 5, 2025</p>
+                  <p class="excerpt" data-i18n="blog.post4.excerpt">A proven methodology for evaluating, planning, and implementing AI solutions in enterprise environments, with real case studies.</p>
+                  <span class="read-link" data-i18n="blog.read_more">Read more</span>
+                </div>
+              </article>
+            </a>
+
+            <a href="blog/building-ask-gary.html" style="text-decoration:none;">
+              <article class="blog-card animate-fade-up">
+                <div class="blog-card-illustration">
+                  <img src="/blog/img/thought-process.svg" alt="Building Ask Gary">
+                </div>
+                <div class="blog-card-body">
+                  <div>
+                    <span class="blog-tag">Tech Projects</span>
+                  </div>
+                  <h3 data-i18n="blog.post5.title">I Built an AI Clone of Myself — Here's What Happened</h3>
+                  <p class="meta" data-i18n="blog.post5.meta">January 28, 2025</p>
+                  <p class="excerpt" data-i18n="blog.post5.excerpt">Creating Ask Gary was supposed to be a fun portfolio piece. Instead, it became a fascinating experiment in conversational AI and user psychology.</p>
+                  <span class="read-link" data-i18n="blog.read_more">Read more</span>
+                </div>
+              </article>
+            </a>
+
           </div>
         </div>
       </section>
@@ -101,12 +272,13 @@
 
     <footer class="site-footer">
       <div class="container">
-        <p data-i18n="footer.copyright">©2025 Gary Yong · Built with love ❤️.</p>
+        <p data-i18n="footer.copyright">©2026 Gary Yong · Built with love ❤️.</p>
       </div>
     </footer>
 
     <script src="main.js?v=202602051746"></script>
     <script src="js/i18n.js"></script>
+    <script src="js/animations.js"></script>
     <script src="ask-gary-widget.js"></script>
   </body>
 </html>

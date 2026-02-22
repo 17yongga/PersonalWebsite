@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <link rel="icon" type="image/png" href="/img/logo-dark.png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Why Most AI Projects Fail (And How to Make Yours Succeed) – Gary Yong</title>
+    <meta name="description" content="A practical guide based on real consulting experience about why AI projects fail and how to build a framework for success." />
+    <meta name="author" content="Gary Yong" />
+    <meta property="og:title" content="Why Most AI Projects Fail (And How to Make Yours Succeed)" />
+    <meta property="og:description" content="Drawing from enterprise consulting experience, learn the real reasons AI projects fail and get a practical evaluation framework." />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://gary-yong.com/blog/ai-automation-consulting.html" />
+    <link rel="stylesheet" href="../styles.css?v=202602051746" />
+    <style>
+      .blog-illustration {
+        display: block;
+        max-width: 700px;
+        width: 100%;
+        margin: 40px auto;
+        opacity: 0;
+        animation: fadeInIllustration 0.8s ease forwards;
+      }
+      .blog-illustration.hero-illustration {
+        max-width: 800px;
+        margin: 30px auto 40px;
+      }
+      .blog-illustration.section-illustration {
+        max-width: 500px;
+        margin: 30px auto;
+      }
+      @keyframes fadeInIllustration {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reading-progress">
+      <div class="reading-progress-bar" id="reading-progress"></div>
+    </div>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="../index.html" class="logo">
+          <img src="../img/logo-dark.png" alt="GY logo dark" class="logo-mark logo-dark" />
+          <img src="../img/logo-light.png" alt="GY logo light" class="logo-mark logo-light" />
+        </a>
+
+        <nav class="nav nav-desktop">
+          <a href="../index.html" data-i18n="nav.home">Home</a>
+          <a href="../projects.html" data-i18n="nav.projects">Projects</a>
+          <a href="../experience.html" data-i18n="nav.experience">Experience</a>
+          <a href="../about.html" data-i18n="nav.about">About</a>
+          <a href="../skills.html" data-i18n="nav.skills">Skills</a>
+          <a href="../blog.html" class="active" data-i18n="nav.blog">Blog</a>
+        </nav>
+
+        <div class="header-actions">
+          <button id="lang-toggle" class="btn btn-ghost lang-toggle" aria-label="Switch language">
+            中文
+          </button>
+          <button id="theme-toggle" class="btn btn-ghost theme-toggle" aria-label="Toggle theme">
+            ☀️
+          </button>
+          <button class="icon-button mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+      </div>
+      
+      <nav class="nav-mobile" aria-label="Mobile navigation">
+        <div class="nav-mobile-inner">
+          <a href="../index.html" data-i18n="nav.home">Home</a>
+          <a href="../projects.html" data-i18n="nav.projects">Projects</a>
+          <a href="../experience.html" data-i18n="nav.experience">Experience</a>
+          <a href="../about.html" data-i18n="nav.about">About</a>
+          <a href="../skills.html" data-i18n="nav.skills">Skills</a>
+          <a href="../blog.html" data-i18n="nav.blog">Blog</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <article class="blog-article">
+        <nav class="blog-nav">
+          <a href="../blog.html" data-i18n="blog.back_to_blog">← Back to Blog</a>
+        </nav>
+
+        <header class="blog-header">
+          <h1 data-i18n="blog.post2.title">Why Most AI Projects Fail (And How to Make Yours Succeed)</h1>
+          <div class="blog-meta-row">
+            <span class="category-tag ai-automation" data-i18n="blog.post2.category">AI & Automation</span>
+            <span class="author-name" data-i18n="blog.post2.author">Gary Yong</span>
+            <span class="publish-date" data-i18n="blog.post2.date">February 10, 2025</span>
+            <span class="reading-time" data-i18n="blog.post2.read_time">8 min read</span>
+          </div>
+        </header>
+
+        <img src="/blog/img/launching.svg" class="blog-illustration hero-illustration" alt="AI Project Success">
+
+        <div class="blog-content">
+          <p data-i18n-html="blog.post2.content.intro_p1"><strong>The AI hype is real, but so is the failure rate.</strong> After implementing AI solutions for clients across finance, healthcare, and retail at Capco, I've seen the same pattern repeat: organizations rush to adopt AI, invest heavily in technology, and then watch their projects fizzle out after a few months.</p>
+
+          <p data-i18n-html="blog.post2.content.intro_p2">The statistics are sobering. Industry reports suggest that <strong>85% of AI projects fail to deliver meaningful business value</strong>. But here's the thing—it's rarely about the technology itself. The failures happen long before you choose between TensorFlow and PyTorch.</p>
+
+          <h2 data-i18n="blog.post2.content.section1_title">The Real Culprits Behind AI Project Failures</h2>
+
+          <h3 data-i18n="blog.post2.content.subsection1_title">1. The Solution-in-Search-of-a-Problem Syndrome</h3>
+          <img src="/blog/img/warning.svg" class="blog-illustration section-illustration" alt="Finding the Right Problem">
+          <p data-i18n-html="blog.post2.content.subsection1_p1">I can't count how many discovery calls start with "We want to implement AI" rather than "We have this business problem." Last year, I worked with a mid-sized insurance company whose executive team was convinced they needed an AI chatbot. Three weeks of process analysis revealed their real issue: customer service reps were spending 60% of their time manually looking up policy information in legacy systems.</p>
+
+          <p data-i18n="blog.post2.content.subsection1_p2">The solution wasn't AI—it was better data integration. We built a simple dashboard that aggregated customer data from three systems into one view. Customer response time improved by 40%, and the project cost 80% less than the proposed chatbot.</p>
+
+          <h3 data-i18n="blog.post2.content.subsection2_title">2. Ignoring the People Side of Change</h3>
+          <img src="/blog/img/team-spirit.svg" class="blog-illustration section-illustration" alt="People Side of Change">
+          <p data-i18n="blog.post2.content.subsection2_p1">Technology is the easy part. People are complex. In my experience, the most sophisticated AI system will fail if your team isn't prepared for how it changes their daily work.</p>
+
+          <p data-i18n="blog.post2.content.subsection2_p2">At a healthcare client, we built an AI tool that could flag potential diagnosis errors in medical records. The technology worked brilliantly in testing—95% accuracy, lightning-fast processing. But six months post-launch, adoption was stuck at 12%. Why? The doctors felt the system was questioning their expertise rather than supporting it.</p>
+
+          <p data-i18n="blog.post2.content.subsection2_p3">We redesigned the interface to position AI suggestions as "additional considerations" rather than "error alerts." Adoption jumped to 78% within two months. Same technology, different framing.</p>
+
+          <h3 data-i18n="blog.post2.content.subsection3_title">3. Underestimating Data Quality and Governance</h3>
+          <p data-i18n-html="blog.post2.content.subsection3_p1">Here's a harsh truth: <strong>AI amplifies the quality of your data—both good and bad.</strong> Garbage in, garbage out, but faster and at scale.</p>
+
+          <p data-i18n="blog.post2.content.subsection3_p2">I worked with a retail client who wanted to implement demand forecasting AI. Their historical sales data was a mess—different product SKUs, inconsistent naming conventions, missing seasonal data. They wanted to launch in 12 weeks. We spent 16 weeks just cleaning and standardizing their data before we could even start training models.</p>
+
+          <h2 data-i18n="blog.post2.content.section2_title">The Gary Yong Framework for AI Readiness</h2>
+
+          <p data-i18n-html="blog.post2.content.section2_intro">After implementing dozens of AI projects, I've developed a framework that helps organizations honestly assess their readiness. I call it the <strong>PRIME framework</strong>:</p>
+
+          <img src="/blog/img/setup-analytics.svg" class="blog-illustration section-illustration" alt="PRIME Framework">
+
+          <h3 data-i18n="blog.post2.content.prime_p_title">P - Process Clarity</h3>
+          <p data-i18n="blog.post2.content.prime_p_desc">Before automating anything, you need to understand your current processes deeply. Can your team clearly articulate the steps involved in the work AI will assist with? Are these processes documented and standardized?</p>
+
+          <p data-i18n-html="blog.post2.content.prime_p_flag"><strong>Red flag:</strong> If different people do the same job differently, AI will struggle to provide consistent value.</p>
+
+          <h3 data-i18n="blog.post2.content.prime_r_title">R - Resource Commitment</h3>
+          <p data-i18n="blog.post2.content.prime_r_desc">AI isn't a one-time purchase—it's an ongoing investment. Do you have dedicated budget for data infrastructure, model maintenance, and team training? Are key stakeholders prepared to spend 20-30% of their time on the project for the first six months?</p>
+
+          <p data-i18n-html="blog.post2.content.prime_r_flag"><strong>Red flag:</strong> If AI is being funded from "leftover" budget or treated as a side project, it will fail.</p>
+
+          <h3 data-i18n="blog.post2.content.prime_i_title">I - Integration Planning</h3>
+          <p data-i18n="blog.post2.content.prime_i_desc">How will AI fit into your existing technology stack? What systems need to talk to each other? Who owns the integration process?</p>
+
+          <p data-i18n-html="blog.post2.content.prime_i_flag"><strong>Red flag:</strong> If your IT team learns about the AI project in the implementation phase, you're in trouble.</p>
+
+          <h3 data-i18n="blog.post2.content.prime_m_title">M - Measurement Strategy</h3>
+          <p data-i18n="blog.post2.content.prime_m_desc">What specific metrics will prove success? How will you track them? What's your baseline performance?</p>
+
+          <p data-i18n-html="blog.post2.content.prime_m_flag"><strong>Red flag:</strong> If success is defined as "improved efficiency" without specific numbers, you can't prove ROI.</p>
+
+          <h3 data-i18n="blog.post2.content.prime_e_title">E - Expectation Management</h3>
+          <p data-i18n="blog.post2.content.prime_e_desc">AI isn't magic. It won't replace human judgment, solve all your problems, or deliver results overnight. Are stakeholders' expectations realistic?</p>
+
+          <p data-i18n-html="blog.post2.content.prime_e_flag"><strong>Red flag:</strong> If anyone uses the phrase "AI will solve everything," run the other direction.</p>
+
+          <h2 data-i18n="blog.post2.content.section3_title">A Real Success Story</h2>
+
+          <p data-i18n="blog.post2.content.section3_p1">Let me share a project that got it right. A financial services client approached me with a specific problem: their loan underwriters were spending 3-4 hours per application manually reviewing financial documents and cross-referencing data points.</p>
+
+          <p data-i18n="blog.post2.content.section3_p2">We scored high on all PRIME dimensions: clear processes (documented underwriting guidelines), committed resources (dedicated budget and team), solid integration plan (API access to core systems), specific metrics (reduce review time to under 1 hour while maintaining approval accuracy), and realistic expectations (AI assists, humans decide).</p>
+
+          <p data-i18n="blog.post2.content.section3_p3">The result? We built an AI system that pre-populates application reviews with key data points and flags potential issues. Average review time dropped to 45 minutes, approval accuracy improved by 12%, and the underwriters love it because it eliminates tedious data entry and lets them focus on complex decision-making.</p>
+
+          <h2 data-i18n="blog.post2.content.section4_title">Your Next Steps</h2>
+
+          <p data-i18n="blog.post2.content.section4_intro">If you're considering an AI project, start with these questions:</p>
+
+          <ol>
+            <li data-i18n-html="blog.post2.content.section4_q1"><strong>What specific business problem are we solving?</strong> If you can't answer this in one sentence, stop and clarify first.</li>
+            <li data-i18n-html="blog.post2.content.section4_q2"><strong>How do we currently handle this process?</strong> Document everything, measure everything.</li>
+            <li data-i18n-html="blog.post2.content.section4_q3"><strong>Who will be affected by this change?</strong> Talk to them early and often.</li>
+            <li data-i18n-html="blog.post2.content.section4_q4"><strong>What data do we need, and what's its current quality?</strong> Be brutal in your assessment.</li>
+            <li data-i18n-html="blog.post2.content.section4_q5"><strong>How will we measure success?</strong> Set specific, measurable goals.</li>
+          </ol>
+
+          <p data-i18n="blog.post2.content.section4_conclusion">AI can deliver transformational results—but only when implemented thoughtfully, strategically, and with deep respect for the human elements of change. The technology has never been more capable. The question is: are you ready for it?</p>
+
+          <blockquote>
+            <p data-i18n-html="blog.post2.content.cta"><em>Want to explore whether AI is right for your organization? I help companies navigate this exact journey. Let's talk about your specific challenges and build a roadmap that actually delivers results.</em></p>
+          </blockquote>
+        </div>
+
+        <div class="blog-share">
+          <button class="share-button" onclick="copyToClipboard()" data-i18n="blog.share.copy_link">📋 Copy Link</button>
+          <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://gary-yong.com/blog/ai-automation-consulting.html" target="_blank" class="share-button" data-i18n="blog.share.linkedin">💼 Share on LinkedIn</a>
+          <a href="https://twitter.com/intent/tweet?url=https://gary-yong.com/blog/ai-automation-consulting.html&text=Why Most AI Projects Fail (And How to Make Yours Succeed)" target="_blank" class="share-button" data-i18n="blog.share.twitter">🐦 Share on X</a>
+        </div>
+
+        <section class="related-articles">
+          <h3 data-i18n="blog.related_articles">Related Articles</h3>
+          <div class="related-grid">
+            <article class="related-card">
+              <h4><a href="enterprise-ai-playbook.html" data-i18n="blog.post4.title">The Enterprise AI Playbook: 5 Steps I Use With Every Client</a></h4>
+              <p data-i18n="blog.post4.excerpt">My proven methodology for implementing AI solutions in enterprise environments, with real examples from client engagements.</p>
+            </article>
+            <article class="related-card">
+              <h4><a href="from-consultant-to-founder.html" data-i18n="blog.post3.title">From Big 4 Consulting to AI Startup: What I Learned</a></h4>
+              <p data-i18n="blog.post3.excerpt">The mindset shift from optimizing existing systems to building from scratch, and lessons for other consultants considering entrepreneurship.</p>
+            </article>
+          </div>
+        </section>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p data-i18n="footer.copyright">©2026 Gary Yong · Built with love ❤️.</p>
+      </div>
+    </footer>
+
+    <script src="../main.js?v=202602051746"></script>
+    <script src="../js/i18n.js"></script>
+    <script>
+      // Reading progress bar
+      window.addEventListener('scroll', function() {
+        const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+        document.getElementById('reading-progress').style.width = scrolled + '%';
+      });
+
+      // Copy to clipboard
+      function copyToClipboard() {
+        navigator.clipboard.writeText(window.location.href).then(function() {
+          const button = event.target;
+          const originalText = button.textContent;
+          button.textContent = '✅ Copied!';
+          setTimeout(() => {
+            button.textContent = originalText;
+          }, 2000);
+        });
+      }
+    </script>
+  </body>
+</html>
