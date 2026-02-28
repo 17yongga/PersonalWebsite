@@ -22,6 +22,19 @@
     canvas.height = rect.height;
   }
 
+  // Color range (can be updated by palette switcher)
+  let hueMin = 180;
+  let hueMax = 240;
+
+  // Expose function to update orb colors from palette switcher
+  window.updateOrbColors = function(newMin, newMax) {
+    hueMin = newMin;
+    hueMax = newMax;
+    orbs.forEach(orb => {
+      orb.hue = Math.random() * (hueMax - hueMin) + hueMin;
+    });
+  };
+
   // Create orb objects
   function createOrbs() {
     orbs = [];
@@ -33,7 +46,7 @@
         speedX: (Math.random() - 0.5) * (isMobile ? 0.3 : 0.5),
         speedY: (Math.random() - 0.5) * (isMobile ? 0.3 : 0.5),
         opacity: Math.random() * 0.15 + 0.05,
-        hue: Math.random() * 60 + 180, // Blue/cyan range
+        hue: Math.random() * (hueMax - hueMin) + hueMin,
       });
     }
   }

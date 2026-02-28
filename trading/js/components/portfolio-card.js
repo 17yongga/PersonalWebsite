@@ -32,11 +32,27 @@ export function PortfolioCard(portfolio) {
     return `
         <div class="portfolio-card" data-portfolio-id="${portfolio.id}" onclick="navigateToPortfolio('${portfolio.id}')">
             <div class="portfolio-card__header">
-                <h3 class="portfolio-card__name">${escapeHtml(portfolio.name)}</h3>
-                <div class="portfolio-card__menu">
-                    <button class="portfolio-menu-button" onclick="event.stopPropagation(); showPortfolioMenu(event, '${portfolio.id}')" aria-label="Portfolio menu">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </button>
+                <div class="portfolio-card__header-top">
+                    <div class="portfolio-card__name-section">
+                        <div class="portfolio-card__name-row">
+                            <h3 class="portfolio-card__name">${escapeHtml(portfolio.name)}</h3>
+                            ${portfolio.type === 'strategy' ? `
+                                <span class="portfolio-card__badge portfolio-card__badge--strategy">
+                                    <i class="fas fa-robot"></i> Automated
+                                </span>
+                            ` : ''}
+                        </div>
+                        ${portfolio.type === 'strategy' && portfolio.strategy_name ? `
+                            <div class="portfolio-card__strategy-name">
+                                <i class="fas fa-link"></i> ${escapeHtml(portfolio.strategy_name)}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="portfolio-card__menu">
+                        <button class="portfolio-menu-button" onclick="event.stopPropagation(); showPortfolioMenu(event, '${portfolio.id}')" aria-label="Portfolio menu">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -128,11 +144,36 @@ if (!document.getElementById('portfolio-card-styles')) {
         }
 
         .portfolio-card__header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
             margin-bottom: var(--space-4);
-            gap: var(--space-3);
+        }
+
+        .portfolio-card__name-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        .portfolio-card__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .portfolio-card__badge--strategy {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent);
+        }
+
+        .portfolio-card__badge--strategy i {
+            font-size: 0.65rem;
         }
 
         .portfolio-card__name {
@@ -144,8 +185,51 @@ if (!document.getElementById('portfolio-card-styles')) {
             word-break: break-word;
         }
 
+        .portfolio-card__name-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: var(--space-2);
+            margin-bottom: var(--space-1);
+        }
+
+        .portfolio-card__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-2);
+            font-size: 0.75rem;
+            font-weight: 500;
+            border-radius: var(--radius-full);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            flex-shrink: 0;
+        }
+
+        .portfolio-card__badge--strategy {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .portfolio-card__strategy-name {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .portfolio-card__strategy-name i {
+            font-size: 0.625rem;
+            opacity: 0.7;
+        }
+
         .portfolio-card__menu {
-            position: relative;
+            position: absolute;
+            top: var(--space-4);
+            right: var(--space-4);
         }
 
         .portfolio-menu-button {
@@ -314,6 +398,19 @@ if (!document.getElementById('portfolio-card-styles')) {
             .portfolio-card__total {
                 font-size: 1.25rem;
             }
+        }
+
+        /* Header structure updates */
+        .portfolio-card__header-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: var(--space-3);
+        }
+
+        .portfolio-card__name-section {
+            flex: 1;
+            min-width: 0;
         }
     `;
 

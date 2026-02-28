@@ -13,6 +13,7 @@ function DashboardPage() {
     let symbolSearchCleanup = null;
     let portfolios = [];
     let watchlist = [];
+    let strategies = [];
 
     async function render(container) {
         // Initial render with loading state
@@ -41,6 +42,18 @@ function DashboardPage() {
                                 ${renderLoadingSkeleton()}
                             </div>
                         </div>
+
+                        <div class="strategies-summary-section">
+                            <div class="section-header">
+                                <h2 class="section-title">Strategy Performance</h2>
+                                <button class="btn btn-ghost btn-sm" onclick="viewAllStrategies()">
+                                    View All Strategies
+                                </button>
+                            </div>
+                            <div class="strategies-summary-content" id="strategies-summary-content">
+                                ${renderStrategiesSkeleton()}
+                            </div>
+                        </div>
                     </div>
 
                     <div class="sidebar-section">
@@ -65,7 +78,8 @@ function DashboardPage() {
         // Load initial data
         await Promise.all([
             loadPortfolios(),
-            loadWatchlist()
+            loadWatchlist(),
+            loadStrategies()
         ]);
 
         // Update the welcome message with current user after rendering
@@ -120,6 +134,21 @@ function DashboardPage() {
         }
     }
 
+    async function loadStrategies() {
+        try {
+            const response = await api.get('/strategies');
+            strategies = response.strategies || [];
+            
+            // Update store
+            store.setState('strategies', strategies);
+            
+            renderStrategiesSummary();
+        } catch (error) {
+            console.error('Failed to load strategies:', error);
+            renderStrategiesError();
+        }
+    }
+
     function renderPortfolios() {
         const container = document.getElementById('portfolios-content');
         
@@ -132,6 +161,102 @@ function DashboardPage() {
                 </div>
             `;
         }
+    }
+
+    function renderStrategiesSummary() {
+        const container = document.getElementById('strategies-summary-content');
+        
+        if (strategies.length === 0) {
+            container.innerHTML = renderEmptyStrategies();
+        } else {
+            // Calculate summary metrics
+            const activeStrategies = strategies.filter(s => s.status === 'active').length;
+            const todayPnL = strategies.reduce((sum, s) => sum + (s.performance?.daily_pnl || 0), 0);
+            const totalReturn = strategies.reduce((sum, s) => sum + (s.performance?.total_return || 0), 0) / strategies.length;
+
+            container.innerHTML = `
+                <div class="strategies-summary-grid">
+                    <div class="strategy-summary-card">
+                        <div class="summary-metric">
+                            <div class="summary-value">${activeStrategies}</div>
+                            <div class="summary-label">Active Strategies</div>
+                        </div>
+                        <div class="summary-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-summary-card">
+                        <div class="summary-metric">
+                            <div class="summary-value ${todayPnL >= 0 ? 'positive' : 'negative'}">
+                                ${formatCurrency(todayPnL)}
+                            </div>
+                            <div class="summary-label">Today's P&L</div>
+                        </div>
+                        <div class="summary-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-summary-card">
+                        <div class="summary-metric">
+                            <div class="summary-value ${totalReturn >= 0 ? 'positive' : 'negative'}">
+                                ${formatPercent(totalReturn, 1, false)}
+                            </div>
+                            <div class="summary-label">Avg Return</div>
+                        </div>
+                        <div class="summary-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="recent-strategies">
+                    <h4>Recent Strategy Activity</h4>
+                    <div class="strategy-activity-list">
+                        ${strategies.slice(0, 3).map(strategy => renderStrategyActivity(strategy)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function renderStrategyActivity(strategy) {
+        const performance = strategy.performance || {};
+        const lastReturn = performance.daily_pnl || 0;
+        
+        return `
+            <div class="strategy-activity-item" onclick="viewStrategy('${strategy.id}')">
+                <div class="activity-info">
+                    <div class="activity-name">${escapeHtml(strategy.name)}</div>
+                    <div class="activity-meta">
+                        <span class="strategy-type-badge ${strategy.type}">${getStrategyTypeLabel(strategy.type)}</span>
+                        <span class="strategy-status ${strategy.status}">${getStrategyStatusIcon(strategy.status)} ${strategy.status}</span>
+                    </div>
+                </div>
+                <div class="activity-performance ${lastReturn >= 0 ? 'positive' : 'negative'}">
+                    ${formatCurrency(lastReturn)}
+                </div>
+            </div>
+        `;
+    }
+
+    function getStrategyTypeLabel(type) {
+        const types = {
+            'momentum': 'Momentum',
+            'mean_reversion': 'Mean Reversion', 
+            'sentiment': 'Sentiment'
+        };
+        return types[type] || type;
+    }
+
+    function getStrategyStatusIcon(status) {
+        const icons = {
+            'active': '🟢',
+            'paused': '🟡',
+            'backtest': '🔵'
+        };
+        return icons[status] || '⚪';
     }
 
     async function renderWatchlist() {
@@ -302,6 +427,24 @@ function DashboardPage() {
         `;
     }
 
+    function renderStrategiesSkeleton() {
+        return `
+            <div class="strategies-summary-grid">
+                ${Array(3).fill(0).map(() => `
+                    <div class="strategy-summary-card loading">
+                        <div class="summary-metric">
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text" style="width: 70%;"></div>
+                        </div>
+                        <div class="summary-icon">
+                            <div class="skeleton skeleton-icon"></div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
     function renderWatchlistSkeleton() {
         return `
             <div class="watchlist-table-container">
@@ -352,6 +495,20 @@ function DashboardPage() {
         `;
     }
 
+    function renderEmptyStrategies() {
+        return `
+            <div class="empty-strategies">
+                <div class="empty-strategies-icon">🤖</div>
+                <h4>No strategies yet</h4>
+                <p>Create automated trading strategies to enhance your trading</p>
+                <button class="btn btn-primary btn-sm" onclick="viewAllStrategies()">
+                    <i class="fas fa-plus"></i>
+                    Create Strategy
+                </button>
+            </div>
+        `;
+    }
+
     function renderPortfoliosError() {
         document.getElementById('portfolios-content').innerHTML = `
             <div class="error-state">
@@ -370,6 +527,18 @@ function DashboardPage() {
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>Failed to load watchlist</p>
                 <button class="btn btn-secondary" onclick="retryLoadWatchlist()">
+                    Retry
+                </button>
+            </div>
+        `;
+    }
+
+    function renderStrategiesError() {
+        document.getElementById('strategies-summary-content').innerHTML = `
+            <div class="error-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Failed to load strategies</p>
+                <button class="btn btn-secondary" onclick="retryLoadStrategies()">
                     Retry
                 </button>
             </div>
@@ -406,6 +575,14 @@ function DashboardPage() {
             store.subscribe('watchlist', async (newWatchlist) => {
                 watchlist = newWatchlist || [];
                 await renderWatchlist();
+            })
+        );
+
+        // Subscribe to strategy changes
+        unsubscribers.push(
+            store.subscribe('strategies', (newStrategies) => {
+                strategies = newStrategies || [];
+                renderStrategiesSummary();
             })
         );
     }
@@ -585,6 +762,18 @@ function DashboardPage() {
         loadWatchlist();
     };
 
+    window.viewAllStrategies = () => {
+        window.location.hash = '#/strategies';
+    };
+
+    window.viewStrategy = (strategyId) => {
+        window.location.hash = `#/strategies/${strategyId}`;
+    };
+
+    window.retryLoadStrategies = () => {
+        loadStrategies();
+    };
+
     function destroy() {
         // Clean up subscriptions
         unsubscribers.forEach(unsub => unsub());
@@ -602,6 +791,9 @@ function DashboardPage() {
         if (window.viewSymbol) delete window.viewSymbol;
         if (window.retryLoadPortfolios) delete window.retryLoadPortfolios;
         if (window.retryLoadWatchlist) delete window.retryLoadWatchlist;
+        if (window.viewAllStrategies) delete window.viewAllStrategies;
+        if (window.viewStrategy) delete window.viewStrategy;
+        if (window.retryLoadStrategies) delete window.retryLoadStrategies;
     }
 
     return { render, destroy };
@@ -657,6 +849,10 @@ if (!document.getElementById('dashboard-page-styles')) {
         }
 
         .portfolios-section {
+            margin-bottom: var(--space-8);
+        }
+
+        .strategies-summary-section {
             margin-bottom: var(--space-8);
         }
 
@@ -931,6 +1127,185 @@ if (!document.getElementById('dashboard-page-styles')) {
             }
         }
 
+        /* Strategies Summary Section */
+        .strategies-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        @media (max-width: 767px) {
+            .strategies-summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .strategy-summary-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .summary-metric {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .summary-value.positive {
+            color: var(--success);
+        }
+
+        .summary-value.negative {
+            color: var(--danger);
+        }
+
+        .summary-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 500;
+            margin-top: var(--space-1);
+        }
+
+        .summary-icon {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        .recent-strategies h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-3);
+        }
+
+        .strategy-activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .strategy-activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-3);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .strategy-activity-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .activity-info {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+
+        .activity-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .activity-meta {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: 0.75rem;
+        }
+
+        .strategy-type-badge {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .strategy-type-badge.momentum {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+        }
+
+        .strategy-type-badge.mean_reversion {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .strategy-type-badge.sentiment {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+        }
+
+        .strategy-status {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .strategy-status.active {
+            color: var(--success);
+        }
+
+        .strategy-status.paused {
+            color: var(--warning);
+        }
+
+        .activity-performance {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .activity-performance.positive {
+            color: var(--success);
+        }
+
+        .activity-performance.negative {
+            color: var(--danger);
+        }
+
+        /* Empty strategies state */
+        .empty-strategies {
+            text-align: center;
+            padding: var(--space-8) var(--space-4);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+        }
+
+        .empty-strategies-icon {
+            font-size: 3rem;
+            margin-bottom: var(--space-3);
+            opacity: 0.3;
+        }
+
+        .empty-strategies h4 {
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .empty-strategies p {
+            color: var(--text-secondary);
+            margin-bottom: var(--space-4);
+        }
+
         /* Loading states */
         .portfolios-grid.loading .portfolio-card {
             pointer-events: none;
@@ -938,6 +1313,16 @@ if (!document.getElementById('dashboard-page-styles')) {
 
         .watchlist-table.loading tbody td {
             padding: var(--space-3);
+        }
+
+        .strategy-summary-card.loading {
+            pointer-events: none;
+        }
+
+        .skeleton-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: var(--radius-sm);
         }
     `;
 

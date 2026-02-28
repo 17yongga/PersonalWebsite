@@ -54,7 +54,7 @@ class Auth {
             });
 
             // Extract user data and token from response
-            const { user, access_token: accessToken } = response;
+            const { user, accessToken } = response;
             
             // Store token and user data
             this.setToken(accessToken);
@@ -80,11 +80,11 @@ class Auth {
             const response = await api.post('/auth/register', {
                 email,
                 password,
-                display_name: displayName
+                displayName
             });
 
             // Extract user data and token from response
-            const { user, access_token: accessToken } = response;
+            const { user, accessToken } = response;
             
             // Store token and user data
             this.setToken(accessToken);
@@ -151,7 +151,7 @@ class Auth {
             // so it will be sent automatically with this request
             const response = await api.post('/auth/refresh');
             
-            const { user, access_token: accessToken } = response;
+            const { user, accessToken } = response;
             
             // Store new token and user data
             this.setToken(accessToken);

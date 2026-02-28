@@ -1575,6 +1575,17 @@
 
             <!-- Settings Tab -->
             <div class="tab-content" id="settings">
+                <!-- Activity Log -->
+                <div class="glass-card" style="margin-bottom: 24px;" id="activityLogCard">
+                    <h3 style="margin-bottom: 20px;">📋 Recent Activity</h3>
+                    <div id="activityLog">
+                        <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                            Loading activity...
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="loadActivity()" style="margin-top: 16px;">🔄 Refresh</button>
+                </div>
+
                 <div class="glass-card" style="margin-bottom: 24px;">
                     <h3 style="margin-bottom: 20px;">🔐 Account</h3>
                     <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
@@ -2257,6 +2268,7 @@
 
         async function loginUser(email, password) {
             // Try API login first
+            let apiError = null;
             try {
                 const data = await apiFetch('/auth/login', {
                     method: 'POST',
@@ -2271,17 +2283,28 @@
                 showApp();
                 showToast('Welcome back!', 'success');
                 return;
-            } catch (apiError) {
-                console.log('API login failed, trying local:', apiError.message);
+            } catch (err) {
+                apiError = err.message || 'Login failed';
+                console.log('API login failed:', apiError);
             }
 
-            // Fallback to localStorage login
+            // If API gave a clear auth error, show it directly — don't fall through to confusing localStorage check
+            if (apiError === 'Invalid password') {
+                showToast('Incorrect password', 'error');
+                return;
+            }
+            if (apiError === 'User not found') {
+                showToast('No account found with that email', 'error');
+                return;
+            }
+
+            // Fallback to localStorage login (only for network failures or legacy accounts)
             try {
                 const users = JSON.parse(localStorage.getItem('finSyncUsers') || '[]');
                 const user = users.find(u => u.email === email);
                 
                 if (!user) {
-                    showToast('User not found', 'error');
+                    showToast(apiError || 'Login failed — check your email and password', 'error');
                     return;
                 }
 
@@ -2583,6 +2606,29 @@
                     timestamp: e.created_at
                 }));
 
+                // Load budgets
+                try {
+                    const month = appState.currentMonth.toISOString().slice(0,7);
+                    const budgetData = await apiFetch('/households/' + currentHouseholdId + '/budgets?month=' + month);
+                    if (budgetData.budgets && budgetData.budgets.length > 0) {
+                        budgetData.budgets.forEach(b => {
+                            if (b.budget_type === 'shared') {
+                                appState.budgets.shared = b.amount;
+                            } else if (b.user_id) {
+                                const partnerKey = window._memberMapReverse?.[b.user_id];
+                                if (partnerKey) {
+                                    appState.budgets[partnerKey + 'Total'] = b.amount;
+                                }
+                            }
+                        });
+                        appState.budgets.total = (appState.budgets.shared || 0) + 
+                            Object.keys(appState.partners).reduce((sum, key) => 
+                                sum + (appState.budgets[key + 'Total'] || 0), 0);
+                    }
+                } catch (err) {
+                    console.error('Budget API load failed:', err);
+                }
+
                 // Store invite code for settings display
                 window._householdInviteCode = household.invite_code;
                 window._householdName = household.name;
@@ -2714,7 +2760,7 @@
             if (tabId === 'transactions') renderTransactions();
             if (tabId === 'budget') renderBudget();
             if (tabId === 'settlement') renderSettlement();
-            if (tabId === 'settings') { renderCustomCategories(); renderHouseholdInfo(); }
+            if (tabId === 'settings') { renderCustomCategories(); renderHouseholdInfo(); loadActivity(); }
         }
 
         // Month Navigation
@@ -3140,7 +3186,38 @@
                 <div><strong>$${totalSpent.toFixed(2)}</strong></div>
                 ${memberBreakdownHtml ? `<div style="font-size: 0.8em; color: var(--text-secondary); margin-top: 4px;">${memberBreakdownHtml}</div>` : ''}
             `;
-            document.getElementById('budgetRemaining').textContent = `$${budgetRemaining.toFixed(2)}`;
+
+            // Enhanced budget remaining display
+            if (solo) {
+                // Solo mode: simple budget remaining
+                const remaining = budgetRemaining;
+                const color = remaining >= 0 ? 'var(--success)' : 'var(--danger)';
+                document.getElementById('budgetRemaining').innerHTML = `
+                    <div style="color: ${color}"><strong>$${Math.abs(remaining).toFixed(2)}</strong></div>
+                    <div style="font-size: 0.8em; color: var(--text-secondary); margin-top: 4px;">
+                        ${remaining >= 0 ? 'Remaining' : 'Over budget'}
+                    </div>
+                `;
+            } else {
+                // Shared mode: show both personal and shared budget breakdowns
+                const myKey = 'partner1'; // current user is always partner1
+                const myPersonalSpent = individualExpenses.filter(exp => exp.whoPaid === myKey).reduce((sum, exp) => sum + exp.amount, 0);
+                const myPersonalBudget = appState.budgets[myKey + 'Total'] || 0;
+                const myPersonalRemaining = myPersonalBudget - myPersonalSpent;
+                
+                const sharedBudget = appState.budgets.shared || 0;
+                const sharedRemaining = sharedBudget - totalSharedSpent;
+                
+                const myColor = myPersonalRemaining >= 0 ? 'var(--success)' : 'var(--danger)';
+                const sharedColor = sharedRemaining >= 0 ? 'var(--success)' : 'var(--danger)';
+                
+                document.getElementById('budgetRemaining').innerHTML = `
+                    <div style="margin-bottom: 8px;">
+                        <div style="color: ${myColor}; font-weight: 600;">Your Budget: $${Math.abs(myPersonalRemaining).toFixed(2)} ${myPersonalRemaining >= 0 ? 'remaining' : 'over'}</div>
+                        <div style="color: ${sharedColor}; font-weight: 600;">Shared Budget: $${Math.abs(sharedRemaining).toFixed(2)} ${sharedRemaining >= 0 ? 'remaining' : 'over'}</div>
+                    </div>
+                `;
+            }
             
             if (!solo) {
                 const balance = calculatePartnerBalance();
@@ -3454,25 +3531,21 @@
                     const catColor = getCategoryColor(expense.category);
                     
                     return `
-                        <div data-expense-id="${expense.id}" style="background: ${sharedBg}; border-left: 4px solid ${borderColor}; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; transition: opacity 0.3s;">
+                        <div data-expense-id="${expense.id}" style="background: ${sharedBg}; border-left: 3px solid ${catColor}; border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; transition: opacity 0.3s;">
                             <div style="flex: 1; min-width: 0;">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
-                                    <span style="background: ${sharedBadgeBg}; color: ${sharedBadgeColor}; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">${isShared ? '👥 Shared' : '👤 Individual'}</span>
-                                    <span style="background: rgba(255,255,255,0.05); color: ${catColor}; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid ${catColor}40;">${expense.category}</span>
-                                    <span style="background: ${paidBadgeBg}; color: ${paidBadgeColor}; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500;">${paidByName}</span>
-                                    <span style="color: var(--text-secondary); font-size: 12px;">${splitText}</span>
+                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px;">
+                                    <span style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${expense.notes || expense.category}</span>
+                                    <span style="font-size: 11px; padding: 1px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); color: ${catColor};">${expense.category}</span>
                                 </div>
-                                <div style="display: flex; align-items: baseline; gap: 8px;">
-                                    <span style="color: var(--text-secondary); font-size: 13px;">${new Date(expense.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</span>
-                                    ${expense.notes ? `<span style="color: var(--text-secondary); font-size: 13px;">· ${expense.notes}</span>` : ''}
-                                    ${expense.isRecurring ? '<span style="font-size: 12px;">🔄</span>' : ''}
+                                <div style="font-size: 12px; color: var(--text-secondary);">
+                                    ${new Date(expense.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})} · ${paidByName} · ${isShared ? '👥 Split' : '👤 Individual'}
                                 </div>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); white-space: nowrap;">$${expense.amount.toFixed(2)}</div>
-                                <div style="display: flex; gap: 4px;">
-                                    <button class="btn btn-secondary btn-small" onclick="editExpense(${expense.id})">✏️</button>
-                                    <button class="btn btn-danger btn-small" onclick="deleteExpense(${expense.id})">🗑️</button>
+                            <div style="text-align: right; flex-shrink: 0;">
+                                <div style="font-size: 16px; font-weight: 700;">$${expense.amount.toFixed(2)}</div>
+                                <div style="display: flex; gap: 4px; margin-top: 2px;">
+                                    <button onclick="editExpense(${expense.id})" style="background: none; border: 1px solid var(--glass-border); color: var(--text-secondary); padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer;">✏️</button>
+                                    <button onclick="deleteExpense(${expense.id})" style="background: none; border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer;">🗑️</button>
                                 </div>
                             </div>
                         </div>
@@ -3646,7 +3719,7 @@
 
         // Budget Management
         let _savingBudgets = false;
-        function saveBudgets() {
+        async function saveBudgets() {
             if (_savingBudgets) return;
             _savingBudgets = true;
             const shared = parseFloat(document.getElementById('sharedBudget').value);
@@ -3668,6 +3741,47 @@
             // Keep backward compat: total = shared + all member budgets
             appState.budgets.total = (appState.budgets.shared || 0) + memberTotal;
             saveData();
+            
+            // Also sync to API
+            if (useApi && currentHouseholdId) {
+                try {
+                    const month = appState.currentMonth.toISOString().slice(0,7); // "2026-02"
+                    
+                    // Save shared budget
+                    if (appState.budgets.shared) {
+                        await apiFetch('/households/' + currentHouseholdId + '/budgets', {
+                            method: 'PUT',
+                            body: JSON.stringify({ 
+                                amount: appState.budgets.shared, 
+                                budgetType: 'shared', 
+                                month: month 
+                            })
+                        });
+                    }
+                    
+                    // Save per-member budgets
+                    for (const key of Object.keys(appState.partners)) {
+                        const val = appState.budgets[key + 'Total'];
+                        if (val) {
+                            const userId = window._memberMap?.[key];
+                            if (userId) {
+                                await apiFetch('/households/' + currentHouseholdId + '/budgets', {
+                                    method: 'PUT',
+                                    body: JSON.stringify({ 
+                                        amount: val, 
+                                        budgetType: 'personal', 
+                                        userId: userId, 
+                                        month: month 
+                                    })
+                                });
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error('Budget API sync failed:', err);
+                }
+            }
+            
             updateDisplay();
             renderBudget();
             showToast('Budgets saved! ✅', 'success');
@@ -4291,6 +4405,104 @@
             }
         }
 
+        // Activity Log
+        async function loadActivity() {
+            const activityCard = document.getElementById('activityLogCard');
+            const activityLog = document.getElementById('activityLog');
+            
+            if (!useApi || !currentHouseholdId) {
+                activityCard.style.display = 'none';
+                return;
+            }
+            activityCard.style.display = 'block';
+            
+            try {
+                activityLog.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);"><div class="loading"></div> Loading...</div>';
+                
+                const data = await apiFetch('/households/' + currentHouseholdId + '/activity?limit=20');
+                const activities = data.activities || [];
+                
+                if (activities.length === 0) {
+                    activityLog.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">No activity yet</div>';
+                    return;
+                }
+                
+                const activityHtml = activities.map(activity => {
+                    const details = activity.details ? JSON.parse(activity.details) : {};
+                    const timeAgo = getTimeAgo(activity.created_at);
+                    
+                    let icon = '📝';
+                    let actionText = activity.action;
+                    let entityDesc = '';
+                    
+                    switch (activity.action) {
+                        case 'add':
+                            icon = '➕';
+                            actionText = 'added';
+                            break;
+                        case 'edit':
+                            icon = '✏️';
+                            actionText = 'edited';
+                            break;
+                        case 'delete':
+                            icon = '🗑️';
+                            actionText = 'deleted';
+                            break;
+                        case 'settle':
+                            icon = '🤝';
+                            actionText = 'settled';
+                            break;
+                        case 'budget_update':
+                            icon = '💰';
+                            actionText = 'updated budget for';
+                            break;
+                    }
+                    
+                    if (activity.entity_type === 'expense' && details) {
+                        entityDesc = `"${details.notes || details.category}" - $${details.amount || '?'}`;
+                    } else if (activity.entity_type === 'budget' && details) {
+                        entityDesc = details.category || 'budget';
+                    }
+                    
+                    return `
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 8px; margin-bottom: 8px;">
+                            <span style="font-size: 20px;">${icon}</span>
+                            <div style="flex: 1;">
+                                <div style="color: var(--text-primary);">
+                                    <strong>${activity.user_name}</strong> ${actionText} ${entityDesc}
+                                </div>
+                                <div style="color: var(--text-secondary); font-size: 12px;">${timeAgo}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                activityLog.innerHTML = activityHtml;
+            } catch (err) {
+                console.error('Load activity failed:', err);
+                activityLog.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);">Failed to load activity</div>';
+            }
+        }
+        
+        function getTimeAgo(dateString) {
+            const now = new Date();
+            const date = new Date(dateString + 'Z'); // Assume UTC
+            const diffMs = now - date;
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHr = Math.floor(diffMin / 60);
+            const diffDays = Math.floor(diffHr / 24);
+            
+            if (diffSec < 60) return 'Just now';
+            if (diffMin === 1) return '1 min ago';
+            if (diffMin < 60) return `${diffMin} min ago`;
+            if (diffHr === 1) return '1h ago';
+            if (diffHr < 24) return `${diffHr}h ago`;
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return `${diffDays} days ago`;
+            return date.toLocaleDateString();
+        }
+
         function renderHouseholdInfo() {
             const card = document.getElementById('householdInfoCard');
             if (!useApi || !currentHouseholdId) {
@@ -4574,18 +4786,33 @@
                 document.getElementById('uploadArea').style.display = 'none';
                 document.getElementById('receiptPreview').style.display = 'block';
                 document.getElementById('scanResults').classList.remove('show');
+                document.getElementById('scanResultsList').innerHTML = '';
                 scannedItems = [];
+                _addingSelected = false;
+                resetScanSummary();
             };
             reader.readAsDataURL(file);
+        }
+
+        function resetScanSummary() {
+            const scanSummary = document.getElementById('scanSummary');
+            scanSummary.innerHTML = `
+                <div class="summary-total" id="summaryTotal">$0.00</div>
+                <div class="summary-count" id="summaryCount">0 items selected</div>
+                <button class="btn" id="addSelectedBtn" onclick="addSelectedExpenses()">➕ Add Selected Items</button>
+            `;
         }
 
         function clearReceipt() {
             currentReceiptImage = null;
             scannedItems = [];
+            _addingSelected = false;
             document.getElementById('uploadArea').style.display = 'block';
             document.getElementById('receiptPreview').style.display = 'none';
             document.getElementById('scanResults').classList.remove('show');
+            document.getElementById('scanResultsList').innerHTML = '';
             document.getElementById('receiptFile').value = '';
+            resetScanSummary();
         }
 
         let _scanning = false;
@@ -4625,7 +4852,7 @@
                     id: `scanned-${Date.now()}-${index}`,
                     description: item.description || item.name || 'Unknown item',
                     amount: parseFloat(item.amount) || 0,
-                    category: mapToAppCategory(item.category || 'Other'),
+                    category: mapToAppCategory(item.category || 'Other', item.description),
                     date: receiptDate,
                     selected: true,
                     shared: true,
@@ -4647,8 +4874,24 @@
             }
         }
         
-        function mapToAppCategory(category) {
-            // Map AI-suggested categories to exact app categories
+        function mapToAppCategory(category, description = '') {
+            // Check user's custom category mappings FIRST
+            const userMappings = getUserCategoryMappings();
+            const descLower = description.toLowerCase();
+            
+            // Check if user has overridden this exact description
+            if (userMappings[descLower]) {
+                return userMappings[descLower];
+            }
+            
+            // Check if any stored description is a partial match
+            for (const [storedDesc, mappedCategory] of Object.entries(userMappings)) {
+                if (descLower.includes(storedDesc) || storedDesc.includes(descLower)) {
+                    return mappedCategory;
+                }
+            }
+            
+            // Map AI-suggested categories to exact app categories (fallback)
             const mapping = {
                 'food': 'Food/Dining', 'dining': 'Food/Dining', 'restaurant': 'Food/Dining',
                 'grocery': 'Groceries', 'groceries': 'Groceries', 'supermarket': 'Groceries',
@@ -4678,6 +4921,34 @@
             return 'Other';
         }
 
+        function getUserCategoryMappings() {
+            if (!currentUser) return {};
+            const key = `finSyncCategoryMap_${currentUser}`;
+            const stored = localStorage.getItem(key);
+            return stored ? JSON.parse(stored) : {};
+        }
+
+        function saveCategoryMapping(description, category) {
+            if (!currentUser || !description || !category) return;
+            const key = `finSyncCategoryMap_${currentUser}`;
+            const mappings = getUserCategoryMappings();
+            mappings[description.toLowerCase()] = category;
+            localStorage.setItem(key, JSON.stringify(mappings));
+        }
+
+        // Function to learn from user's category changes
+        function learnFromCategoryChange(description, newCategory) {
+            if (description && newCategory) {
+                saveCategoryMapping(description, newCategory);
+                showToast(`Learned: "${description}" → ${newCategory}`, 'info');
+            }
+        }
+
+        function escAttr(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
         function showScanResults(data) {
             const results = document.getElementById('scanResults');
             const list = document.getElementById('scanResultsList');
@@ -4692,7 +4963,7 @@
                     <div class="result-fields">
                         <div class="result-field">
                             <label>Description</label>
-                            <input type="text" value="${item.description}" 
+                            <input type="text" value="${escAttr(item.description)}" 
                                    onchange="updateItemField('${item.id}', 'description', this.value)">
                         </div>
                         <div class="result-field">
@@ -4704,7 +4975,7 @@
                             <label>Category</label>
                             <select onchange="updateItemField('${item.id}', 'category', this.value)">
                                 ${appState.categories.map(cat => 
-                                    `<option value="${cat}" ${cat === item.category ? 'selected' : ''}>${cat}</option>`
+                                    `<option value="${escAttr(cat)}" ${cat === item.category ? 'selected' : ''}>${escAttr(cat)}</option>`
                                 ).join('')}
                             </select>
                         </div>
@@ -4712,7 +4983,7 @@
                             <label>Who Paid</label>
                             <select onchange="updateItemField('${item.id}', 'whoPaid', this.value)">
                                 ${Object.keys(appState.partners).map(key => 
-                                    `<option value="${key}" ${item.whoPaid === key ? 'selected' : ''}>${appState.partners[key]}</option>`
+                                    `<option value="${escAttr(key)}" ${item.whoPaid === key ? 'selected' : ''}>${escAttr(appState.partners[key])}</option>`
                                 ).join('')}
                             </select>
                         </div>
@@ -4744,6 +5015,10 @@
         function updateItemField(itemId, field, value) {
             const item = scannedItems.find(i => i.id === itemId);
             if (item) {
+                // Learn from category changes
+                if (field === 'category' && value !== item[field] && item.description) {
+                    learnFromCategoryChange(item.description, value);
+                }
                 item[field] = value;
                 updateScanSummary();
             }
@@ -4770,68 +5045,99 @@
 
             _addingSelected = true;
             const btn = document.getElementById('addSelectedBtn');
+            const scanSummary = document.getElementById('scanSummary');
             btn.disabled = true;
             btn.textContent = '⏳ Adding ' + selectedItems.length + ' item' + (selectedItems.length > 1 ? 's' : '') + '...';
             btn.style.opacity = '0.6';
+            btn.style.pointerEvents = 'none';
             
             let addedCount = 0;
             
-            for (const item of selectedItems) {
-                // Auto-add new categories from scanned items
-                await ensureCategory(item.category);
+            try {
+                for (const item of selectedItems) {
+                    await ensureCategory(item.category);
 
-                const expense = {
-                    id: Date.now() + Math.random(),
-                    amount: item.amount,
-                    category: item.category,
-                    whoPaid: item.whoPaid,
-                    splitType: item.shared ? '50/50' : 'single',
-                    customSplit: null,
-                    date: item.date || new Date().toISOString().split('T')[0],
-                    notes: item.description,
-                    isRecurring: false,
-                    isShared: item.shared,
-                    timestamp: new Date()
-                };
-                
-                if (useApi && currentHouseholdId) {
-                    try {
-                        const data = await apiFetch('/households/' + currentHouseholdId + '/expenses', {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                amount: expense.amount, category: expense.category, date: expense.date,
-                                notes: expense.notes, isRecurring: false, isShared: expense.isShared,
-                                paidBy: window._memberMap?.[expense.whoPaid] || expense.whoPaid,
-                                splitType: expense.splitType, customSplit: null
-                            })
-                        });
-                        if (data.expense) expense.id = data.expense.id;
-                    } catch (err) { console.error('API add scanned expense failed:', err); }
+                    const expense = {
+                        id: Date.now() + Math.random(),
+                        amount: item.amount,
+                        category: item.category,
+                        whoPaid: item.whoPaid,
+                        splitType: item.shared ? '50/50' : 'single',
+                        customSplit: null,
+                        date: item.date || new Date().toISOString().split('T')[0],
+                        notes: item.description,
+                        isRecurring: false,
+                        isShared: item.shared,
+                        timestamp: new Date()
+                    };
+                    
+                    if (useApi && currentHouseholdId) {
+                        try {
+                            const data = await apiFetch('/households/' + currentHouseholdId + '/expenses', {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    amount: expense.amount, category: expense.category, date: expense.date,
+                                    notes: expense.notes, isRecurring: false, isShared: expense.isShared,
+                                    paidBy: window._memberMap?.[expense.whoPaid] || expense.whoPaid,
+                                    splitType: expense.splitType, customSplit: null
+                                })
+                            });
+                            if (data.expense) expense.id = data.expense.id;
+                        } catch (err) { console.error('API add scanned expense failed:', err); }
+                    }
+
+                    addExpense(expense);
+                    addedCount++;
+                    // Update button with progress
+                    btn.textContent = '⏳ Added ' + addedCount + '/' + selectedItems.length + '...';
                 }
-
-                addExpense(expense);
-                addedCount++;
+            } catch (err) {
+                console.error('addSelectedExpenses error:', err);
             }
-            
-            updateDisplay();
-            renderTransactions();
-            
-            // Clear results and input
+
+            // === ALWAYS runs: clear items, show success, prevent re-add ===
+            // Clear scanned items FIRST so re-clicking does nothing
             scannedItems = [];
-            document.getElementById('scanResults').classList.remove('show');
-            const codeInput = document.getElementById('transactionCodeInput');
-            if (codeInput) codeInput.value = '';
-            
-            showToast(`Added ${addedCount} expense${addedCount !== 1 ? 's' : ''}! 🎉`, 'success');
 
-            // Reset button state
-            btn.disabled = false;
-            btn.textContent = '➕ Add Selected Items';
-            btn.style.opacity = '1';
-            _addingSelected = false;
+            if (addedCount > 0) {
+                updateDisplay();
+                renderTransactions();
 
-            // Switch to transactions tab so user can SEE the added items
-            switchTab('transactions');
+                // Replace the entire scan results with a big success message
+                const scanResultsList = document.getElementById('scanResultsList');
+                scanResultsList.innerHTML = '';
+                scanSummary.innerHTML = `
+                    <div style="text-align: center; padding: 30px 20px;">
+                        <div style="font-size: 56px; margin-bottom: 12px;">✅</div>
+                        <div style="font-size: 22px; font-weight: 700; color: #10b981; margin-bottom: 6px;">
+                            ${addedCount} item${addedCount !== 1 ? 's' : ''} added!
+                        </div>
+                        <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px;">
+                            Switching to transactions...
+                        </div>
+                        <button class="btn" onclick="clearReceipt()" style="background: rgba(255,255,255,0.1); font-size: 14px; padding: 8px 20px;">
+                            📷 Scan Another Receipt
+                        </button>
+                    </div>
+                `;
+
+                showToast(`✅ ${addedCount} transaction${addedCount !== 1 ? 's' : ''} added!`, 'success');
+
+                // Switch to transactions tab after a clear delay
+                setTimeout(() => {
+                    switchTab('transactions');
+                    // Reset scan UI so next visit is clean
+                    clearReceipt();
+                    _addingSelected = false;
+                }, 2500);
+            } else {
+                showToast('No items were added — please try again', 'error');
+                btn.disabled = false;
+                btn.textContent = '➕ Add Selected Items';
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = '';
+                _addingSelected = false;
+            }
         }
 
         // Initialize charts after page load

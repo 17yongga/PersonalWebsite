@@ -27,38 +27,49 @@ class Router {
     setupRoutes() {
         // Define routes with their lazy-loaded modules and metadata
         this.routes.set('/', {
-            module: () => import('./pages/dashboard.js?v=1771481317'),
+            module: () => import('./pages/dashboard.js?v=1771915420'),
             requiresAuth: true,
             title: 'Dashboard'
         });
 
         this.routes.set('/login', {
-            module: () => import('./pages/login.js?v=1771481317'),
+            module: () => import('./pages/login.js?v=1771915420'),
             requiresAuth: false,
             title: 'Login'
         });
 
         this.routes.set('/trade/:symbol?', {
-            module: () => import('./pages/trading.js?v=1771481317'),
+            module: () => import('./pages/trading.js?v=1771915420'),
             requiresAuth: true,
             title: 'Trade'
         });
 
         this.routes.set('/portfolio/:id', {
-            module: () => import('./pages/portfolio.js?v=1771481317'),
+            module: () => import('./pages/portfolio.js?v=1771915420'),
             requiresAuth: true,
             title: 'Portfolio'
         });
 
-        // Redirect deprecated routes to home
         this.routes.set('/strategies', {
-            module: () => Promise.resolve({ default: () => ({ 
-                render: () => { window.location.hash = '#/'; } 
-            })}),
+            module: () => import('./pages/strategies.js?v=1771915420'),
             requiresAuth: true,
-            title: 'Dashboard'
+            title: 'Strategies'
         });
 
+        this.routes.set('/strategies/:id', {
+            module: () => import('./pages/strategies.js?v=1771915420'),
+            requiresAuth: true,
+            title: 'Strategy Details'
+        });
+
+        // Public strategy showcase / leaderboard
+        this.routes.set('/leaderboard', {
+            module: () => import('./pages/dashboard-strategies.js?v=4'),
+            requiresAuth: false,
+            title: 'Strategy Leaderboard'
+        });
+
+        // Redirect contests to home
         this.routes.set('/contests', {
             module: () => Promise.resolve({ default: () => ({ 
                 render: () => { window.location.hash = '#/'; } 
@@ -67,16 +78,8 @@ class Router {
             title: 'Dashboard'
         });
 
-        this.routes.set('/leaderboard', {
-            module: () => Promise.resolve({ default: () => ({ 
-                render: () => { window.location.hash = '#/'; } 
-            })}),
-            requiresAuth: true,
-            title: 'Dashboard'
-        });
-
         this.routes.set('/profile', {
-            module: () => import('./pages/profile.js?v=1771481317'),
+            module: () => import('./pages/profile.js?v=1771915420'),
             requiresAuth: true,
             title: 'Profile'
         });

@@ -43,6 +43,7 @@ class APIClient {
         const fetchOptions = {
             ...options,
             headers,
+            credentials: 'include',  // Send cookies for cross-origin requests
         };
 
         // Handle request body

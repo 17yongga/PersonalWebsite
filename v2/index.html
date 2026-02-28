@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="css/hero.css" />
   <link rel="stylesheet" href="css/timeline.css" />
   <link rel="stylesheet" href="css/projects.css" />
+  <link rel="stylesheet" href="css/palettes.css" />
   <link rel="stylesheet" href="css/gallery.css" />
 </head>
 <body>
@@ -326,14 +327,56 @@
 
 
   <script src="js/reveal.js"></script>
+  <!-- Palette Switcher -->
+  <div class="palette-switcher">
+    <button class="palette-btn active" data-palette="default" title="Cyan"></button>
+    <button class="palette-btn" data-palette="warm" title="Warm Leather"></button>
+    <button class="palette-btn" data-palette="bakery" title="Bakery"></button>
+    <button class="palette-btn" data-palette="ocean" title="Ocean"></button>
+    <button class="palette-btn" data-palette="sunset" title="Sunset Coast"></button>
+  </div>
+
   <script src="js/hero-bg.js"></script>
   <script>
-    /* Theme toggle (temporary for prototype) */
+    /* Theme toggle (T key) */
     document.addEventListener('keydown', (e) => {
       if (e.key === 't') {
         const html = document.documentElement;
         html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
       }
+    });
+
+    /* Palette switcher */
+    const paletteColors = {
+      default: { hueMin: 180, hueMax: 240 },  // Cyan/blue
+      warm:    { hueMin: 20,  hueMax: 40  },   // Orange/amber
+      bakery:  { hueMin: 40,  hueMax: 60  },   // Yellow/gold
+      ocean:   { hueMin: 195, hueMax: 215 },   // Blue
+      sunset:  { hueMin: 10,  hueMax: 25  },    // Red/orange
+    };
+
+    document.querySelectorAll('.palette-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const palette = btn.dataset.palette;
+        const html = document.documentElement;
+        
+        // Remove all palette attributes or set the new one
+        if (palette === 'default') {
+          html.removeAttribute('data-palette');
+        } else {
+          html.setAttribute('data-palette', palette);
+        }
+        
+        // Update active state
+        document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update hero background orb colors
+        if (window.updateOrbColors) {
+          const colors = paletteColors[palette];
+          window.updateOrbColors(colors.hueMin, colors.hueMax);
+        }
+      });
     });
   </script>
 </body>

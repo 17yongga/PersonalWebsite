@@ -1,0 +1,307 @@
+/* ============================================================
+   COLOR PALETTES — Switchable themes
+   Toggle via data-palette attribute on <html>
+   ============================================================ */
+
+/* Palette 1: Warm Leather — #BC552A, #DD9047, #602314 */
+[data-palette="warm"] {
+  --color-accent:       #DD9047;
+  --color-accent-hover: #E5A462;
+  --color-accent-soft:  rgba(221, 144, 71, 0.08);
+  --color-accent-glow:  rgba(221, 144, 71, 0.15);
+
+  --color-palette-secondary: #BC552A;
+  --color-palette-deep:      #602314;
+}
+
+[data-palette="warm"] .text-accent {
+  color: #DD9047;
+}
+
+[data-palette="warm"] .hero-name {
+  background: linear-gradient(135deg, #DD9047, #BC552A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-palette="warm"] .tag {
+  background: rgba(221, 144, 71, 0.1);
+  color: #DD9047;
+  border-color: rgba(221, 144, 71, 0.2);
+}
+
+[data-palette="warm"] .timeline-item:first-child .timeline-marker {
+  border-color: #DD9047;
+  background: #DD9047;
+  box-shadow: 0 0 12px rgba(221, 144, 71, 0.3);
+}
+
+[data-palette="warm"] .timeline::before {
+  background: linear-gradient(to bottom, #DD9047, var(--color-border) 20%, var(--color-border) 80%, transparent);
+}
+
+[data-palette="warm"] .project-card:hover {
+  border-color: #DD9047;
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(221, 144, 71, 0.06);
+}
+
+[data-palette="warm"] .scroll-line {
+  background: linear-gradient(to bottom, #DD9047, transparent);
+}
+
+
+/* Palette 2: Bakery — #BEB9A9, #472D1F, #FFEFB5 */
+[data-palette="bakery"] {
+  --color-accent:       #FFEFB5;
+  --color-accent-hover: #FFF4CC;
+  --color-accent-soft:  rgba(255, 239, 181, 0.06);
+  --color-accent-glow:  rgba(255, 239, 181, 0.12);
+
+  --color-palette-secondary: #BEB9A9;
+  --color-palette-deep:      #472D1F;
+}
+
+[data-palette="bakery"] .text-accent {
+  color: #FFEFB5;
+}
+
+[data-palette="bakery"] .hero-name {
+  background: linear-gradient(135deg, #FFEFB5, #BEB9A9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-palette="bakery"] .tag {
+  background: rgba(255, 239, 181, 0.08);
+  color: #FFEFB5;
+  border-color: rgba(255, 239, 181, 0.15);
+}
+
+[data-palette="bakery"] .timeline-item:first-child .timeline-marker {
+  border-color: #FFEFB5;
+  background: #FFEFB5;
+  box-shadow: 0 0 12px rgba(255, 239, 181, 0.3);
+}
+
+[data-palette="bakery"] .timeline::before {
+  background: linear-gradient(to bottom, #FFEFB5, var(--color-border) 20%, var(--color-border) 80%, transparent);
+}
+
+[data-palette="bakery"] .project-card:hover {
+  border-color: #BEB9A9;
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(255, 239, 181, 0.06);
+}
+
+[data-palette="bakery"] .btn-primary {
+  background: #FFEFB5;
+  color: #1a1a1a;
+  border-color: #FFEFB5;
+}
+
+[data-palette="bakery"] .btn-primary:hover {
+  background: #FFF4CC;
+  color: #1a1a1a;
+}
+
+[data-palette="bakery"] .scroll-line {
+  background: linear-gradient(to bottom, #FFEFB5, transparent);
+}
+
+
+/* Palette 3: Ocean — #FFE9D2, #ADD4E5, #017CC3 */
+[data-palette="ocean"] {
+  --color-accent:       #017CC3;
+  --color-accent-hover: #0290E0;
+  --color-accent-soft:  rgba(1, 124, 195, 0.08);
+  --color-accent-glow:  rgba(1, 124, 195, 0.15);
+
+  --color-palette-secondary: #ADD4E5;
+  --color-palette-warm:      #FFE9D2;
+}
+
+[data-palette="ocean"] .text-accent {
+  color: #ADD4E5;
+}
+
+[data-palette="ocean"] .hero-name {
+  background: linear-gradient(135deg, #ADD4E5, #017CC3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-palette="ocean"] .tag {
+  background: rgba(173, 212, 229, 0.1);
+  color: #ADD4E5;
+  border-color: rgba(173, 212, 229, 0.2);
+}
+
+[data-palette="ocean"] .label {
+  color: #ADD4E5;
+}
+
+[data-palette="ocean"] .timeline-item:first-child .timeline-marker {
+  border-color: #017CC3;
+  background: #017CC3;
+  box-shadow: 0 0 12px rgba(1, 124, 195, 0.3);
+}
+
+[data-palette="ocean"] .timeline::before {
+  background: linear-gradient(to bottom, #017CC3, var(--color-border) 20%, var(--color-border) 80%, transparent);
+}
+
+[data-palette="ocean"] .project-card:hover {
+  border-color: #017CC3;
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(1, 124, 195, 0.06);
+}
+
+[data-palette="ocean"] .scroll-line {
+  background: linear-gradient(to bottom, #017CC3, transparent);
+}
+
+
+/* Palette 4: Sunset Coast — #A2C2BE, #EB4600, #FFFFEB */
+[data-palette="sunset"] {
+  --color-accent:       #EB4600;
+  --color-accent-hover: #FF5A1A;
+  --color-accent-soft:  rgba(235, 70, 0, 0.08);
+  --color-accent-glow:  rgba(235, 70, 0, 0.15);
+
+  --color-palette-secondary: #A2C2BE;
+  --color-palette-light:     #FFFFEB;
+}
+
+[data-palette="sunset"] .text-accent {
+  color: #EB4600;
+}
+
+[data-palette="sunset"] .hero-name {
+  background: linear-gradient(135deg, #EB4600, #A2C2BE);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-palette="sunset"] .tag {
+  background: rgba(235, 70, 0, 0.1);
+  color: #EB4600;
+  border-color: rgba(235, 70, 0, 0.2);
+}
+
+[data-palette="sunset"] .timeline-item:first-child .timeline-marker {
+  border-color: #EB4600;
+  background: #EB4600;
+  box-shadow: 0 0 12px rgba(235, 70, 0, 0.3);
+}
+
+[data-palette="sunset"] .timeline::before {
+  background: linear-gradient(to bottom, #EB4600, var(--color-border) 20%, var(--color-border) 80%, transparent);
+}
+
+[data-palette="sunset"] .project-card:hover {
+  border-color: #EB4600;
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(235, 70, 0, 0.06);
+}
+
+[data-palette="sunset"] .scroll-line {
+  background: linear-gradient(to bottom, #EB4600, transparent);
+}
+
+[data-palette="sunset"] .label {
+  color: #A2C2BE;
+}
+
+
+/* ============================================================
+   PALETTE SWITCHER UI
+   ============================================================ */
+.palette-switcher {
+  position: fixed;
+  bottom: var(--space-xl);
+  right: var(--space-xl);
+  z-index: var(--z-toast);
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(20px);
+}
+
+.palette-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  position: relative;
+}
+
+.palette-btn:hover {
+  transform: scale(1.15);
+}
+
+.palette-btn.active {
+  border-color: var(--color-text);
+  transform: scale(1.15);
+}
+
+.palette-btn[data-palette="default"] {
+  background: linear-gradient(135deg, #00d4ff, #0077b6);
+}
+
+.palette-btn[data-palette="warm"] {
+  background: linear-gradient(135deg, #DD9047, #BC552A);
+}
+
+.palette-btn[data-palette="bakery"] {
+  background: linear-gradient(135deg, #FFEFB5, #472D1F);
+}
+
+.palette-btn[data-palette="ocean"] {
+  background: linear-gradient(135deg, #ADD4E5, #017CC3);
+}
+
+.palette-btn[data-palette="sunset"] {
+  background: linear-gradient(135deg, #EB4600, #A2C2BE);
+}
+
+/* Tooltip on hover */
+.palette-btn::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast);
+}
+
+.palette-btn:hover::after {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .palette-switcher {
+    bottom: var(--space-md);
+    right: var(--space-md);
+  }
+  
+  .palette-btn {
+    width: 24px;
+    height: 24px;
+  }
+}

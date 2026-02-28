@@ -104,6 +104,10 @@ class Navbar {
                 <i class="fas fa-chart-line"></i>
                 Trade
             </a>
+            <a href="#/strategies" class="nav-link" data-route="/strategies">
+                <i class="fas fa-robot"></i>
+                Strategies
+            </a>
         `;
     }
 
@@ -125,6 +129,10 @@ class Navbar {
             <a href="#/trade" class="mobile-nav-link" data-route="/trade">
                 <i class="fas fa-chart-line"></i>
                 Trade
+            </a>
+            <a href="#/strategies" class="mobile-nav-link" data-route="/strategies">
+                <i class="fas fa-robot"></i>
+                Strategies
             </a>
         `;
     }

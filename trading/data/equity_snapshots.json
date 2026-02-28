@@ -1,0 +1,1136 @@
+[
+  {
+    "timestamp": "2026-02-25T22:21:35.493886",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20077.02,
+        "cash": 5344.19,
+        "positions_value": 14732.83
+      },
+      "mean-reversion": {
+        "value": 20077.02,
+        "cash": 5344.19,
+        "positions_value": 14732.83
+      },
+      "sector-rotator": {
+        "value": 20077.02,
+        "cash": 5344.19,
+        "positions_value": 14732.83
+      },
+      "value-dividends": {
+        "value": 20077.02,
+        "cash": 5344.19,
+        "positions_value": 14732.83
+      },
+      "volatility-breakout": {
+        "value": 20077.02,
+        "cash": 5344.19,
+        "positions_value": 14732.83
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T09:00:05.026523",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20148.36,
+        "cash": 5344.19,
+        "positions_value": 14804.17
+      },
+      "mean-reversion": {
+        "value": 20148.36,
+        "cash": 5344.19,
+        "positions_value": 14804.17
+      },
+      "sector-rotator": {
+        "value": 20148.36,
+        "cash": 5344.19,
+        "positions_value": 14804.17
+      },
+      "value-dividends": {
+        "value": 20148.36,
+        "cash": 5344.19,
+        "positions_value": 14804.17
+      },
+      "volatility-breakout": {
+        "value": 20148.36,
+        "cash": 5344.19,
+        "positions_value": 14804.17
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T09:05:04.432170",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20152.07,
+        "cash": 5344.19,
+        "positions_value": 14807.88
+      },
+      "mean-reversion": {
+        "value": 20152.07,
+        "cash": 5344.19,
+        "positions_value": 14807.88
+      },
+      "sector-rotator": {
+        "value": 20152.07,
+        "cash": 5344.19,
+        "positions_value": 14807.88
+      },
+      "value-dividends": {
+        "value": 20152.07,
+        "cash": 5344.19,
+        "positions_value": 14807.88
+      },
+      "volatility-breakout": {
+        "value": 20152.07,
+        "cash": 5344.19,
+        "positions_value": 14807.88
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T09:10:03.697917",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20157.04,
+        "cash": 5344.19,
+        "positions_value": 14812.84
+      },
+      "mean-reversion": {
+        "value": 20157.04,
+        "cash": 5344.19,
+        "positions_value": 14812.84
+      },
+      "sector-rotator": {
+        "value": 20157.04,
+        "cash": 5344.19,
+        "positions_value": 14812.84
+      },
+      "value-dividends": {
+        "value": 20157.04,
+        "cash": 5344.19,
+        "positions_value": 14812.84
+      },
+      "volatility-breakout": {
+        "value": 20157.04,
+        "cash": 5344.19,
+        "positions_value": 14812.84
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T09:15:03.592002",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20163.91,
+        "cash": 5344.19,
+        "positions_value": 14819.71
+      },
+      "mean-reversion": {
+        "value": 20163.91,
+        "cash": 5344.19,
+        "positions_value": 14819.71
+      },
+      "sector-rotator": {
+        "value": 20163.91,
+        "cash": 5344.19,
+        "positions_value": 14819.71
+      },
+      "value-dividends": {
+        "value": 20163.91,
+        "cash": 5344.19,
+        "positions_value": 14819.71
+      },
+      "volatility-breakout": {
+        "value": 20163.91,
+        "cash": 5344.19,
+        "positions_value": 14819.71
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T09:20:03.953935",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20169.21,
+        "cash": 5344.19,
+        "positions_value": 14825.02
+      },
+      "mean-reversion": {
+        "value": 20169.21,
+        "cash": 5344.19,
+        "positions_value": 14825.02
+      },
+      "sector-rotator": {
+        "value": 20169.21,
+        "cash": 5344.19,
+        "positions_value": 14825.02
+      },
+      "value-dividends": {
+        "value": 20169.21,
+        "cash": 5344.19,
+        "positions_value": 14825.02
+      },
+      "volatility-breakout": {
+        "value": 20169.21,
+        "cash": 5344.19,
+        "positions_value": 14825.02
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T10:00:32.738269",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20194.72,
+        "cash": 16232.14,
+        "positions_value": 3962.58
+      },
+      "mean-reversion": {
+        "value": 20194.72,
+        "cash": 16232.14,
+        "positions_value": 3962.58
+      },
+      "sector-rotator": {
+        "value": 20194.72,
+        "cash": 16232.14,
+        "positions_value": 3962.58
+      },
+      "value-dividends": {
+        "value": 20194.72,
+        "cash": 16232.14,
+        "positions_value": 3962.58
+      },
+      "volatility-breakout": {
+        "value": 20194.72,
+        "cash": 16232.14,
+        "positions_value": 3962.58
+      }
+    },
+    "trades": [
+      {
+        "strategy_id": 2,
+        "strategy_name": "mean-reversion",
+        "symbol": "GOOGL",
+        "action": "buy",
+        "quantity": 6,
+        "price": 306.19000244140625,
+        "reason": "Oversold RSI: 20.2",
+        "confidence": 0.75,
+        "order_id": "252a01be-14b4-4701-9969-d8e85c128783",
+        "timestamp": "2026-02-26T10:00:32.623251"
+      },
+      {
+        "strategy_id": 2,
+        "strategy_name": "mean-reversion",
+        "symbol": "NVDA",
+        "action": "buy",
+        "quantity": 10,
+        "price": 189.11500549316406,
+        "reason": "Oversold RSI: 11.1",
+        "confidence": 0.75,
+        "order_id": "75a0d175-b389-44b2-9316-5387a8e9fd3b",
+        "timestamp": "2026-02-26T10:00:32.737512"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-02-26T10:05:04.546662",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20195.39,
+        "cash": 15486.4,
+        "positions_value": 4708.99
+      },
+      "mean-reversion": {
+        "value": 20195.39,
+        "cash": 15486.4,
+        "positions_value": 4708.99
+      },
+      "sector-rotator": {
+        "value": 20195.39,
+        "cash": 15486.4,
+        "positions_value": 4708.99
+      },
+      "value-dividends": {
+        "value": 20195.39,
+        "cash": 15486.4,
+        "positions_value": 4708.99
+      },
+      "volatility-breakout": {
+        "value": 20195.39,
+        "cash": 15486.4,
+        "positions_value": 4708.99
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T10:10:03.590111",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20195.01,
+        "cash": 15486.4,
+        "positions_value": 4708.61
+      },
+      "mean-reversion": {
+        "value": 20195.01,
+        "cash": 15486.4,
+        "positions_value": 4708.61
+      },
+      "sector-rotator": {
+        "value": 20195.01,
+        "cash": 15486.4,
+        "positions_value": 4708.61
+      },
+      "value-dividends": {
+        "value": 20195.01,
+        "cash": 15486.4,
+        "positions_value": 4708.61
+      },
+      "volatility-breakout": {
+        "value": 20195.01,
+        "cash": 15486.4,
+        "positions_value": 4708.61
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T10:15:03.653228",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20190.76,
+        "cash": 15486.4,
+        "positions_value": 4704.36
+      },
+      "mean-reversion": {
+        "value": 20190.76,
+        "cash": 15486.4,
+        "positions_value": 4704.36
+      },
+      "sector-rotator": {
+        "value": 20190.76,
+        "cash": 15486.4,
+        "positions_value": 4704.36
+      },
+      "value-dividends": {
+        "value": 20190.76,
+        "cash": 15486.4,
+        "positions_value": 4704.36
+      },
+      "volatility-breakout": {
+        "value": 20190.76,
+        "cash": 15486.4,
+        "positions_value": 4704.36
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T10:20:03.583834",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20185.1,
+        "cash": 15486.4,
+        "positions_value": 4698.7
+      },
+      "mean-reversion": {
+        "value": 20185.1,
+        "cash": 15486.4,
+        "positions_value": 4698.7
+      },
+      "sector-rotator": {
+        "value": 20185.1,
+        "cash": 15486.4,
+        "positions_value": 4698.7
+      },
+      "value-dividends": {
+        "value": 20185.1,
+        "cash": 15486.4,
+        "positions_value": 4698.7
+      },
+      "volatility-breakout": {
+        "value": 20185.1,
+        "cash": 15486.4,
+        "positions_value": 4698.7
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T10:25:03.469224",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20181.98,
+        "cash": 15486.4,
+        "positions_value": 4695.58
+      },
+      "mean-reversion": {
+        "value": 20181.98,
+        "cash": 15486.4,
+        "positions_value": 4695.58
+      },
+      "sector-rotator": {
+        "value": 20181.98,
+        "cash": 15486.4,
+        "positions_value": 4695.58
+      },
+      "value-dividends": {
+        "value": 20181.98,
+        "cash": 15486.4,
+        "positions_value": 4695.58
+      },
+      "volatility-breakout": {
+        "value": 20181.98,
+        "cash": 15486.4,
+        "positions_value": 4695.58
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T10:30:04.781328",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20182.76,
+        "cash": 15486.4,
+        "positions_value": 4696.36
+      },
+      "mean-reversion": {
+        "value": 20182.76,
+        "cash": 15486.4,
+        "positions_value": 4696.36
+      },
+      "sector-rotator": {
+        "value": 20182.76,
+        "cash": 15486.4,
+        "positions_value": 4696.36
+      },
+      "value-dividends": {
+        "value": 20182.76,
+        "cash": 15486.4,
+        "positions_value": 4696.36
+      },
+      "volatility-breakout": {
+        "value": 20182.76,
+        "cash": 15486.4,
+        "positions_value": 4696.36
+      }
+    },
+    "trades": [
+      {
+        "strategy_id": 2,
+        "strategy_name": "mean-reversion",
+        "symbol": "AMZN",
+        "action": "buy",
+        "quantity": 9,
+        "price": 207.47000122070312,
+        "reason": "Oversold RSI: 22.1",
+        "confidence": 0.75,
+        "order_id": "ce8ed0bb-35af-4c27-b2dc-73f2a52b91af",
+        "timestamp": "2026-02-26T10:30:04.780586"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-02-26T10:35:03.428940",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20178.12,
+        "cash": 15112.9,
+        "positions_value": 5065.22
+      },
+      "mean-reversion": {
+        "value": 20178.12,
+        "cash": 15112.9,
+        "positions_value": 5065.22
+      },
+      "sector-rotator": {
+        "value": 20178.12,
+        "cash": 15112.9,
+        "positions_value": 5065.22
+      },
+      "value-dividends": {
+        "value": 20178.12,
+        "cash": 15112.9,
+        "positions_value": 5065.22
+      },
+      "volatility-breakout": {
+        "value": 20178.12,
+        "cash": 15112.9,
+        "positions_value": 5065.22
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T10:40:03.729783",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20182.67,
+        "cash": 15112.9,
+        "positions_value": 5069.78
+      },
+      "mean-reversion": {
+        "value": 20182.67,
+        "cash": 15112.9,
+        "positions_value": 5069.78
+      },
+      "sector-rotator": {
+        "value": 20182.67,
+        "cash": 15112.9,
+        "positions_value": 5069.78
+      },
+      "value-dividends": {
+        "value": 20182.67,
+        "cash": 15112.9,
+        "positions_value": 5069.78
+      },
+      "volatility-breakout": {
+        "value": 20182.67,
+        "cash": 15112.9,
+        "positions_value": 5069.78
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T10:45:03.480646",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20188.19,
+        "cash": 15112.9,
+        "positions_value": 5075.29
+      },
+      "mean-reversion": {
+        "value": 20188.19,
+        "cash": 15112.9,
+        "positions_value": 5075.29
+      },
+      "sector-rotator": {
+        "value": 20188.19,
+        "cash": 15112.9,
+        "positions_value": 5075.29
+      },
+      "value-dividends": {
+        "value": 20188.19,
+        "cash": 15112.9,
+        "positions_value": 5075.29
+      },
+      "volatility-breakout": {
+        "value": 20188.19,
+        "cash": 15112.9,
+        "positions_value": 5075.29
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T10:50:05.136903",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20191.2,
+        "cash": 15112.9,
+        "positions_value": 5078.3
+      },
+      "mean-reversion": {
+        "value": 20191.2,
+        "cash": 15112.9,
+        "positions_value": 5078.3
+      },
+      "sector-rotator": {
+        "value": 20191.2,
+        "cash": 15112.9,
+        "positions_value": 5078.3
+      },
+      "value-dividends": {
+        "value": 20191.2,
+        "cash": 15112.9,
+        "positions_value": 5078.3
+      },
+      "volatility-breakout": {
+        "value": 20191.2,
+        "cash": 15112.9,
+        "positions_value": 5078.3
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T10:55:03.996171",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20191.97,
+        "cash": 15112.9,
+        "positions_value": 5079.07
+      },
+      "mean-reversion": {
+        "value": 20191.97,
+        "cash": 15112.9,
+        "positions_value": 5079.07
+      },
+      "sector-rotator": {
+        "value": 20191.97,
+        "cash": 15112.9,
+        "positions_value": 5079.07
+      },
+      "value-dividends": {
+        "value": 20191.97,
+        "cash": 15112.9,
+        "positions_value": 5079.07
+      },
+      "volatility-breakout": {
+        "value": 20191.97,
+        "cash": 15112.9,
+        "positions_value": 5079.07
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T11:00:35.863059",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20193.67,
+        "cash": 15112.9,
+        "positions_value": 5080.77
+      },
+      "mean-reversion": {
+        "value": 20193.67,
+        "cash": 15112.9,
+        "positions_value": 5080.77
+      },
+      "sector-rotator": {
+        "value": 20193.67,
+        "cash": 15112.9,
+        "positions_value": 5080.77
+      },
+      "value-dividends": {
+        "value": 20193.67,
+        "cash": 15112.9,
+        "positions_value": 5080.77
+      },
+      "volatility-breakout": {
+        "value": 20193.67,
+        "cash": 15112.9,
+        "positions_value": 5080.77
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T11:05:03.940131",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20195.71,
+        "cash": 15112.9,
+        "positions_value": 5082.81
+      },
+      "mean-reversion": {
+        "value": 20195.71,
+        "cash": 15112.9,
+        "positions_value": 5082.81
+      },
+      "sector-rotator": {
+        "value": 20195.71,
+        "cash": 15112.9,
+        "positions_value": 5082.81
+      },
+      "value-dividends": {
+        "value": 20195.71,
+        "cash": 15112.9,
+        "positions_value": 5082.81
+      },
+      "volatility-breakout": {
+        "value": 20195.71,
+        "cash": 15112.9,
+        "positions_value": 5082.81
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T11:10:03.745198",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20198.65,
+        "cash": 15112.9,
+        "positions_value": 5085.75
+      },
+      "mean-reversion": {
+        "value": 20198.65,
+        "cash": 15112.9,
+        "positions_value": 5085.75
+      },
+      "sector-rotator": {
+        "value": 20198.65,
+        "cash": 15112.9,
+        "positions_value": 5085.75
+      },
+      "value-dividends": {
+        "value": 20198.65,
+        "cash": 15112.9,
+        "positions_value": 5085.75
+      },
+      "volatility-breakout": {
+        "value": 20198.65,
+        "cash": 15112.9,
+        "positions_value": 5085.75
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T11:15:04.233240",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20201.61,
+        "cash": 15112.9,
+        "positions_value": 5088.71
+      },
+      "mean-reversion": {
+        "value": 20201.61,
+        "cash": 15112.9,
+        "positions_value": 5088.71
+      },
+      "sector-rotator": {
+        "value": 20201.61,
+        "cash": 15112.9,
+        "positions_value": 5088.71
+      },
+      "value-dividends": {
+        "value": 20201.61,
+        "cash": 15112.9,
+        "positions_value": 5088.71
+      },
+      "volatility-breakout": {
+        "value": 20201.61,
+        "cash": 15112.9,
+        "positions_value": 5088.71
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T11:20:03.562623",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20198.15,
+        "cash": 15112.9,
+        "positions_value": 5085.25
+      },
+      "mean-reversion": {
+        "value": 20198.15,
+        "cash": 15112.9,
+        "positions_value": 5085.25
+      },
+      "sector-rotator": {
+        "value": 20198.15,
+        "cash": 15112.9,
+        "positions_value": 5085.25
+      },
+      "value-dividends": {
+        "value": 20198.15,
+        "cash": 15112.9,
+        "positions_value": 5085.25
+      },
+      "volatility-breakout": {
+        "value": 20198.15,
+        "cash": 15112.9,
+        "positions_value": 5085.25
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T11:25:03.405910",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20198.31,
+        "cash": 15112.9,
+        "positions_value": 5085.41
+      },
+      "mean-reversion": {
+        "value": 20198.31,
+        "cash": 15112.9,
+        "positions_value": 5085.41
+      },
+      "sector-rotator": {
+        "value": 20198.31,
+        "cash": 15112.9,
+        "positions_value": 5085.41
+      },
+      "value-dividends": {
+        "value": 20198.31,
+        "cash": 15112.9,
+        "positions_value": 5085.41
+      },
+      "volatility-breakout": {
+        "value": 20198.31,
+        "cash": 15112.9,
+        "positions_value": 5085.41
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T11:30:04.650279",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20198.61,
+        "cash": 15112.9,
+        "positions_value": 5085.71
+      },
+      "mean-reversion": {
+        "value": 20198.61,
+        "cash": 15112.9,
+        "positions_value": 5085.71
+      },
+      "sector-rotator": {
+        "value": 20198.61,
+        "cash": 15112.9,
+        "positions_value": 5085.71
+      },
+      "value-dividends": {
+        "value": 20198.61,
+        "cash": 15112.9,
+        "positions_value": 5085.71
+      },
+      "volatility-breakout": {
+        "value": 20198.61,
+        "cash": 15112.9,
+        "positions_value": 5085.71
+      }
+    },
+    "trades": [
+      {
+        "strategy_id": 2,
+        "strategy_name": "mean-reversion",
+        "symbol": "GOOGL",
+        "action": "sell",
+        "quantity": 6,
+        "price": 307.3564147949219,
+        "reason": "Overbought RSI: 86.7",
+        "confidence": 0.75,
+        "order_id": "303aaabe-bd8c-419b-8c94-533b1ea36c98",
+        "timestamp": "2026-02-26T11:30:04.649680"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-02-26T11:35:03.563088",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20197.52,
+        "cash": 15481.72,
+        "positions_value": 4715.81
+      },
+      "mean-reversion": {
+        "value": 20197.52,
+        "cash": 15481.72,
+        "positions_value": 4715.81
+      },
+      "sector-rotator": {
+        "value": 20197.52,
+        "cash": 15481.72,
+        "positions_value": 4715.81
+      },
+      "value-dividends": {
+        "value": 20197.52,
+        "cash": 15481.72,
+        "positions_value": 4715.81
+      },
+      "volatility-breakout": {
+        "value": 20197.52,
+        "cash": 15481.72,
+        "positions_value": 4715.81
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T11:40:03.979187",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20191.57,
+        "cash": 15481.72,
+        "positions_value": 4709.85
+      },
+      "mean-reversion": {
+        "value": 20191.57,
+        "cash": 15481.72,
+        "positions_value": 4709.85
+      },
+      "sector-rotator": {
+        "value": 20191.57,
+        "cash": 15481.72,
+        "positions_value": 4709.85
+      },
+      "value-dividends": {
+        "value": 20191.57,
+        "cash": 15481.72,
+        "positions_value": 4709.85
+      },
+      "volatility-breakout": {
+        "value": 20191.57,
+        "cash": 15481.72,
+        "positions_value": 4709.85
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T11:45:05.076097",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20185.72,
+        "cash": 15481.72,
+        "positions_value": 4704.0
+      },
+      "mean-reversion": {
+        "value": 20185.72,
+        "cash": 15481.72,
+        "positions_value": 4704.0
+      },
+      "sector-rotator": {
+        "value": 20185.72,
+        "cash": 15481.72,
+        "positions_value": 4704.0
+      },
+      "value-dividends": {
+        "value": 20185.72,
+        "cash": 15481.72,
+        "positions_value": 4704.0
+      },
+      "volatility-breakout": {
+        "value": 20185.72,
+        "cash": 15481.72,
+        "positions_value": 4704.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T11:50:03.850834",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20187.69,
+        "cash": 15481.72,
+        "positions_value": 4705.97
+      },
+      "mean-reversion": {
+        "value": 20187.69,
+        "cash": 15481.72,
+        "positions_value": 4705.97
+      },
+      "sector-rotator": {
+        "value": 20187.69,
+        "cash": 15481.72,
+        "positions_value": 4705.97
+      },
+      "value-dividends": {
+        "value": 20187.69,
+        "cash": 15481.72,
+        "positions_value": 4705.97
+      },
+      "volatility-breakout": {
+        "value": 20187.69,
+        "cash": 15481.72,
+        "positions_value": 4705.97
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T11:55:03.642711",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20182.53,
+        "cash": 15481.72,
+        "positions_value": 4700.81
+      },
+      "mean-reversion": {
+        "value": 20182.53,
+        "cash": 15481.72,
+        "positions_value": 4700.81
+      },
+      "sector-rotator": {
+        "value": 20182.53,
+        "cash": 15481.72,
+        "positions_value": 4700.81
+      },
+      "value-dividends": {
+        "value": 20182.53,
+        "cash": 15481.72,
+        "positions_value": 4700.81
+      },
+      "volatility-breakout": {
+        "value": 20182.53,
+        "cash": 15481.72,
+        "positions_value": 4700.81
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T12:01:46.833987",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20185.29,
+        "cash": 15481.72,
+        "positions_value": 4703.57
+      },
+      "mean-reversion": {
+        "value": 20185.29,
+        "cash": 15481.72,
+        "positions_value": 4703.57
+      },
+      "sector-rotator": {
+        "value": 20185.29,
+        "cash": 15481.72,
+        "positions_value": 4703.57
+      },
+      "value-dividends": {
+        "value": 20185.29,
+        "cash": 15481.72,
+        "positions_value": 4703.57
+      },
+      "volatility-breakout": {
+        "value": 20185.29,
+        "cash": 15481.72,
+        "positions_value": 4703.57
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T12:05:03.516891",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20185.04,
+        "cash": 15481.72,
+        "positions_value": 4703.32
+      },
+      "mean-reversion": {
+        "value": 20185.04,
+        "cash": 15481.72,
+        "positions_value": 4703.32
+      },
+      "sector-rotator": {
+        "value": 20185.04,
+        "cash": 15481.72,
+        "positions_value": 4703.32
+      },
+      "value-dividends": {
+        "value": 20185.04,
+        "cash": 15481.72,
+        "positions_value": 4703.32
+      },
+      "volatility-breakout": {
+        "value": 20185.04,
+        "cash": 15481.72,
+        "positions_value": 4703.32
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T12:10:04.160217",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20184.57,
+        "cash": 15481.72,
+        "positions_value": 4702.86
+      },
+      "mean-reversion": {
+        "value": 20184.57,
+        "cash": 15481.72,
+        "positions_value": 4702.86
+      },
+      "sector-rotator": {
+        "value": 20184.57,
+        "cash": 15481.72,
+        "positions_value": 4702.86
+      },
+      "value-dividends": {
+        "value": 20184.57,
+        "cash": 15481.72,
+        "positions_value": 4702.86
+      },
+      "volatility-breakout": {
+        "value": 20184.57,
+        "cash": 15481.72,
+        "positions_value": 4702.86
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T12:15:04.083320",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20182.36,
+        "cash": 15481.72,
+        "positions_value": 4700.64
+      },
+      "mean-reversion": {
+        "value": 20182.36,
+        "cash": 15481.72,
+        "positions_value": 4700.64
+      },
+      "sector-rotator": {
+        "value": 20182.36,
+        "cash": 15481.72,
+        "positions_value": 4700.64
+      },
+      "value-dividends": {
+        "value": 20182.36,
+        "cash": 15481.72,
+        "positions_value": 4700.64
+      },
+      "volatility-breakout": {
+        "value": 20182.36,
+        "cash": 15481.72,
+        "positions_value": 4700.64
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T12:20:03.527653",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20180.87,
+        "cash": 15481.72,
+        "positions_value": 4699.16
+      },
+      "mean-reversion": {
+        "value": 20180.87,
+        "cash": 15481.72,
+        "positions_value": 4699.16
+      },
+      "sector-rotator": {
+        "value": 20180.87,
+        "cash": 15481.72,
+        "positions_value": 4699.16
+      },
+      "value-dividends": {
+        "value": 20180.87,
+        "cash": 15481.72,
+        "positions_value": 4699.16
+      },
+      "volatility-breakout": {
+        "value": 20180.87,
+        "cash": 15481.72,
+        "positions_value": 4699.16
+      }
+    }
+  },
+  {
+    "timestamp": "2026-02-26T12:25:05.425161",
+    "snapshots": {
+      "momentum-hunter": {
+        "value": 20180.72,
+        "cash": 15481.72,
+        "positions_value": 4699.0
+      },
+      "mean-reversion": {
+        "value": 20180.72,
+        "cash": 15481.72,
+        "positions_value": 4699.0
+      },
+      "sector-rotator": {
+        "value": 20180.72,
+        "cash": 15481.72,
+        "positions_value": 4699.0
+      },
+      "value-dividends": {
+        "value": 20180.72,
+        "cash": 15481.72,
+        "positions_value": 4699.0
+      },
+      "volatility-breakout": {
+        "value": 20180.72,
+        "cash": 15481.72,
+        "positions_value": 4699.0
+      }
+    }
+  }
+]
