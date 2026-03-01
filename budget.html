@@ -653,6 +653,13 @@
         }
         /* Keep scan results within the modal flow */
         #scanResults.show { display: block; }
+        /* Inside the scan modal, switch to 2×2 grid so all columns fit */
+        .scan-modal-box .result-fields {
+            grid-template-columns: 1fr 1fr;
+        }
+        .scan-modal-box .result-field:first-child {
+            grid-column: 1 / -1; /* Description spans full width */
+        }
         .scan-modal-header {
             display: flex;
             align-items: center;
@@ -4787,56 +4794,53 @@
                 cumulativeSpending.push(cumulative);
             }
 
+            // Budget for pace line:
+            // combined → group budget (shared field = all-spending budget)
+            // shared   → no pace line (no dedicated shared-only budget)
+            // partner  → that partner's personal budget
             let viewBudget = 0;
+            const showBudgetPace = currentAnalyticsView !== 'shared';
             if (currentAnalyticsView === 'combined') {
-                viewBudget = appState.budgets.total || 0;
-            } else if (currentAnalyticsView === 'shared') {
-                viewBudget = appState.budgets.shared || 0;
+                viewBudget = appState.budgets.shared || 0; // group budget tracks all spending
             } else if (currentAnalyticsView.startsWith('partner')) {
                 viewBudget = appState.budgets[currentAnalyticsView + 'Total'] || 0;
             }
-            const budgetLine = viewBudget > 0 ? 
-                new Array(daysInMonth).fill().map((_, i) => (viewBudget / daysInMonth) * (i + 1)) :
-                new Array(daysInMonth).fill(0);
+            const budgetLine = (showBudgetPace && viewBudget > 0)
+                ? new Array(daysInMonth).fill().map((_, i) => (viewBudget / daysInMonth) * (i + 1))
+                : null;
+
+            const dailyDatasets = [
+                {
+                    label: `Cumulative Spending (${analyticsViewLabel()})`,
+                    data: cumulativeSpending,
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true
+                }
+            ];
+            if (budgetLine) {
+                dailyDatasets.push({
+                    label: `Budget Pace (${analyticsViewLabel()})`,
+                    data: budgetLine,
+                    borderColor: '#10b981',
+                    borderDash: [5, 5],
+                    fill: false
+                });
+            }
 
             window.dailyChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: Array.from({length: daysInMonth}, (_, i) => i + 1),
-                    datasets: [
-                        {
-                            label: `Cumulative Spending (${analyticsViewLabel()})`,
-                            data: cumulativeSpending,
-                            borderColor: '#6366f1',
-                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                            fill: true
-                        },
-                        {
-                            label: `Budget Pace (${analyticsViewLabel()})`,
-                            data: budgetLine,
-                            borderColor: '#10b981',
-                            borderDash: [5, 5],
-                            fill: false
-                        }
-                    ]
+                    labels: Array.from({ length: daysInMonth }, (_, i) => i + 1),
+                    datasets: dailyDatasets
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: { color: '#ffffff' }
-                        }
-                    },
+                    plugins: { legend: { labels: { color: '#ffffff' } } },
                     scales: {
-                        y: {
-                            ticks: { color: '#ffffff' },
-                            grid: { color: '#374151' }
-                        },
-                        x: {
-                            ticks: { color: '#ffffff' },
-                            grid: { color: '#374151' }
-                        }
+                        y: { ticks: { color: '#ffffff' }, grid: { color: '#374151' } },
+                        x: { ticks: { color: '#ffffff' }, grid: { color: '#374151' } }
                     }
                 }
             });
