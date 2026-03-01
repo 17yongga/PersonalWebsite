@@ -4657,9 +4657,16 @@
                 cumulativeSpending.push(cumulative);
             }
 
-            const totalBudget = appState.budgets.total || 0;
-            const budgetLine = totalBudget > 0 ? 
-                new Array(daysInMonth).fill().map((_, i) => (totalBudget / daysInMonth) * (i + 1)) :
+            let viewBudget = 0;
+            if (currentAnalyticsView === 'combined') {
+                viewBudget = appState.budgets.total || 0;
+            } else if (currentAnalyticsView === 'shared') {
+                viewBudget = appState.budgets.shared || 0;
+            } else if (currentAnalyticsView.startsWith('partner')) {
+                viewBudget = appState.budgets[currentAnalyticsView + 'Total'] || 0;
+            }
+            const budgetLine = viewBudget > 0 ? 
+                new Array(daysInMonth).fill().map((_, i) => (viewBudget / daysInMonth) * (i + 1)) :
                 new Array(daysInMonth).fill(0);
 
             window.dailyChart = new Chart(ctx, {
@@ -4675,7 +4682,7 @@
                             fill: true
                         },
                         {
-                            label: 'Budget Pace',
+                            label: `Budget Pace (${analyticsViewLabel()})`,
                             data: budgetLine,
                             borderColor: '#10b981',
                             borderDash: [5, 5],
