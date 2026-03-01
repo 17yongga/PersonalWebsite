@@ -364,56 +364,35 @@
         }
 
         /* AI Insights */
-        .insights-panel {
-            margin-bottom: 32px;
-        }
+        .insights-panel { margin-bottom: 32px; }
 
-        .insight-item {
-            padding: 16px;
-            margin-bottom: 12px;
+        /* Insight cards grid */
+        .insight-grid {
+            display: grid;
+            gap: 10px;
+        }
+        .insight-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            border-left: 4px solid var(--accent-start);
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.5;
         }
-
-        .insight-item.warning {
-            border-left-color: var(--warning);
+        .insight-card .ins-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 1px;
         }
-
-        .insight-item.danger {
-            border-left-color: var(--danger);
-        }
-
-        .health-score {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .health-circle {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            margin: 0 auto 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            font-weight: 700;
-            position: relative;
-        }
-
-        .health-circle.excellent {
-            background: conic-gradient(var(--success) 0deg, var(--success) calc(var(--score) * 3.6deg), var(--glass-bg) calc(var(--score) * 3.6deg));
-        }
-
-        .health-circle.good {
-            background: conic-gradient(var(--warning) 0deg, var(--warning) calc(var(--score) * 3.6deg), var(--glass-bg) calc(var(--score) * 3.6deg));
-        }
-
-        .health-circle.poor {
-            background: conic-gradient(var(--danger) 0deg, var(--danger) calc(var(--score) * 3.6deg), var(--glass-bg) calc(var(--score) * 3.6deg));
-        }
+        .insight-card .ins-text { flex: 1; color: var(--text-primary); }
+        .insight-card.warning { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.06); }
+        .insight-card.danger  { border-color: rgba(239,68,68,0.4);  background: rgba(239,68,68,0.06);  }
+        .insight-card.success { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.06); }
+        /* keep old .insight-item class as alias for any legacy references */
+        .insight-item { display: none; }
 
         /* Settlement */
         .settlement-card {
@@ -668,10 +647,12 @@
             border-radius: 20px;
             padding: 28px 24px;
             width: 100%;
-            max-width: 640px;
+            max-width: 600px;
             position: relative;
             box-shadow: 0 24px 60px rgba(0,0,0,0.5);
         }
+        /* Keep scan results within the modal flow */
+        #scanResults.show { display: block; }
         .scan-modal-header {
             display: flex;
             align-items: center;
@@ -1514,14 +1495,8 @@
                 </div>
 
                 <div class="glass-card insights-panel">
-                    <h3 style="margin-bottom: 20px;">🤖 AI Insights</h3>
-                    <div class="health-score">
-                        <div class="health-circle excellent" id="healthCircle" style="--score: 85">
-                            <span id="healthScore">85</span>
-                        </div>
-                        <div class="stat-label">Budget Health Score</div>
-                    </div>
-                    <div id="aiInsights"></div>
+                    <h3 style="margin-bottom: 16px;">🤖 AI Insights</h3>
+                    <div id="aiInsights" class="insight-grid"></div>
                 </div>
 
                 <div class="glass-card">
@@ -1661,11 +1636,13 @@
                 </div>
 
                 <div class="glass-card" style="margin-bottom: 24px;">
-                    <h3 style="margin-bottom: 20px;">👥 Group Budget</h3>
+                    <h3 style="margin-bottom: 16px;">👥 Group Budget</h3>
+                    <div id="groupBudgetProgress" style="margin-bottom:20px;"></div>
                     <div class="form-group">
-                        <label class="form-label">Monthly Shared Budget</label>
-                        <input type="number" class="form-input" id="sharedBudget" placeholder="Enter shared budget" step="0.01">
-                        <button class="btn" onclick="saveBudgets()" style="margin-top: 12px;">Save</button>
+                        <label class="form-label">Monthly Group Budget</label>
+                        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">Tracks <strong>all</strong> expenses from both partners combined.</p>
+                        <input type="number" class="form-input" id="sharedBudget" placeholder="Enter group budget (e.g. 3000)" step="0.01">
+                        <button class="btn" onclick="saveBudgets()" style="margin-top: 12px;">💾 Save</button>
                     </div>
                 </div>
 
@@ -1738,9 +1715,20 @@
 
             <!-- Settings Tab -->
             <div class="tab-content" id="settings">
+                <!-- Change History -->
+                <div class="glass-card" style="margin-bottom: 24px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                        <h3>🕐 Change History</h3>
+                        <button class="btn btn-secondary" onclick="clearChangeHistory()" style="font-size:12px;padding:6px 14px;">🗑️ Clear</button>
+                    </div>
+                    <div id="changeHistoryList">
+                        <div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px;">No changes recorded yet.</div>
+                    </div>
+                </div>
+
                 <!-- Activity Log -->
                 <div class="glass-card" style="margin-bottom: 24px;" id="activityLogCard">
-                    <h3 style="margin-bottom: 20px;">📋 Recent Activity</h3>
+                    <h3 style="margin-bottom: 20px;">📋 Server Activity</h3>
                     <div id="activityLog">
                         <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
                             Loading activity...
@@ -2918,19 +2906,19 @@
             if (tabId === 'transactions') renderTransactions();
             if (tabId === 'budget') renderBudget();
             if (tabId === 'settlement') renderSettlement();
-            if (tabId === 'settings') { renderCustomCategories(); renderHouseholdInfo(); loadActivity(); }
+            if (tabId === 'settings') { renderCustomCategories(); renderHouseholdInfo(); loadActivity(); renderChangeHistory(); }
         }
 
         // Month Navigation
-        function changeMonth(direction) {
+        async function changeMonth(direction) {
             appState.currentMonth = new Date(appState.currentMonth);
             appState.currentMonth.setMonth(appState.currentMonth.getMonth() + direction);
+            updateCurrentMonth(); // immediately update month label
+            // Reset budgets so stale values don't show during load
+            await loadBudgetsForCurrentMonth();
             updateDisplay();
-            // Reload budgets for new month then re-render budget/analytics tabs
-            loadBudgetsForCurrentMonth().then(() => {
-                renderBudget();
-                if (document.getElementById('analytics').classList.contains('active')) renderCharts();
-            });
+            renderBudget();
+            if (document.getElementById('analytics').classList.contains('active')) renderCharts();
         }
 
         function updateDisplay() {
@@ -3072,9 +3060,57 @@
             }
         }
 
+        // ── Change History ───────────────────────────────────────────────────
+        let changeHistory = JSON.parse(localStorage.getItem('finSyncChangeHistory') || '[]');
+
+        function logChange(action, details) {
+            const entry = {
+                ts: new Date().toISOString(),
+                action,
+                details,
+                user: appState.partners?.partner1 || 'You'
+            };
+            changeHistory.unshift(entry); // newest first
+            if (changeHistory.length > 100) changeHistory.pop(); // keep last 100
+            localStorage.setItem('finSyncChangeHistory', JSON.stringify(changeHistory));
+            renderChangeHistory();
+        }
+
+        function renderChangeHistory() {
+            const el = document.getElementById('changeHistoryList');
+            if (!el) return;
+            if (changeHistory.length === 0) {
+                el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px;">No changes recorded yet.</div>';
+                return;
+            }
+            const actionIcon = { add: '➕', edit: '✏️', delete: '🗑️', settle: '🤝', budget: '💰' };
+            el.innerHTML = changeHistory.slice(0, 50).map(e => {
+                const d = new Date(e.ts);
+                const timeStr = d.toLocaleDateString('en-CA') + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--glass-border);">
+                    <span style="font-size:16px;flex-shrink:0;">${actionIcon[e.action] || '📝'}</span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:500;">${e.details}</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">${e.user} · ${timeStr}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function clearChangeHistory() {
+            if (confirm('Clear all change history?')) {
+                changeHistory = [];
+                localStorage.removeItem('finSyncChangeHistory');
+                renderChangeHistory();
+            }
+        }
+
         function addExpense(expense) {
             appState.expenses.push(expense);
             saveData();
+            // Log the add
+            const paidBy = appState.partners?.[expense.whoPaid] || expense.whoPaid || 'Unknown';
+            logChange('add', `Added $${expense.amount.toFixed(2)} — ${expense.category} (${paidBy}${expense.notes ? ', ' + expense.notes : ''})`);
         }
 
         let _deletingExpense = null;
@@ -3082,6 +3118,7 @@
             if (_deletingExpense === id) return;
             if (confirm('Delete this expense?')) {
                 _deletingExpense = id;
+                const target = appState.expenses.find(e => e.id === id);
                 // Gray out the row being deleted
                 const row = document.querySelector(`[data-expense-id="${id}"]`);
                 if (row) { row.style.opacity = '0.4'; row.style.pointerEvents = 'none'; }
@@ -3093,6 +3130,7 @@
                 appState.expenses = appState.expenses.filter(e => e.id !== id);
                 saveData();
                 _deletingExpense = null;
+                if (target) logChange('delete', `Deleted $${target.amount.toFixed(2)} — ${target.category}${target.notes ? ' (' + target.notes + ')' : ''}`);
                 updateDisplay();
                 renderTransactions();
                 showToast('Expense deleted', 'success');
@@ -3337,34 +3375,47 @@
 
             // Enhanced budget remaining display
             if (solo) {
-                // Solo mode: simple budget remaining
+                // Solo mode
                 const remaining = budgetRemaining;
-                const color = remaining >= 0 ? 'var(--success)' : 'var(--danger)';
+                const pct = totalBudget > 0 ? Math.min(totalSpent / totalBudget * 100, 100) : 0;
+                const color = remaining >= 0 ? '#10b981' : '#ef4444';
                 document.getElementById('budgetRemaining').innerHTML = `
-                    <div style="color: ${color}"><strong>$${Math.abs(remaining).toFixed(2)}</strong></div>
-                    <div style="font-size: 0.8em; color: var(--text-secondary); margin-top: 4px;">
-                        ${remaining >= 0 ? 'Remaining' : 'Over budget'}
-                    </div>
+                    <div style="font-size:22px;font-weight:700;color:${color};">$${Math.abs(remaining).toFixed(2)}</div>
+                    <div style="font-size:11px;color:var(--text-secondary);margin:2px 0 8px;">${remaining >= 0 ? 'remaining' : 'over budget'}</div>
+                    ${totalBudget > 0 ? `<div style="height:4px;border-radius:4px;background:rgba(255,255,255,0.1);overflow:hidden;"><div style="height:100%;width:${pct}%;background:${remaining >= 0 ? '#10b981' : '#ef4444'};border-radius:4px;transition:width 0.3s;"></div></div>` : ''}
                 `;
             } else {
-                // Shared mode: show both personal and shared budget breakdowns
-                const myKey = 'partner1'; // current user is always partner1
-                // My spend = individual expenses I paid + my share of shared expenses
+                // Shared mode — group budget tracks ALL spending from both partners
+                const myKey = 'partner1';
                 const myPersonalSpent = getMyBudgetSpend(myKey, monthExpenses);
                 const myPersonalBudget = appState.budgets[myKey + 'Total'] || 0;
-                const myPersonalRemaining = myPersonalBudget - myPersonalSpent;
-                
-                const sharedBudget = appState.budgets.shared || 0;
-                const sharedRemaining = sharedBudget - totalSharedSpent;
-                
-                const myColor = myPersonalRemaining >= 0 ? 'var(--success)' : 'var(--danger)';
-                const sharedColor = sharedRemaining >= 0 ? 'var(--success)' : 'var(--danger)';
-                
+                const myRemaining = myPersonalBudget - myPersonalSpent;
+
+                // Group budget = all expenses (both partners combined)
+                const groupBudget = appState.budgets.shared || 0;
+                const groupRemaining = groupBudget - totalSpent; // totalSpent = all expenses
+
+                const myColor = myRemaining >= 0 ? '#10b981' : '#ef4444';
+                const grpColor = groupRemaining >= 0 ? '#10b981' : '#ef4444';
+                const myPct = myPersonalBudget > 0 ? Math.min(myPersonalSpent / myPersonalBudget * 100, 100) : 0;
+                const grpPct = groupBudget > 0 ? Math.min(totalSpent / groupBudget * 100, 100) : 0;
+
                 document.getElementById('budgetRemaining').innerHTML = `
-                    <div style="margin-bottom: 8px;">
-                        <div style="color: ${myColor}; font-weight: 600;">Your Budget: $${Math.abs(myPersonalRemaining).toFixed(2)} ${myPersonalRemaining >= 0 ? 'remaining' : 'over'}</div>
-                        <div style="color: ${sharedColor}; font-weight: 600;">Shared Budget: $${Math.abs(sharedRemaining).toFixed(2)} ${sharedRemaining >= 0 ? 'remaining' : 'over'}</div>
-                    </div>
+                    ${groupBudget > 0 ? `
+                    <div style="margin-bottom:10px;">
+                        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:4px;">
+                            <span>👥 Group</span><span style="color:${grpColor};">$${Math.abs(groupRemaining).toFixed(0)} ${groupRemaining >= 0 ? 'left' : 'over'}</span>
+                        </div>
+                        <div style="height:4px;border-radius:4px;background:rgba(255,255,255,0.1);overflow:hidden;"><div style="height:100%;width:${grpPct}%;background:${grpColor};border-radius:4px;"></div></div>
+                    </div>` : ''}
+                    ${myPersonalBudget > 0 ? `
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:4px;">
+                            <span>👤 Mine</span><span style="color:${myColor};">$${Math.abs(myRemaining).toFixed(0)} ${myRemaining >= 0 ? 'left' : 'over'}</span>
+                        </div>
+                        <div style="height:4px;border-radius:4px;background:rgba(255,255,255,0.1);overflow:hidden;"><div style="height:100%;width:${myPct}%;background:${myColor};border-radius:4px;"></div></div>
+                    </div>` : ''}
+                    ${!groupBudget && !myPersonalBudget ? `<div style="font-size:12px;color:var(--text-secondary);">Set a budget in Settings</div>` : ''}
                 `;
             }
             
@@ -3639,40 +3690,27 @@
                 }
             }
 
-            // ── Health score ─────────────────────────────────────────────────
-            let healthScore = 100;
-            if (totalBudget > 0 && totalSpent > 0) {
-                const budgetUsage = (totalSpent / totalBudget) * 100;
-                if (budgetUsage > 100) healthScore -= 35;
-                else if (budgetUsage > 90) healthScore -= 20;
-                else if (budgetUsage > 75) healthScore -= 10;
-            } else if (totalBudget === 0 && totalSpent > 0) {
-                healthScore -= 5;
-            }
-            const balance2 = !window._isSoloSpace ? calculatePartnerBalance() : { rawBalance: 0 };
-            if (Math.abs(balance2.rawBalance) > 200) healthScore -= 15;
-            const dangerCount = insights.filter(i => i.type === 'danger').length;
-            healthScore -= dangerCount * 15;
-            healthScore = Math.max(0, Math.min(100, healthScore));
-
-            const healthCircle = document.getElementById('healthCircle');
-            const scoreElement = document.getElementById('healthScore');
-            if (healthCircle) {
-                healthCircle.style.setProperty('--score', healthScore);
-                scoreElement.textContent = healthScore;
-                healthCircle.className = `health-circle ${healthScore >= 80 ? 'excellent' : healthScore >= 60 ? 'good' : 'poor'}`;
-            }
-
             // ── Render ───────────────────────────────────────────────────────
             const container = document.getElementById('aiInsights');
             if (!container) return;
+
+            // Icon map for insight types
+            const typeIcon = { danger: '🚨', warning: '⚠️', success: '✅', info: '💡' };
+
             if (insights.length === 0) {
-                container.innerHTML = '<div class="insight-item">✨ Everything looks good! Your spending is on track.</div>';
+                container.innerHTML = `<div class="insight-card success"><span class="ins-icon">✨</span><span class="ins-text">Everything looks good! Your spending is on track.</span></div>`;
             } else {
-                // Show danger first, then warnings, then others
+                // Sort: danger first, then warning, success, info
                 const order = { danger: 0, warning: 1, success: 2, info: 3 };
                 insights.sort((a, b) => (order[a.type] ?? 4) - (order[b.type] ?? 4));
-                container.innerHTML = insights.map(i => `<div class="insight-item ${i.type || 'info'}">${i.text}</div>`).join('');
+                container.innerHTML = insights.map(i => {
+                    // Strip leading emoji from text since we're adding one via icon
+                    const cleanText = i.text.replace(/^[\p{Emoji}\s]{1,3}/u, '').trim();
+                    return `<div class="insight-card ${i.type || 'info'}">
+                        <span class="ins-icon">${typeIcon[i.type] || '💡'}</span>
+                        <span class="ins-text">${cleanText}</span>
+                    </div>`;
+                }).join('');
             }
         }
 
@@ -4049,6 +4087,8 @@
                         appState.expenses[idx] = { ...appState.expenses[idx], amount, category, whoPaid, splitType, date, notes, isRecurring, isShared, customSplit: splitType === 'custom' ? parseFloat(customSplit) : null };
                     }
                     saveData();
+                    const paidByName = appState.partners?.[whoPaid] || whoPaid;
+                    logChange('edit', `Edited $${amount.toFixed(2)} — ${category} (${paidByName}${notes ? ', ' + notes : ''})`);
                     closeExpenseModal();
                     updateDisplay();
                     renderTransactions();
@@ -4185,7 +4225,32 @@
         function renderBudget() {
             migrateBudgets();
             const solo = window._isSoloSpace;
-            
+
+            // ── Group budget progress bar ────────────────────────────────────
+            const gpEl = document.getElementById('groupBudgetProgress');
+            if (gpEl && !solo) {
+                const groupBudget = appState.budgets.shared || 0;
+                const allExpenses = getCurrentMonthExpenses();
+                const totalSpent = allExpenses.reduce((s,e) => s + e.amount, 0);
+                if (groupBudget > 0) {
+                    const pct = Math.min(totalSpent / groupBudget * 100, 100);
+                    const remaining = groupBudget - totalSpent;
+                    const over = remaining < 0;
+                    const barColor = over ? '#ef4444' : pct > 85 ? '#f59e0b' : '#6366f1';
+                    gpEl.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-secondary);margin-bottom:6px;">
+                            <span>$${totalSpent.toFixed(2)} spent of $${groupBudget.toFixed(2)}</span>
+                            <span style="color:${over ? '#ef4444' : '#10b981'};">${over ? '⚠️ ' : ''}$${Math.abs(remaining).toFixed(2)} ${over ? 'over' : 'remaining'}</span>
+                        </div>
+                        <div style="height:8px;border-radius:8px;background:rgba(255,255,255,0.08);overflow:hidden;">
+                            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:8px;transition:width 0.4s;"></div>
+                        </div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:5px;">${pct.toFixed(0)}% of group budget used</div>`;
+                } else {
+                    gpEl.innerHTML = `<div style="font-size:12px;color:var(--text-secondary);padding:8px 0;">Set a group budget below to see progress.</div>`;
+                }
+            }
+
             // Set budget inputs
             document.getElementById('sharedBudget').value = appState.budgets.shared || '';
             
@@ -5634,6 +5699,8 @@
 
         // Initialize charts after page load
         setTimeout(renderCharts, 100);
+        // Initialize change history (show any existing from localStorage)
+        renderChangeHistory();
     </script>
 
     <!-- ── Scan Receipt Modal ───────────────────────────── -->
