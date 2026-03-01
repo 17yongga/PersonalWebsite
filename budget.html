@@ -648,6 +648,38 @@
         .filter-input { flex: 1; min-width: 200px; }
 
         /* ── Expense Modal ───────────────────────────────── */
+        /* Scan receipt modal (same base as expense modal) */
+        .scan-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px);
+            z-index: 9100;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 24px 16px;
+            overflow-y: auto;
+        }
+        .scan-modal-overlay.open { display: flex; }
+        .scan-modal-box {
+            background: #12122a;
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 28px 24px;
+            width: 100%;
+            max-width: 640px;
+            position: relative;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+        }
+        .scan-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .scan-modal-header h3 { font-size: 18px; font-weight: 700; }
+
         .expense-modal-overlay {
             display: none;
             position: fixed;
@@ -1450,8 +1482,6 @@
 
         <nav class="tab-nav">
             <button class="tab-btn active" data-tab="dashboard">📊<span class="tab-text"> Dashboard</span></button>
-            <button class="tab-btn" data-tab="add-expense">➕<span class="tab-text"> Add Expense</span></button>
-            <button class="tab-btn" data-tab="scan-receipt">📷<span class="tab-text"> Scan</span></button>
             <button class="tab-btn" data-tab="transactions">💳<span class="tab-text"> Transactions</span></button>
             <button class="tab-btn" data-tab="budget">💰<span class="tab-text"> Budget</span></button>
             <button class="tab-btn" data-tab="analytics">📈<span class="tab-text"> Analytics</span></button>
@@ -1500,16 +1530,8 @@
                 </div>
             </div>
 
-            <!-- Add Expense Tab -->
+            <!-- Add Expense Tab (hidden from nav — form kept for JS compat) -->
             <div class="tab-content" id="add-expense">
-                <div class="glass-card quick-add">
-                    <h3 style="margin-bottom: 20px;">💬 Quick Add</h3>
-                    <input type="text" class="form-input natural-input" id="naturalInput" 
-                           placeholder="e.g. 'Tim Hortons $4.50 me' or 'groceries $85 split' or 'vet 150 personal'"
-                           onkeydown="if(event.key==='Enter'){event.preventDefault();parseNaturalInput();}">
-                    <button class="btn" onclick="parseNaturalInput()" style="margin-top:10px;">🔍 Parse & Review</button>
-                </div>
-
                 <div class="glass-card">
                     <h3 style="margin-bottom: 20px;">📝 Manual Entry</h3>
                     <form id="expenseForm">
@@ -1587,51 +1609,8 @@
             </div>
 
             <!-- Scan Receipt Tab -->
-            <div class="tab-content" id="scan-receipt">
-                <div class="glass-card" style="margin-bottom: 24px;">
-                    <h3 style="margin-bottom: 20px;">📷 Scan Receipt</h3>
-                    
-                    <!-- Upload Area -->
-                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('receiptFile').click()">
-                        <div style="font-size: 48px; margin-bottom: 12px;">📷</div>
-                        <div style="font-size: 16px; margin-bottom: 8px;">Click to select or drag & drop your receipt</div>
-                        <div style="font-size: 13px; color: var(--text-secondary);">Supports JPG, PNG, WebP • Max 10MB</div>
-                    </div>
-                    
-                    <input type="file" id="receiptFile" accept="image/*" style="display: none;" onchange="handleReceiptFile(event)">
-                    
-                    <!-- Image Preview -->
-                    <div id="receiptPreview" style="display: none;">
-                        <img id="previewImage" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 12px; margin-bottom: 16px;" alt="Receipt preview">
-                        <div style="display: flex; gap: 12px;">
-                            <button class="btn" onclick="scanReceipt()">🔍 Scan Receipt</button>
-                            <button class="btn btn-secondary" onclick="clearReceipt()">❌ Remove</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Loading -->
-                    <div id="scanLoading" style="display: none; text-align: center; padding: 40px 0;">
-                        <div class="loading" style="margin: 0 auto 16px;"></div>
-                        <div>🩺 Dr.Molt is analyzing your receipt...</div>
-                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">This may take a few seconds</div>
-                    </div>
-                </div>
-                    
-                <!-- Results -->
-                <div class="scan-results" id="scanResults">
-                    <div class="glass-card">
-                        <h3 style="margin-bottom: 20px;">📋 Review & Edit</h3>
-                        
-                        <div id="scanResultsList"></div>
-
-                        <div class="scan-summary" id="scanSummary" style="margin-top: 20px;">
-                            <div class="summary-total" id="summaryTotal">$0.00</div>
-                            <div class="summary-count" id="summaryCount">0 items selected</div>
-                            <button class="btn" id="addSelectedBtn" onclick="addSelectedExpenses()">➕ Add Selected Items</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- scan-receipt tab kept as empty shell for backward compat -->
+            <div class="tab-content" id="scan-receipt"></div>
 
             <!-- Transactions Tab -->
             <div class="tab-content" id="transactions">
@@ -1643,6 +1622,7 @@
                         </div>
                         <div class="filter-actions">
                             <button class="btn btn-secondary" onclick="exportTransactions('csv')" title="Export CSV">📥 CSV</button>
+                            <button class="btn btn-secondary" onclick="openScanModal()" title="Scan a receipt">📷 Scan</button>
                             <button class="btn" onclick="openExpenseModal()" style="background: linear-gradient(135deg, var(--accent-start), var(--accent-end));">➕ Add Transaction</button>
                         </div>
                     </div>
@@ -1855,12 +1835,12 @@
                 partner2: 'Partner 2'
             },
             categories: [
-                'Food/Dining', 'Groceries', 'Rent/Housing', 'Utilities', 
-                'Transport', 'Entertainment', 'Subscriptions', 'Health', 
-                'Shopping', 'Travel', 'Gifts', 'Insurance', 'Education',
-                'Personal Care', 'Pets', 'Home Maintenance', 'Alcohol/Bars',
-                'Coffee/Cafe', 'Fitness/Gym', 'Clothing', 'Electronics',
-                'Charity/Donations', 'Parking', 'Phone/Internet', 'Other'
+                '🍽️ Food/Dining', '🛒 Groceries', '🏠 Rent/Housing', '💡 Utilities', 
+                '🚗 Transport', '🎬 Entertainment', '📺 Subscriptions', '💊 Health', 
+                '🛍️ Shopping', '✈️ Travel', '🎁 Gifts', '🛡️ Insurance', '📚 Education',
+                '💄 Personal Care', '🐾 Pets', '🔧 Home Maintenance', '🍺 Alcohol/Bars',
+                '☕ Coffee/Cafe', '💪 Fitness/Gym', '👗 Clothing', '💻 Electronics',
+                '❤️ Charity/Donations', '🅿️ Parking', '📱 Phone/Internet', '📦 Other'
             ]
         };
 
@@ -2698,7 +2678,7 @@
         }
 
         // Toast Notifications
-        function showToast(message, type = 'success') {
+        function showToast(message, type = 'success', duration = 3000) {
             // Remove existing toast
             const existingToast = document.querySelector('.toast');
             if (existingToast) {
@@ -2714,7 +2694,7 @@
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            }, duration);
         }
 
         // Data Management
@@ -2761,9 +2741,9 @@
                 // Track if solo
                 window._isSoloSpace = members.length <= 1;
 
-                // Load categories from household
+                // Load categories from household (normalise with emoji)
                 if (household.categories && household.categories.length > 0) {
-                    appState.categories = household.categories;
+                    appState.categories = household.categories.map(c => emojiForCategory(c));
                 }
 
                 // Load expenses
@@ -2838,7 +2818,7 @@
                 appState.expenses = data.expenses || [];
                 appState.budgets = data.budgets || {};
                 appState.partners = data.partners || appState.partners;
-                appState.categories = data.categories || appState.categories;
+                appState.categories = (data.categories || appState.categories).map(c => emojiForCategory(c));
                 
                 // Re-check solo after loading partners
                 const pKeys = Object.keys(appState.partners);
@@ -2928,8 +2908,10 @@
                 btn.classList.remove('active');
             });
             
-            document.getElementById(tabId).classList.add('active');
-            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+            const tabEl = document.getElementById(tabId);
+            if (tabEl) tabEl.classList.add('active');
+            const tabBtn = document.querySelector(`[data-tab="${tabId}"]`);
+            if (tabBtn) tabBtn.classList.add('active');
 
             // Update content when switching tabs
             if (tabId === 'analytics') renderCharts();
@@ -3483,173 +3465,214 @@
         function generateAIInsights() {
             const insights = [];
             const currentExpenses = getCurrentMonthExpenses();
-            
+            const today = new Date();
+            const dayOfMonth = today.getDate();
+            const daysInMonth = new Date(appState.currentMonth.getFullYear(), appState.currentMonth.getMonth() + 1, 0).getDate();
+            const daysLeft = daysInMonth - dayOfMonth;
+            const isCurrentMonth = today.getMonth() === appState.currentMonth.getMonth() && today.getFullYear() === appState.currentMonth.getFullYear();
+
             // Separate shared and individual expenses for analysis
             const sharedExpenses = currentExpenses.filter(exp => exp.isShared !== false);
             const individualExpenses = currentExpenses.filter(exp => exp.isShared === false);
-            
+
             const totalSpent = currentExpenses.reduce((sum, exp) => sum + exp.amount, 0);
             const totalSharedSpent = sharedExpenses.reduce((sum, exp) => sum + exp.amount, 0);
             const totalIndividualSpent = individualExpenses.reduce((sum, exp) => sum + exp.amount, 0);
             const totalBudget = appState.budgets.total || 0;
             
-            // Shared vs Individual ratio insights
-            if (totalSpent > 0) {
-                const sharedRatio = (totalSharedSpent / totalSpent) * 100;
-                if (!window._isSoloSpace && sharedRatio < 30) {
+            // ── Category totals (current + previous month) ──────────────────
+            const categoryTotals = {};
+            currentExpenses.forEach(e => { categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount; });
+            const sortedCats = Object.entries(categoryTotals).sort(([,a],[,b]) => b - a);
+
+            const prevMonth = new Date(appState.currentMonth);
+            prevMonth.setMonth(prevMonth.getMonth() - 1);
+            const prevMonthExpenses = appState.expenses.filter(e => {
+                const d = new Date(e.date);
+                return d.getMonth() === prevMonth.getMonth() && d.getFullYear() === prevMonth.getFullYear();
+            });
+            const prevMonthTotal = prevMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+            const prevCatTotals = {};
+            prevMonthExpenses.forEach(e => { prevCatTotals[e.category] = (prevCatTotals[e.category] || 0) + e.amount; });
+
+            // ── 1. Budget burn-rate & projection ────────────────────────────
+            if (totalBudget > 0 && totalSpent > 0 && isCurrentMonth && dayOfMonth > 3) {
+                const dailyBurn = totalSpent / dayOfMonth;
+                const projected = dailyBurn * daysInMonth;
+                const budgetUsage = (totalSpent / totalBudget) * 100;
+                if (budgetUsage >= 100) {
+                    insights.push({ text: `🚨 Over budget! Spent $${totalSpent.toFixed(0)} of $${totalBudget.toFixed(0)} — $${(totalSpent - totalBudget).toFixed(0)} over limit.`, type: 'danger' });
+                } else if (projected > totalBudget) {
+                    insights.push({ text: `📈 At your daily burn of $${dailyBurn.toFixed(0)}/day, you'll overshoot your budget by ~$${(projected - totalBudget).toFixed(0)} by month-end.`, type: 'warning' });
+                } else if (budgetUsage > 75) {
+                    insights.push({ text: `⚠️ ${budgetUsage.toFixed(0)}% of budget used with ${daysLeft} days left — tighten up a bit.`, type: 'warning' });
+                } else {
+                    const remaining = totalBudget - totalSpent;
+                    insights.push({ text: `✅ On track — $${remaining.toFixed(0)} budget remaining for ${daysLeft} more days ($${(remaining/Math.max(daysLeft,1)).toFixed(0)}/day available).`, type: 'success' });
+                }
+            } else if (totalBudget === 0 && totalSpent > 0) {
+                insights.push({ text: `💡 No monthly budget set — set one in Settings to track your pace and get smarter insights.`, type: 'info' });
+            }
+
+            // ── 2. Month-over-month comparison ──────────────────────────────
+            if (prevMonthTotal > 0 && totalSpent > 0) {
+                const change = ((totalSpent - prevMonthTotal) / prevMonthTotal) * 100;
+                if (Math.abs(change) >= 5) {
+                    const dir = change > 0 ? 'more' : 'less';
+                    const sign = change > 0 ? '📈' : '📉';
                     insights.push({
-                        text: `Only ${sharedRatio.toFixed(0)}% of spending is shared — consider tracking more group expenses`,
-                        type: 'info'
-                    });
-                } else if (!window._isSoloSpace && sharedRatio > 90) {
-                    insights.push({
-                        text: `Most expenses (${sharedRatio.toFixed(0)}%) are shared — good teamwork!`,
-                        type: 'success'
+                        text: `${sign} Spending ${Math.abs(change).toFixed(0)}% ${dir} than last month ($${totalSpent.toFixed(0)} vs $${prevMonthTotal.toFixed(0)}).`,
+                        type: change > 15 ? 'warning' : change < -10 ? 'success' : 'info'
                     });
                 }
             }
-            
-            // Individual spending imbalance (only for shared spaces)
-            if (!window._isSoloSpace) {
-                const memberIndivTotals = {};
-                Object.keys(appState.partners).forEach(key => {
-                    memberIndivTotals[key] = individualExpenses.filter(exp => exp.whoPaid === key).reduce((sum, exp) => sum + exp.amount, 0);
+
+            // ── 3. Top category spotlight ────────────────────────────────────
+            if (sortedCats.length > 0 && totalSpent > 0) {
+                const [topCat, topAmt] = sortedCats[0];
+                const pct = (topAmt / totalSpent * 100).toFixed(0);
+                const prevAmt = prevCatTotals[topCat] || 0;
+                const catChange = prevAmt > 0 ? ((topAmt - prevAmt) / prevAmt * 100).toFixed(0) : null;
+                const changeNote = catChange ? ` (${catChange > 0 ? '+' : ''}${catChange}% vs last month)` : '';
+                insights.push({
+                    text: `🏆 Top spend: ${topCat} at $${topAmt.toFixed(0)} — ${pct}% of this month's total${changeNote}.`,
+                    type: parseInt(pct) > 40 ? 'warning' : 'info'
                 });
-                const indivAmounts = Object.values(memberIndivTotals).filter(v => v > 0);
-                if (indivAmounts.length >= 2) {
-                    const maxIndiv = Math.max(...indivAmounts);
-                    const minIndiv = Math.min(...indivAmounts);
-                    if (minIndiv > 0 && maxIndiv / minIndiv > 2) {
-                        const breakdown = Object.keys(memberIndivTotals).map(key => 
-                            `${appState.partners[key]} $${memberIndivTotals[key].toFixed(0)}`
-                        ).join(', ');
+            }
+
+            // ── 4. Fastest growing category vs last month ────────────────────
+            if (prevMonthTotal > 0) {
+                let biggestRise = null, biggestRiseRatio = 0;
+                Object.entries(categoryTotals).forEach(([cat, amt]) => {
+                    const prev = prevCatTotals[cat] || 0;
+                    if (prev > 0 && amt > 50) {
+                        const ratio = (amt - prev) / prev;
+                        if (ratio > biggestRiseRatio) { biggestRiseRatio = ratio; biggestRise = { cat, amt, prev, ratio }; }
+                    }
+                });
+                if (biggestRise && biggestRise.ratio > 0.3) {
+                    insights.push({
+                        text: `📊 Fastest rising category: ${biggestRise.cat} up ${(biggestRise.ratio*100).toFixed(0)}% ($${biggestRise.prev.toFixed(0)} → $${biggestRise.amt.toFixed(0)}).`,
+                        type: biggestRise.ratio > 0.75 ? 'warning' : 'info'
+                    });
+                }
+            }
+
+            // ── 5. Largest single transaction ────────────────────────────────
+            if (currentExpenses.length > 0) {
+                const biggest = currentExpenses.reduce((a, b) => a.amount > b.amount ? a : b);
+                const avgExpense = totalSpent / currentExpenses.length;
+                if (biggest.amount > avgExpense * 3 && biggest.amount > 100) {
+                    insights.push({
+                        text: `💸 Largest transaction this month: $${biggest.amount.toFixed(2)} (${biggest.category}${biggest.notes ? ` — ${biggest.notes}` : ''}) — ${(biggest.amount/totalSpent*100).toFixed(0)}% of all spending.`,
+                        type: 'info'
+                    });
+                }
+            }
+
+            // ── 6. Subscriptions audit ───────────────────────────────────────
+            const subKeywords = ['subscription', 'subscriptions', '📺 subscriptions', '📺 subscription'];
+            const subExpenses = currentExpenses.filter(e => subKeywords.some(k => e.category.toLowerCase().includes(k.toLowerCase())));
+            if (subExpenses.length >= 3) {
+                const subTotal = subExpenses.reduce((s,e) => s + e.amount, 0);
+                insights.push({
+                    text: `📺 ${subExpenses.length} subscription charges totalling $${subTotal.toFixed(0)} this month — worth a review for anything unused.`,
+                    type: subExpenses.length > 5 ? 'warning' : 'info'
+                });
+            }
+
+            // ── 7. Shared expenses partner balance ───────────────────────────
+            if (!window._isSoloSpace) {
+                const balance = calculatePartnerBalance();
+                if (Math.abs(balance.rawBalance) > 50) {
+                    const who = balance.rawBalance > 0 ? appState.partners.partner1 : (appState.partners.partner2 || 'Partner');
+                    insights.push({
+                        text: `⚖️ ${balance.label} — $${Math.abs(balance.rawBalance).toFixed(2)} pending settlement.`,
+                        type: Math.abs(balance.rawBalance) > 200 ? 'warning' : 'info'
+                    });
+                } else if (Math.abs(balance.rawBalance) <= 50 && sharedExpenses.length > 0) {
+                    insights.push({ text: `🤝 Shared expenses are well balanced — less than $${Math.abs(balance.rawBalance).toFixed(2)} difference.`, type: 'success' });
+                }
+
+                // Spending load imbalance
+                const paidByPartner = {};
+                Object.keys(appState.partners).forEach(k => { paidByPartner[k] = sharedExpenses.filter(e => e.whoPaid === k).reduce((s,e) => s+e.amount, 0); });
+                const paidVals = Object.values(paidByPartner).filter(v => v > 0);
+                if (paidVals.length >= 2) {
+                    const maxPaid = Math.max(...paidVals);
+                    const minPaid = Math.min(...paidVals);
+                    if (minPaid > 0 && maxPaid / minPaid > 2.5) {
+                        const heavyPayer = Object.entries(paidByPartner).find(([,v]) => v === maxPaid);
                         insights.push({
-                            text: `Individual spending differs significantly: ${breakdown}`,
+                            text: `💳 ${appState.partners[heavyPayer[0]]} is covering most shared expenses ($${maxPaid.toFixed(0)} paid). Consider rotating who pays.`,
                             type: 'info'
                         });
                     }
                 }
             }
-            
-            // Previous month comparison
-            const prevMonth = new Date(appState.currentMonth);
-            prevMonth.setMonth(prevMonth.getMonth() - 1);
-            const prevMonthExpenses = appState.expenses.filter(expense => {
-                const expenseDate = new Date(expense.date);
-                return expenseDate.getMonth() === prevMonth.getMonth() && 
-                       expenseDate.getFullYear() === prevMonth.getFullYear();
-            });
-            const prevMonthTotal = prevMonthExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
-            if (prevMonthTotal > 0) {
-                const change = ((totalSpent - prevMonthTotal) / prevMonthTotal * 100);
-                if (Math.abs(change) > 10) {
-                    insights.push({
-                        text: `You spent ${Math.abs(change).toFixed(0)}% ${change > 0 ? 'more' : 'less'} this month vs last month`,
-                        type: change > 0 ? 'warning' : 'success'
-                    });
+            // ── 8. Daily spending streak / recent activity ───────────────────
+            if (isCurrentMonth && currentExpenses.length > 0) {
+                const todayStr = today.toISOString().split('T')[0];
+                const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().split('T')[0];
+                const todaySpend = currentExpenses.filter(e => e.date === todayStr).reduce((s,e) => s+e.amount, 0);
+                const yesterdaySpend = currentExpenses.filter(e => e.date === yesterdayStr).reduce((s,e) => s+e.amount, 0);
+                const avgDaily = totalSpent / dayOfMonth;
+                if (todaySpend > avgDaily * 2 && todaySpend > 30) {
+                    insights.push({ text: `📅 High-spend day — $${todaySpend.toFixed(0)} logged today vs your daily avg of $${avgDaily.toFixed(0)}.`, type: 'warning' });
+                } else if (todaySpend > 0) {
+                    insights.push({ text: `📅 $${todaySpend.toFixed(0)} logged today, $${yesterdaySpend.toFixed(0)} yesterday. Daily avg this month: $${avgDaily.toFixed(0)}.`, type: 'info' });
                 }
             }
 
-            // Partner balance insights (only for shared spaces)
-            if (!window._isSoloSpace) {
-                const balance = calculatePartnerBalance();
-                if (Math.abs(balance.rawBalance) > 100) {
-                    insights.push({
-                        text: `${balance.rawBalance > 0 ? appState.partners.partner1 : (appState.partners.partner2 || 'Someone')} has covered more expenses — consider rebalancing`,
-                        type: 'info'
-                    });
+            // ── 9. No-spend streak ───────────────────────────────────────────
+            if (isCurrentMonth && currentExpenses.length > 0) {
+                let noSpendDays = 0;
+                for (let d = dayOfMonth - 1; d >= 1; d--) {
+                    const ds = new Date(appState.currentMonth.getFullYear(), appState.currentMonth.getMonth(), d).toISOString().split('T')[0];
+                    if (currentExpenses.some(e => e.date === ds)) break;
+                    noSpendDays++;
+                }
+                if (noSpendDays >= 3) {
+                    insights.push({ text: `🏅 ${noSpendDays}-day no-spend streak before today — great discipline!`, type: 'success' });
                 }
             }
 
-            // Budget warnings
-            if (totalBudget > 0) {
-                const budgetUsage = (totalSpent / totalBudget) * 100;
-                if (budgetUsage > 90) {
-                    insights.push({
-                        text: `You've used ${budgetUsage.toFixed(0)}% of your monthly budget`,
-                        type: 'danger'
-                    });
-                } else if (budgetUsage > 75) {
-                    const daysLeft = new Date(appState.currentMonth.getFullYear(), appState.currentMonth.getMonth() + 1, 0).getDate() - new Date().getDate();
-                    const currentPace = totalSpent / new Date().getDate();
-                    const projectedTotal = currentPace * new Date(appState.currentMonth.getFullYear(), appState.currentMonth.getMonth() + 1, 0).getDate();
-                    if (projectedTotal > totalBudget) {
-                        insights.push({
-                            text: `At current pace, you'll exceed your budget by $${(projectedTotal - totalBudget).toFixed(0)}`,
-                            type: 'warning'
-                        });
-                    }
-                }
-            }
-
-            // Category insights
-            const categoryTotals = {};
-            currentExpenses.forEach(expense => {
-                categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + expense.amount;
-            });
-
-            const topCategory = Object.entries(categoryTotals).sort(([,a], [,b]) => b - a)[0];
-            if (topCategory && topCategory[1] > totalSpent * 0.3) {
-                insights.push({
-                    text: `${topCategory[0]} accounts for ${((topCategory[1] / totalSpent) * 100).toFixed(0)}% of your spending`,
-                    type: 'info'
-                });
-            }
-
-            // Subscription check
-            const subscriptionExpenses = currentExpenses.filter(exp => exp.category === 'Subscriptions');
-            if (subscriptionExpenses.length > 5) {
-                insights.push({
-                    text: `You have ${subscriptionExpenses.length} subscription expenses — check for unused services`,
-                    type: 'info'
-                });
-            }
-
-            // Calculate health score with better edge case handling
+            // ── Health score ─────────────────────────────────────────────────
             let healthScore = 100;
-            
-            // Budget usage penalty (only if budget is set)
             if (totalBudget > 0 && totalSpent > 0) {
                 const budgetUsage = (totalSpent / totalBudget) * 100;
-                if (budgetUsage > 100) healthScore -= 30;
+                if (budgetUsage > 100) healthScore -= 35;
                 else if (budgetUsage > 90) healthScore -= 20;
                 else if (budgetUsage > 75) healthScore -= 10;
             } else if (totalBudget === 0 && totalSpent > 0) {
-                // Small penalty for no budget set
                 healthScore -= 5;
             }
-            
-            // Partner balance penalty (only for shared expenses)
-            if (balance.rawBalance !== undefined && Math.abs(balance.rawBalance) > 200) {
-                healthScore -= 15;
-            }
-            
-            // Danger insight penalty
+            const balance2 = !window._isSoloSpace ? calculatePartnerBalance() : { rawBalance: 0 };
+            if (Math.abs(balance2.rawBalance) > 200) healthScore -= 15;
             const dangerCount = insights.filter(i => i.type === 'danger').length;
-            if (dangerCount > 0) healthScore -= (dangerCount * 15);
-
+            healthScore -= dangerCount * 15;
             healthScore = Math.max(0, Math.min(100, healthScore));
 
-            // Update health score display
             const healthCircle = document.getElementById('healthCircle');
             const scoreElement = document.getElementById('healthScore');
-            healthCircle.style.setProperty('--score', healthScore);
-            scoreElement.textContent = healthScore;
+            if (healthCircle) {
+                healthCircle.style.setProperty('--score', healthScore);
+                scoreElement.textContent = healthScore;
+                healthCircle.className = `health-circle ${healthScore >= 80 ? 'excellent' : healthScore >= 60 ? 'good' : 'poor'}`;
+            }
 
-            const healthClass = healthScore >= 80 ? 'excellent' : healthScore >= 60 ? 'good' : 'poor';
-            healthCircle.className = `health-circle ${healthClass}`;
-
-            // Render insights
+            // ── Render ───────────────────────────────────────────────────────
             const container = document.getElementById('aiInsights');
+            if (!container) return;
             if (insights.length === 0) {
-                container.innerHTML = '<div class="insight-item">Everything looks good! Your spending is on track.</div>';
+                container.innerHTML = '<div class="insight-item">✨ Everything looks good! Your spending is on track.</div>';
             } else {
-                container.innerHTML = insights.map(insight => `
-                    <div class="insight-item ${insight.type || 'info'}">
-                        ${insight.text}
-                    </div>
-                `).join('');
+                // Show danger first, then warnings, then others
+                const order = { danger: 0, warning: 1, success: 2, info: 3 };
+                insights.sort((a, b) => (order[a.type] ?? 4) - (order[b.type] ?? 4));
+                container.innerHTML = insights.map(i => `<div class="insight-item ${i.type || 'info'}">${i.text}</div>`).join('');
             }
         }
 
@@ -3942,6 +3965,15 @@
 
         function handleModalOverlayClick(e) {
             if (e.target === document.getElementById('expenseModalOverlay')) closeExpenseModal();
+        }
+
+        // ── Scan Receipt Modal ────────────────────────────────────
+        function openScanModal() {
+            clearReceipt(); // reset to clean state
+            document.getElementById('scanReceiptModal').classList.add('open');
+        }
+        function closeScanModal() {
+            document.getElementById('scanReceiptModal').classList.remove('open');
         }
 
         // Split button logic for modal
@@ -4324,48 +4356,81 @@
         }
 
         function renderPaymentBreakdown() {
-            // Only shared expenses matter for settlement breakdown
+            // Shared expenses drive settlement
             const sharedExpenses = getCurrentMonthExpenses().filter(e => e.isShared !== false);
             const partnerKeys = Object.keys(appState.partners);
-            const numMembers = partnerKeys.length;
 
-            // Calculate what each member paid
-            const paidByMember = {};
-            partnerKeys.forEach(key => { paidByMember[key] = 0; });
+            // What each person paid out of pocket
+            const paid = {};
+            partnerKeys.forEach(k => { paid[k] = 0; });
+            sharedExpenses.forEach(e => { if (paid[e.whoPaid] !== undefined) paid[e.whoPaid] += e.amount; });
+
+            // What each person owes (based on split type)
+            const owes = {};
+            partnerKeys.forEach(k => { owes[k] = 0; });
             sharedExpenses.forEach(e => {
-                if (paidByMember[e.whoPaid] !== undefined) paidByMember[e.whoPaid] += e.amount;
+                if (e.splitType === '50/50') {
+                    const half = e.amount / 2;
+                    partnerKeys.forEach(k => { owes[k] += half; });
+                } else if (e.splitType === 'custom' && e.customSplit != null) {
+                    owes['partner1'] = (owes['partner1'] || 0) + e.amount * e.customSplit / 100;
+                    owes['partner2'] = (owes['partner2'] || 0) + e.amount * (100 - e.customSplit) / 100;
+                } else if (e.splitType === 'single') {
+                    owes[e.whoPaid] = (owes[e.whoPaid] || 0) + e.amount;
+                } else {
+                    // default 50/50
+                    const half = e.amount / 2;
+                    partnerKeys.forEach(k => { owes[k] += half; });
+                }
             });
 
-            const total = Object.values(paidByMember).reduce((a, b) => a + b, 0);
-            const fairShare = numMembers > 0 ? total / numMembers : 0;
-
+            const totalPaid = Object.values(paid).reduce((a,b) => a+b, 0);
             const container = document.getElementById('paymentBreakdown');
             let html = '';
 
             partnerKeys.forEach(key => {
-                const paid = paidByMember[key] || 0;
+                const p = paid[key] || 0;
+                const o = owes[key] || 0;
+                const net = p - o; // positive = overpaid (others owe this person), negative = underpaid
+                const netLabel = net > 0.005
+                    ? `<span style="color:#10b981">+$${net.toFixed(2)} overpaid</span>`
+                    : net < -0.005
+                    ? `<span style="color:#f87171">−$${Math.abs(net).toFixed(2)} owes</span>`
+                    : `<span style="color:#a3a3a3">Balanced ✓</span>`;
                 html += `
-                    <div class="budget-item">
-                        <div class="budget-info">
-                            <div class="budget-category">${appState.partners[key]} paid (shared expenses)</div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${total > 0 ? (paid / total * 100) : 0}%"></div>
-                            </div>
-                            <div class="budget-spent">Fair share: $${fairShare.toFixed(2)}</div>
+                    <div class="budget-item" style="flex-direction:column;align-items:flex-start;gap:6px;">
+                        <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+                            <span class="budget-category" style="font-size:15px;font-weight:600;">${appState.partners[key]}</span>
+                            <span class="budget-amount">$${p.toFixed(2)} paid</span>
                         </div>
-                        <div class="budget-amount">$${paid.toFixed(2)}</div>
-                    </div>
-                `;
+                        <div class="progress-bar" style="width:100%;">
+                            <div class="progress-fill" style="width:${totalPaid > 0 ? (p/totalPaid*100) : 0}%;"></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;width:100%;font-size:12px;color:var(--text-secondary);">
+                            <span>Fair share: $${o.toFixed(2)}</span>
+                            <span>${netLabel}</span>
+                        </div>
+                    </div>`;
             });
 
             html += `
-                <div class="budget-item" style="border-top: 1px solid var(--glass-border); padding-top: 16px; margin-top: 8px;">
-                    <div class="budget-info">
-                        <div class="budget-category">Total shared expenses</div>
-                    </div>
-                    <div class="budget-amount">$${total.toFixed(2)}</div>
-                </div>
-            `;
+                <div class="budget-item" style="border-top:1px solid var(--glass-border);padding-top:16px;margin-top:8px;">
+                    <div class="budget-info"><div class="budget-category">Total shared expenses</div></div>
+                    <div class="budget-amount">$${totalPaid.toFixed(2)}</div>
+                </div>`;
+
+            // Settlement direction summary
+            const balance = calculatePartnerBalance();
+            if (Math.abs(balance.rawBalance) > 0.01) {
+                html += `
+                    <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:12px;padding:14px;margin-top:12px;text-align:center;">
+                        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">Settlement needed</div>
+                        <div style="font-size:18px;font-weight:700;color:#a5b4fc;">${balance.label}</div>
+                        <div style="font-size:22px;font-weight:800;color:#818cf8;margin-top:2px;">${balance.amount}</div>
+                    </div>`;
+            } else if (totalPaid > 0) {
+                html += `<div style="text-align:center;padding:14px;font-size:14px;color:#10b981;font-weight:600;">✅ All square — no settlement needed!</div>`;
+            }
 
             container.innerHTML = html;
         }
@@ -4784,7 +4849,7 @@
                         appState.expenses = data.expenses || [];
                         appState.budgets = data.budgets || {};
                         appState.partners = data.partners || appState.partners;
-                        appState.categories = data.categories || appState.categories;
+                        appState.categories = (data.categories || appState.categories).map(c => emojiForCategory(c));
                         
                         saveData();
                         initializeApp();
@@ -5241,7 +5306,7 @@
             `;
         }
 
-        function clearReceipt() {
+        function clearReceipt(closeModal = false) {
             currentReceiptImage = null;
             scannedItems = [];
             _addingSelected = false;
@@ -5251,6 +5316,7 @@
             document.getElementById('scanResultsList').innerHTML = '';
             document.getElementById('receiptFile').value = '';
             resetScanSummary();
+            if (closeModal) closeScanModal();
         }
 
         let _scanning = false;
@@ -5541,33 +5607,13 @@
                 updateDisplay();
                 renderTransactions();
 
-                // Replace the entire scan results with a big success message
-                const scanResultsList = document.getElementById('scanResultsList');
-                scanResultsList.innerHTML = '';
-                scanSummary.innerHTML = `
-                    <div style="text-align: center; padding: 30px 20px;">
-                        <div style="font-size: 56px; margin-bottom: 12px;">✅</div>
-                        <div style="font-size: 22px; font-weight: 700; color: #10b981; margin-bottom: 6px;">
-                            ${addedCount} item${addedCount !== 1 ? 's' : ''} added!
-                        </div>
-                        <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px;">
-                            Switching to transactions...
-                        </div>
-                        <button class="btn" onclick="clearReceipt()" style="background: rgba(255,255,255,0.1); font-size: 14px; padding: 8px 20px;">
-                            📷 Scan Another Receipt
-                        </button>
-                    </div>
-                `;
+                // Close modal immediately, show a clear toast, switch to transactions
+                closeScanModal();
+                clearReceipt();
+                _addingSelected = false;
 
-                showToast(`✅ ${addedCount} transaction${addedCount !== 1 ? 's' : ''} added!`, 'success');
-
-                // Switch to transactions tab after a clear delay
-                setTimeout(() => {
-                    switchTab('transactions');
-                    // Reset scan UI so next visit is clean
-                    clearReceipt();
-                    _addingSelected = false;
-                }, 2500);
+                showToast(`✅ ${addedCount} transaction${addedCount !== 1 ? 's' : ''} added successfully!`, 'success', 4000);
+                switchTab('transactions');
             } else {
                 showToast('No items were added — please try again', 'error');
                 btn.disabled = false;
@@ -5578,10 +5624,11 @@
             }
         }
 
-        // Close expense modal on Escape key
+        // Close modals on Escape key
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape' && document.getElementById('expenseModalOverlay').classList.contains('open')) {
-                closeExpenseModal();
+            if (e.key === 'Escape') {
+                if (document.getElementById('expenseModalOverlay').classList.contains('open')) closeExpenseModal();
+                if (document.getElementById('scanReceiptModal').classList.contains('open')) closeScanModal();
             }
         });
 
@@ -5589,12 +5636,70 @@
         setTimeout(renderCharts, 100);
     </script>
 
+    <!-- ── Scan Receipt Modal ───────────────────────────── -->
+    <div class="scan-modal-overlay" id="scanReceiptModal" onclick="if(event.target===this)closeScanModal()">
+        <div class="scan-modal-box">
+            <div class="scan-modal-header">
+                <h3>📷 Scan Receipt</h3>
+                <button class="expense-modal-close" onclick="closeScanModal()">✕</button>
+            </div>
+
+            <!-- Upload Area -->
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('receiptFile').click()">
+                <div style="font-size: 48px; margin-bottom: 12px;">📷</div>
+                <div style="font-size: 16px; margin-bottom: 8px;">Click to select or drag & drop your receipt</div>
+                <div style="font-size: 13px; color: var(--text-secondary);">Supports JPG, PNG, WebP • Max 10MB</div>
+            </div>
+
+            <input type="file" id="receiptFile" accept="image/*" style="display: none;" onchange="handleReceiptFile(event)">
+
+            <!-- Image Preview -->
+            <div id="receiptPreview" style="display: none;">
+                <img id="previewImage" style="width: 100%; max-height: 320px; object-fit: contain; border-radius: 12px; margin-bottom: 16px;" alt="Receipt preview">
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn" onclick="scanReceipt()">🔍 Scan Receipt</button>
+                    <button class="btn btn-secondary" onclick="clearReceipt()">❌ Remove</button>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="scanLoading" style="display: none; text-align: center; padding: 40px 0;">
+                <div class="loading" style="margin: 0 auto 16px;"></div>
+                <div>🩺 Dr.Molt is analyzing your receipt...</div>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">This may take a few seconds</div>
+            </div>
+
+            <!-- Results -->
+            <div class="scan-results" id="scanResults" style="margin-top: 0;">
+                <div style="border-top: 1px solid var(--glass-border); margin-top: 16px; padding-top: 16px;">
+                    <h3 style="margin-bottom: 16px;">📋 Review & Edit</h3>
+                    <div id="scanResultsList"></div>
+                    <div class="scan-summary" id="scanSummary" style="margin-top: 20px;">
+                        <div class="summary-total" id="summaryTotal">$0.00</div>
+                        <div class="summary-count" id="summaryCount">0 items selected</div>
+                        <button class="btn" id="addSelectedBtn" onclick="addSelectedExpenses()">➕ Add Selected Items</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ── Expense Modal ─────────────────────────────────── -->
     <div class="expense-modal-overlay" id="expenseModalOverlay" onclick="handleModalOverlayClick(event)">
         <div class="expense-modal" id="expenseModalBox">
             <div class="expense-modal-header">
                 <h3 id="expenseModalTitle">➕ Add Transaction</h3>
                 <button class="expense-modal-close" onclick="closeExpenseModal()">✕</button>
+            </div>
+            <!-- Quick Add strip inside modal -->
+            <div style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--glass-border);">
+                <label class="form-label" style="margin-bottom:6px;">💬 Quick Add (type naturally)</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="text" class="form-input" id="naturalInput" placeholder="e.g. 'Tim Hortons $4.50 me' or 'groceries $85 split'"
+                           style="flex:1;height:38px;font-size:13px;"
+                           onkeydown="if(event.key==='Enter'){event.preventDefault();parseNaturalInput();}">
+                    <button type="button" class="btn btn-secondary" onclick="parseNaturalInput()" style="height:38px;white-space:nowrap;font-size:13px;">🔍 Parse</button>
+                </div>
             </div>
             <form id="expenseModalForm" onsubmit="submitExpenseModal(event)">
                 <div class="quick-add-grid">
