@@ -4415,15 +4415,23 @@
             renderCharts();
         }
 
-        function getAnalyticsExpenses() {
-            const expenses = getCurrentMonthExpenses();
+        function applyAnalyticsFilter(expenses) {
             if (currentAnalyticsView === 'combined') return expenses;
             if (currentAnalyticsView === 'shared') return expenses.filter(e => e.isShared !== false);
-            // Any partner key (partner1, partner2, partner3, etc.)
             if (currentAnalyticsView.startsWith('partner')) {
                 return expenses.filter(e => e.whoPaid === currentAnalyticsView);
             }
             return expenses;
+        }
+
+        function getAnalyticsExpenses() {
+            return applyAnalyticsFilter(getCurrentMonthExpenses());
+        }
+
+        function analyticsViewLabel() {
+            if (currentAnalyticsView === 'combined') return 'All';
+            if (currentAnalyticsView === 'shared') return 'Shared';
+            return appState.partners[currentAnalyticsView] || currentAnalyticsView;
         }
 
         function renderCharts() {
@@ -4581,11 +4589,11 @@
             for (let i = 5; i >= 0; i--) {
                 const month = new Date();
                 month.setMonth(month.getMonth() - i);
-                const monthExpenses = appState.expenses.filter(expense => {
+                const monthExpenses = applyAnalyticsFilter(appState.expenses.filter(expense => {
                     const expenseDate = new Date(expense.date);
                     return expenseDate.getMonth() === month.getMonth() && 
                            expenseDate.getFullYear() === month.getFullYear();
-                });
+                }));
                 
                 months.push(month.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }));
                 totals.push(monthExpenses.reduce((sum, e) => sum + e.amount, 0));
@@ -4596,7 +4604,7 @@
                 data: {
                     labels: months,
                     datasets: [{
-                        label: 'Monthly Spending',
+                        label: `Monthly Spending (${analyticsViewLabel()})`,
                         data: totals,
                         backgroundColor: '#6366f1'
                     }]
@@ -4660,7 +4668,7 @@
                     labels: Array.from({length: daysInMonth}, (_, i) => i + 1),
                     datasets: [
                         {
-                            label: 'Cumulative Spending (All)',
+                            label: `Cumulative Spending (${analyticsViewLabel()})`,
                             data: cumulativeSpending,
                             borderColor: '#6366f1',
                             backgroundColor: 'rgba(99, 102, 241, 0.1)',
