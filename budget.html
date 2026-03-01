@@ -571,16 +571,176 @@
         }
 
         /* Filters */
-        .filters {
+        /* ── Filter Bar ─────────────────────────────────── */
+        .filter-bar {
+            padding: 16px 20px;
+            margin-bottom: 20px;
             display: flex;
+            flex-direction: column;
             gap: 12px;
-            margin-bottom: 24px;
+        }
+
+        .filter-bar-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
             flex-wrap: wrap;
         }
 
-        .filter-input {
-            flex: 1;
-            min-width: 200px;
+        .filter-bar-row .form-input,
+        .filter-bar-row .form-select {
+            margin: 0;
+            height: 38px;
+            font-size: 13px;
+        }
+
+        .filter-search { flex: 1; min-width: 180px; }
+
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            flex: 2;
+        }
+
+        .filter-chip {
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            color: var(--text-primary);
+            font-size: 12px;
+            cursor: pointer;
+            height: 34px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .filter-chip:focus, .filter-chip:hover {
+            border-color: var(--accent-start);
+        }
+
+        .filter-chip option { background: #1a1a2e; }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .filter-actions .btn {
+            white-space: nowrap;
+            font-size: 13px;
+            padding: 7px 14px;
+            height: 34px;
+        }
+
+        @media (max-width: 600px) {
+            .filter-chips { gap: 6px; }
+            .filter-chip { font-size: 11px; padding: 5px 10px; }
+            .filter-actions { width: 100%; }
+            .filter-actions .btn { flex: 1; }
+        }
+
+        /* Legacy .filters kept for safety */
+        .filters { display: none; }
+        .filter-input { flex: 1; min-width: 200px; }
+
+        /* ── Expense Modal ───────────────────────────────── */
+        .expense-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 9000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .expense-modal-overlay.open {
+            display: flex;
+        }
+
+        .expense-modal {
+            background: #12122a;
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 28px 24px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+        }
+
+        .expense-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+
+        .expense-modal-header h3 { font-size: 18px; font-weight: 700; }
+
+        .expense-modal-close {
+            background: rgba(255,255,255,0.08);
+            border: none;
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .expense-modal-close:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+        /* ── Split Selector ─────────────────────────────────── */
+        .split-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .split-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 6px;
+            background: rgba(255,255,255,0.04);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.18s;
+            font-size: 12px;
+            line-height: 1.2;
+        }
+
+        .split-btn .split-icon { font-size: 20px; }
+        .split-btn .split-label { font-weight: 600; }
+        .split-btn .split-sub { font-size: 10px; opacity: 0.7; }
+
+        .split-btn:hover {
+            border-color: var(--accent-start);
+            background: rgba(99,102,241,0.08);
+            color: var(--text-primary);
+        }
+
+        .split-btn.active {
+            border-color: var(--accent-start);
+            background: rgba(99,102,241,0.15);
+            color: #fff;
         }
 
         /* Custom Scrollbar */
@@ -1345,8 +1505,9 @@
                 <div class="glass-card quick-add">
                     <h3 style="margin-bottom: 20px;">💬 Quick Add</h3>
                     <input type="text" class="form-input natural-input" id="naturalInput" 
-                           placeholder="Try: 'lunch at chipotle $18 gary' or 'groceries $45 split'">
-                    <button class="btn" onclick="parseNaturalInput()">Parse & Add</button>
+                           placeholder="e.g. 'Tim Hortons $4.50 me' or 'groceries $85 split' or 'vet 150 personal'"
+                           onkeydown="if(event.key==='Enter'){event.preventDefault();parseNaturalInput();}">
+                    <button class="btn" onclick="parseNaturalInput()" style="margin-top:10px;">🔍 Parse & Review</button>
                 </div>
 
                 <div class="glass-card">
@@ -1370,23 +1531,36 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">
-                                    <input type="checkbox" id="isShared" checked style="margin-right: 8px;">
-                                    Shared expense
-                                </label>
-                            </div>
-                            <div class="form-group" id="splitTypeGroup">
-                                <label class="form-label">Split Type</label>
-                                <select class="form-select" id="splitType" required>
+                                <label class="form-label">How to Split?</label>
+                                <div class="split-selector">
+                                    <button type="button" class="split-btn" id="tab-split-solo" onclick="setTabSplit('solo')">
+                                        <span class="split-icon">👤</span>
+                                        <span class="split-label">Just Me</span>
+                                        <span class="split-sub">Personal</span>
+                                    </button>
+                                    <button type="button" class="split-btn active" id="tab-split-half" onclick="setTabSplit('50/50')">
+                                        <span class="split-icon">👥</span>
+                                        <span class="split-label">50 / 50</span>
+                                        <span class="split-sub">Equal split</span>
+                                    </button>
+                                    <button type="button" class="split-btn" id="tab-split-custom" onclick="setTabSplit('custom')">
+                                        <span class="split-icon">⚖️</span>
+                                        <span class="split-label">Custom %</span>
+                                        <span class="split-sub">Set ratio</span>
+                                    </button>
+                                </div>
+                                <!-- Keep hidden checkbox+select for handleExpenseSubmit compatibility -->
+                                <input type="checkbox" id="isShared" checked style="display:none;">
+                                <select id="splitType" style="display:none;" required>
                                     <option value="50/50">50/50</option>
                                     <option value="custom">Custom %</option>
                                     <option value="single">One Person</option>
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="form-group" id="customSplitGroup" style="display: none;">
-                            <label class="form-label">Your Percentage</label>
+                            <label class="form-label">Your Share (%)</label>
                             <input type="number" class="form-input" id="customSplit" min="0" max="100" value="50">
                         </div>
 
@@ -1461,27 +1635,36 @@
 
             <!-- Transactions Tab -->
             <div class="tab-content" id="transactions">
-                <div class="filters">
-                    <input type="text" class="form-input filter-input" id="searchFilter" placeholder="🔍 Search transactions...">
-                    <select class="form-select" id="categoryFilter">
-                        <option value="">All Categories</option>
-                    </select>
-                    <select class="form-select" id="personFilter">
-                        <option value="">All People</option>
-                    </select>
-                    <select class="form-select" id="typeFilter">
-                        <option value="">All Types</option>
-                        <option value="shared">Shared</option>
-                        <option value="individual">Individual</option>
-                    </select>
-                    <select class="form-select" id="monthFilter">
-                        <option value="">All Months</option>
-                    </select>
-                </div>
-
-                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                    <button class="btn btn-secondary" onclick="exportTransactions('csv')" style="font-size: 14px;">📥 Export CSV</button>
-                    <button class="btn btn-secondary" onclick="exportTransactions('excel')" style="font-size: 14px;">📊 Export Excel</button>
+                <div class="filter-bar glass-card">
+                    <!-- Row 1: search + add button -->
+                    <div class="filter-bar-row">
+                        <div class="filter-search">
+                            <input type="text" class="form-input" id="searchFilter" placeholder="🔍 Search transactions..." oninput="filterTransactions()" style="height:38px;font-size:13px;">
+                        </div>
+                        <div class="filter-actions">
+                            <button class="btn btn-secondary" onclick="exportTransactions('csv')" title="Export CSV">📥 CSV</button>
+                            <button class="btn" onclick="openExpenseModal()" style="background: linear-gradient(135deg, var(--accent-start), var(--accent-end));">➕ Add Transaction</button>
+                        </div>
+                    </div>
+                    <!-- Row 2: filter chips -->
+                    <div class="filter-bar-row">
+                        <div class="filter-chips">
+                            <select class="filter-chip" id="monthFilter" onchange="filterTransactions()">
+                                <option value="">📅 All Months</option>
+                            </select>
+                            <select class="filter-chip" id="categoryFilter" onchange="filterTransactions()">
+                                <option value="">🏷️ All Categories</option>
+                            </select>
+                            <select class="filter-chip" id="personFilter" onchange="filterTransactions()">
+                                <option value="">👤 All People</option>
+                            </select>
+                            <select class="filter-chip" id="typeFilter" onchange="filterTransactions()">
+                                <option value="">🔀 All Types</option>
+                                <option value="shared">👥 Shared</option>
+                                <option value="individual">👤 Individual</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="glass-card">
@@ -2475,16 +2658,9 @@
             } else if (currentOnboardingStep === 3) {
                 const expense = document.getElementById('onboardingExpense').value;
                 if (expense) {
-                    // Use the existing natural language parser
+                    // Parse + open review modal
                     document.getElementById('naturalInput').value = expense;
-                    parseNaturalInput();
-                    if (document.getElementById('amount').value) {
-                        // Auto-submit the parsed expense
-                        const form = document.getElementById('expenseForm');
-                        if (form.checkValidity()) {
-                            handleExpenseSubmit({ preventDefault: () => {} });
-                        }
-                    }
+                    parseNaturalInput(); // opens modal for review
                 }
             }
 
@@ -2768,6 +2944,11 @@
             appState.currentMonth = new Date(appState.currentMonth);
             appState.currentMonth.setMonth(appState.currentMonth.getMonth() + direction);
             updateDisplay();
+            // Reload budgets for new month then re-render budget/analytics tabs
+            loadBudgetsForCurrentMonth().then(() => {
+                renderBudget();
+                if (document.getElementById('analytics').classList.contains('active')) renderCharts();
+            });
         }
 
         function updateDisplay() {
@@ -2943,47 +3124,58 @@
         }
 
         function handleSharedToggle() {
-            const isShared = document.getElementById('isShared').checked;
+            const isShared = document.getElementById('isShared')?.checked;
             const splitTypeGroup = document.getElementById('splitTypeGroup');
             const customGroup = document.getElementById('customSplitGroup');
-            
-            if (isShared) {
-                splitTypeGroup.style.display = 'block';
-                document.getElementById('splitType').required = true;
-            } else {
-                splitTypeGroup.style.display = 'none';
-                customGroup.style.display = 'none';
-                document.getElementById('splitType').required = false;
-            }
+            const splitType = document.getElementById('splitType');
+            if (splitTypeGroup) splitTypeGroup.style.display = isShared ? 'block' : 'none';
+            if (!isShared && customGroup) customGroup.style.display = 'none';
+            if (splitType) splitType.required = !!isShared;
         }
 
         // Natural Language Processing
         function parseNaturalInput() {
-            const input = document.getElementById('naturalInput').value.toLowerCase();
-            if (!input.trim()) {
-                showToast('Please enter an expense description', 'error');
+            const rawInput = document.getElementById('naturalInput').value.trim();
+            const input = rawInput.toLowerCase();
+            if (!input) {
+                showToast('Enter a description like "Tim Hortons $4.50" or "groceries 85 split"', 'error');
                 return;
             }
 
-            // Extract amount - handle various formats
-            const amountMatch = input.match(/\$?(\d+(?:\.\d{1,2})?)/);
-            if (amountMatch) {
-                let amount = parseFloat(amountMatch[1]);
-                if (!isNaN(amount) && amount > 0) {
-                    document.getElementById('amount').value = amount.toFixed(2);
-                }
-            } else {
-                // If no amount found, show error
-                showToast('Please include an amount in your description (e.g., "$25" or "25.50")', 'error');
+            // ── SMART AMOUNT PARSING ──────────────────────────────────
+            // Priority: $XX.XX → XX.XX at end → last decimal number → last any number
+            let amount = null;
+
+            // 1. Dollar-sign prefixed (most explicit signal)
+            const dollarMatch = rawInput.match(/\$(\d+(?:\.\d{1,2})?)/);
+            if (dollarMatch) amount = parseFloat(dollarMatch[1]);
+
+            // 2. Decimal at end of string (e.g. "coffee 4.50")
+            if (!amount) {
+                const endDecimal = rawInput.match(/(\d+\.\d{1,2})\s*$/);
+                if (endDecimal) amount = parseFloat(endDecimal[1]);
+            }
+
+            // 3. All numbers — prefer last one that looks like a price (≥ 1)
+            if (!amount) {
+                const allNums = [...rawInput.matchAll(/\b(\d+(?:\.\d{1,2})?)\b/g)]
+                    .map(m => parseFloat(m[1]))
+                    .filter(n => n >= 1);
+                if (allNums.length > 0) amount = allNums[allNums.length - 1];
+            }
+
+            if (!amount || isNaN(amount) || amount <= 0) {
+                showToast('No amount found. Try: "Starbucks $6.50" or "groceries 85"', 'error');
                 return;
             }
 
-            // Check for personal expense keywords
-            const personalKeywords = ['personal', 'mine', 'just me', 'individual', 'my own', 'for me', 'myself', 'private'];
-            const isPersonal = personalKeywords.some(keyword => input.includes(keyword));
-            
-            document.getElementById('isShared').checked = !isPersonal;
-            handleSharedToggle(); // Update form visibility
+            // ── SPLIT DETECTION ──────────────────────────────────────
+            const personalKeywords = ['personal', 'mine', 'just me', 'individual', 'my own', 'for me', 'myself', 'private', 'solo'];
+            const splitKeywords = ['split', 'shared', 'together', 'half', '50/50', 'divide', 'between us'];
+            const isPersonal = personalKeywords.some(k => input.includes(k));
+            const isExplicitSplit = splitKeywords.some(k => input.includes(k));
+            // Default: shared (50/50) unless explicitly personal
+            const splitMode = isPersonal ? 'solo' : '50/50';
 
             // Enhanced category keywords
             const categoryMap = {
@@ -3090,71 +3282,45 @@
                 }
             }
             
-            if (foundCategory) {
-                document.getElementById('category').value = foundCategory;
-            } else {
-                document.getElementById('category').value = 'Other';
-            }
+            if (!foundCategory) foundCategory = 'Other';
 
-            // Extract who paid — check all member names
-            let foundPayer = 'partner1'; // default
+            // ── PAYER DETECTION ───────────────────────────────────────
+            let foundPayer = 'partner1'; // default = me
             const partnerKeys = Object.keys(appState.partners);
             for (const key of partnerKeys) {
                 const name = (appState.partners[key] || '').toLowerCase();
-                if (name && input.includes(name)) {
+                if (name && key !== 'partner1' && input.includes(name)) {
                     foundPayer = key;
                     break;
                 }
             }
-            if (input.includes('me') || input.includes('i ')) {
-                foundPayer = 'partner1'; // partner1 is always "me"
-            }
-            document.getElementById('whoPaid').value = foundPayer;
-
-            // Extract split type
-            if (input.includes('split') || input.includes('shared') || input.includes('together')) {
-                document.getElementById('splitType').value = '50/50';
-            } else {
-                document.getElementById('splitType').value = '50/50'; // Default to split
+            // "me" / "i " → always partner1
+            if (input.includes(' me ') || input.startsWith('me ') || input.includes(' i ') || input.startsWith('i ')) {
+                foundPayer = 'partner1';
             }
 
-            // Set current date
-            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
-
-            // Extract notes from original input
+            // ── NOTES (strip amounts, member names, split keywords) ───
+            const stopWords = new Set(['split', 'shared', 'share', 'together', 'half', 'personal', 'mine', 'for', 'me', 'my', 'i', 'just', 'solo']);
             const allMemberNames = Object.values(appState.partners).map(n => n.toLowerCase()).filter(Boolean);
-            const words = document.getElementById('naturalInput').value.split(' ');
-            const notes = words.filter(word => 
-                !word.match(/\$?\d+/) && 
-                !allMemberNames.some(name => word.toLowerCase().includes(name)) &&
-                !['split', 'shared', 'me', 'i'].includes(word.toLowerCase())
-            ).join(' ');
-            
-            if (notes.trim()) {
-                document.getElementById('notes').value = notes.trim();
-            }
+            const notes = rawInput.split(/\s+/).filter(word => {
+                const w = word.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (!w) return false;
+                if (word.match(/^\$?\d+(?:\.\d{1,2})?$/)) return false; // number
+                if (stopWords.has(w)) return false;
+                if (allMemberNames.some(n => n.includes(w) || w.includes(n))) return false;
+                return true;
+            }).join(' ');
 
-            // Auto-submit if we have required fields
-            const amount = document.getElementById('amount').value;
-            const category = document.getElementById('category').value;
-            
-            if (amount && category) {
-                // Simulate form submission
-                setTimeout(() => {
-                    const form = document.getElementById('expenseForm');
-                    if (form.checkValidity()) {
-                        handleExpenseSubmit({ preventDefault: () => {} });
-                        // handleExpenseSubmit shows its own toast
-                        
-                        // Clear the natural input
-                        document.getElementById('naturalInput').value = '';
-                    } else {
-                        showToast('Please fill in any missing required fields', 'warning');
-                    }
-                }, 100);
-            } else {
-                showToast('Parsed! Please fill in any missing fields and submit', 'success');
-            }
+            // ── OPEN PREVIEW MODAL ────────────────────────────────────
+            document.getElementById('naturalInput').value = '';
+            openExpenseModal(null, {
+                amount: amount.toFixed(2),
+                category: foundCategory,
+                whoPaid: foundPayer,
+                notes: notes.trim(),
+                date: new Date().toISOString().split('T')[0],
+                splitMode
+            });
         }
 
         // Dashboard Updates
@@ -3201,7 +3367,8 @@
             } else {
                 // Shared mode: show both personal and shared budget breakdowns
                 const myKey = 'partner1'; // current user is always partner1
-                const myPersonalSpent = individualExpenses.filter(exp => exp.whoPaid === myKey).reduce((sum, exp) => sum + exp.amount, 0);
+                // My spend = individual expenses I paid + my share of shared expenses
+                const myPersonalSpent = getMyBudgetSpend(myKey, monthExpenses);
                 const myPersonalBudget = appState.budgets[myKey + 'Total'] || 0;
                 const myPersonalRemaining = myPersonalBudget - myPersonalSpent;
                 
@@ -3487,6 +3654,52 @@
         }
 
         // Transactions Management
+        // Auto-emoji lookup for custom categories
+        const CATEGORY_AUTO_EMOJI = {
+            'food': '🍕', 'dining': '🍽️', 'restaurant': '🍽️', 'lunch': '🥗', 'dinner': '🍽️', 'breakfast': '🥞',
+            'coffee': '☕', 'cafe': '☕', 'café': '☕', 'tims': '☕', 'tim hortons': '☕', 'starbucks': '☕',
+            'bar': '🍺', 'alcohol': '🍺', 'beer': '🍺', 'wine': '🍷', 'pub': '🍺', 'drinks': '🍹',
+            'grocery': '🛒', 'groceries': '🛒', 'supermarket': '🛒', 'market': '🛒',
+            'transport': '🚗', 'transportation': '🚗', 'transit': '🚇', 'subway': '🚇', 'bus': '🚌',
+            'uber': '🚕', 'lyft': '🚕', 'taxi': '🚕', 'cab': '🚕',
+            'gas': '⛽', 'fuel': '⛽', 'parking': '🅿️',
+            'rent': '🏠', 'housing': '🏠', 'mortgage': '🏠', 'home': '🏠',
+            'utilities': '💡', 'utility': '💡', 'electricity': '💡', 'hydro': '💡', 'water': '💧',
+            'internet': '🌐', 'wifi': '🌐', 'phone': '📱', 'mobile': '📱', 'rogers': '📱', 'bell': '📱', 'fido': '📱',
+            'entertainment': '🎬', 'movie': '🎬', 'cinema': '🎬', 'concert': '🎵', 'game': '🎮', 'gaming': '🎮',
+            'subscription': '📺', 'subscriptions': '📺', 'netflix': '📺', 'spotify': '🎵', 'disney': '📺',
+            'shopping': '🛍️', 'clothes': '👗', 'clothing': '👗', 'fashion': '👗', 'amazon': '📦',
+            'health': '💊', 'healthcare': '🏥', 'medical': '🏥', 'doctor': '🏥', 'pharmacy': '💊', 'dentist': '🦷',
+            'fitness': '💪', 'gym': '💪', 'yoga': '🧘', 'sport': '⚽', 'sports': '⚽', 'workout': '💪',
+            'pet': '🐾', 'pets': '🐾', 'dog': '🐕', 'cat': '🐈', 'vet': '🐾', 'animal': '🐾',
+            'travel': '✈️', 'hotel': '🏨', 'flight': '✈️', 'vacation': '🏖️', 'trip': '✈️', 'airbnb': '🏠',
+            'education': '📚', 'school': '🎓', 'tuition': '🎓', 'course': '📚', 'book': '📚', 'textbook': '📚',
+            'personal care': '💄', 'beauty': '💄', 'salon': '💇', 'spa': '🧖', 'haircut': '✂️', 'skincare': '🧴',
+            'gift': '🎁', 'gifts': '🎁', 'present': '🎁',
+            'insurance': '🛡️',
+            'electronics': '💻', 'tech': '💻', 'computer': '💻', 'laptop': '💻',
+            'savings': '💰', 'investment': '📈', 'saving': '💰', 'invest': '📈',
+            'charity': '❤️', 'donation': '❤️', 'donate': '❤️',
+            'maintenance': '🔧', 'repair': '🔧', 'plumber': '🔧',
+            'childcare': '🧒', 'baby': '🍼', 'kids': '🧒',
+            'work': '💼', 'office': '💼', 'business': '💼',
+            'rent/mortgage': '🏠', 'rent/housing': '🏠',
+        };
+
+        function emojiForCategory(name) {
+            if (!name) return name;
+            // Already starts with an emoji char — leave it alone
+            if (/^\p{Emoji}/u.test(name.trimStart())) return name;
+            const lower = name.toLowerCase();
+            // Exact match first
+            if (CATEGORY_AUTO_EMOJI[lower]) return CATEGORY_AUTO_EMOJI[lower] + ' ' + name;
+            // Partial match
+            for (const [keyword, emoji] of Object.entries(CATEGORY_AUTO_EMOJI)) {
+                if (lower.includes(keyword)) return emoji + ' ' + name;
+            }
+            return name; // No match — return unchanged
+        }
+
         const CATEGORY_COLORS = {
             'Food/Dining': '#f59e0b', 'Groceries': '#10b981', 'Rent/Housing': '#6366f1',
             'Utilities': '#8b5cf6', 'Transport': '#3b82f6', 'Entertainment': '#ec4899',
@@ -3663,47 +3876,188 @@
         // Track which expense is being edited (null = adding new)
         let editingExpenseId = null;
 
-        function editExpense(id) {
-            const expense = appState.expenses.find(e => e.id === id);
-            if (!expense) return;
+        // ── Expense Modal ────────────────────────────────────────────
+        function openExpenseModal(id = null, prefill = null) {
+            // Populate modal category datalist
+            const dl = document.getElementById('m-categoryDatalist');
+            dl.innerHTML = appState.categories.map(c => `<option value="${escAttr(c)}">`).join('');
 
-            editingExpenseId = id;
+            // Populate who paid
+            const whoPaidSel = document.getElementById('m-whoPaid');
+            whoPaidSel.innerHTML = Object.keys(appState.partners)
+                .map(k => `<option value="${escAttr(k)}">${escAttr(appState.partners[k])}</option>`).join('');
 
-            // Fill form with expense data
-            document.getElementById('amount').value = expense.amount;
-            document.getElementById('category').value = expense.category;
-            document.getElementById('whoPaid').value = expense.whoPaid;
-            document.getElementById('splitType').value = expense.splitType;
-            document.getElementById('expenseDate').value = expense.date;
-            document.getElementById('notes').value = expense.notes || '';
-            document.getElementById('isRecurring').checked = expense.isRecurring || false;
-            document.getElementById('isShared').checked = expense.isShared !== false;
-            
-            if (expense.customSplit) {
-                document.getElementById('customSplit').value = expense.customSplit;
-                document.getElementById('customSplitGroup').style.display = 'block';
+            const titleEl = document.getElementById('expenseModalTitle');
+            const submitBtn = document.getElementById('expenseModalSubmitBtn');
+
+            if (id !== null) {
+                // ── Edit mode
+                const expense = appState.expenses.find(e => e.id === id);
+                if (!expense) return;
+                editingExpenseId = id;
+                titleEl.textContent = '✏️ Edit Transaction';
+                submitBtn.textContent = '💾 Save Changes';
+                document.getElementById('m-amount').value = expense.amount;
+                document.getElementById('m-category').value = expense.category;
+                document.getElementById('m-whoPaid').value = expense.whoPaid;
+                document.getElementById('m-date').value = expense.date;
+                document.getElementById('m-notes').value = expense.notes || '';
+                document.getElementById('m-isRecurring').checked = !!expense.isRecurring;
+                document.getElementById('m-customSplit').value = expense.customSplit || 50;
+                // Set split button
+                const st = expense.splitType || '50/50';
+                const splitMode = (expense.isShared === false || st === 'single') ? 'solo' : st;
+                setModalSplit(splitMode);
+            } else if (prefill) {
+                // ── Prefill mode (from Quick Add)
+                editingExpenseId = null;
+                titleEl.textContent = '✏️ Review & Add Transaction';
+                submitBtn.textContent = '💾 Add Expense';
+                document.getElementById('m-amount').value = prefill.amount || '';
+                document.getElementById('m-category').value = prefill.category || '';
+                document.getElementById('m-whoPaid').value = prefill.whoPaid || 'partner1';
+                document.getElementById('m-date').value = prefill.date || new Date().toISOString().split('T')[0];
+                document.getElementById('m-notes').value = prefill.notes || '';
+                document.getElementById('m-isRecurring').checked = false;
+                document.getElementById('m-customSplit').value = 50;
+                setModalSplit(prefill.splitMode || '50/50');
+            } else {
+                // ── Add mode (blank)
+                editingExpenseId = null;
+                titleEl.textContent = '➕ Add Transaction';
+                submitBtn.textContent = '💾 Add Expense';
+                document.getElementById('expenseModalForm').reset();
+                document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
+                setModalSplit('50/50');
             }
 
-            handleSharedToggle();
-
-            // Update button text and show cancel option
-            const submitBtn = document.querySelector('#expenseForm button[type="submit"]');
-            submitBtn.textContent = '💾 Update Expense';
-            
-            // Add cancel edit button if not already present
-            if (!document.getElementById('cancelEditBtn')) {
-                const cancelBtn = document.createElement('button');
-                cancelBtn.type = 'button';
-                cancelBtn.id = 'cancelEditBtn';
-                cancelBtn.className = 'btn btn-secondary';
-                cancelBtn.textContent = '✖ Cancel Edit';
-                cancelBtn.style.marginLeft = '8px';
-                cancelBtn.onclick = cancelEdit;
-                submitBtn.parentNode.insertBefore(cancelBtn, submitBtn.nextSibling);
-            }
-
-            switchTab('add-expense');
+            document.getElementById('expenseModalOverlay').classList.add('open');
+            setTimeout(() => document.getElementById('m-amount').focus(), 100);
         }
+
+        function closeExpenseModal() {
+            document.getElementById('expenseModalOverlay').classList.remove('open');
+            editingExpenseId = null;
+        }
+
+        function handleModalOverlayClick(e) {
+            if (e.target === document.getElementById('expenseModalOverlay')) closeExpenseModal();
+        }
+
+        // Split button logic for modal
+        function setModalSplit(mode) {
+            document.getElementById('m-split-solo').classList.toggle('active', mode === 'solo');
+            document.getElementById('m-split-half').classList.toggle('active', mode === '50/50');
+            document.getElementById('m-split-custom').classList.toggle('active', mode === 'custom');
+            document.getElementById('m-isShared').value = (mode === 'solo') ? '0' : '1';
+            document.getElementById('m-splitType').value = (mode === 'solo') ? 'single' : mode;
+            document.getElementById('m-customSplitGroup').style.display = (mode === 'custom') ? '' : 'none';
+        }
+
+        // Split button logic for the Add Expense tab form
+        function setTabSplit(mode) {
+            document.getElementById('tab-split-solo')?.classList.toggle('active', mode === 'solo');
+            document.getElementById('tab-split-half')?.classList.toggle('active', mode === '50/50');
+            document.getElementById('tab-split-custom')?.classList.toggle('active', mode === 'custom');
+            const isSharedEl = document.getElementById('isShared');
+            const splitTypeEl = document.getElementById('splitType');
+            if (isSharedEl) isSharedEl.checked = (mode !== 'solo');
+            if (splitTypeEl) splitTypeEl.value = (mode === 'solo') ? 'single' : mode;
+            document.getElementById('customSplitGroup').style.display = (mode === 'custom') ? '' : 'none';
+            document.getElementById('splitTypeGroup') && (document.getElementById('splitTypeGroup').style.display = 'none');
+        }
+
+        // Legacy stubs (keep for safety)
+        function handleModalSharedToggle() {}
+        function handleModalSplitChange() {}
+
+        let _submittingModalExpense = false;
+        async function submitExpenseModal(e) {
+            e.preventDefault();
+            if (_submittingModalExpense) return;
+
+            const amount = parseFloat(document.getElementById('m-amount').value);
+            const category = document.getElementById('m-category').value.trim();
+            const whoPaid = document.getElementById('m-whoPaid').value;
+            const splitType = document.getElementById('m-splitType').value;
+            const date = document.getElementById('m-date').value;
+            const notes = document.getElementById('m-notes').value;
+            const isRecurring = document.getElementById('m-isRecurring').checked;
+            const customSplit = document.getElementById('m-customSplit').value;
+            const isShared = document.getElementById('m-isShared').value !== '0';
+
+            if (!category) { showToast('Please select or enter a category', 'error'); return; }
+            if (isNaN(amount) || amount <= 0) { showToast('Please enter a valid amount', 'error'); return; }
+
+            await ensureCategory(category);
+
+            _submittingModalExpense = true;
+            const submitBtn = document.getElementById('expenseModalSubmitBtn');
+            const origText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Saving...';
+
+            try {
+                if (editingExpenseId !== null) {
+                    // ── Update existing
+                    if (useApi && currentHouseholdId) {
+                        try {
+                            await apiFetch('/households/' + currentHouseholdId + '/expenses/' + editingExpenseId, {
+                                method: 'PUT',
+                                body: JSON.stringify({
+                                    amount, category, date, notes, isRecurring, isShared,
+                                    paidBy: window._memberMap?.[whoPaid] || whoPaid,
+                                    splitType, customSplit: splitType === 'custom' ? parseFloat(customSplit) : null
+                                })
+                            });
+                        } catch (err) { console.error('API update failed:', err); }
+                    }
+                    const idx = appState.expenses.findIndex(e => e.id === editingExpenseId);
+                    if (idx !== -1) {
+                        appState.expenses[idx] = { ...appState.expenses[idx], amount, category, whoPaid, splitType, date, notes, isRecurring, isShared, customSplit: splitType === 'custom' ? parseFloat(customSplit) : null };
+                    }
+                    saveData();
+                    closeExpenseModal();
+                    updateDisplay();
+                    renderTransactions();
+                    showToast('Transaction updated ✅', 'success');
+                } else {
+                    // ── Add new
+                    const expense = {
+                        id: Date.now(),
+                        amount, category, whoPaid, splitType,
+                        customSplit: splitType === 'custom' ? parseFloat(customSplit) : null,
+                        date, notes, isRecurring, isShared,
+                        timestamp: new Date().toLocaleString()
+                    };
+                    if (useApi && currentHouseholdId) {
+                        try {
+                            const data = await apiFetch('/households/' + currentHouseholdId + '/expenses', {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    amount, category, date, notes, isRecurring, isShared,
+                                    paidBy: window._memberMap?.[whoPaid] || whoPaid,
+                                    splitType, customSplit: splitType === 'custom' ? parseFloat(customSplit) : null
+                                })
+                            });
+                            if (data.expense) expense.id = data.expense.id;
+                        } catch (err) { console.error('API add failed:', err); }
+                    }
+                    addExpense(expense);
+                    closeExpenseModal();
+                    updateDisplay();
+                    renderTransactions();
+                    showToast(`${isShared ? 'Shared' : 'Individual'} expense added 💰`, 'success');
+                }
+            } finally {
+                _submittingModalExpense = false;
+                submitBtn.disabled = false;
+                submitBtn.textContent = origText;
+            }
+        }
+
+        // ── Legacy editExpense now uses modal ────────────────────────
+        function editExpense(id) { openExpenseModal(id); }
 
         function cancelEdit() {
             editingExpenseId = null;
@@ -3712,7 +4066,7 @@
             document.getElementById('isShared').checked = true;
             handleSharedToggle();
             const submitBtn = document.querySelector('#expenseForm button[type="submit"]');
-            submitBtn.textContent = '💾 Add Expense';
+            if (submitBtn) submitBtn.textContent = '💾 Add Expense';
             const cancelBtn = document.getElementById('cancelEditBtn');
             if (cancelBtn) cancelBtn.remove();
         }
@@ -3806,15 +4160,31 @@
             // Render per-member budget cards dynamically
             const memberCards = document.getElementById('memberBudgetCards');
             if (memberCards) {
+                const monthExp = getCurrentMonthExpenses();
                 memberCards.innerHTML = Object.keys(appState.partners).map(key => {
                     const name = appState.partners[key];
-                    const val = appState.budgets[key + 'Total'] || '';
+                    const budget = appState.budgets[key + 'Total'] || 0;
+                    const spent = getMyBudgetSpend(key, monthExp);
+                    const pct = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
+                    const over = spent > budget && budget > 0;
+                    const remaining = budget - spent;
+                    const barColor = over ? 'danger' : pct > 80 ? 'warning' : '';
                     return `<div class="glass-card" style="margin-bottom: 24px;">
-                        <h3 style="margin-bottom: 20px;">👤 ${name}'s Personal Budget</h3>
+                        <h3 style="margin-bottom: 16px;">👤 ${name}'s Personal Budget</h3>
+                        ${budget > 0 ? `
+                        <div style="margin-bottom: 16px;">
+                            <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-secondary);margin-bottom:6px;">
+                                <span>$${spent.toFixed(2)} spent <span style="font-size:11px;opacity:0.7;">(incl. shared share)</span></span>
+                                <span style="color:${over ? 'var(--danger)' : 'var(--success)'};">$${Math.abs(remaining).toFixed(2)} ${over ? 'over' : 'left'}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill ${barColor}" style="width:${pct}%;"></div>
+                            </div>
+                        </div>` : ''}
                         <div class="form-group">
                             <label class="form-label">Monthly Personal Budget</label>
-                            <input type="number" class="form-input" id="budget_${key}" placeholder="Enter personal budget" step="0.01" value="${val}">
-                            <button class="btn" onclick="saveBudgets()" style="margin-top: 12px;">Save</button>
+                            <input type="number" class="form-input" id="budget_${key}" placeholder="Enter budget amount" step="0.01" value="${budget || ''}">
+                            <button class="btn" onclick="saveBudgets()" style="margin-top: 12px;">💾 Save</button>
                         </div>
                     </div>`;
                 }).join('');
@@ -3865,6 +4235,51 @@
             }).join('');
 
             container.innerHTML = budgetItems;
+        }
+
+        // My true budget spend = individual expenses I paid + my share of shared expenses
+        function getMyBudgetSpend(myKey, monthExpenses) {
+            return (monthExpenses || getCurrentMonthExpenses()).reduce((sum, exp) => {
+                if (exp.isShared === false) {
+                    // Individual: only counts if I paid it
+                    return sum + (exp.whoPaid === myKey ? exp.amount : 0);
+                } else {
+                    // Shared: count my portion regardless of who fronted the cash
+                    if (exp.splitType === 'custom' && exp.customSplit != null) {
+                        return sum + exp.amount * (exp.customSplit / 100);
+                    } else if (exp.splitType === 'single') {
+                        return sum + (exp.whoPaid === myKey ? exp.amount : 0);
+                    }
+                    return sum + exp.amount * 0.5; // 50/50 default
+                }
+            }, 0);
+        }
+
+        // Reload budgets from API for the given month and re-render
+        async function loadBudgetsForCurrentMonth() {
+            if (!useApi || !currentHouseholdId) return;
+            try {
+                const month = appState.currentMonth.toISOString().slice(0, 7);
+                const data = await apiFetch('/households/' + currentHouseholdId + '/budgets?month=' + month);
+                if (data.budgets) {
+                    // Reset budgets for re-population
+                    Object.keys(appState.budgets).forEach(k => {
+                        if (k !== 'total') appState.budgets[k] = undefined;
+                    });
+                    data.budgets.forEach(b => {
+                        if (b.budget_type === 'shared') {
+                            appState.budgets.shared = b.amount;
+                        } else if (b.user_id) {
+                            const pk = window._memberMapReverse?.[b.user_id];
+                            if (pk) appState.budgets[pk + 'Total'] = b.amount;
+                        } else if (b.category) {
+                            appState.budgets[b.category] = b.amount;
+                        }
+                    });
+                    appState.budgets.total = (appState.budgets.shared || 0) +
+                        Object.keys(appState.partners).reduce((s, k) => s + (appState.budgets[k + 'Total'] || 0), 0);
+                }
+            } catch (e) { console.error('Budget reload failed:', e); }
         }
 
         function setCategoryBudget(category, value) {
@@ -4385,15 +4800,18 @@
 
         function addCustomCategory() {
             const input = document.getElementById('newCategory');
-            const category = input.value.trim();
-            
-            if (category && !appState.categories.includes(category)) {
-                appState.categories.push(category);
-                saveData();
-                populateSelectors();
-                renderCustomCategories();
-                input.value = '';
+            const raw = input.value.trim();
+            if (!raw) { showToast('Please enter a category name', 'warning'); return; }
+            const category = emojiForCategory(raw);
+            if (appState.categories.includes(category) || appState.categories.includes(raw)) {
+                showToast(`"${raw}" already exists`, 'warning'); return;
             }
+            appState.categories.push(category);
+            saveData();
+            populateSelectors();
+            renderCustomCategories();
+            input.value = '';
+            showToast(`Category "${category}" added ✅`, 'success');
         }
 
         function removeCustomCategory(category) {
@@ -4402,6 +4820,7 @@
                 saveData();
                 populateSelectors();
                 renderCustomCategories();
+                showToast(`Category "${category}" removed`, 'info');
             }
         }
 
@@ -4718,8 +5137,12 @@
             // Month filter
             const monthFilter = document.getElementById('monthFilter');
             const months = [...new Set(appState.expenses.map(e => e.date.substring(0, 7)))].sort().reverse();
-            monthFilter.innerHTML = '<option value="">All Months</option>' + 
-                months.map(month => `<option value="${month}">${new Date(month + '-01').toLocaleDateString('en-US', {month: 'long', year: 'numeric'})}</option>`).join('');
+            monthFilter.innerHTML = '<option value="">📅 All Months</option>' + 
+                months.map(month => {
+                    // Use noon on 2nd to avoid UTC midnight rolling back to prev month in negative offsets
+                    const d = new Date(month + '-02T12:00:00');
+                    return `<option value="${month}">${d.toLocaleDateString('en-US', {month: 'long', year: 'numeric'})}</option>`;
+                }).join('');
 
             // Dynamically populate whoPaid selector from all members
             const whoPaidSelect = document.getElementById('whoPaid');
@@ -5140,8 +5563,88 @@
             }
         }
 
+        // Close expense modal on Escape key
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && document.getElementById('expenseModalOverlay').classList.contains('open')) {
+                closeExpenseModal();
+            }
+        });
+
         // Initialize charts after page load
         setTimeout(renderCharts, 100);
     </script>
+
+    <!-- ── Expense Modal ─────────────────────────────────── -->
+    <div class="expense-modal-overlay" id="expenseModalOverlay" onclick="handleModalOverlayClick(event)">
+        <div class="expense-modal" id="expenseModalBox">
+            <div class="expense-modal-header">
+                <h3 id="expenseModalTitle">➕ Add Transaction</h3>
+                <button class="expense-modal-close" onclick="closeExpenseModal()">✕</button>
+            </div>
+            <form id="expenseModalForm" onsubmit="submitExpenseModal(event)">
+                <div class="quick-add-grid">
+                    <div class="form-group">
+                        <label class="form-label">Amount</label>
+                        <input type="number" class="form-input" id="m-amount" placeholder="0.00" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <input type="text" class="form-input" id="m-category" list="m-categoryDatalist" placeholder="Select or type category" required autocomplete="off">
+                        <datalist id="m-categoryDatalist"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Who Paid</label>
+                        <select class="form-select" id="m-whoPaid" required></select>
+                    </div>
+                </div>
+                <!-- Split selector -->
+                <div class="form-group">
+                    <label class="form-label">How to Split?</label>
+                    <div class="split-selector">
+                        <button type="button" class="split-btn" id="m-split-solo" onclick="setModalSplit('solo')">
+                            <span class="split-icon">👤</span>
+                            <span class="split-label">Just Me</span>
+                            <span class="split-sub">Personal</span>
+                        </button>
+                        <button type="button" class="split-btn active" id="m-split-half" onclick="setModalSplit('50/50')">
+                            <span class="split-icon">👥</span>
+                            <span class="split-label">50 / 50</span>
+                            <span class="split-sub">Equal split</span>
+                        </button>
+                        <button type="button" class="split-btn" id="m-split-custom" onclick="setModalSplit('custom')">
+                            <span class="split-icon">⚖️</span>
+                            <span class="split-label">Custom %</span>
+                            <span class="split-sub">Set ratio</span>
+                        </button>
+                    </div>
+                    <!-- hidden state fields read by submitExpenseModal -->
+                    <input type="hidden" id="m-isShared" value="1">
+                    <input type="hidden" id="m-splitType" value="50/50">
+                </div>
+                <div class="form-group" id="m-customSplitGroup" style="display:none;">
+                    <label class="form-label">Your Share (%)</label>
+                    <input type="number" class="form-input" id="m-customSplit" min="0" max="100" value="50" placeholder="e.g. 60">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-input" id="m-date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <input type="text" class="form-input" id="m-notes" placeholder="Optional notes">
+                </div>
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="m-isRecurring">
+                        <span>Recurring expense</span>
+                    </label>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:8px;">
+                    <button type="submit" class="btn" id="expenseModalSubmitBtn" style="flex:1;">💾 Add Expense</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeExpenseModal()" style="flex:0 0 auto;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
