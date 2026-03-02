@@ -1,6 +1,19 @@
 const express = require('express');
 const crypto = require('crypto');
 const { queryAll, queryOne, runSql } = require('./database');
+
+// Activity log helper function
+function logActivity(householdId, userId, action, entityType, entityId, details) {
+    try {
+        const detailsJson = typeof details === 'string' ? details : JSON.stringify(details);
+        runSql("INSERT INTO activity_log (household_id, user_id, action, entity_type, entity_id, details, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [householdId, userId, action, entityType, entityId, detailsJson, new Date().toISOString()]);
+    } catch (err) {
+        console.error('Activity log failed:', err);
+    }
+}
+
+
 const { authenticate } = require('./auth');
 
 const router = express.Router();
@@ -21,7 +34,7 @@ router.post('/', authenticate, (req, res) => {
     runSql('INSERT INTO household_members (household_id, user_id, role, partner_name) VALUES (?, ?, ?, ?)',
       [result.lastInsertRowid, req.user.id, 'owner', partnerName || req.user.name]);
 
-    const defaultCategories = ['🍕 Food & Dining', '🛒 Groceries', '🏠 Rent/Mortgage', '🚗 Transportation', '🎬 Entertainment', '💡 Utilities', '🛍️ Shopping', '💊 Healthcare', '📱 Subscriptions', '✈️ Travel', '📦 Other'];
+    const defaultCategories = ['🍕 Food & Dining', '🛒 Groceries', '🏠 Rent/Mortgage', '🚗 Transportation', '🎬 Entertainment', '💡 Utilities', '🛍️ Shopping', '💊 Healthcare', '📱 Subscriptions', '✈️ Travel', '🐾 Pet', '💰 Investments', '📦 Other'];
     defaultCategories.forEach(cat => {
       try { runSql('INSERT INTO categories (household_id, name) VALUES (?, ?)', [result.lastInsertRowid, cat]); } catch(e) {}
     });
@@ -287,6 +300,96 @@ router.get('/:id/settlements', authenticate, (req, res) => {
     console.error('Get settlements error:', err);
     res.status(500).json({ error: 'Failed to get settlements' });
   }
+});
+
+
+
+
+// Kick member from household (owner only)
+router.delete('/:id/members/:userId', authenticate, (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    if (!household) return res.status(404).json({ error: 'Space not found' });
+    if (household.created_by !== req.user.id) return res.status(403).json({ error: 'Only the space owner can remove members' });
+    if (parseInt(userId) === req.user.id) return res.status(400).json({ error: 'You cannot remove yourself — delete the space instead' });
+
+    const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, parseInt(userId)]);
+    if (!member) return res.status(404).json({ error: 'Member not found in this space' });
+
+    runSql('DELETE FROM household_members WHERE household_id = ? AND user_id = ?', [id, parseInt(userId)]);
+
+    res.json({ message: 'Member removed' });
+  } catch (err) {
+    console.error('Kick member error:', err);
+    res.status(500).json({ error: 'Failed to remove member' });
+  }
+});
+
+// Regenerate invite code (owner only)
+router.post('/:id/regenerate-code', authenticate, (req, res) => {
+  try {
+    const { id } = req.params;
+    const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    if (!household) return res.status(404).json({ error: 'Space not found' });
+
+    const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
+    if (!member || member.role !== 'owner') return res.status(403).json({ error: 'Only the space owner can regenerate the invite code' });
+
+    const newCode = crypto.randomBytes(3).toString('hex').toUpperCase();
+    runSql('UPDATE households SET invite_code = ? WHERE id = ?', [newCode, id]);
+
+    res.json({ invite_code: newCode });
+  } catch (err) {
+    console.error('Regenerate code error:', err);
+    res.status(500).json({ error: 'Failed to regenerate invite code' });
+  }
+});
+
+// Delete household (owner only)
+router.delete('/:id', authenticate, (req, res) => {
+  try {
+    const { id } = req.params;
+    const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    if (!household) return res.status(404).json({ error: 'Space not found' });
+    if (household.created_by !== req.user.id) return res.status(403).json({ error: 'Only the space owner can delete it' });
+
+    // Delete all related data
+    runSql('DELETE FROM expenses WHERE household_id = ?', [id]);
+    runSql('DELETE FROM budgets WHERE household_id = ?', [id]);
+    runSql('DELETE FROM categories WHERE household_id = ?', [id]);
+    runSql('DELETE FROM settlements WHERE household_id = ?', [id]);
+    runSql('DELETE FROM household_members WHERE household_id = ?', [id]);
+    runSql('DELETE FROM households WHERE id = ?', [id]);
+
+    res.json({ message: 'Space deleted successfully' });
+  } catch (err) {
+    console.error('Delete household error:', err);
+    res.status(500).json({ error: 'Failed to delete space' });
+  }
+});
+
+
+// Get activity log
+router.get('/:id/activity', authenticate, (req, res) => {
+    const { id } = req.params;
+    const limit = parseInt(req.query.limit) || 50;
+    
+    try {
+        const activities = queryAll(
+            `SELECT al.*, u.name as user_name, u.email as user_email 
+             FROM activity_log al 
+             JOIN users u ON al.user_id = u.id 
+             WHERE al.household_id = ? 
+             ORDER BY al.created_at DESC 
+             LIMIT ?`,
+            [id, limit]
+        );
+        res.json({ activities });
+    } catch (err) {
+        console.error('Get activities error:', err);
+        res.status(500).json({ error: 'Failed to get activities' });
+    }
 });
 
 module.exports = router;

@@ -124,6 +124,19 @@ async function initialize() {
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS activity_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      household_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      action TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      entity_id INTEGER,
+      details TEXT,
+      created_at TEXT
+    )
+  `);
+
   saveDb();
 }
 

@@ -363,6 +363,21 @@
             margin-bottom: 32px;
         }
 
+        /* Mobile chart legend fix */
+        @media (max-width: 600px) {
+            .chart-container {
+                display: flex;
+                flex-direction: column;
+                height: auto;
+                min-height: 300px;
+                max-height: 450px;
+                overflow-y: auto;
+            }
+            .chart-container canvas {
+                flex-shrink: 0;
+            }
+        }
+
         /* AI Insights */
         .insights-panel { margin-bottom: 32px; }
 
@@ -620,11 +635,144 @@
             .filter-chip { font-size: 11px; padding: 5px 10px; }
             .filter-actions { width: 100%; }
             .filter-actions .btn { flex: 1; }
+            /* Mobile chart container for legend overflow */
+            .chart-container {
+                max-height: 400px;
+                overflow-y: auto;
+            }
+        }
+
+        /* Unified filter button and panel */
+        .filter-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 50%;
+            margin-left: 6px;
+        }
+        .filter-panel {
+            margin-top: 12px;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        .filter-panel .filter-chips {
+            margin-bottom: 12px;
+        }
+
+        /* Category Transactions Modal */
+        .category-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px);
+            z-index: 9200;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .category-modal-overlay.open { display: flex; }
+        .category-modal-box {
+            background: #12122a;
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+        }
+        .category-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-shrink: 0;
+        }
+        .category-modal-header h3 { font-size: 18px; font-weight: 700; }
+        .category-modal-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+        .category-modal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 13px;
+        }
+        .category-modal-item:last-child { border-bottom: none; }
+        .category-modal-total {
+            padding: 12px;
+            background: rgba(99,102,241,0.1);
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            flex-shrink: 0;
         }
 
         /* Legacy .filters kept for safety */
         .filters { display: none; }
         .filter-input { flex: 1; min-width: 200px; }
+
+        /* Category Dropdown (mobile-friendly replacement for datalist) */
+        .category-dropdown-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .category-dropdown-wrapper .form-input {
+            flex: 1;
+            font-size: 16px !important; /* Prevent iOS zoom */
+            padding-right: 36px;
+        }
+        .category-dropdown-toggle {
+            position: absolute;
+            right: 8px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+        .category-dropdown-toggle.open {
+            transform: rotate(180deg);
+        }
+        .category-dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a2e;
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: 4px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .category-dropdown-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.15s;
+        }
+        .category-dropdown-item:hover, .category-dropdown-item.highlighted {
+            background: rgba(99,102,241,0.15);
+        }
 
         /* ── Expense Modal ───────────────────────────────── */
         /* Scan receipt modal (same base as expense modal) */
@@ -682,6 +830,64 @@
 
         .expense-modal-overlay.open {
             display: flex;
+        }
+
+        /* Category drill-down modal */
+        .category-modal-overlay {
+            display: flex;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 9000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        /* Custom category dropdown for mobile */
+        .category-dropdown-wrapper {
+            position: relative;
+        }
+        .category-dropdown-wrapper input {
+            font-size: 16px !important; /* Prevent iOS zoom */
+            padding-right: 36px;
+        }
+        .category-dropdown-toggle {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        .category-dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a2e;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            margin-top: 4px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .category-dropdown-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .category-dropdown-item:last-child { border-bottom: none; }
+        .category-dropdown-item:hover, .category-dropdown-item.highlighted {
+            background: rgba(99,102,241,0.15);
         }
 
         .expense-modal {
@@ -1524,9 +1730,10 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Category</label>
-                                <div style="position: relative;">
-                                    <input type="text" class="form-input" id="category" list="categoryDatalist" placeholder="Select or type new category" required autocomplete="off">
-                                    <datalist id="categoryDatalist"></datalist>
+                                <div class="category-dropdown-wrapper" id="categoryDropdownWrapper">
+                                    <input type="text" class="form-input" id="category" placeholder="Select or type category" required autocomplete="off" oninput="filterCategoryDropdown(this.value, 'categoryDropdownList')" onfocus="showCategoryDropdown('categoryDropdownList')" onblur="hideCategoryDropdownDelayed('categoryDropdownList')">
+                                    <button type="button" class="category-dropdown-toggle" id="categoryDropdownToggle" onclick="toggleCategoryDropdown('categoryDropdownList', 'categoryDropdownToggle')">▼</button>
+                                    <div class="category-dropdown-list" id="categoryDropdownList" style="display:none;"></div>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -1608,24 +1815,34 @@
                             <button class="btn" onclick="openExpenseModal()" style="background: linear-gradient(135deg, var(--accent-start), var(--accent-end));">➕ Add Transaction</button>
                         </div>
                     </div>
-                    <!-- Row 2: filter chips -->
+                    <!-- Row 2: unified filter button -->
                     <div class="filter-bar-row">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <button class="btn btn-secondary" id="filterToggleBtn" onclick="toggleFilterPanel()" style="font-size:13px;">
+                                🔽 Filters <span id="filterBadge" class="filter-badge" style="display:none;">0</span>
+                            </button>
+                            <span id="activeFilterSummary" style="font-size:12px;color:var(--text-secondary);"></span>
+                        </div>
+                    </div>
+                    <!-- Filter panel (collapsible) -->
+                    <div class="filter-panel glass-card" id="filterPanel" style="display:none;">
                         <div class="filter-chips">
-                            <select class="filter-chip" id="monthFilter" onchange="filterTransactions()">
+                            <select class="filter-chip" id="monthFilter" onchange="filterTransactions();updateFilterBadge()">
                                 <option value="">📅 All Months</option>
                             </select>
-                            <select class="filter-chip" id="categoryFilter" onchange="filterTransactions()">
+                            <select class="filter-chip" id="categoryFilter" onchange="filterTransactions();updateFilterBadge()">
                                 <option value="">🏷️ All Categories</option>
                             </select>
-                            <select class="filter-chip" id="personFilter" onchange="filterTransactions()">
+                            <select class="filter-chip" id="personFilter" onchange="filterTransactions();updateFilterBadge()">
                                 <option value="">👤 All People</option>
                             </select>
-                            <select class="filter-chip" id="typeFilter" onchange="filterTransactions()">
+                            <select class="filter-chip" id="typeFilter" onchange="filterTransactions();updateFilterBadge()">
                                 <option value="">🔀 All Types</option>
                                 <option value="shared">👥 Shared</option>
                                 <option value="individual">👤 Individual</option>
                             </select>
                         </div>
+                        <button class="btn btn-ghost btn-small" onclick="clearFilters()" style="font-size:12px;padding:6px 12px;">✕ Clear all</button>
                     </div>
                 </div>
 
@@ -2780,6 +2997,22 @@
                     console.error('Budget API load failed:', err);
                 }
 
+                // Load settlements for cumulative balance calculation
+                try {
+                    const settleData = await apiFetch('/households/' + currentHouseholdId + '/settlements');
+                    appState.settlements = (settleData.settlements || []).map(s => ({
+                        id: s.id,
+                        amount: s.amount,
+                        date: s.date,
+                        notes: s.notes || '',
+                        settledBy: s.settled_by,
+                        createdAt: s.created_at
+                    }));
+                } catch (err) {
+                    console.error('Settlements API load failed:', err);
+                    appState.settlements = [];
+                }
+
                 // Store invite code for settings display
                 window._householdInviteCode = household.invite_code;
                 window._householdName = household.name;
@@ -3297,7 +3530,13 @@
                 'iphone': 'Electronics',
                 'apple store': 'Electronics',
                 'donation': 'Charity/Donations',
-                'charity': 'Charity/Donations'
+                'charity': 'Charity/Donations',
+                'investment': '💰 Investments',
+                'invest': '💰 Investments',
+                'stock': '💰 Investments',
+                'etf': '💰 Investments',
+                'rrsp': '💰 Investments',
+                'tfsa': '💰 Investments'
             };
 
             // Find best category match
@@ -3446,8 +3685,8 @@
         }
 
         function calculatePartnerBalance() {
-            // Only consider shared expenses for balance calculation
-            const sharedExpenses = getCurrentMonthExpenses().filter(exp => exp.isShared !== false);
+            // Use ALL expenses (cross-month cumulative), not just current month
+            const sharedExpenses = appState.expenses.filter(exp => exp.isShared !== false);
             let partner1Total = 0;
             let partner2Total = 0;
             let partner1Paid = 0;
@@ -3478,16 +3717,27 @@
                 }
             });
 
+            // Subtract settled amounts (settlements reduce what is owed)
+            const totalSettled = (appState.settlements || []).reduce((sum, s) => sum + s.amount, 0);
+
             // How much partner1 overpaid (positive = partner2 owes partner1)
-            const balance = partner1Paid - partner1Total;
-            const owesWho = balance > 0 ? 
-                `${appState.partners.partner2} owes ${appState.partners.partner1}` : 
+            let balance = partner1Paid - partner1Total;
+            // Settlements reduce the balance - if partner1 was owed, they got paid; if partner2 was owed, they got paid
+            if (balance > 0) {
+                balance = Math.max(0, balance - totalSettled);
+            } else {
+                balance = Math.min(0, balance + totalSettled);
+            }
+
+            const owesWho = balance > 0 ?
+                `${appState.partners.partner2} owes ${appState.partners.partner1}` :
                 `${appState.partners.partner1} owes ${appState.partners.partner2}`;
 
             return {
                 amount: `$${Math.abs(balance).toFixed(2)}`,
                 label: Math.abs(balance) < 0.01 ? 'Balanced' : owesWho,
-                rawBalance: balance
+                rawBalance: balance,
+                totalSettled: totalSettled
             };
         }
 
@@ -3746,7 +3996,7 @@
             'gift': '🎁', 'gifts': '🎁', 'present': '🎁',
             'insurance': '🛡️',
             'electronics': '💻', 'tech': '💻', 'computer': '💻', 'laptop': '💻',
-            'savings': '💰', 'investment': '📈', 'saving': '💰', 'invest': '📈',
+            'savings': '💰', 'investment': '💰', 'investments': '💰', 'saving': '💰', 'invest': '💰',
             'charity': '❤️', 'donation': '❤️', 'donate': '❤️',
             'maintenance': '🔧', 'repair': '🔧', 'plumber': '🔧',
             'childcare': '🧒', 'baby': '🍼', 'kids': '🧒',
@@ -3868,6 +4118,57 @@
 
         function filterTransactions() {
             renderTransactions();
+            updateFilterBadge();
+        }
+
+        // ── Filter panel functions ──────────────────────────────────
+        let filterPanelOpen = false;
+
+        function toggleFilterPanel() {
+            filterPanelOpen = !filterPanelOpen;
+            const panel = document.getElementById('filterPanel');
+            const btn = document.getElementById('filterToggleBtn');
+            if (panel) panel.style.display = filterPanelOpen ? 'block' : 'none';
+            if (btn) btn.innerHTML = (filterPanelOpen ? '🔼' : '🔽') + ' Filters ' + (document.getElementById('filterBadge')?.outerHTML || '');
+        }
+
+        function updateFilterBadge() {
+            const monthFilter = document.getElementById('monthFilter')?.value || '';
+            const categoryFilter = document.getElementById('categoryFilter')?.value || '';
+            const personFilter = document.getElementById('personFilter')?.value || '';
+            const typeFilter = document.getElementById('typeFilter')?.value || '';
+
+            let count = 0;
+            const summaryParts = [];
+
+            if (monthFilter) { count++; summaryParts.push('Month: ' + monthFilter); }
+            if (categoryFilter) { count++; summaryParts.push('Category: ' + categoryFilter); }
+            if (personFilter) { count++; summaryParts.push('Person: ' + (appState.partners[personFilter] || personFilter)); }
+            if (typeFilter) { count++; summaryParts.push('Type: ' + typeFilter); }
+
+            const badge = document.getElementById('filterBadge');
+            const summary = document.getElementById('activeFilterSummary');
+
+            if (badge) {
+                if (count > 0) {
+                    badge.style.display = 'inline-flex';
+                    badge.textContent = count;
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+            if (summary) {
+                summary.textContent = summaryParts.join(' | ');
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('monthFilter').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('personFilter').value = '';
+            document.getElementById('typeFilter').value = '';
+            filterTransactions();
+            updateFilterBadge();
         }
 
         function exportTransactions(format) {
@@ -3944,11 +4245,65 @@
         // Track which expense is being edited (null = adding new)
         let editingExpenseId = null;
 
+        // ── Category Dropdown Functions ──────────────────────────────
+        let categoryDropdownVisible = false;
+        let categoryDropdownTimeout = null;
+
+        function populateCategoryDropdown(filter = '') {
+            const list = document.getElementById('categoryDropdownList');
+            if (!list) return;
+            const filtered = appState.categories.filter(c =>
+                c.toLowerCase().includes(filter.toLowerCase())
+            );
+            list.innerHTML = filtered.map(c =>
+                `<div class="category-dropdown-item" onmousedown="selectCategory('${escAttr(c)}')">${c}</div>`
+            ).join('') || '<div class="category-dropdown-item" style="color:var(--text-secondary);">No matches</div>';
+        }
+
+        function showCategoryDropdown() {
+            if (categoryDropdownTimeout) clearTimeout(categoryDropdownTimeout);
+            const list = document.getElementById('categoryDropdownList');
+            const input = document.getElementById('m-category');
+            if (!list || !input) return;
+            populateCategoryDropdown(input.value);
+            list.style.display = 'block';
+            categoryDropdownVisible = true;
+        }
+
+        function hideCategoryDropdown() {
+            const list = document.getElementById('categoryDropdownList');
+            if (list) list.style.display = 'none';
+            categoryDropdownVisible = false;
+        }
+
+        function hideCategoryDropdownDelayed() {
+            categoryDropdownTimeout = setTimeout(hideCategoryDropdown, 150);
+        }
+
+        function toggleCategoryDropdown() {
+            if (categoryDropdownVisible) {
+                hideCategoryDropdown();
+            } else {
+                showCategoryDropdown();
+                document.getElementById('m-category')?.focus();
+            }
+        }
+
+        function filterCategoryDropdown(value) {
+            populateCategoryDropdown(value);
+            if (!categoryDropdownVisible) showCategoryDropdown();
+        }
+
+        function selectCategory(name) {
+            const input = document.getElementById('m-category');
+            if (input) input.value = name;
+            hideCategoryDropdown();
+        }
+
         // ── Expense Modal ────────────────────────────────────────────
         function openExpenseModal(id = null, prefill = null) {
-            // Populate modal category datalist
-            const dl = document.getElementById('m-categoryDatalist');
-            dl.innerHTML = appState.categories.map(c => `<option value="${escAttr(c)}">`).join('');
+            // Populate category dropdown
+            populateCategoryDropdown('');
 
             // Populate who paid
             const whoPaidSel = document.getElementById('m-whoPaid');
@@ -4428,11 +4783,11 @@
         }
 
         function renderPaymentBreakdown() {
-            // Shared expenses drive settlement
-            const sharedExpenses = getCurrentMonthExpenses().filter(e => e.isShared !== false);
+            // Use ALL shared expenses (cumulative) for settlement calculation
+            const sharedExpenses = appState.expenses.filter(e => e.isShared !== false);
             const partnerKeys = Object.keys(appState.partners);
 
-            // What each person paid out of pocket
+            // What each person paid out of pocket (all-time)
             const paid = {};
             partnerKeys.forEach(k => { paid[k] = 0; });
             sharedExpenses.forEach(e => { if (paid[e.whoPaid] !== undefined) paid[e.whoPaid] += e.amount; });
@@ -4457,8 +4812,10 @@
             });
 
             const totalPaid = Object.values(paid).reduce((a,b) => a+b, 0);
+            const totalSettled = (appState.settlements || []).reduce((sum, s) => sum + s.amount, 0);
             const container = document.getElementById('paymentBreakdown');
-            let html = '';
+
+            let html = `<div style="font-size:12px;color:var(--text-secondary);text-align:center;margin-bottom:12px;padding:8px;background:rgba(99,102,241,0.05);border-radius:8px;">📊 Balance is cumulative across all months</div>`;
 
             partnerKeys.forEach(key => {
                 const p = paid[key] || 0;
@@ -4487,9 +4844,18 @@
 
             html += `
                 <div class="budget-item" style="border-top:1px solid var(--glass-border);padding-top:16px;margin-top:8px;">
-                    <div class="budget-info"><div class="budget-category">Total shared expenses</div></div>
+                    <div class="budget-info"><div class="budget-category">Total shared expenses (all-time)</div></div>
                     <div class="budget-amount">$${totalPaid.toFixed(2)}</div>
                 </div>`;
+
+            // Show settlements history if any
+            if (totalSettled > 0) {
+                html += `
+                    <div class="budget-item" style="border-top:1px solid var(--glass-border);padding-top:12px;margin-top:8px;">
+                        <div class="budget-info"><div class="budget-category" style="color:#10b981;">✅ Previously settled</div></div>
+                        <div class="budget-amount" style="color:#10b981;">-$${totalSettled.toFixed(2)}</div>
+                    </div>`;
+            }
 
             // Settlement direction summary
             const balance = calculatePartnerBalance();
@@ -4508,36 +4874,37 @@
         }
 
         let _settling = false;
-        function settleUp() {
+        async function settleUp() {
             if (_settling) return;
-            if (confirm('Mark all balances as settled? This will add a settlement transaction.')) {
-                const balance = calculatePartnerBalance();
-                if (Math.abs(balance.rawBalance) > 0.01) {
-                    _settling = true;
-                    const btn = document.getElementById('settleButton');
-                    if (btn) { btn.disabled = true; btn.textContent = '⏳ Settling...'; }
-                    const settlementExpense = {
-                        id: Date.now(),
+            if (!confirm('Mark all balances as settled? This records a settlement payment.')) return;
+            const balance = calculatePartnerBalance();
+            if (Math.abs(balance.rawBalance) <= 0.01) {
+                showToast('No balance to settle!', 'info');
+                return;
+            }
+            _settling = true;
+            const btn = document.getElementById('settleButton');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Settling...'; }
+            try {
+                const resp = await apiFetch('/households/' + currentHouseholdId + '/settlements', {
+                    method: 'POST',
+                    body: JSON.stringify({
                         amount: Math.abs(balance.rawBalance),
-                        category: 'Settlement',
-                        whoPaid: balance.rawBalance < 0 ? 'partner1' : 'partner2',
-                        splitType: 'single',
                         date: new Date().toISOString().split('T')[0],
-                        notes: 'Settlement payment',
-                        isRecurring: false,
-                        isShared: false,
-                        timestamp: new Date()
-                    };
-                    
-                    addExpense(settlementExpense);
-                    updateDisplay();
-                    renderSettlement();
+                        notes: `Settlement: ${balance.label}`
+                    })
+                });
+                if (resp.settlement) {
+                    if (!appState.settlements) appState.settlements = [];
+                    appState.settlements.push(resp.settlement);
                     showToast('Settled! 🤝', 'success');
-                    _settling = false;
-                    if (btn) { btn.disabled = false; btn.textContent = '✅ Mark as Settled'; }
-                } else {
-                    showToast('No balance to settle!', 'info');
+                    renderSettlement();
                 }
+            } catch(e) {
+                showToast('Settlement failed: ' + e.message, 'error');
+            } finally {
+                _settling = false;
+                if (btn) { btn.disabled = false; btn.textContent = '✅ Mark as Settled'; }
             }
         }
 
@@ -4640,11 +5007,133 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            labels: { color: '#ffffff' }
+                            position: 'bottom',
+                            labels: {
+                                color: '#ffffff',
+                                boxWidth: 12,
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    onClick: function(e, elements) {
+                        if (!elements.length) return;
+                        const idx = elements[0].index;
+                        const label = this.data.labels[idx];
+                        if (label !== 'No expenses yet') {
+                            showCategoryTransactionsModal(label);
                         }
                     }
                 }
             });
+        }
+
+        // Category drill-down modal
+        function showCategoryTransactionsModal(categoryName) {
+            const expenses = getAnalyticsExpenses().filter(e => e.category === categoryName);
+            const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+            let html = `
+                <div class="category-modal-overlay" id="categoryModalOverlay" onclick="if(event.target===this)closeCategoryModal()">
+                    <div class="glass-card" style="max-width:500px;width:90%;max-height:70vh;display:flex;flex-direction:column;position:relative;margin:auto;">
+                        <button onclick="closeCategoryModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--text-secondary);font-size:20px;cursor:pointer;">✕</button>
+                        <h3 style="margin-bottom:16px;padding-right:30px;">${categoryName}</h3>
+                        <div style="overflow-y:auto;flex:1;">`;
+
+            if (expenses.length === 0) {
+                html += `<p style="color:var(--text-secondary);text-align:center;padding:20px;">No transactions in this category</p>`;
+            } else {
+                expenses.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(e => {
+                    const paidBy = appState.partners[e.whoPaid] || 'Unknown';
+                    html += `
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--glass-border);">
+                            <div>
+                                <div style="font-weight:500;">${e.notes || e.category}</div>
+                                <div style="font-size:12px;color:var(--text-secondary);">${new Date(e.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})} · ${paidBy}</div>
+                            </div>
+                            <div style="font-weight:600;">$${e.amount.toFixed(2)}</div>
+                        </div>`;
+                });
+            }
+
+            html += `
+                        </div>
+                        <div style="border-top:1px solid var(--glass-border);padding-top:12px;margin-top:12px;display:flex;justify-content:space-between;font-weight:700;">
+                            <span>Total</span>
+                            <span>$${total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>`;
+
+            // Remove existing modal if any
+            const existing = document.getElementById('categoryModalOverlay');
+            if (existing) existing.remove();
+
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        function closeCategoryModal() {
+            const modal = document.getElementById('categoryModalOverlay');
+            if (modal) modal.remove();
+        }
+
+        // Category Dropdown Functions (mobile-friendly replacement for datalist)
+        function populateCategoryDropdown(listId, filterText = '') {
+            const list = document.getElementById(listId);
+            if (!list) return;
+            const filter = filterText.toLowerCase();
+            const filtered = appState.categories.filter(c => !filter || c.toLowerCase().includes(filter));
+            list.innerHTML = filtered.map(cat =>
+                `<div class="category-dropdown-item" onmousedown="selectCategory('${cat.replace(/'/g, "\\'")}', '${listId}')">${cat}</div>`
+            ).join('');
+        }
+
+        function showCategoryDropdown(listId) {
+            const list = document.getElementById(listId);
+            if (list) {
+                populateCategoryDropdown(listId);
+                list.style.display = 'block';
+            }
+        }
+
+        function hideCategoryDropdownDelayed(listId) {
+            setTimeout(() => {
+                const list = document.getElementById(listId);
+                if (list) list.style.display = 'none';
+                // Reset toggle button
+                const toggleId = listId.replace('DropdownList', 'DropdownToggle');
+                const toggle = document.getElementById(toggleId);
+                if (toggle) toggle.classList.remove('open');
+            }, 150);
+        }
+
+        function toggleCategoryDropdown(listId, toggleId) {
+            const list = document.getElementById(listId);
+            const toggle = document.getElementById(toggleId);
+            if (list) {
+                if (list.style.display === 'none') {
+                    populateCategoryDropdown(listId);
+                    list.style.display = 'block';
+                    if (toggle) toggle.classList.add('open');
+                } else {
+                    list.style.display = 'none';
+                    if (toggle) toggle.classList.remove('open');
+                }
+            }
+        }
+
+        function filterCategoryDropdown(value, listId) {
+            populateCategoryDropdown(listId, value);
+            const list = document.getElementById(listId);
+            if (list) list.style.display = 'block';
+        }
+
+        function selectCategory(cat, listId) {
+            // Determine which input to fill based on list ID
+            const inputId = listId === 'm-categoryDropdownList' ? 'm-category' : 'category';
+            const input = document.getElementById(inputId);
+            if (input) input.value = cat;
+            const list = document.getElementById(listId);
+            if (list) list.style.display = 'none';
         }
 
         function renderPartnerChart() {
@@ -5258,16 +5747,9 @@
 
         // Utility Functions
         function populateSelectors() {
-            // Category datalist (for the text input)
-            const datalist = document.getElementById('categoryDatalist');
-            if (datalist) {
-                datalist.innerHTML = '';
-                appState.categories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category;
-                    datalist.appendChild(option);
-                });
-            }
+            // Populate category dropdown lists (mobile-friendly replacement for datalist)
+            populateCategoryDropdown('categoryDropdownList');
+            populateCategoryDropdown('m-categoryDropdownList');
 
             // Category filter dropdown (stays as select)
             const categoryFilter = document.getElementById('categoryFilter');
@@ -5780,8 +6262,11 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Category</label>
-                        <input type="text" class="form-input" id="m-category" list="m-categoryDatalist" placeholder="Select or type category" required autocomplete="off">
-                        <datalist id="m-categoryDatalist"></datalist>
+                        <div class="category-dropdown-wrapper" id="mCategoryDropdownWrapper">
+                            <input type="text" class="form-input" id="m-category" placeholder="Select or type category" required autocomplete="off" oninput="filterCategoryDropdown(this.value, 'm-categoryDropdownList')" onfocus="showCategoryDropdown('m-categoryDropdownList')" onblur="hideCategoryDropdownDelayed('m-categoryDropdownList')">
+                            <button type="button" class="category-dropdown-toggle" id="m-categoryDropdownToggle" onclick="toggleCategoryDropdown('m-categoryDropdownList', 'm-categoryDropdownToggle')">▼</button>
+                            <div class="category-dropdown-list" id="m-categoryDropdownList" style="display:none;"></div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Who Paid</label>
