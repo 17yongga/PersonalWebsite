@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <style>
         * {
             margin: 0;
@@ -47,7 +47,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
+            background:
                 radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
             z-index: -1;
@@ -449,7 +449,7 @@
                 height: 300px !important;
                 max-height: 300px;
             }
-            
+
             .chart-container canvas {
                 max-width: 100% !important;
             }
@@ -459,7 +459,7 @@
             #partnerChart {
                 max-height: 250px !important;
             }
-            
+
             /* Monthly and Daily charts specific height on mobile */
             #monthlyChart,
             #dailyChart {
@@ -646,38 +646,203 @@
             .app-header h1 {
                 font-size: 24px;
             }
-            
+
             .tab-nav {
                 padding: 16px;
                 gap: 8px;
             }
-            
+
             .tab-btn {
                 padding: 10px 12px;
                 font-size: 14px;
             }
-            
+
             .tab-text {
                 display: none;
             }
-            
+
             .dashboard-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .chart-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .expense-item {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 12px;
             }
-            
+
             .expense-actions {
                 justify-content: center;
             }
+        }
+
+        /* ── Batch Select Mode ─────────────────────────────────── */
+        .batch-row {
+            cursor: pointer;
+            transition: background 0.12s, outline 0.12s !important;
+        }
+        .batch-row:active { opacity: 0.8; }
+        .batch-row.batch-selected {
+            outline: 2px solid #6366f1 !important;
+            outline-offset: -2px;
+            background: rgba(99, 102, 241, 0.12) !important;
+        }
+
+        /* Custom checkbox in batch mode */
+        .batch-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 5px;
+            background: rgba(255,255,255,0.05);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .batch-checkbox:checked {
+            background: #6366f1;
+            border-color: #6366f1;
+        }
+        .batch-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        /* Floating action bar */
+        #batchActionBar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 300;
+            background: rgba(17, 24, 39, 0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(99, 102, 241, 0.4);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(100%);
+            transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.4);
+        }
+        #batchActionBar.visible {
+            transform: translateY(0);
+        }
+        .batch-action-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .batch-count-badge {
+            background: #6366f1;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            min-width: 28px;
+            text-align: center;
+        }
+        .batch-action-right {
+            display: flex;
+            gap: 8px;
+        }
+        .batch-edit-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .batch-edit-btn:hover { background: rgba(255,255,255,0.18); }
+        .batch-delete-btn {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .batch-delete-btn:hover { background: rgba(239, 68, 68, 0.28); }
+        .batch-cancel-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Batch edit modal */
+        .batch-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 400;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 0;
+        }
+        @media (min-width: 600px) {
+            .batch-modal-overlay { align-items: center; padding: 20px; }
+        }
+        .batch-modal-sheet {
+            background: var(--card-bg, #1f2937);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px 20px 32px;
+            animation: sheetUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @media (min-width: 600px) {
+            .batch-modal-sheet { border-radius: 20px; }
+        }
+        @keyframes sheetUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+        .batch-modal-handle {
+            width: 36px; height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            margin: 0 auto 20px;
+        }
+        .batch-field-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
         }
 
         /* Loading Animation */
@@ -719,9 +884,9 @@
             font-size: 13px;
         }
 
-        .filter-search { 
-            flex: 1; 
-            min-width: 180px; 
+        .filter-search {
+            flex: 1;
+            min-width: 180px;
         }
 
         .filter-actions {
@@ -768,12 +933,12 @@
                 width: 100%;
                 flex: none;
             }
-            
+
             /* Hide CSV and Scan from main row on mobile */
             .filter-actions .btn:not(:last-child) {
                 display: none;
             }
-            
+
             /* Show mobile-only buttons and style them */
             .mobile-only {
                 display: inline-flex !important;
@@ -781,16 +946,16 @@
                 padding: 8px 6px;
                 font-size: 11px;
             }
-            
+
             /* Style the secondary actions row for mobile */
             .mobile-secondary-actions {
                 gap: 8px !important;
             }
-            
+
             .mobile-secondary-actions .btn {
                 flex: 1;
             }
-            
+
             /* Hide desktop-only elements on mobile */
             .desktop-only {
                 display: none;
@@ -1232,7 +1397,7 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.2);
         }
-        
+
         /* Login/Register System */
         .auth-overlay {
             position: fixed;
@@ -1356,7 +1521,7 @@
             transform: none;
         }
 
-        /* (partner-inputs removed — registration simplified) */
+        /* (partner-inputs removed - registration simplified) */
 
         /* Onboarding System */
         .onboarding-overlay {
@@ -1694,11 +1859,11 @@
                 grid-template-columns: 1fr;
                 gap: 8px;
             }
-            
+
             .upload-area {
                 padding: 30px 15px;
             }
-            
+
             .upload-icon {
                 font-size: 36px;
             }
@@ -1750,7 +1915,7 @@
         <div class="auth-card">
             <h1 class="auth-header">FinSync</h1>
             <p class="auth-subtitle">Smart Budgeting, Together or Solo</p>
-            
+
             <div class="auth-toggle">
                 <button type="button" class="active" id="loginToggle">Login</button>
                 <button type="button" id="registerToggle">Register</button>
@@ -1760,7 +1925,7 @@
                 <input type="text" class="auth-input" id="registerNameInput" placeholder="Your Name" style="display: none;">
                 <input type="email" class="auth-input" id="authEmail" placeholder="Email" required>
                 <input type="password" class="auth-input" id="authPassword" placeholder="Password" required>
-                
+
                 <button type="submit" class="auth-btn" id="authSubmit">Login</button>
                 <div id="forgotPasswordLink" style="text-align: center; margin-top: 12px;">
                     <a href="#" onclick="showResetPassword(); return false;" style="color: #818cf8; font-size: 14px; text-decoration: none;">Forgot Password?</a>
@@ -1802,7 +1967,7 @@
             <div id="householdOptions" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
                 <button type="button" class="auth-btn" id="optionPersonal" style="display: flex; align-items: center; gap: 12px; text-align: left; padding: 18px 20px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3);">
                     <span style="font-size: 28px;">🧑</span>
-                    <span><strong style="display: block; font-size: 16px;">Personal Budget</strong><span style="font-size: 13px; opacity: 0.8; font-weight: 400;">Track your own spending — quick setup</span></span>
+                    <span><strong style="display: block; font-size: 16px;">Personal Budget</strong><span style="font-size: 13px; opacity: 0.8; font-weight: 400;">Track your own spending - quick setup</span></span>
                 </button>
                 <button type="button" class="auth-btn" id="optionCreate" style="display: flex; align-items: center; gap: 12px; text-align: left; padding: 18px 20px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3);">
                     <span style="font-size: 28px;">👥</span>
@@ -1964,7 +2129,7 @@
                 </div>
             </div>
 
-            <!-- Add Expense Tab (hidden from nav — form kept for JS compat) -->
+            <!-- Add Expense Tab (hidden from nav - form kept for JS compat) -->
             <div class="tab-content" id="add-expense">
                 <div class="glass-card">
                     <h3 style="margin-bottom: 20px;">📝 Manual Entry</h3>
@@ -2095,12 +2260,16 @@
                 </div>
 
                 <div class="glass-card">
-                    <!-- Transaction list header with batch actions -->
-                    <div id="transactionHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--glass-border);">
-                        <h3 style="margin: 0; font-size: 16px; color: var(--text-primary);">Recent Transactions</h3>
-                        <button id="batchSelectBtn" class="btn btn-secondary" onclick="toggleBatchMode()" style="font-size: 12px; padding: 6px 12px;">
-                            📋 Select
-                        </button>
+                    <!-- Transaction list header -->
+                    <div id="transactionHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border);">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <h3 style="margin: 0; font-size: 16px; color: var(--text-primary);">Transactions</h3>
+                            <span id="batchSelectionCount" style="display:none; font-size:12px; background: rgba(99,102,241,0.2); color:#a5b4fc; padding:2px 8px; border-radius:12px; font-weight:600;"></span>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button id="batchSelectAllBtn" onclick="batchSelectAll()" style="display:none; background:none; border:none; color:var(--accent-start); font-size:12px; cursor:pointer; padding:4px 6px;">Select All</button>
+                            <button id="batchSelectBtn" class="btn btn-secondary" onclick="toggleBatchMode()" style="font-size:12px; padding:6px 14px;">☑️ Select</button>
+                        </div>
                     </div>
                     <div id="expensesList"></div>
                 </div>
@@ -2152,7 +2321,7 @@
                         <div class="chart-container">
                             <canvas id="categoryChart"></canvas>
                         </div>
-                        <!-- Pie chart popup — sits below chart, never overlaps -->
+                        <!-- Pie chart popup - sits below chart, never overlaps -->
                         <div id="categoryPopup" class="category-popup">
                             <div class="popup-header">
                                 <div class="popup-category-name"></div>
@@ -2169,7 +2338,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="chart-grid">
                     <div class="glass-card">
                         <h3 style="margin-bottom: 20px;">📈 Monthly Comparison</h3>
@@ -2311,8 +2480,8 @@
                 partner2: 'Partner 2'
             },
             categories: [
-                '🍽️ Food/Dining', '🛒 Groceries', '🏠 Rent/Housing', '💡 Utilities', 
-                '🚗 Transport', '🎬 Entertainment', '📺 Subscriptions', '💊 Health', 
+                '🍽️ Food/Dining', '🛒 Groceries', '🏠 Rent/Housing', '💡 Utilities',
+                '🚗 Transport', '🎬 Entertainment', '📺 Subscriptions', '💊 Health',
                 '🛍️ Shopping', '✈️ Travel', '🎁 Gifts', '🛡️ Insurance', '📚 Education',
                 '💄 Personal Care', '🐾 Pets', '🔧 Home Maintenance', '🍺 Alcohol/Bars',
                 '☕ Coffee/Cafe', '💪 Fitness/Gym', '👗 Clothing', '💻 Electronics',
@@ -2365,7 +2534,7 @@
                 currentUser = session;
                 showApp();
             } else {
-                // No valid session — must authenticate
+                // No valid session - must authenticate
                 // Clean up any stale data
                 localStorage.removeItem('finSyncSession');
                 localStorage.removeItem('finSyncToken');
@@ -2396,7 +2565,7 @@
             const savedHousehold = localStorage.getItem('finSyncHouseholdId');
 
             if (!token) {
-                // No API token — must register/login properly first
+                // No API token - must register/login properly first
                 // Clear stale session and send to auth
                 localStorage.removeItem('finSyncSession');
                 localStorage.removeItem('finSyncHouseholdId');
@@ -2421,7 +2590,7 @@
                     useApi = true;
                     showMainApp();
                 } catch (err) {
-                    // Token expired or invalid — re-authenticate
+                    // Token expired or invalid - re-authenticate
                     localStorage.removeItem('finSyncToken');
                     localStorage.removeItem('finSyncSession');
                     localStorage.removeItem('finSyncHouseholdId');
@@ -2430,7 +2599,7 @@
                     showToast('Session expired. Please log in again.', 'info');
                 }
             } else {
-                // Has token but no household — check if they belong to one
+                // Has token but no household - check if they belong to one
                 checkHouseholds();
             }
         }
@@ -2440,7 +2609,7 @@
                 const data = await apiFetch('/households');
                 if (data.households && data.households.length > 0) {
                     if (data.households.length === 1) {
-                        // Single household — auto-select
+                        // Single household - auto-select
                         const h = data.households[0];
                         currentHouseholdId = h.id;
                         currentHouseholdData = h;
@@ -2448,7 +2617,7 @@
                         useApi = true;
                         showMainApp();
                     } else {
-                        // Multiple households — show picker
+                        // Multiple households - show picker
                         window._allHouseholds = data.households;
                         showHouseholdSetup(data.households);
                     }
@@ -2652,7 +2821,7 @@
                 // Client-side validation
                 if (!inviteCode) { joinError.textContent = 'Please enter an invite code'; joinError.style.display = 'block'; return; }
                 if (inviteCode.length !== 6) { joinError.textContent = 'Invite codes are 6 characters long'; joinError.style.display = 'block'; return; }
-                if (!/^[A-F0-9]{6}$/.test(inviteCode)) { joinError.textContent = 'Invalid code format — should be 6 hex characters (0-9, A-F)'; joinError.style.display = 'block'; return; }
+                if (!/^[A-F0-9]{6}$/.test(inviteCode)) { joinError.textContent = 'Invalid code format - should be 6 hex characters (0-9, A-F)'; joinError.style.display = 'block'; return; }
                 if (!partnerName) { joinError.textContent = 'Enter a display name so others know who you are'; joinError.style.display = 'block'; return; }
 
                 _joiningSpace = true;
@@ -2672,7 +2841,7 @@
                 } catch (err) {
                     const msg = err.message || 'Failed to join space';
                     if (msg.includes('Invalid invite code')) {
-                        joinError.textContent = 'Invalid invite code — double-check with the space owner';
+                        joinError.textContent = 'Invalid invite code - double-check with the space owner';
                     } else if (msg.includes('Already a member')) {
                         joinError.textContent = "You're already a member of this space!";
                     } else {
@@ -2723,7 +2892,7 @@
         function renderSpaceSwitcher() {
             const switcher = document.getElementById('spaceSwitcher');
             const allHouseholds = window._allHouseholds || [];
-            
+
             if (!useApi || allHouseholds.length < 1) {
                 switcher.style.display = 'none';
                 return;
@@ -2760,7 +2929,7 @@
             localStorage.setItem('finSyncHouseholdId', householdId);
             useApi = true;
             document.getElementById('spaceSwitcherDropdown').style.display = 'none';
-            
+
             await loadDataFromApi();
             renderSpaceSwitcher();
             adaptUIForSpaceType();
@@ -2855,7 +3024,7 @@
 
         async function handleAuth(e) {
             e.preventDefault();
-            
+
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
             const isRegister = document.getElementById('registerToggle').classList.contains('active');
@@ -2883,7 +3052,7 @@
                 localStorage.setItem('finSyncSession', email);
                 localStorage.setItem('finSyncUserId', data.user.id);
                 localStorage.setItem('finSyncUserName', data.user.name);
-                
+
                 // Also keep legacy localStorage for backward compat
                 const users = JSON.parse(localStorage.getItem('finSyncUsers') || '[]');
                 if (!users.some(u => u.email === email)) {
@@ -2891,12 +3060,12 @@
                     users.push({ email, passwordHash, partner1Name: name, partner2Name: '', createdAt: new Date().toISOString() });
                     localStorage.setItem('finSyncUsers', JSON.stringify(users));
                 }
-                
+
                 appState.partners = { partner1: name, partner2: '' };
                 currentUser = email;
                 isFirstRegister = true;
                 saveData();
-                
+
                 // Go directly to household/space setup (not onboarding)
                 showApp();
                 showToast('Account created successfully!', 'success');
@@ -2927,7 +3096,7 @@
                 console.log('API login failed:', apiError);
             }
 
-            // If API gave a clear auth error, show it directly — don't fall through to confusing localStorage check
+            // If API gave a clear auth error, show it directly - don't fall through to confusing localStorage check
             if (apiError === 'Invalid password') {
                 showToast('Incorrect password', 'error');
                 return;
@@ -2941,9 +3110,9 @@
             try {
                 const users = JSON.parse(localStorage.getItem('finSyncUsers') || '[]');
                 const user = users.find(u => u.email === email);
-                
+
                 if (!user) {
-                    showToast(apiError || 'Login failed — check your email and password', 'error');
+                    showToast(apiError || 'Login failed - check your email and password', 'error');
                     return;
                 }
 
@@ -2953,7 +3122,7 @@
                     return;
                 }
 
-                // Local login succeeded — auto-migrate to API
+                // Local login succeeded - auto-migrate to API
                 try {
                     const data = await apiFetch('/auth/register', {
                         method: 'POST',
@@ -2998,7 +3167,7 @@
         function setupResetListener() {
             document.getElementById('resetForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
+
                 if (!resetVerifiedEmail) {
                     // Step 1: Verify email exists (check API first, then local)
                     const email = document.getElementById('resetEmail').value;
@@ -3025,7 +3194,7 @@
                         showToast('No account found with that email', 'error');
                         return;
                     }
-                    
+
                     resetVerifiedEmail = email;
                     document.getElementById('resetEmail').disabled = true;
                     document.getElementById('resetNewPasswordFields').style.display = 'block';
@@ -3035,17 +3204,17 @@
                     // Step 2: Set new password
                     const newPassword = document.getElementById('resetNewPassword').value;
                     const confirmPassword = document.getElementById('resetConfirmPassword').value;
-                    
+
                     if (newPassword.length < 1) {
                         showToast('Please enter a new password', 'error');
                         return;
                     }
-                    
+
                     if (newPassword !== confirmPassword) {
                         showToast('Passwords do not match', 'error');
                         return;
                     }
-                    
+
                     // Reset on API
                     try {
                         await apiFetch('/auth/reset-password', {
@@ -3063,15 +3232,15 @@
                         users[userIdx].passwordHash = await hashPassword(newPassword);
                         localStorage.setItem('finSyncUsers', JSON.stringify(users));
                     }
-                    
+
                     const resetEmail = resetVerifiedEmail;
                     resetVerifiedEmail = null;
                     cancelReset();
-                    
+
                     document.getElementById('authEmail').value = resetEmail || '';
                     document.getElementById('authPassword').value = '';
                     document.getElementById('authPassword').focus();
-                    
+
                     showToast('Password reset successful! Please log in.', 'success');
                 }
             });
@@ -3190,7 +3359,7 @@
                 const hData = await apiFetch('/households/' + currentHouseholdId);
                 const household = hData.household;
 
-                // Map members dynamically — me first, then others by join order
+                // Map members dynamically - me first, then others by join order
                 const myId = parseInt(localStorage.getItem('finSyncUserId'));
                 const members = household.members || [];
                 const me = members.find(m => m.user_id === myId);
@@ -3253,8 +3422,8 @@
                                 }
                             }
                         });
-                        appState.budgets.total = (appState.budgets.shared || 0) + 
-                            Object.keys(appState.partners).reduce((sum, key) => 
+                        appState.budgets.total = (appState.budgets.shared || 0) +
+                            Object.keys(appState.partners).reduce((sum, key) =>
                                 sum + (appState.budgets[key + 'Total'] || 0), 0);
                     }
                 } catch (err) {
@@ -3298,7 +3467,7 @@
 
         function loadData() {
             if (!currentUser) return;
-            
+
             // For localStorage users, determine solo vs shared from partner data
             const partnerKeys = Object.keys(appState.partners);
             const hasMultipleMembers = partnerKeys.length >= 2 && partnerKeys.some(k => k !== 'partner1' && appState.partners[k]);
@@ -3311,11 +3480,11 @@
                 appState.budgets = data.budgets || {};
                 appState.partners = data.partners || appState.partners;
                 appState.categories = (data.categories || appState.categories).map(c => emojiForCategory(c));
-                
+
                 // Re-check solo after loading partners
                 const pKeys = Object.keys(appState.partners);
                 window._isSoloSpace = !(pKeys.length >= 2 && pKeys.some(k => k !== 'partner1' && appState.partners[k]));
-                
+
                 let needsSave = false;
                 appState.expenses.forEach(expense => {
                     if (expense.isShared === undefined) {
@@ -3339,7 +3508,7 @@
         function initializeApp() {
             // Set current date
             document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
-            
+
             // Initialize tabs
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -3399,7 +3568,7 @@
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            
+
             const tabEl = document.getElementById(tabId);
             if (tabEl) tabEl.classList.add('active');
             const tabBtn = document.querySelector(`[data-tab="${tabId}"]`);
@@ -3433,9 +3602,9 @@
         }
 
         function updateCurrentMonth() {
-            const monthYear = appState.currentMonth.toLocaleDateString('en-US', { 
-                month: 'long', 
-                year: 'numeric' 
+            const monthYear = appState.currentMonth.toLocaleDateString('en-US', {
+                month: 'long',
+                year: 'numeric'
             });
             document.getElementById('currentMonth').textContent = monthYear;
         }
@@ -3463,7 +3632,7 @@
         async function handleExpenseSubmit(e) {
             e.preventDefault();
             if (_submittingExpense) return;
-            
+
             const amount = parseFloat(document.getElementById('amount').value);
             const category = document.getElementById('category').value.trim();
             const whoPaid = document.getElementById('whoPaid').value;
@@ -3519,7 +3688,7 @@
                 submitBtn.textContent = '💾 Add Expense';
                 const cancelBtn = document.getElementById('cancelEditBtn');
                 if (cancelBtn) cancelBtn.remove();
-                
+
                 document.getElementById('expenseForm').reset();
                 document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
                 document.getElementById('isShared').checked = true;
@@ -3614,7 +3783,7 @@
             saveData();
             // Log the add
             const paidBy = appState.partners?.[expense.whoPaid] || expense.whoPaid || 'Unknown';
-            logChange('add', `Added $${expense.amount.toFixed(2)} — ${expense.category} (${paidBy}${expense.notes ? ', ' + expense.notes : ''})`);
+            logChange('add', `Added $${expense.amount.toFixed(2)} - ${expense.category} (${paidBy}${expense.notes ? ', ' + expense.notes : ''})`);
         }
 
         let _deletingExpense = null;
@@ -3634,7 +3803,7 @@
                 appState.expenses = appState.expenses.filter(e => e.id !== id);
                 saveData();
                 _deletingExpense = null;
-                if (target) logChange('delete', `Deleted $${target.amount.toFixed(2)} — ${target.category}${target.notes ? ' (' + target.notes + ')' : ''}`);
+                if (target) logChange('delete', `Deleted $${target.amount.toFixed(2)} - ${target.category}${target.notes ? ' (' + target.notes + ')' : ''}`);
                 updateDisplay();
                 renderTransactions();
                 showToast('Expense deleted', 'success');
@@ -3680,7 +3849,7 @@
                 if (endDecimal) amount = parseFloat(endDecimal[1]);
             }
 
-            // 3. All numbers — prefer last one that looks like a price (≥ 1)
+            // 3. All numbers - prefer last one that looks like a price (≥ 1)
             if (!amount) {
                 const allNums = [...rawInput.matchAll(/\b(\d+(?:\.\d{1,2})?)\b/g)]
                     .map(m => parseFloat(m[1]))
@@ -3704,7 +3873,7 @@
             // Enhanced category keywords
             const categoryMap = {
                 'groceries': 'Groceries',
-                'grocery': 'Groceries', 
+                'grocery': 'Groceries',
                 'supermarket': 'Groceries',
                 'costco': 'Groceries',
                 'walmart': 'Groceries',
@@ -3811,7 +3980,7 @@
                     break;
                 }
             }
-            
+
             if (!foundCategory) foundCategory = 'Other';
 
             // ── PAYER DETECTION ───────────────────────────────────────
@@ -3857,14 +4026,14 @@
         function updateDashboard() {
             const monthExpenses = getCurrentMonthExpenses();
             const solo = window._isSoloSpace;
-            
+
             // Separate shared and individual expenses
             const sharedExpenses = monthExpenses.filter(exp => exp.isShared !== false);
             const individualExpenses = monthExpenses.filter(exp => exp.isShared === false);
-            
+
             const totalSharedSpent = sharedExpenses.reduce((sum, exp) => sum + exp.amount, 0);
             const totalSpent = monthExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-            
+
             const totalBudget = appState.budgets.total || 0;
             const budgetRemaining = totalBudget - totalSpent;
 
@@ -3895,7 +4064,7 @@
                     ${totalBudget > 0 ? `<div style="height:4px;border-radius:4px;background:rgba(255,255,255,0.1);overflow:hidden;"><div style="height:100%;width:${pct}%;background:${remaining >= 0 ? '#10b981' : '#ef4444'};border-radius:4px;transition:width 0.3s;"></div></div>` : ''}
                 `;
             } else {
-                // Shared mode — group budget tracks ALL spending from both partners
+                // Shared mode - group budget tracks ALL spending from both partners
                 const myKey = 'partner1';
                 const myPersonalSpent = getMyBudgetSpend(myKey, monthExpenses);
                 const myPersonalBudget = appState.budgets[myKey + 'Total'] || 0;
@@ -3928,7 +4097,7 @@
                     ${!groupBudget && !myPersonalBudget ? `<div style="font-size:12px;color:var(--text-secondary);">Set a budget in Settings</div>` : ''}
                 `;
             }
-            
+
             if (!solo) {
                 const balance = calculatePartnerBalance();
                 document.getElementById('partnerBalance').textContent = balance.amount;
@@ -3940,10 +4109,10 @@
         function getCurrentMonthExpenses() {
             const currentMonth = appState.currentMonth.getMonth();
             const currentYear = appState.currentMonth.getFullYear();
-            
+
             return appState.expenses.filter(expense => {
                 const expenseDate = new Date(expense.date);
-                return expenseDate.getMonth() === currentMonth && 
+                return expenseDate.getMonth() === currentMonth &&
                        expenseDate.getFullYear() === currentYear;
             });
         }
@@ -4051,7 +4220,7 @@
             const totalSharedSpent = sharedExpenses.reduce((sum, exp) => sum + exp.amount, 0);
             const totalIndividualSpent = individualExpenses.reduce((sum, exp) => sum + exp.amount, 0);
             const totalBudget = appState.budgets.total || 0;
-            
+
             // ── Category totals (current + previous month) ──────────────────
             const categoryTotals = {};
             currentExpenses.forEach(e => { categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount; });
@@ -4074,17 +4243,17 @@
                 const projected = dailyBurn * daysInMonth;
                 const budgetUsage = (totalSpent / totalBudget) * 100;
                 if (budgetUsage >= 100) {
-                    insights.push({ text: `🚨 Over budget! Spent $${totalSpent.toFixed(0)} of $${totalBudget.toFixed(0)} — $${(totalSpent - totalBudget).toFixed(0)} over limit.`, type: 'danger' });
+                    insights.push({ text: `🚨 Over budget! Spent $${totalSpent.toFixed(0)} of $${totalBudget.toFixed(0)} - $${(totalSpent - totalBudget).toFixed(0)} over limit.`, type: 'danger' });
                 } else if (projected > totalBudget) {
                     insights.push({ text: `📈 At your daily burn of $${dailyBurn.toFixed(0)}/day, you'll overshoot your budget by ~$${(projected - totalBudget).toFixed(0)} by month-end.`, type: 'warning' });
                 } else if (budgetUsage > 75) {
-                    insights.push({ text: `⚠️ ${budgetUsage.toFixed(0)}% of budget used with ${daysLeft} days left — tighten up a bit.`, type: 'warning' });
+                    insights.push({ text: `⚠️ ${budgetUsage.toFixed(0)}% of budget used with ${daysLeft} days left - tighten up a bit.`, type: 'warning' });
                 } else {
                     const remaining = totalBudget - totalSpent;
-                    insights.push({ text: `✅ On track — $${remaining.toFixed(0)} budget remaining for ${daysLeft} more days ($${(remaining/Math.max(daysLeft,1)).toFixed(0)}/day available).`, type: 'success' });
+                    insights.push({ text: `✅ On track - $${remaining.toFixed(0)} budget remaining for ${daysLeft} more days ($${(remaining/Math.max(daysLeft,1)).toFixed(0)}/day available).`, type: 'success' });
                 }
             } else if (totalBudget === 0 && totalSpent > 0) {
-                insights.push({ text: `💡 No monthly budget set — set one in Settings to track your pace and get smarter insights.`, type: 'info' });
+                insights.push({ text: `💡 No monthly budget set - set one in Settings to track your pace and get smarter insights.`, type: 'info' });
             }
 
             // ── 2. Month-over-month comparison ──────────────────────────────
@@ -4108,7 +4277,7 @@
                 const catChange = prevAmt > 0 ? ((topAmt - prevAmt) / prevAmt * 100).toFixed(0) : null;
                 const changeNote = catChange ? ` (${catChange > 0 ? '+' : ''}${catChange}% vs last month)` : '';
                 insights.push({
-                    text: `🏆 Top spend: ${topCat} at $${topAmt.toFixed(0)} — ${pct}% of this month's total${changeNote}.`,
+                    text: `🏆 Top spend: ${topCat} at $${topAmt.toFixed(0)} - ${pct}% of this month's total${changeNote}.`,
                     type: parseInt(pct) > 40 ? 'warning' : 'info'
                 });
             }
@@ -4137,7 +4306,7 @@
                 const avgExpense = totalSpent / currentExpenses.length;
                 if (biggest.amount > avgExpense * 3 && biggest.amount > 100) {
                     insights.push({
-                        text: `💸 Largest transaction this month: $${biggest.amount.toFixed(2)} (${biggest.category}${biggest.notes ? ` — ${biggest.notes}` : ''}) — ${(biggest.amount/totalSpent*100).toFixed(0)}% of all spending.`,
+                        text: `💸 Largest transaction this month: $${biggest.amount.toFixed(2)} (${biggest.category}${biggest.notes ? ` - ${biggest.notes}` : ''}) - ${(biggest.amount/totalSpent*100).toFixed(0)}% of all spending.`,
                         type: 'info'
                     });
                 }
@@ -4149,7 +4318,7 @@
             if (subExpenses.length >= 3) {
                 const subTotal = subExpenses.reduce((s,e) => s + e.amount, 0);
                 insights.push({
-                    text: `📺 ${subExpenses.length} subscription charges totalling $${subTotal.toFixed(0)} this month — worth a review for anything unused.`,
+                    text: `📺 ${subExpenses.length} subscription charges totalling $${subTotal.toFixed(0)} this month - worth a review for anything unused.`,
                     type: subExpenses.length > 5 ? 'warning' : 'info'
                 });
             }
@@ -4160,11 +4329,11 @@
                 if (Math.abs(balance.rawBalance) > 50) {
                     const who = balance.rawBalance > 0 ? appState.partners.partner1 : (appState.partners.partner2 || 'Partner');
                     insights.push({
-                        text: `⚖️ ${balance.label} — $${Math.abs(balance.rawBalance).toFixed(2)} pending settlement.`,
+                        text: `⚖️ ${balance.label} - $${Math.abs(balance.rawBalance).toFixed(2)} pending settlement.`,
                         type: Math.abs(balance.rawBalance) > 200 ? 'warning' : 'info'
                     });
                 } else if (Math.abs(balance.rawBalance) <= 50 && sharedExpenses.length > 0) {
-                    insights.push({ text: `🤝 Shared expenses are well balanced — less than $${Math.abs(balance.rawBalance).toFixed(2)} difference.`, type: 'success' });
+                    insights.push({ text: `🤝 Shared expenses are well balanced - less than $${Math.abs(balance.rawBalance).toFixed(2)} difference.`, type: 'success' });
                 }
 
                 // Spending load imbalance
@@ -4192,7 +4361,7 @@
                 const yesterdaySpend = currentExpenses.filter(e => e.date === yesterdayStr).reduce((s,e) => s+e.amount, 0);
                 const avgDaily = totalSpent / dayOfMonth;
                 if (todaySpend > avgDaily * 2 && todaySpend > 30) {
-                    insights.push({ text: `📅 High-spend day — $${todaySpend.toFixed(0)} logged today vs your daily avg of $${avgDaily.toFixed(0)}.`, type: 'warning' });
+                    insights.push({ text: `📅 High-spend day - $${todaySpend.toFixed(0)} logged today vs your daily avg of $${avgDaily.toFixed(0)}.`, type: 'warning' });
                 } else if (todaySpend > 0) {
                     insights.push({ text: `📅 $${todaySpend.toFixed(0)} logged today, $${yesterdaySpend.toFixed(0)} yesterday. Daily avg this month: $${avgDaily.toFixed(0)}.`, type: 'info' });
                 }
@@ -4207,7 +4376,7 @@
                     noSpendDays++;
                 }
                 if (noSpendDays >= 3) {
-                    insights.push({ text: `🏅 ${noSpendDays}-day no-spend streak before today — great discipline!`, type: 'success' });
+                    insights.push({ text: `🏅 ${noSpendDays}-day no-spend streak before today - great discipline!`, type: 'success' });
                 }
             }
 
@@ -4270,7 +4439,7 @@
 
         function emojiForCategory(name) {
             if (!name) return name;
-            // Already starts with an emoji char — leave it alone
+            // Already starts with an emoji char - leave it alone
             if (/^\p{Emoji}/u.test(name.trimStart())) return name;
             const lower = name.toLowerCase();
             // Exact match first
@@ -4279,7 +4448,7 @@
             for (const [keyword, emoji] of Object.entries(CATEGORY_AUTO_EMOJI)) {
                 if (lower.includes(keyword)) return emoji + ' ' + name;
             }
-            return name; // No match — return unchanged
+            return name; // No match - return unchanged
         }
 
         const CATEGORY_COLORS = {
@@ -4319,25 +4488,24 @@
                     const sharedBg = isShared ? 'rgba(99,102,241,0.06)' : 'rgba(245,158,11,0.06)';
                     const sharedBadgeBg = isShared ? 'rgba(99,102,241,0.15)' : 'rgba(245,158,11,0.15)';
                     const sharedBadgeColor = isShared ? '#a5b4fc' : '#fbbf24';
-                    const splitText = isShared ? 
-                        (expense.splitType === '50/50' ? '50/50' : 
-                         expense.splitType === 'custom' ? `${expense.customSplit}/${100-expense.customSplit}` : 
+                    const splitText = isShared ?
+                        (expense.splitType === '50/50' ? '50/50' :
+                         expense.splitType === 'custom' ? `${expense.customSplit}/${100-expense.customSplit}` :
                          'Single') : 'Individual';
                     const catColor = getCategoryColor(expense.category);
-                    
+
                     const isSelected = selectedTransactions.includes(expense.id);
                     const checkboxHtml = batchSelectMode ? `
-                        <input type="checkbox" data-expense-id="${expense.id}" 
+                        <input type="checkbox" class="batch-checkbox" data-expense-id="${expense.id}"
                                onclick="event.stopPropagation()"
                                onchange="toggleTransactionSelection(${expense.id})"
-                               ${isSelected ? 'checked' : ''}
-                               style="margin-right: 8px; transform: scale(1.3); cursor: pointer; flex-shrink: 0;">
+                               ${isSelected ? 'checked' : ''}>
                     ` : '';
-                    const rowOnClick = batchSelectMode ? `onclick="toggleTransactionSelection(${expense.id})" style="cursor:pointer;"` : '';
-                    const selectedStyle = (batchSelectMode && isSelected) ? 'outline: 2px solid var(--accent-start); outline-offset: -2px;' : '';
+                    const batchClass = batchSelectMode ? `batch-row${isSelected ? ' batch-selected' : ''}` : '';
+                    const batchClick = batchSelectMode ? `onclick="toggleTransactionSelection(${expense.id})"` : '';
 
                     return `
-                        <div data-expense-id="${expense.id}" ${rowOnClick} style="background: ${sharedBg}; border-left: 3px solid ${catColor}; border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; transition: opacity 0.3s, outline 0.1s; ${selectedStyle}">
+                        <div data-expense-id="${expense.id}" class="${batchClass}" ${batchClick} style="background: ${sharedBg}; border-left: 3px solid ${catColor}; border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
                             ${checkboxHtml}
                             <div style="flex: 1; min-width: 0;">
                                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px;">
@@ -4362,238 +4530,277 @@
                 }).join('');
         }
 
-        // ── Batch Edit Feature ──────────────────────────────────
+        // ── Batch Select / Edit Feature ─────────────────────────
         let batchSelectMode = false;
         let selectedTransactions = [];
 
         function toggleBatchMode() {
             batchSelectMode = !batchSelectMode;
             selectedTransactions = [];
-            
-            const selectBtn = document.getElementById('batchSelectBtn');
+
+            const selectBtn    = document.getElementById('batchSelectBtn');
+            const selectAllBtn = document.getElementById('batchSelectAllBtn');
+            const countBadge   = document.getElementById('batchSelectionCount');
+
             if (batchSelectMode) {
-                selectBtn.innerHTML = '✕ Cancel';
-                selectBtn.style.background = 'var(--danger)';
+                selectBtn.innerHTML    = '✕ Done';
+                selectBtn.style.background = 'rgba(239,68,68,0.15)';
+                selectBtn.style.borderColor = 'rgba(239,68,68,0.4)';
+                selectBtn.style.color  = '#f87171';
+                selectAllBtn.style.display = 'inline-block';
+                countBadge.style.display   = 'inline-block';
+                countBadge.textContent     = '0 selected';
             } else {
-                selectBtn.innerHTML = '📋 Select';
+                selectBtn.innerHTML    = '☑️ Select';
                 selectBtn.style.background = '';
+                selectBtn.style.borderColor = '';
+                selectBtn.style.color  = '';
+                selectAllBtn.style.display = 'none';
+                countBadge.style.display   = 'none';
+                hideBatchActionBar();
             }
-            
+
+            renderTransactions();
+        }
+
+        function batchSelectAll() {
+            const filtered = getFilteredExpenses();
+            const allIds = filtered.map(e => e.id);
+            const allSelected = allIds.every(id => selectedTransactions.includes(id));
+            if (allSelected) {
+                selectedTransactions = [];
+            } else {
+                selectedTransactions = [...allIds];
+            }
             renderTransactions();
             updateBatchActionBar();
+            refreshBatchHeader();
         }
 
         function toggleTransactionSelection(expenseId) {
-            const index = selectedTransactions.indexOf(expenseId);
-            if (index > -1) {
-                selectedTransactions.splice(index, 1);
+            const idx = selectedTransactions.indexOf(expenseId);
+            if (idx > -1) {
+                selectedTransactions.splice(idx, 1);
             } else {
                 selectedTransactions.push(expenseId);
             }
             const isNowSelected = selectedTransactions.includes(expenseId);
 
-            // Update checkbox
-            const checkbox = document.querySelector(`input[data-expense-id="${expenseId}"]`);
-            if (checkbox) checkbox.checked = isNowSelected;
+            // Update checkbox without re-render
+            const cb = document.querySelector(`.batch-checkbox[data-expense-id="${expenseId}"]`);
+            if (cb) cb.checked = isNowSelected;
 
-            // Update row highlight
-            const row = document.querySelector(`[data-expense-id="${expenseId}"]`);
-            if (row) {
-                row.style.outline = isNowSelected ? '2px solid var(--accent-start)' : '';
-                row.style.outlineOffset = isNowSelected ? '-2px' : '';
-            }
+            // Update row class
+            const row = document.querySelector(`[data-expense-id="${expenseId}"].batch-row`);
+            if (row) row.classList.toggle('batch-selected', isNowSelected);
 
             updateBatchActionBar();
+            refreshBatchHeader();
+        }
+
+        function refreshBatchHeader() {
+            const countBadge   = document.getElementById('batchSelectionCount');
+            const selectAllBtn = document.getElementById('batchSelectAllBtn');
+            if (!countBadge) return;
+            const n = selectedTransactions.length;
+            countBadge.textContent = n === 0 ? '0 selected' : `${n} selected`;
+            const filtered = getFilteredExpenses();
+            const allSelected = filtered.length > 0 && filtered.every(e => selectedTransactions.includes(e.id));
+            if (selectAllBtn) selectAllBtn.textContent = allSelected ? 'Deselect All' : 'Select All';
         }
 
         function updateBatchActionBar() {
-            let actionBar = document.getElementById('batchActionBar');
-            
+            let bar = document.getElementById('batchActionBar');
             if (!batchSelectMode || selectedTransactions.length === 0) {
-                if (actionBar) actionBar.remove();
+                hideBatchActionBar();
                 return;
             }
-            
-            if (!actionBar) {
-                actionBar = document.createElement('div');
-                actionBar.id = 'batchActionBar';
-                actionBar.style.cssText = `
-                    position: fixed; 
-                    bottom: 0; 
-                    left: 0; 
-                    right: 0; 
-                    z-index: 200;
-                    background: rgba(31, 41, 55, 0.97);
-                    backdrop-filter: blur(16px);
-                    border-top: 1px solid var(--glass-border);
-                    padding: 16px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                `;
-                document.body.appendChild(actionBar);
+
+            if (!bar) {
+                bar = document.createElement('div');
+                bar.id = 'batchActionBar';
+                document.body.appendChild(bar);
+                // Allow transition to play
+                requestAnimationFrame(() => bar.classList.add('visible'));
+            } else if (!bar.classList.contains('visible')) {
+                requestAnimationFrame(() => bar.classList.add('visible'));
             }
-            
-            actionBar.innerHTML = `
-                <div style="color: var(--text-primary); font-weight: 500;">
-                    ${selectedTransactions.length} selected
+
+            const n = selectedTransactions.length;
+            bar.innerHTML = `
+                <div class="batch-action-left">
+                    <span class="batch-count-badge">${n}</span>
+                    <span style="color:var(--text-secondary); font-size:13px;">transaction${n !== 1 ? 's' : ''} selected</span>
                 </div>
-                <div style="display: flex; gap: 12px;">
-                    <button class="btn btn-secondary" onclick="openBatchEditModal()" style="font-size: 14px;">✏️ Edit</button>
-                    <button class="btn" onclick="batchDeleteTransactions()" style="background: var(--danger); font-size: 14px;">🗑️ Delete</button>
-                    <button class="btn btn-ghost" onclick="toggleBatchMode()" style="font-size: 14px;">Cancel</button>
+                <div class="batch-action-right">
+                    <button class="batch-edit-btn" onclick="openBatchEditModal()">✏️ Edit</button>
+                    <button class="batch-delete-btn" onclick="batchDeleteTransactions()">🗑️ Delete</button>
+                    <button class="batch-cancel-btn" onclick="toggleBatchMode()">✕</button>
                 </div>
             `;
         }
 
-        function batchDeleteTransactions() {
+        function hideBatchActionBar() {
+            const bar = document.getElementById('batchActionBar');
+            if (!bar) return;
+            bar.classList.remove('visible');
+            setTimeout(() => { if (bar.parentNode) bar.remove(); }, 250);
+        }
+
+        async function batchDeleteTransactions() {
             const count = selectedTransactions.length;
-            if (!confirm(`Delete ${count} transaction${count > 1 ? 's' : ''}?`)) return;
-            
-            selectedTransactions.forEach(expenseId => {
-                deleteExpense(expenseId, false); // Don't show individual confirmations
-            });
-            
+            if (!confirm(`Delete ${count} transaction${count > 1 ? 's' : ''}? This cannot be undone.`)) return;
+
+            const toDelete = [...selectedTransactions];
             selectedTransactions = [];
+            hideBatchActionBar();
+
+            for (const expenseId of toDelete) {
+                const expense = appState.expenses.find(e => e.id === expenseId);
+                if (!expense) continue;
+                if (useApi && currentHouseholdId) {
+                    try {
+                        await apiFetch('/households/' + currentHouseholdId + '/expenses/' + expenseId, { method: 'DELETE' });
+                    } catch (err) { console.error('Batch delete error:', err); }
+                }
+                appState.expenses = appState.expenses.filter(e => e.id !== expenseId);
+            }
+
+            saveData();
             toggleBatchMode();
             showToast(`${count} transaction${count > 1 ? 's' : ''} deleted`, 'success');
         }
 
         function openBatchEditModal() {
-            const modal = document.getElementById('batchEditModal');
-            if (!modal) createBatchEditModal();
-
-            const count = selectedTransactions.length;
-            document.getElementById('batchEditModal').style.display = 'flex';
-            document.getElementById('batchEditCount').textContent = count;
-            const applyBtn = document.getElementById('batchApplyBtn');
-            if (applyBtn) applyBtn.textContent = `Apply to ${count} transaction${count !== 1 ? 's' : ''}`;
+            // Remove stale modal if it exists (re-create fresh each time)
+            const existing = document.getElementById('batchEditModal');
+            if (existing) existing.remove();
+            createAndShowBatchEditModal();
         }
 
-        function createBatchEditModal() {
-            const modalHTML = `
-                <div id="batchEditModal" class="modal-overlay" style="display: none;">
-                    <div class="glass-card" style="max-width: 400px; width: 90%; margin: auto; max-height: 80vh; overflow-y: auto;">
-                        <h2 style="margin: 0 0 20px 0; font-size: 20px;">Batch Edit</h2>
-                        <p style="color: var(--text-secondary); margin-bottom: 20px;">
-                            Apply changes to <span id="batchEditCount">0</span> selected transactions. Only fill fields you want to change.
+        function createAndShowBatchEditModal() {
+            const count = selectedTransactions.length;
+
+            // Build partner options
+            const partnerOpts = Object.entries(appState.partners).map(([k, v]) =>
+                `<option value="${k}">${v}</option>`).join('');
+
+            // Build category options
+            const catOpts = (appState.categories || []).map(c =>
+                `<option value="${c}">${c}</option>`).join('');
+
+            const html = `
+                <div id="batchEditModal" class="batch-modal-overlay" onclick="if(event.target===this)closeBatchEditModal()">
+                    <div class="batch-modal-sheet">
+                        <div class="batch-modal-handle"></div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <h2 style="margin:0; font-size:18px; font-weight:700;">Edit ${count} Transaction${count !== 1 ? 's' : ''}</h2>
+                            <button onclick="closeBatchEditModal()" style="background:none;border:none;color:var(--text-secondary);font-size:22px;cursor:pointer;line-height:1;">✕</button>
+                        </div>
+                        <p style="color:var(--text-secondary); font-size:13px; margin:0 0 24px;">
+                            Only fields you fill in will be updated — leave blank to keep original values.
                         </p>
-                        
-                        <div style="display: flex; flex-direction: column; gap: 16px;">
+
+                        <div style="display:flex; flex-direction:column; gap:18px;">
                             <div>
-                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-secondary);">Category</label>
-                                <select id="batchCategory" class="form-input" style="width: 100%;">
-                                    <option value="">Don't change</option>
+                                <div class="batch-field-label">Category</div>
+                                <select id="batchCategory" class="form-input" style="width:100%;">
+                                    <option value="">— Keep original —</option>
+                                    ${catOpts}
                                 </select>
                             </div>
-                            
                             <div>
-                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-secondary);">Who Paid</label>
-                                <select id="batchWhoPaid" class="form-input" style="width: 100%;">
-                                    <option value="">Don't change</option>
-                                    <option value="partner1">${appState.partners.partner1 || 'Partner 1'}</option>
-                                    <option value="partner2">${appState.partners.partner2 || 'Partner 2'}</option>
+                                <div class="batch-field-label">Who Paid</div>
+                                <select id="batchWhoPaid" class="form-input" style="width:100%;">
+                                    <option value="">— Keep original —</option>
+                                    ${partnerOpts}
                                 </select>
                             </div>
-                            
                             <div>
-                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-secondary);">Split Type</label>
-                                <select id="batchSplitType" class="form-input" style="width: 100%;">
-                                    <option value="">Don't change</option>
-                                    <option value="50/50">50/50 Split</option>
-                                    <option value="individual">Individual</option>
+                                <div class="batch-field-label">Split Type</div>
+                                <select id="batchSplitType" class="form-input" style="width:100%;">
+                                    <option value="">— Keep original —</option>
+                                    <option value="shared">👥 50/50 Shared</option>
+                                    <option value="individual">👤 Individual</option>
                                 </select>
                             </div>
-                            
                             <div>
-                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-secondary);">Date</label>
-                                <input type="date" id="batchDate" class="form-input" style="width: 100%;">
-                                <small style="color: var(--text-secondary);">Leave empty to keep original dates</small>
+                                <div class="batch-field-label">Date</div>
+                                <input type="date" id="batchDate" class="form-input" style="width:100%;">
+                                <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">Leave empty to keep original dates</div>
                             </div>
                         </div>
-                        
-                        <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
-                            <button class="btn btn-ghost" onclick="closeBatchEditModal()">Cancel</button>
-                            <button id="batchApplyBtn" class="btn" onclick="applyBatchEdit()" style="background: linear-gradient(135deg, var(--accent-start), var(--accent-end));">
-                                Apply to ${selectedTransactions.length} transaction${selectedTransactions.length !== 1 ? 's' : ''}
-                            </button>
+
+                        <div style="display:flex; gap:10px; margin-top:28px;">
+                            <button onclick="closeBatchEditModal()" style="flex:1; padding:12px; border-radius:10px; background:rgba(255,255,255,0.07); border:1px solid var(--glass-border); color:var(--text-secondary); font-size:14px; cursor:pointer;">Cancel</button>
+                            <button onclick="applyBatchEdit()" style="flex:2; padding:12px; border-radius:10px; background:linear-gradient(135deg, var(--accent-start), var(--accent-end)); border:none; color:white; font-size:14px; font-weight:700; cursor:pointer;">Apply to ${count} Transaction${count !== 1 ? 's' : ''}</button>
                         </div>
                     </div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-            
-            // Populate categories
-            const categorySelect = document.getElementById('batchCategory');
-            appState.categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                categorySelect.appendChild(option);
-            });
+                </div>`;
+
+            document.body.insertAdjacentHTML('beforeend', html);
         }
 
         function closeBatchEditModal() {
-            document.getElementById('batchEditModal').style.display = 'none';
+            const m = document.getElementById('batchEditModal');
+            if (m) m.remove();
         }
 
         async function applyBatchEdit() {
-            const category = document.getElementById('batchCategory').value;
-            const whoPaid = document.getElementById('batchWhoPaid').value;
+            const category  = document.getElementById('batchCategory').value;
+            const whoPaid   = document.getElementById('batchWhoPaid').value;
             const splitType = document.getElementById('batchSplitType').value;
-            const date = document.getElementById('batchDate').value;
-            
+            const date      = document.getElementById('batchDate').value;
+
             if (!category && !whoPaid && !splitType && !date) {
-                showToast('No changes specified', 'warning');
+                showToast('Fill in at least one field to change', 'warning');
                 return;
             }
-            
+
             const updates = {};
-            if (category) updates.category = category;
-            if (whoPaid) updates.whoPaid = whoPaid;
+            if (category)  updates.category = category;
+            if (whoPaid)   updates.whoPaid  = whoPaid;
             if (splitType) {
-                updates.splitType = splitType === 'individual' ? 'individual' : '50/50';
-                updates.isShared = splitType !== 'individual';
+                updates.isShared  = splitType === 'shared';
+                updates.splitType = splitType === 'shared' ? '50/50' : 'individual';
             }
             if (date) updates.date = date;
-            
-            // Apply updates to each selected transaction
-            for (const expenseId of selectedTransactions) {
+
+            const toUpdate = [...selectedTransactions];
+            const count    = toUpdate.length;
+
+            for (const expenseId of toUpdate) {
                 const expense = appState.expenses.find(e => e.id === expenseId);
-                if (expense) {
-                    Object.assign(expense, updates);
-                    
-                    if (useApi) {
-                        try {
-                            await apiFetch(`/households/${currentHouseholdId}/expenses/${expenseId}`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    amount: expense.amount,
-                                    category: expense.category,
-                                    paidBy: expense.whoPaid,
-                                    splitType: expense.splitType || '50/50',
-                                    date: expense.date,
-                                    notes: expense.notes,
-                                    isShared: expense.isShared
-                                })
-                            });
-                        } catch (err) {
-                            console.error('Batch edit API error:', err);
-                            showToast('Some updates failed', 'error');
-                            return;
-                        }
+                if (!expense) continue;
+                Object.assign(expense, updates);
+
+                if (useApi && currentHouseholdId) {
+                    try {
+                        await apiFetch(`/households/${currentHouseholdId}/expenses/${expenseId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                amount:    expense.amount,
+                                category:  expense.category,
+                                paidBy:    expense.whoPaid,
+                                splitType: expense.splitType || '50/50',
+                                date:      expense.date,
+                                notes:     expense.notes,
+                                isShared:  expense.isShared
+                            })
+                        });
+                    } catch (err) {
+                        console.error('Batch edit API error:', err);
+                        showToast('Some updates failed — check connection', 'error');
                     }
                 }
             }
-            
-            const updatedCount = selectedTransactions.length;
+
             saveData();
-            renderTransactions();
             closeBatchEditModal();
+            selectedTransactions = [];
             toggleBatchMode();
-            showToast(`${updatedCount} transaction${updatedCount !== 1 ? 's' : ''} updated`, 'success');
+            showToast(`${count} transaction${count !== 1 ? 's' : ''} updated ✓`, 'success');
         }
 
         function getFilteredExpenses() {
@@ -4608,8 +4815,8 @@
                 if (expense.isShared === undefined) {
                     expense.isShared = true;
                 }
-                
-                if (searchTerm && !expense.notes.toLowerCase().includes(searchTerm) && 
+
+                if (searchTerm && !expense.notes.toLowerCase().includes(searchTerm) &&
                     !expense.category.toLowerCase().includes(searchTerm)) {
                     return false;
                 }
@@ -4694,9 +4901,9 @@
             const rows = expenses.map(e => {
                 const paidBy = appState.partners[e.whoPaid] || e.whoPaid;
                 const isShared = e.isShared !== false;
-                const split = isShared ? 
-                    (e.splitType === '50/50' ? '50/50' : 
-                     e.splitType === 'custom' ? `${e.customSplit}/${100-e.customSplit}` : 
+                const split = isShared ?
+                    (e.splitType === '50/50' ? '50/50' :
+                     e.splitType === 'custom' ? `${e.customSplit}/${100-e.customSplit}` :
                      'Single Payer') : 'N/A';
                 return [
                     e.date,
@@ -4765,16 +4972,16 @@
         function deduplicateCategories(categories) {
             const categoryMap = new Map();
             const emojiPattern = /^[\p{Emoji}]/u;
-            
+
             categories.forEach(cat => {
                 const plainText = cat.replace(/^[\p{Emoji}\s]+/u, '').trim();
                 const hasEmoji = emojiPattern.test(cat);
-                
+
                 if (!categoryMap.has(plainText) || hasEmoji) {
                     categoryMap.set(plainText, cat);
                 }
             });
-            
+
             return Array.from(categoryMap.values()).sort();
         }
 
@@ -4980,7 +5187,7 @@
                     }
                     saveData();
                     const paidByName = appState.partners?.[whoPaid] || whoPaid;
-                    logChange('edit', `Edited $${amount.toFixed(2)} — ${category} (${paidByName}${notes ? ', ' + notes : ''})`);
+                    logChange('edit', `Edited $${amount.toFixed(2)} - ${category} (${paidByName}${notes ? ', ' + notes : ''})`);
                     closeExpenseModal();
                     updateDisplay();
                     renderTransactions();
@@ -5042,7 +5249,7 @@
             _savingBudgets = true;
             const shared = parseFloat(document.getElementById('sharedBudget').value);
             if (!isNaN(shared)) appState.budgets.shared = shared;
-            
+
             // Save per-member budgets dynamically
             let memberTotal = 0;
             Object.keys(appState.partners).forEach(key => {
@@ -5055,28 +5262,28 @@
                     }
                 }
             });
-            
+
             // Keep backward compat: total = shared + all member budgets
             appState.budgets.total = (appState.budgets.shared || 0) + memberTotal;
             saveData();
-            
+
             // Also sync to API
             if (useApi && currentHouseholdId) {
                 try {
                     const month = appState.currentMonth.toISOString().slice(0,7); // "2026-02"
-                    
+
                     // Save shared budget
                     if (appState.budgets.shared) {
                         await apiFetch('/households/' + currentHouseholdId + '/budgets', {
                             method: 'PUT',
-                            body: JSON.stringify({ 
-                                amount: appState.budgets.shared, 
-                                budgetType: 'shared', 
-                                month: month 
+                            body: JSON.stringify({
+                                amount: appState.budgets.shared,
+                                budgetType: 'shared',
+                                month: month
                             })
                         });
                     }
-                    
+
                     // Save per-member budgets
                     for (const key of Object.keys(appState.partners)) {
                         const val = appState.budgets[key + 'Total'];
@@ -5085,11 +5292,11 @@
                             if (userId) {
                                 await apiFetch('/households/' + currentHouseholdId + '/budgets', {
                                     method: 'PUT',
-                                    body: JSON.stringify({ 
-                                        amount: val, 
-                                        budgetType: 'personal', 
-                                        userId: userId, 
-                                        month: month 
+                                    body: JSON.stringify({
+                                        amount: val,
+                                        budgetType: 'personal',
+                                        userId: userId,
+                                        month: month
                                     })
                                 });
                             }
@@ -5099,7 +5306,7 @@
                     console.error('Budget API sync failed:', err);
                 }
             }
-            
+
             updateDisplay();
             renderBudget();
             showToast('Budgets saved! ✅', 'success');
@@ -5145,7 +5352,7 @@
 
             // Set budget inputs
             document.getElementById('sharedBudget').value = appState.budgets.shared || '';
-            
+
             // Render per-member budget cards dynamically
             const memberCards = document.getElementById('memberBudgetCards');
             if (memberCards) {
@@ -5211,13 +5418,13 @@
                             <div class="budget-spent">$${spent.toFixed(2)} spent</div>
                             ${budget > 0 ? `
                                 <div class="progress-bar">
-                                    <div class="progress-fill ${isOverBudget ? 'danger' : percentage > 75 ? 'warning' : ''}" 
+                                    <div class="progress-fill ${isOverBudget ? 'danger' : percentage > 75 ? 'warning' : ''}"
                                          style="width: ${Math.min(percentage, 100)}%"></div>
                                 </div>
                             ` : ''}
                         </div>
-                        <input type="number" class="form-input" style="width: 120px;" 
-                               placeholder="Budget" value="${budget || ''}" 
+                        <input type="number" class="form-input" style="width: 120px;"
+                               placeholder="Budget" value="${budget || ''}"
                                onchange="setCategoryBudget('${category}', this.value)">
                     </div>
                 `;
@@ -5290,7 +5497,7 @@
             const breakdownDiv = document.getElementById('paymentBreakdown');
 
             if (solo) {
-                amount.textContent = '—';
+                amount.textContent = '-';
                 amount.className = 'settlement-amount';
                 label.textContent = 'Settlement is for shared spaces';
                 button.style.display = 'none';
@@ -5354,7 +5561,7 @@
                 const netLabel = net > 0.005
                     ? `<span style="color:#10b981">+$${net.toFixed(2)} overpaid</span>`
                     : net < -0.005
-                    ? `<span style="color:#f87171">−$${Math.abs(net).toFixed(2)} owes</span>`
+                    ? `<span style="color:#f87171">-$${Math.abs(net).toFixed(2)} owes</span>`
                     : `<span style="color:#a3a3a3">Balanced ✓</span>`;
                 html += `
                     <div class="budget-item" style="flex-direction:column;align-items:flex-start;gap:6px;">
@@ -5397,7 +5604,7 @@
                         <div style="font-size:22px;font-weight:800;color:#818cf8;margin-top:2px;">${balance.amount}</div>
                     </div>`;
             } else if (totalPaid > 0) {
-                html += `<div style="text-align:center;padding:14px;font-size:14px;color:#10b981;font-weight:600;">✅ All square — no settlement needed!</div>`;
+                html += `<div style="text-align:center;padding:14px;font-size:14px;color:#10b981;font-weight:600;">✅ All square - no settlement needed!</div>`;
             }
 
             container.innerHTML = html;
@@ -5497,12 +5704,12 @@
 
         function renderCategoryChart() {
             const ctx = document.getElementById('categoryChart').getContext('2d');
-            
+
             // Destroy existing chart to prevent memory leaks
             if (window.categoryChart instanceof Chart) {
                 window.categoryChart.destroy();
             }
-            
+
             const expenses = getAnalyticsExpenses();
             const categoryTotals = {};
 
@@ -5673,18 +5880,18 @@
 
         function renderPartnerChart() {
             const ctx = document.getElementById('partnerChart').getContext('2d');
-            
+
             // Destroy existing chart to prevent memory leaks
             if (window.partnerChart instanceof Chart) {
                 window.partnerChart.destroy();
             }
-            
+
             const expenses = getAnalyticsExpenses();
-            
+
             // Separate shared and individual expenses
             const sharedExpenses = expenses.filter(e => e.isShared !== false);
             const individualExpenses = expenses.filter(e => e.isShared === false);
-            
+
             const partnerKeys = Object.keys(appState.partners);
             const sharedColors = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
             const indivColors = ['#8b5cf6', '#14b8a6', '#84cc16', '#f97316', '#d946ef', '#0ea5e9', '#f472b6'];
@@ -5707,7 +5914,7 @@
                     colors.push(indivColors[i % indivColors.length]);
                 }
             });
-            
+
             // Handle empty data
             if (data.length === 0) {
                 data.push(1);
@@ -5738,12 +5945,12 @@
 
         function renderMonthlyChart() {
             const ctx = document.getElementById('monthlyChart').getContext('2d');
-            
+
             // Destroy existing chart to prevent memory leaks
             if (window.monthlyChart instanceof Chart) {
                 window.monthlyChart.destroy();
             }
-            
+
             const months = [];
             const totals = [];
 
@@ -5752,10 +5959,10 @@
                 month.setMonth(month.getMonth() - i);
                 const monthExpenses = applyAnalyticsFilter(appState.expenses.filter(expense => {
                     const expenseDate = new Date(expense.date);
-                    return expenseDate.getMonth() === month.getMonth() && 
+                    return expenseDate.getMonth() === month.getMonth() &&
                            expenseDate.getFullYear() === month.getFullYear();
                 }));
-                
+
                 months.push(month.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }));
                 totals.push(monthExpenses.reduce((sum, e) => sum + e.amount, 0));
             }
@@ -5795,18 +6002,18 @@
 
         function renderDailyChart() {
             const ctx = document.getElementById('dailyChart').getContext('2d');
-            
+
             // Destroy existing chart to prevent memory leaks
             if (window.dailyChart instanceof Chart) {
                 window.dailyChart.destroy();
             }
-            
+
             const expenses = getAnalyticsExpenses();
-            
+
             const daysInMonth = new Date(appState.currentMonth.getFullYear(), appState.currentMonth.getMonth() + 1, 0).getDate();
             const dailyTotals = new Array(daysInMonth).fill(0);
             const cumulativeSpending = [];
-            
+
             expenses.forEach(expense => {
                 const day = new Date(expense.date).getDate();
                 dailyTotals[day - 1] += expense.amount;
@@ -5936,7 +6143,7 @@
                     appState.partners[key] = input.value.trim();
                 }
             });
-            
+
             saveData();
             populateSelectors();
             updateDisplay();
@@ -5951,7 +6158,7 @@
                 categories: appState.categories,
                 exportDate: new Date().toISOString()
             };
-            
+
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -5973,17 +6180,17 @@
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    
+
                     if (confirm('This will replace all current data. Continue?')) {
                         appState.expenses = data.expenses || [];
                         appState.budgets = data.budgets || {};
                         appState.partners = data.partners || appState.partners;
                         appState.categories = (data.categories || appState.categories).map(c => emojiForCategory(c));
-                        
+
                         saveData();
                         initializeApp();
                         updateDisplay();
-                        
+
                         alert('Data imported successfully!');
                     }
                 } catch (error) {
@@ -6037,32 +6244,32 @@
         async function loadActivity() {
             const activityCard = document.getElementById('activityLogCard');
             const activityLog = document.getElementById('activityLog');
-            
+
             if (!useApi || !currentHouseholdId) {
                 activityCard.style.display = 'none';
                 return;
             }
             activityCard.style.display = 'block';
-            
+
             try {
                 activityLog.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);"><div class="loading"></div> Loading...</div>';
-                
+
                 const data = await apiFetch('/households/' + currentHouseholdId + '/activity?limit=20');
                 const activities = data.activities || [];
-                
+
                 if (activities.length === 0) {
                     activityLog.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">No activity yet</div>';
                     return;
                 }
-                
+
                 const activityHtml = activities.map(activity => {
                     const details = activity.details ? JSON.parse(activity.details) : {};
                     const timeAgo = getTimeAgo(activity.created_at);
-                    
+
                     let icon = '📝';
                     let actionText = activity.action;
                     let entityDesc = '';
-                    
+
                     switch (activity.action) {
                         case 'add':
                             icon = '➕';
@@ -6085,13 +6292,13 @@
                             actionText = 'updated budget for';
                             break;
                     }
-                    
+
                     if (activity.entity_type === 'expense' && details) {
                         entityDesc = `"${details.notes || details.category}" - $${details.amount || '?'}`;
                     } else if (activity.entity_type === 'budget' && details) {
                         entityDesc = details.category || 'budget';
                     }
-                    
+
                     return `
                         <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 8px; margin-bottom: 8px;">
                             <span style="font-size: 20px;">${icon}</span>
@@ -6104,14 +6311,14 @@
                         </div>
                     `;
                 }).join('');
-                
+
                 activityLog.innerHTML = activityHtml;
             } catch (err) {
                 console.error('Load activity failed:', err);
                 activityLog.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);">Failed to load activity</div>';
             }
         }
-        
+
         function getTimeAgo(dateString) {
             const now = new Date();
             const date = new Date(dateString + 'Z'); // Assume UTC
@@ -6120,7 +6327,7 @@
             const diffMin = Math.floor(diffSec / 60);
             const diffHr = Math.floor(diffMin / 60);
             const diffDays = Math.floor(diffHr / 24);
-            
+
             if (diffSec < 60) return 'Just now';
             if (diffMin === 1) return '1 min ago';
             if (diffMin < 60) return `${diffMin} min ago`;
@@ -6139,7 +6346,7 @@
             }
             card.style.display = 'block';
             document.getElementById('settingsHouseholdName').textContent = window._householdName || 'My Space';
-            document.getElementById('settingsInviteCode').textContent = window._householdInviteCode || '—';
+            document.getElementById('settingsInviteCode').textContent = window._householdInviteCode || '-';
             const members = window._householdMembers || [];
             const myId = parseInt(localStorage.getItem('finSyncUserId'));
             const listEl = document.getElementById('settingsMembersList');
@@ -6251,19 +6458,19 @@
 
         function renderCustomCategories() {
             const defaultCategories = [
-                'Food/Dining', 'Groceries', 'Rent/Housing', 'Utilities', 
-                'Transport', 'Entertainment', 'Subscriptions', 'Health', 
+                'Food/Dining', 'Groceries', 'Rent/Housing', 'Utilities',
+                'Transport', 'Entertainment', 'Subscriptions', 'Health',
                 'Shopping', 'Travel', 'Gifts', 'Other'
             ];
-            
+
             const customCategories = appState.categories.filter(c => !defaultCategories.includes(c));
             const container = document.getElementById('customCategoriesList');
-            
+
             if (customCategories.length === 0) {
                 container.innerHTML = '<p style="color: var(--text-secondary);">No custom categories yet</p>';
                 return;
             }
-            
+
             container.innerHTML = customCategories.map(category => `
                 <div class="budget-item">
                     <div class="budget-info">
@@ -6278,24 +6485,24 @@
         function renderRecurringExpenses() {
             const now = new Date();
             const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            
+
             const recurringExpenses = appState.expenses.filter(e => e.isRecurring && e.date && e.category);
             const monthlyRecurring = recurringExpenses.filter(e => {
                 const expenseMonth = e.date.substring(0, 7);
                 return expenseMonth !== currentMonth;
             });
-            
+
             let added = false;
             monthlyRecurring.forEach(expense => {
                 // More specific check to prevent duplicates
-                const exists = appState.expenses.some(e => 
+                const exists = appState.expenses.some(e =>
                     e.category === expense.category &&
                     e.amount === expense.amount &&
                     e.whoPaid === expense.whoPaid &&
                     e.date.substring(0, 7) === currentMonth &&
                     (e.notes || '').includes('Auto-generated')
                 );
-                
+
                 if (!exists) {
                     const newExpense = {
                         ...expense,
@@ -6305,12 +6512,12 @@
                         timestamp: new Date(),
                         isShared: expense.isShared !== false // Preserve shared status
                     };
-                    
+
                     appState.expenses.push(newExpense);
                     added = true;
                 }
             });
-            
+
             if (added) {
                 saveData();
             }
@@ -6340,7 +6547,7 @@
             // Month filter
             const monthFilter = document.getElementById('monthFilter');
             const months = [...new Set(appState.expenses.map(e => e.date.substring(0, 7)))].sort().reverse();
-            monthFilter.innerHTML = '<option value="">📅 All Months</option>' + 
+            monthFilter.innerHTML = '<option value="">📅 All Months</option>' +
                 months.map(month => {
                     // Use noon on 2nd to avoid UTC midnight rolling back to prev month in negative offsets
                     const d = new Date(month + '-02T12:00:00');
@@ -6395,16 +6602,16 @@
         function handleReceiptFile(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
+
             if (!file.type.startsWith('image/')) {
                 showToast('Please select an image file', 'error');
                 return;
             }
             if (file.size > 10 * 1024 * 1024) {
-                showToast('File too large — max 10MB', 'error');
+                showToast('File too large - max 10MB', 'error');
                 return;
             }
-            
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 currentReceiptImage = e.target.result;
@@ -6449,32 +6656,32 @@
                 showToast('Please select an image first', 'error');
                 return;
             }
-            
+
             _scanning = true;
             document.getElementById('receiptPreview').style.display = 'none';
             document.getElementById('scanLoading').style.display = 'block';
             document.getElementById('scanResults').classList.remove('show');
-            
+
             try {
                 const response = await fetch(RECEIPT_API, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: currentReceiptImage }),
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (!response.ok) {
                     throw new Error(result.error || `Server error ${response.status}`);
                 }
-                
+
                 if (!result.success) {
                     throw new Error(result.error || 'No transactions found in this image');
                 }
-                
+
                 const parsedData = result.data;
                 const receiptDate = parsedData.date || new Date().toISOString().split('T')[0];
-                
+
                 scannedItems = parsedData.items.map((item, index) => ({
                     id: `scanned-${Date.now()}-${index}`,
                     description: item.description || item.name || 'Unknown item',
@@ -6485,12 +6692,12 @@
                     shared: true,
                     whoPaid: 'partner1'
                 }));
-                
+
                 document.getElementById('scanLoading').style.display = 'none';
                 document.getElementById('receiptPreview').style.display = 'block';
                 showScanResults(parsedData);
                 showToast(`Found ${scannedItems.length} transaction${scannedItems.length !== 1 ? 's' : ''}!`, 'success');
-                
+
             } catch (error) {
                 document.getElementById('scanLoading').style.display = 'none';
                 document.getElementById('receiptPreview').style.display = 'block';
@@ -6500,24 +6707,24 @@
                 _scanning = false;
             }
         }
-        
+
         function mapToAppCategory(category, description = '') {
             // Check user's custom category mappings FIRST
             const userMappings = getUserCategoryMappings();
             const descLower = description.toLowerCase();
-            
+
             // Check if user has overridden this exact description
             if (userMappings[descLower]) {
                 return userMappings[descLower];
             }
-            
+
             // Check if any stored description is a partial match
             for (const [storedDesc, mappedCategory] of Object.entries(userMappings)) {
                 if (descLower.includes(storedDesc) || storedDesc.includes(descLower)) {
                     return mappedCategory;
                 }
             }
-            
+
             // Map AI-suggested categories to exact app categories (fallback)
             const mapping = {
                 'food': 'Food/Dining', 'dining': 'Food/Dining', 'restaurant': 'Food/Dining',
@@ -6532,19 +6739,19 @@
                 'travel': 'Travel', 'hotel': 'Travel', 'flight': 'Travel',
                 'gifts': 'Gifts', 'gift': 'Gifts',
             };
-            
+
             // Check exact match first
             if (appState.categories.includes(category)) return category;
-            
+
             // Check mapping
             const lower = category.toLowerCase();
             if (mapping[lower]) return mapping[lower];
-            
+
             // Partial match
             for (const [key, val] of Object.entries(mapping)) {
                 if (lower.includes(key) || key.includes(lower)) return val;
             }
-            
+
             return 'Other';
         }
 
@@ -6579,29 +6786,29 @@
         function showScanResults(data) {
             const results = document.getElementById('scanResults');
             const list = document.getElementById('scanResultsList');
-            
+
             list.innerHTML = scannedItems.map(item => `
                 <div class="scan-result-item ${item.selected ? 'selected' : ''}" data-item-id="${item.id}">
                     <div class="result-header">
-                        <input type="checkbox" class="result-checkbox" ${item.selected ? 'checked' : ''} 
+                        <input type="checkbox" class="result-checkbox" ${item.selected ? 'checked' : ''}
                                onchange="toggleItemSelection('${item.id}')">
                         <strong>Item ${scannedItems.findIndex(i => i.id === item.id) + 1}</strong>
                     </div>
                     <div class="result-fields">
                         <div class="result-field">
                             <label>Description</label>
-                            <input type="text" value="${escAttr(item.description)}" 
+                            <input type="text" value="${escAttr(item.description)}"
                                    onchange="updateItemField('${item.id}', 'description', this.value)">
                         </div>
                         <div class="result-field">
                             <label>Amount</label>
-                            <input type="number" step="0.01" value="${item.amount}" 
+                            <input type="number" step="0.01" value="${item.amount}"
                                    onchange="updateItemField('${item.id}', 'amount', parseFloat(this.value))">
                         </div>
                         <div class="result-field">
                             <label>Category</label>
                             <select onchange="updateItemField('${item.id}', 'category', this.value)">
-                                ${appState.categories.map(cat => 
+                                ${appState.categories.map(cat =>
                                     `<option value="${escAttr(cat)}" ${cat === item.category ? 'selected' : ''}>${escAttr(cat)}</option>`
                                 ).join('')}
                             </select>
@@ -6609,7 +6816,7 @@
                         <div class="result-field">
                             <label>Who Paid</label>
                             <select onchange="updateItemField('${item.id}', 'whoPaid', this.value)">
-                                ${Object.keys(appState.partners).map(key => 
+                                ${Object.keys(appState.partners).map(key =>
                                     `<option value="${escAttr(key)}" ${item.whoPaid === key ? 'selected' : ''}>${escAttr(appState.partners[key])}</option>`
                                 ).join('')}
                             </select>
@@ -6617,14 +6824,14 @@
                     </div>
                     <div style="margin-top: 12px;">
                         <label class="shared-toggle">
-                            <input type="checkbox" ${item.shared ? 'checked' : ''} 
+                            <input type="checkbox" ${item.shared ? 'checked' : ''}
                                    onchange="updateItemField('${item.id}', 'shared', this.checked)">
                             <span>👥 Shared expense</span>
                         </label>
                     </div>
                 </div>
             `).join('');
-            
+
             updateScanSummary();
             results.classList.add('show');
         }
@@ -6654,9 +6861,9 @@
         function updateScanSummary() {
             const selectedItems = scannedItems.filter(item => item.selected);
             const total = selectedItems.reduce((sum, item) => sum + item.amount, 0);
-            
+
             document.getElementById('summaryTotal').textContent = `$${total.toFixed(2)}`;
-            document.getElementById('summaryCount').textContent = 
+            document.getElementById('summaryCount').textContent =
                 `${selectedItems.length} item${selectedItems.length !== 1 ? 's' : ''} selected`;
         }
 
@@ -6664,7 +6871,7 @@
         async function addSelectedExpenses() {
             if (_addingSelected) return;
             const selectedItems = scannedItems.filter(item => item.selected);
-            
+
             if (selectedItems.length === 0) {
                 showToast('Please select at least one item to add', 'warning');
                 return;
@@ -6677,9 +6884,9 @@
             btn.textContent = '⏳ Adding ' + selectedItems.length + ' item' + (selectedItems.length > 1 ? 's' : '') + '...';
             btn.style.opacity = '0.6';
             btn.style.pointerEvents = 'none';
-            
+
             let addedCount = 0;
-            
+
             try {
                 for (const item of selectedItems) {
                     await ensureCategory(item.category);
@@ -6697,7 +6904,7 @@
                         isShared: item.shared,
                         timestamp: new Date()
                     };
-                    
+
                     if (useApi && currentHouseholdId) {
                         try {
                             const data = await apiFetch('/households/' + currentHouseholdId + '/expenses', {
@@ -6738,7 +6945,7 @@
                 showToast(`✅ ${addedCount} transaction${addedCount !== 1 ? 's' : ''} added successfully!`, 'success', 4000);
                 switchTab('transactions');
             } else {
-                showToast('No items were added — please try again', 'error');
+                showToast('No items were added - please try again', 'error');
                 btn.disabled = false;
                 btn.textContent = '➕ Add Selected Items';
                 btn.style.opacity = '1';
