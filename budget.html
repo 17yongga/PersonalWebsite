@@ -863,6 +863,7 @@
             width: 100%; max-width: 520px;
             padding: 10px 20px 36px;
             animation: sheetSlideUp 0.22s cubic-bezier(0.4,0,0.2,1);
+            touch-action: none;
         }
         @keyframes sheetSlideUp {
             from { transform: translateY(60px); opacity:0; }
@@ -4691,7 +4692,7 @@
             let startY = 0, startTime = 0, dragging = false;
 
             sheet.addEventListener('touchstart', e => {
-                startY   = e.touches[0].clientY;
+                startY    = e.touches[0].clientY;
                 startTime = Date.now();
                 dragging  = true;
                 sheet.style.transition = 'none';
@@ -4700,22 +4701,24 @@
             sheet.addEventListener('touchmove', e => {
                 if (!dragging) return;
                 const dy = e.touches[0].clientY - startY;
-                if (dy <= 0) return;                       // block upward drag
+                if (dy <= 0) return;
+                // Prevent the background page from scrolling while dragging the sheet
+                e.preventDefault();
+                e.stopPropagation();
                 sheet.style.transform = `translateY(${dy}px)`;
                 overlay.style.opacity = Math.max(0, 1 - dy / 320).toString();
-            }, { passive: true });
+            }, { passive: false });   // ← must be non-passive to call preventDefault
 
             sheet.addEventListener('touchend', e => {
                 if (!dragging) return;
                 dragging = false;
                 const dy       = e.changedTouches[0].clientY - startY;
                 const elapsed  = Date.now() - startTime;
-                const velocity = dy / elapsed;            // px/ms
+                const velocity = dy / elapsed;
 
                 if (dy > 80 || velocity > 0.5) {
                     closeTransactionActionSheet();
                 } else {
-                    // Snap back
                     sheet.style.transition = 'transform 0.3s cubic-bezier(0.4,0,0.2,1)';
                     sheet.style.transform  = 'translateY(0)';
                     overlay.style.transition = 'opacity 0.3s ease';
