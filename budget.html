@@ -62,6 +62,7 @@
             backdrop-filter: blur(20px);
             padding: 24px;
             transition: all 0.3s ease;
+            overflow: hidden;
         }
 
         .glass-card:hover {
@@ -358,7 +359,7 @@
 
         .chart-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
             gap: 24px;
             margin-bottom: 32px;
         }
@@ -433,19 +434,7 @@
         }
 
         /* Mobile chart legend fix */
-        @media (max-width: 600px) {
-            .chart-container {
-                display: flex;
-                flex-direction: column;
-                height: auto;
-                min-height: 300px;
-                max-height: 450px;
-                overflow-y: auto;
-            }
-            .chart-container canvas {
-                flex-shrink: 0;
-            }
-        }
+
 
         /* Analytics mobile layout fixes */
         @media (max-width: 768px) {
@@ -455,14 +444,26 @@
             }
 
             .chart-container {
+                width: 100%;
+                overflow: hidden;
                 height: 300px !important;
                 max-height: 300px;
+            }
+            
+            .chart-container canvas {
+                max-width: 100% !important;
             }
 
             /* Pie charts smaller on mobile */
             #categoryChart,
             #partnerChart {
                 max-height: 250px !important;
+            }
+            
+            /* Monthly and Daily charts specific height on mobile */
+            #monthlyChart,
+            #dailyChart {
+                height: 250px !important;
             }
 
             /* Stats cards stack vertically */
@@ -746,14 +747,17 @@
 
             .filter-actions {
                 justify-content: center;
-                gap: 10px;
+                gap: 8px;
+                display: flex;
+                flex-wrap: wrap;
             }
 
-            .filter-actions .btn {
+            /* CSV and Scan buttons - make smaller on mobile */
+            .filter-actions .btn:not(:last-child) {
                 flex: 1;
-                min-width: 80px;
-                font-size: 12px;
-                padding: 10px 8px;
+                min-width: 60px;
+                font-size: 11px;
+                padding: 8px 6px;
             }
 
             /* Make Add Transaction more prominent */
@@ -761,8 +765,42 @@
                 order: -1;
                 margin-bottom: 8px;
                 font-weight: 600;
-                flex: none;
                 width: 100%;
+                flex: none;
+            }
+            
+            /* Hide CSV and Scan from main row on mobile */
+            .filter-actions .btn:not(:last-child) {
+                display: none;
+            }
+            
+            /* Show mobile-only buttons and style them */
+            .mobile-only {
+                display: inline-flex !important;
+                flex: 1;
+                padding: 8px 6px;
+                font-size: 11px;
+            }
+            
+            /* Style the secondary actions row for mobile */
+            .mobile-secondary-actions {
+                gap: 8px !important;
+            }
+            
+            .mobile-secondary-actions .btn {
+                flex: 1;
+            }
+            
+            /* Hide desktop-only elements on mobile */
+            .desktop-only {
+                display: none;
+            }
+        }
+
+        /* Desktop styles - hide mobile-only buttons */
+        @media (min-width: 769px) {
+            .mobile-only {
+                display: none !important;
             }
         }
 
@@ -811,11 +849,7 @@
             .filter-chip { font-size: 11px; padding: 5px 10px; }
             .filter-actions { width: 100%; }
             .filter-actions .btn { flex: 1; }
-            /* Mobile chart container for legend overflow */
-            .chart-container {
-                max-height: 400px;
-                overflow-y: auto;
-            }
+
         }
 
         /* Unified filter button and panel */
@@ -2027,13 +2061,15 @@
                             <button class="btn" onclick="openExpenseModal()" style="background: linear-gradient(135deg, var(--accent-start), var(--accent-end));">➕ Add Transaction</button>
                         </div>
                     </div>
-                    <!-- Row 2: unified filter button -->
+                    <!-- Row 2: unified filter button + mobile secondary actions -->
                     <div class="filter-bar-row">
-                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <div class="mobile-secondary-actions" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;">
+                            <button class="btn btn-secondary mobile-only" onclick="exportTransactions('csv')" title="Export CSV" style="font-size:11px;">📥 CSV</button>
+                            <button class="btn btn-secondary mobile-only" onclick="openScanModal()" title="Scan a receipt" style="font-size:11px;">📷 Scan</button>
                             <button class="btn btn-secondary" id="filterToggleBtn" onclick="toggleFilterPanel()" style="font-size:13px;">
                                 🔽 Filters <span id="filterBadge" class="filter-badge" style="display:none;">0</span>
                             </button>
-                            <span id="activeFilterSummary" style="font-size:12px;color:var(--text-secondary);"></span>
+                            <span id="activeFilterSummary" class="desktop-only" style="font-size:12px;color:var(--text-secondary);"></span>
                         </div>
                     </div>
                     <!-- Filter panel (collapsible) -->
@@ -2059,6 +2095,13 @@
                 </div>
 
                 <div class="glass-card">
+                    <!-- Transaction list header with batch actions -->
+                    <div id="transactionHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--glass-border);">
+                        <h3 style="margin: 0; font-size: 16px; color: var(--text-primary);">Recent Transactions</h3>
+                        <button id="batchSelectBtn" class="btn btn-secondary" onclick="toggleBatchMode()" style="font-size: 12px; padding: 6px 12px;">
+                            📋 Select
+                        </button>
+                    </div>
                     <div id="expensesList"></div>
                 </div>
             </div>
@@ -4282,8 +4325,16 @@
                          'Single') : 'Individual';
                     const catColor = getCategoryColor(expense.category);
                     
+                    const checkboxHtml = batchSelectMode ? `
+                        <input type="checkbox" data-expense-id="${expense.id}" 
+                               onchange="toggleTransactionSelection(${expense.id})"
+                               ${selectedTransactions.includes(expense.id) ? 'checked' : ''}
+                               style="margin-right: 8px; transform: scale(1.2);">
+                    ` : '';
+                    
                     return `
                         <div data-expense-id="${expense.id}" style="background: ${sharedBg}; border-left: 3px solid ${catColor}; border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; transition: opacity 0.3s;">
+                            ${checkboxHtml}
                             <div style="flex: 1; min-width: 0;">
                                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px;">
                                     <span style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${expense.notes || expense.category}</span>
@@ -4295,14 +4346,237 @@
                             </div>
                             <div style="text-align: right; flex-shrink: 0;">
                                 <div style="font-size: 16px; font-weight: 700;">$${expense.amount.toFixed(2)}</div>
-                                <div style="display: flex; gap: 4px; margin-top: 2px;">
-                                    <button onclick="editExpense(${expense.id})" style="background: none; border: 1px solid var(--glass-border); color: var(--text-secondary); padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer;">✏️</button>
-                                    <button onclick="deleteExpense(${expense.id})" style="background: none; border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer;">🗑️</button>
-                                </div>
+                                ${!batchSelectMode ? `
+                                    <div style="display: flex; gap: 4px; margin-top: 2px;">
+                                        <button onclick="editExpense(${expense.id})" style="background: none; border: 1px solid var(--glass-border); color: var(--text-secondary); padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer;">✏️</button>
+                                        <button onclick="deleteExpense(${expense.id})" style="background: none; border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer;">🗑️</button>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     `;
                 }).join('');
+        }
+
+        // ── Batch Edit Feature ──────────────────────────────────
+        let batchSelectMode = false;
+        let selectedTransactions = [];
+
+        function toggleBatchMode() {
+            batchSelectMode = !batchSelectMode;
+            selectedTransactions = [];
+            
+            const selectBtn = document.getElementById('batchSelectBtn');
+            if (batchSelectMode) {
+                selectBtn.innerHTML = '✕ Cancel';
+                selectBtn.style.background = 'var(--danger)';
+            } else {
+                selectBtn.innerHTML = '📋 Select';
+                selectBtn.style.background = '';
+            }
+            
+            renderTransactions();
+            updateBatchActionBar();
+        }
+
+        function toggleTransactionSelection(expenseId) {
+            const index = selectedTransactions.indexOf(expenseId);
+            if (index > -1) {
+                selectedTransactions.splice(index, 1);
+            } else {
+                selectedTransactions.push(expenseId);
+            }
+            updateBatchActionBar();
+            
+            // Update checkbox visual
+            const checkbox = document.querySelector(`input[data-expense-id="${expenseId}"]`);
+            if (checkbox) checkbox.checked = selectedTransactions.includes(expenseId);
+        }
+
+        function updateBatchActionBar() {
+            let actionBar = document.getElementById('batchActionBar');
+            
+            if (!batchSelectMode || selectedTransactions.length === 0) {
+                if (actionBar) actionBar.remove();
+                return;
+            }
+            
+            if (!actionBar) {
+                actionBar = document.createElement('div');
+                actionBar.id = 'batchActionBar';
+                actionBar.style.cssText = `
+                    position: fixed; 
+                    bottom: 0; 
+                    left: 0; 
+                    right: 0; 
+                    z-index: 200;
+                    background: rgba(31, 41, 55, 0.97);
+                    backdrop-filter: blur(16px);
+                    border-top: 1px solid var(--glass-border);
+                    padding: 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                `;
+                document.body.appendChild(actionBar);
+            }
+            
+            actionBar.innerHTML = `
+                <div style="color: var(--text-primary); font-weight: 500;">
+                    ${selectedTransactions.length} selected
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-secondary" onclick="openBatchEditModal()" style="font-size: 14px;">✏️ Edit</button>
+                    <button class="btn" onclick="batchDeleteTransactions()" style="background: var(--danger); font-size: 14px;">🗑️ Delete</button>
+                    <button class="btn btn-ghost" onclick="toggleBatchMode()" style="font-size: 14px;">Cancel</button>
+                </div>
+            `;
+        }
+
+        function batchDeleteTransactions() {
+            const count = selectedTransactions.length;
+            if (!confirm(`Delete ${count} transaction${count > 1 ? 's' : ''}?`)) return;
+            
+            selectedTransactions.forEach(expenseId => {
+                deleteExpense(expenseId, false); // Don't show individual confirmations
+            });
+            
+            selectedTransactions = [];
+            toggleBatchMode();
+            showToast(`${count} transaction${count > 1 ? 's' : ''} deleted`, 'success');
+        }
+
+        function openBatchEditModal() {
+            const modal = document.getElementById('batchEditModal');
+            if (!modal) createBatchEditModal();
+            
+            document.getElementById('batchEditModal').style.display = 'flex';
+            document.getElementById('batchEditCount').textContent = selectedTransactions.length;
+        }
+
+        function createBatchEditModal() {
+            const modalHTML = `
+                <div id="batchEditModal" class="modal-overlay" style="display: none;">
+                    <div class="glass-card" style="max-width: 400px; width: 90%; margin: auto; max-height: 80vh; overflow-y: auto;">
+                        <h2 style="margin: 0 0 20px 0; font-size: 20px;">Batch Edit</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                            Apply changes to <span id="batchEditCount">0</span> selected transactions. Only fill fields you want to change.
+                        </p>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-secondary);">Category</label>
+                                <select id="batchCategory" class="form-input" style="width: 100%;">
+                                    <option value="">Don't change</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-secondary);">Who Paid</label>
+                                <select id="batchWhoPaid" class="form-input" style="width: 100%;">
+                                    <option value="">Don't change</option>
+                                    <option value="partner1">${appState.partners.partner1 || 'Partner 1'}</option>
+                                    <option value="partner2">${appState.partners.partner2 || 'Partner 2'}</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-secondary);">Split Type</label>
+                                <select id="batchSplitType" class="form-input" style="width: 100%;">
+                                    <option value="">Don't change</option>
+                                    <option value="50/50">50/50 Split</option>
+                                    <option value="individual">Individual</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-secondary);">Date</label>
+                                <input type="date" id="batchDate" class="form-input" style="width: 100%;">
+                                <small style="color: var(--text-secondary);">Leave empty to keep original dates</small>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+                            <button class="btn btn-ghost" onclick="closeBatchEditModal()">Cancel</button>
+                            <button class="btn" onclick="applyBatchEdit()" style="background: linear-gradient(135deg, var(--accent-start), var(--accent-end));">
+                                Apply to ${selectedTransactions.length} transactions
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Populate categories
+            const categorySelect = document.getElementById('batchCategory');
+            appState.categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+            });
+        }
+
+        function closeBatchEditModal() {
+            document.getElementById('batchEditModal').style.display = 'none';
+        }
+
+        async function applyBatchEdit() {
+            const category = document.getElementById('batchCategory').value;
+            const whoPaid = document.getElementById('batchWhoPaid').value;
+            const splitType = document.getElementById('batchSplitType').value;
+            const date = document.getElementById('batchDate').value;
+            
+            if (!category && !whoPaid && !splitType && !date) {
+                showToast('No changes specified', 'warning');
+                return;
+            }
+            
+            const updates = {};
+            if (category) updates.category = category;
+            if (whoPaid) updates.whoPaid = whoPaid;
+            if (splitType) {
+                updates.splitType = splitType === 'individual' ? 'individual' : '50/50';
+                updates.isShared = splitType !== 'individual';
+            }
+            if (date) updates.date = date;
+            
+            // Apply updates to each selected transaction
+            for (const expenseId of selectedTransactions) {
+                const expense = appState.expenses.find(e => e.id === expenseId);
+                if (expense) {
+                    Object.assign(expense, updates);
+                    
+                    if (useApi) {
+                        try {
+                            await apiFetch(`/households/${currentHouseholdId}/expenses/${expenseId}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    amount: expense.amount,
+                                    category: expense.category,
+                                    paidBy: expense.whoPaid,
+                                    splitType: expense.splitType || '50/50',
+                                    date: expense.date,
+                                    notes: expense.notes,
+                                    isShared: expense.isShared
+                                })
+                            });
+                        } catch (err) {
+                            console.error('Batch edit API error:', err);
+                            showToast('Some updates failed', 'error');
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            saveData();
+            renderTransactions();
+            closeBatchEditModal();
+            toggleBatchMode();
+            showToast(`${selectedTransactions.length} transactions updated`, 'success');
         }
 
         function getFilteredExpenses() {
@@ -5245,7 +5519,6 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        tooltip: { enabled: false },
                         legend: {
                             position: 'bottom',
                             labels: {
