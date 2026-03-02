@@ -365,48 +365,71 @@
 
         /* Category popup */
         .category-popup {
-            position: absolute;
-            background: rgba(31, 41, 55, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(156, 163, 175, 0.3);
-            border-radius: 8px;
-            padding: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            min-width: 200px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            display: none;
+            background: rgba(31, 41, 55, 0.97);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(156, 163, 175, 0.25);
+            border-radius: 14px;
+            padding: 16px 18px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+            margin-top: 14px;
+            animation: popupFadeSlide 0.18s ease;
+        }
+
+        @keyframes popupFadeSlide {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .popup-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
         }
 
         .popup-category-name {
             font-weight: 600;
             color: #ffffff;
-            margin-bottom: 8px;
-            font-size: 14px;
+            font-size: 15px;
         }
 
-        .popup-category-amount {
+        .popup-close-btn {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.45);
             font-size: 18px;
-            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 2px;
+            transition: color 0.15s;
+        }
+        .popup-close-btn:hover { color: rgba(255,255,255,0.85); }
+
+        .popup-category-amount {
+            font-size: 22px;
+            font-weight: 700;
             color: #10b981;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
+            letter-spacing: -0.3px;
         }
 
         .popup-details-btn {
-            background: #3b82f6;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 10px 16px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 12px;
-            transition: background-color 0.2s;
+            font-size: 13px;
+            font-weight: 600;
+            transition: opacity 0.15s;
             width: 100%;
         }
 
         .popup-details-btn:hover {
-            background: #2563eb;
+            opacity: 0.88;
         }
 
         /* Mobile chart legend fix */
@@ -2083,14 +2106,17 @@
                 <div class="chart-grid">
                     <div class="glass-card">
                         <h3 style="margin-bottom: 20px;">🥧 Spending by Category</h3>
-                        <div class="chart-container" style="position: relative;">
+                        <div class="chart-container">
                             <canvas id="categoryChart"></canvas>
-                            <!-- Pie chart popup -->
-                            <div id="categoryPopup" class="category-popup" style="display: none;">
+                        </div>
+                        <!-- Pie chart popup — sits below chart, never overlaps -->
+                        <div id="categoryPopup" class="category-popup">
+                            <div class="popup-header">
                                 <div class="popup-category-name"></div>
-                                <div class="popup-category-amount"></div>
-                                <button class="popup-details-btn" onclick="openCategoryDetails()">Details</button>
+                                <button class="popup-close-btn" onclick="closeCategoryPopup()">✕</button>
                             </div>
+                            <div class="popup-category-amount"></div>
+                            <button class="popup-details-btn" onclick="openCategoryDetails()">Details →</button>
                         </div>
                     </div>
                     <div class="glass-card">
@@ -5219,6 +5245,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
+                        tooltip: { enabled: false },
                         legend: {
                             position: 'bottom',
                             labels: {
@@ -5229,12 +5256,15 @@
                         }
                     },
                     onClick: function(e, elements) {
-                        if (!elements.length) return;
+                        if (!elements.length) {
+                            closeCategoryPopup();
+                            return;
+                        }
                         const idx = elements[0].index;
                         const label = this.data.labels[idx];
                         const amount = this.data.datasets[0].data[idx];
                         if (label !== 'No expenses yet') {
-                            showCategoryPopup(label, amount, e);
+                            showCategoryPopup(label, amount);
                         }
                     }
                 }
@@ -5553,33 +5583,36 @@
         // Category popup functions
         let selectedCategoryForDetails = '';
 
-        function showCategoryPopup(categoryName, amount, clickEvent) {
+        function showCategoryPopup(categoryName, amount) {
             const popup = document.getElementById('categoryPopup');
-            const nameEl = popup.querySelector('.popup-category-name');
-            const amountEl = popup.querySelector('.popup-category-amount');
-            
-            nameEl.textContent = categoryName;
-            amountEl.textContent = '$' + amount.toFixed(2);
+            popup.querySelector('.popup-category-name').textContent = categoryName;
+            popup.querySelector('.popup-category-amount').textContent = '$' + parseFloat(amount).toFixed(2);
             selectedCategoryForDetails = categoryName;
-            
             popup.style.display = 'block';
-            
-            // Close popup when clicking outside
+            // Re-trigger animation
+            popup.style.animation = 'none';
+            popup.offsetHeight; // force reflow
+            popup.style.animation = '';
+
+            // Close when clicking outside
             setTimeout(() => {
                 document.addEventListener('click', closeCategoryPopupOnOutsideClick, { once: true });
             }, 100);
         }
 
+        function closeCategoryPopup() {
+            document.getElementById('categoryPopup').style.display = 'none';
+        }
+
         function closeCategoryPopupOnOutsideClick(event) {
             const popup = document.getElementById('categoryPopup');
-            if (!popup.contains(event.target)) {
+            if (popup.style.display !== 'none' && !popup.contains(event.target)) {
                 popup.style.display = 'none';
             }
         }
 
         function openCategoryDetails() {
-            const popup = document.getElementById('categoryPopup');
-            popup.style.display = 'none';
+            closeCategoryPopup();
             showCategoryTransactionsModal(selectedCategoryForDetails);
         }
 
