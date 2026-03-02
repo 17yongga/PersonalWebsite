@@ -1374,15 +1374,18 @@
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             z-index: 9000;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
-            padding: 16px;
         }
-
-        .expense-modal-overlay.open {
-            display: flex;
+        .expense-modal-overlay.open { display: flex; }
+        @media (min-width: 600px) {
+            .expense-modal-overlay {
+                align-items: center;
+                padding: 20px;
+            }
         }
 
         /* Category drill-down modal */
@@ -1445,15 +1448,46 @@
 
         .expense-modal {
             background: #12122a;
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 28px 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            /* bottom-sheet on mobile */
+            border-radius: 24px 24px 0 0;
+            padding: 8px 20px 40px;
             width: 100%;
-            max-width: 520px;
-            max-height: 90vh;
+            max-width: 560px;
+            max-height: 92vh;
             overflow-y: auto;
+            overflow-x: hidden;
             position: relative;
-            box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+            box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+        /* drag handle for bottom sheet feel */
+        .expense-modal::before {
+            content: '';
+            display: block;
+            width: 40px; height: 4px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 2px;
+            margin: 8px auto 16px;
+        }
+        @media (min-width: 600px) {
+            .expense-modal {
+                border-radius: 20px;
+                padding: 28px 24px;
+            }
+            .expense-modal::before { display: none; }
+        }
+        /* Ensure every input/select in the modal can't overflow */
+        .expense-modal input,
+        .expense-modal select,
+        .expense-modal textarea {
+            box-sizing: border-box;
+            max-width: 100%;
+            width: 100%;
+        }
+        input[type="date"].form-input {
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .expense-modal-header {
@@ -1495,7 +1529,7 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            padding: 10px 6px;
+            padding: 12px 4px;
             background: rgba(255,255,255,0.04);
             border: 1.5px solid var(--glass-border);
             border-radius: 12px;
@@ -1504,6 +1538,10 @@
             transition: all 0.18s;
             font-size: 12px;
             line-height: 1.2;
+            min-width: 0;
+            overflow: hidden;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .split-btn .split-icon { font-size: 20px; }
@@ -7376,28 +7414,53 @@
                     <button type="button" class="btn btn-secondary" onclick="parseNaturalInput()" style="height:38px;white-space:nowrap;font-size:13px;">🔍 Parse</button>
                 </div>
             </div>
-            <form id="expenseModalForm" onsubmit="submitExpenseModal(event)">
-                <div class="quick-add-grid">
-                    <div class="form-group">
-                        <label class="form-label">Amount</label>
-                        <input type="number" class="form-input" id="m-amount" placeholder="0.00" step="0.01" required>
+            <form id="expenseModalForm" onsubmit="submitExpenseModal(event)" autocomplete="off">
+
+                <!-- Amount — full width, prominent -->
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label class="form-label">Amount</label>
+                    <div style="position:relative;">
+                        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;font-weight:700;color:rgba(255,255,255,0.4);">$</span>
+                        <input type="number" class="form-input" id="m-amount" placeholder="0.00" step="0.01" required
+                               style="padding-left:30px;font-size:22px;font-weight:700;height:52px;letter-spacing:-0.3px;">
                     </div>
-                    <div class="form-group">
+                </div>
+
+                <!-- Category + Who Paid — 2 col -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                    <div class="form-group" style="margin:0;">
                         <label class="form-label">Category</label>
                         <div class="category-dropdown-wrapper" id="mCategoryDropdownWrapper">
-                            <input type="text" class="form-input" id="m-category" placeholder="Select or type category" required autocomplete="off" oninput="filterCategoryDropdown(this.value, 'm-categoryDropdownList')" onfocus="showCategoryDropdown('m-categoryDropdownList')" onblur="hideCategoryDropdownDelayed('m-categoryDropdownList')">
-                            <button type="button" class="category-dropdown-toggle" id="m-categoryDropdownToggle" onclick="toggleCategoryDropdown('m-categoryDropdownList', 'm-categoryDropdownToggle')">▼</button>
+                            <input type="text" class="form-input" id="m-category" placeholder="e.g. Groceries" required autocomplete="off"
+                                   oninput="filterCategoryDropdown(this.value,'m-categoryDropdownList')"
+                                   onfocus="showCategoryDropdown('m-categoryDropdownList')"
+                                   onblur="hideCategoryDropdownDelayed('m-categoryDropdownList')">
+                            <button type="button" class="category-dropdown-toggle" id="m-categoryDropdownToggle"
+                                    onclick="toggleCategoryDropdown('m-categoryDropdownList','m-categoryDropdownToggle')">▼</button>
                             <div class="category-dropdown-list" id="m-categoryDropdownList" style="display:none;"></div>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="margin:0;">
                         <label class="form-label">Who Paid</label>
                         <select class="form-select" id="m-whoPaid" required></select>
                     </div>
                 </div>
-                <!-- Split selector -->
-                <div class="form-group">
-                    <label class="form-label">How to Split?</label>
+
+                <!-- Date + Notes — 2 col -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                    <div class="form-group" style="margin:0;">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input" id="m-date" required style="width:100%;box-sizing:border-box;">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label class="form-label">Notes</label>
+                        <input type="text" class="form-input" id="m-notes" placeholder="Description…">
+                    </div>
+                </div>
+
+                <!-- Split selector — full width -->
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label class="form-label">Split</label>
                     <div class="split-selector">
                         <button type="button" class="split-btn" id="m-split-solo" onclick="setModalSplit('solo')">
                             <span class="split-icon">👤</span>
@@ -7411,35 +7474,36 @@
                         </button>
                         <button type="button" class="split-btn" id="m-split-custom" onclick="setModalSplit('custom')">
                             <span class="split-icon">⚖️</span>
-                            <span class="split-label">Custom %</span>
+                            <span class="split-label">Custom</span>
                             <span class="split-sub">Set ratio</span>
                         </button>
                     </div>
-                    <!-- hidden state fields read by submitExpenseModal -->
                     <input type="hidden" id="m-isShared" value="1">
                     <input type="hidden" id="m-splitType" value="50/50">
                 </div>
-                <div class="form-group" id="m-customSplitGroup" style="display:none;">
+
+                <!-- Custom split % — only when custom selected -->
+                <div class="form-group" id="m-customSplitGroup" style="display:none;margin-bottom:16px;">
                     <label class="form-label">Your Share (%)</label>
                     <input type="number" class="form-input" id="m-customSplit" min="0" max="100" value="50" placeholder="e.g. 60">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Date</label>
-                    <input type="date" class="form-input" id="m-date" required>
+
+                <!-- Recurring toggle -->
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
+                    <input type="checkbox" id="m-isRecurring" style="width:18px;height:18px;accent-color:#6366f1;cursor:pointer;flex-shrink:0;">
+                    <div>
+                        <div style="font-size:14px;font-weight:500;">Recurring expense</div>
+                        <div style="font-size:11px;color:var(--text-secondary);">Repeats monthly</div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Notes</label>
-                    <input type="text" class="form-input" id="m-notes" placeholder="Optional notes">
-                </div>
-                <div class="form-group">
-                    <label style="display:flex;align-items:center;gap:8px;">
-                        <input type="checkbox" id="m-isRecurring">
-                        <span>Recurring expense</span>
-                    </label>
-                </div>
-                <div style="display:flex;gap:10px;margin-top:8px;">
-                    <button type="submit" class="btn" id="expenseModalSubmitBtn" style="flex:1;">💾 Add Expense</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeExpenseModal()" style="flex:0 0 auto;">Cancel</button>
+
+                <!-- Actions -->
+                <div style="display:flex;gap:10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeExpenseModal()" style="flex:0 0 auto;padding:0 20px;height:48px;">Cancel</button>
+                    <button type="submit" class="btn" id="expenseModalSubmitBtn"
+                            style="flex:1;height:48px;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--accent-start),var(--accent-end));">
+                        💾 Add Expense
+                    </button>
                 </div>
             </form>
         </div>
