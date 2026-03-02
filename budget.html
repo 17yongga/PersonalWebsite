@@ -363,6 +363,52 @@
             margin-bottom: 32px;
         }
 
+        /* Category popup */
+        .category-popup {
+            position: absolute;
+            background: rgba(31, 41, 55, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(156, 163, 175, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            min-width: 200px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .popup-category-name {
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .popup-category-amount {
+            font-size: 18px;
+            font-weight: bold;
+            color: #10b981;
+            margin-bottom: 12px;
+        }
+
+        .popup-details-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+            width: 100%;
+        }
+
+        .popup-details-btn:hover {
+            background: #2563eb;
+        }
+
         /* Mobile chart legend fix */
         @media (max-width: 600px) {
             .chart-container {
@@ -375,6 +421,67 @@
             }
             .chart-container canvas {
                 flex-shrink: 0;
+            }
+        }
+
+        /* Analytics mobile layout fixes */
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .chart-container {
+                height: 300px !important;
+                max-height: 300px;
+            }
+
+            /* Pie charts smaller on mobile */
+            #categoryChart,
+            #partnerChart {
+                max-height: 250px !important;
+            }
+
+            /* Stats cards stack vertically */
+            .stats-grid {
+                grid-template-columns: 1fr !important;
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 12px 16px;
+                min-height: auto;
+            }
+
+            .stat-card h3 {
+                font-size: 1.2rem;
+            }
+
+            .stat-value {
+                font-size: 1.4rem !important;
+            }
+
+            /* Budget progress bars */
+            .budget-progress {
+                overflow-x: auto;
+                padding-bottom: 4px;
+            }
+
+            .budget-item {
+                min-width: 200px;
+                flex-shrink: 0;
+            }
+
+            /* Analytics controls */
+            .analytics-controls {
+                flex-direction: column;
+                gap: 8px;
+                align-items: stretch;
+            }
+
+            .view-buttons {
+                justify-content: center;
+                flex-wrap: wrap;
             }
         }
 
@@ -588,7 +695,53 @@
             font-size: 13px;
         }
 
-        .filter-search { flex: 1; min-width: 180px; }
+        .filter-search { 
+            flex: 1; 
+            min-width: 180px; 
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Mobile filter bar improvements */
+        @media (max-width: 768px) {
+            .filter-bar-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .filter-search {
+                order: -1;
+                width: 100%;
+                flex: none;
+            }
+
+            .filter-actions {
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .filter-actions .btn {
+                flex: 1;
+                min-width: 80px;
+                font-size: 12px;
+                padding: 10px 8px;
+            }
+
+            /* Make Add Transaction more prominent */
+            .filter-actions .btn:last-child {
+                order: -1;
+                margin-bottom: 8px;
+                font-weight: 600;
+                flex: none;
+                width: 100%;
+            }
+        }
 
         .filter-chips {
             display: flex;
@@ -1930,8 +2083,14 @@
                 <div class="chart-grid">
                     <div class="glass-card">
                         <h3 style="margin-bottom: 20px;">🥧 Spending by Category</h3>
-                        <div class="chart-container">
+                        <div class="chart-container" style="position: relative;">
                             <canvas id="categoryChart"></canvas>
+                            <!-- Pie chart popup -->
+                            <div id="categoryPopup" class="category-popup" style="display: none;">
+                                <div class="popup-category-name"></div>
+                                <div class="popup-category-amount"></div>
+                                <button class="popup-details-btn" onclick="openCategoryDetails()">Details</button>
+                            </div>
                         </div>
                     </div>
                     <div class="glass-card">
@@ -4285,10 +4444,28 @@
         let categoryDropdownVisible = false;
         let categoryDropdownTimeout = null;
 
+        // Deduplicate categories, preferring emoji versions
+        function deduplicateCategories(categories) {
+            const categoryMap = new Map();
+            const emojiPattern = /^[\p{Emoji}]/u;
+            
+            categories.forEach(cat => {
+                const plainText = cat.replace(/^[\p{Emoji}\s]+/u, '').trim();
+                const hasEmoji = emojiPattern.test(cat);
+                
+                if (!categoryMap.has(plainText) || hasEmoji) {
+                    categoryMap.set(plainText, cat);
+                }
+            });
+            
+            return Array.from(categoryMap.values()).sort();
+        }
+
         function populateCategoryDropdown(filter = '') {
             const list = document.getElementById('categoryDropdownList');
             if (!list) return;
-            const filtered = appState.categories.filter(c =>
+            const deduped = deduplicateCategories(appState.categories);
+            const filtered = deduped.filter(c =>
                 c.toLowerCase().includes(filter.toLowerCase())
             );
             list.innerHTML = filtered.map(c =>
@@ -5055,8 +5232,9 @@
                         if (!elements.length) return;
                         const idx = elements[0].index;
                         const label = this.data.labels[idx];
+                        const amount = this.data.datasets[0].data[idx];
                         if (label !== 'No expenses yet') {
-                            showCategoryTransactionsModal(label);
+                            showCategoryPopup(label, amount, e);
                         }
                     }
                 }
@@ -5116,8 +5294,9 @@
         function populateCategoryDropdown(listId, filterText = '') {
             const list = document.getElementById(listId);
             if (!list) return;
+            const deduped = deduplicateCategories(appState.categories);
             const filter = filterText.toLowerCase();
-            const filtered = appState.categories.filter(c => !filter || c.toLowerCase().includes(filter));
+            const filtered = deduped.filter(c => !filter || c.toLowerCase().includes(filter));
             list.innerHTML = filtered.map(cat =>
                 `<div class="category-dropdown-item" onmousedown="selectCategory('${cat.replace(/'/g, "\\'")}', '${listId}')">${cat}</div>`
             ).join('');
@@ -5369,6 +5548,39 @@
                     }
                 }
             });
+        }
+
+        // Category popup functions
+        let selectedCategoryForDetails = '';
+
+        function showCategoryPopup(categoryName, amount, clickEvent) {
+            const popup = document.getElementById('categoryPopup');
+            const nameEl = popup.querySelector('.popup-category-name');
+            const amountEl = popup.querySelector('.popup-category-amount');
+            
+            nameEl.textContent = categoryName;
+            amountEl.textContent = '$' + amount.toFixed(2);
+            selectedCategoryForDetails = categoryName;
+            
+            popup.style.display = 'block';
+            
+            // Close popup when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', closeCategoryPopupOnOutsideClick, { once: true });
+            }, 100);
+        }
+
+        function closeCategoryPopupOnOutsideClick(event) {
+            const popup = document.getElementById('categoryPopup');
+            if (!popup.contains(event.target)) {
+                popup.style.display = 'none';
+            }
+        }
+
+        function openCategoryDetails() {
+            const popup = document.getElementById('categoryPopup');
+            popup.style.display = 'none';
+            showCategoryTransactionsModal(selectedCategoryForDetails);
         }
 
         // Settings Management
@@ -5792,7 +6004,8 @@
             if (categoryFilter) {
                 const currentValue = categoryFilter.value;
                 categoryFilter.innerHTML = '<option value="">All Categories</option>';
-                appState.categories.forEach(category => {
+                const deduped = deduplicateCategories(appState.categories);
+                deduped.forEach(category => {
                     const option = document.createElement('option');
                     option.value = category;
                     option.textContent = category;
