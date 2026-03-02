@@ -1490,6 +1490,120 @@
             appearance: none;
         }
 
+        /* ── Expense Modal — scoped design system ─────────────────
+           Everything inside the modal gets a consistent token set.
+           This overrides global .form-* without touching the rest.   */
+        #expenseModalBox .form-label,
+        #expenseModalBox label.form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: rgba(255,255,255,0.45);
+            margin-bottom: 6px;
+        }
+        /* Quick-add section label matches */
+        #expenseModalBox .quick-add-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.65);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        /* All text inputs, selects, date — uniform height & style */
+        #expenseModalBox input:not([type="checkbox"]):not([type="hidden"]):not([type="number"]#m-amount),
+        #expenseModalBox select {
+            height: 44px;
+            font-size: 14px;
+            padding: 0 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            box-sizing: border-box;
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            font-family: inherit;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        #expenseModalBox input:not([type="checkbox"]):not([type="hidden"]):not([type="number"]#m-amount):focus,
+        #expenseModalBox select:focus {
+            outline: none;
+            border-color: rgba(99,102,241,0.6);
+            background: rgba(99,102,241,0.08);
+        }
+        /* Amount field keeps its special large size */
+        #expenseModalBox #m-amount {
+            height: 52px;
+            font-size: 22px;
+            font-weight: 700;
+            padding: 0 14px 0 30px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            box-sizing: border-box;
+            width: 100%;
+            -webkit-appearance: none;
+            font-family: inherit;
+            transition: border-color 0.15s, background 0.15s;
+            letter-spacing: -0.5px;
+        }
+        #expenseModalBox #m-amount:focus {
+            outline: none;
+            border-color: rgba(99,102,241,0.6);
+            background: rgba(99,102,241,0.08);
+        }
+        /* Category dropdown wrapper — make it uniform height */
+        #expenseModalBox .category-dropdown-wrapper input {
+            padding-right: 36px;
+        }
+        /* Quick-add row: input + Parse button — same height */
+        #expenseModalBox .quick-add-row {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+        #expenseModalBox .quick-add-row input {
+            flex: 1;
+        }
+        #expenseModalBox .quick-add-row .parse-btn {
+            height: 44px;
+            padding: 0 16px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.75);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: background 0.12s;
+        }
+        #expenseModalBox .quick-add-row .parse-btn:active {
+            background: rgba(255,255,255,0.15);
+        }
+        /* 2-col field grid inside modal */
+        #expenseModalBox .modal-field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        #expenseModalBox .modal-field-row .form-group { margin: 0; }
+        /* select arrow */
+        #expenseModalBox select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+
         .expense-modal-header {
             display: flex;
             align-items: center;
@@ -7470,13 +7584,12 @@
                 <button class="expense-modal-close" onclick="closeExpenseModal()">✕</button>
             </div>
             <!-- Quick Add strip inside modal -->
-            <div style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--glass-border);">
-                <label class="form-label" style="margin-bottom:6px;">💬 Quick Add (type naturally)</label>
-                <div style="display:flex;gap:8px;align-items:center;">
-                    <input type="text" class="form-input" id="naturalInput" placeholder="e.g. 'Tim Hortons $4.50 me' or 'groceries $85 split'"
-                           style="flex:1;height:38px;font-size:13px;"
+            <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.07);">
+                <div class="quick-add-label">💬 Quick Add</div>
+                <div class="quick-add-row">
+                    <input type="text" id="naturalInput" placeholder="e.g. 'Tim Hortons $4.50 me' or 'groceries $85 split'"
                            onkeydown="if(event.key==='Enter'){event.preventDefault();parseNaturalInput();}">
-                    <button type="button" class="btn btn-secondary" onclick="parseNaturalInput()" style="height:38px;white-space:nowrap;font-size:13px;">🔍 Parse</button>
+                    <button type="button" class="parse-btn" onclick="parseNaturalInput()">🔍 Parse</button>
                 </div>
             </div>
             <form id="expenseModalForm" onsubmit="submitExpenseModal(event)" autocomplete="off">
@@ -7485,18 +7598,17 @@
                 <div class="form-group" style="margin-bottom:16px;">
                     <label class="form-label">Amount</label>
                     <div style="position:relative;">
-                        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;font-weight:700;color:rgba(255,255,255,0.4);">$</span>
-                        <input type="number" class="form-input" id="m-amount" placeholder="0.00" step="0.01" required
-                               style="padding-left:30px;font-size:22px;font-weight:700;height:52px;letter-spacing:-0.3px;">
+                        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;font-weight:700;color:rgba(255,255,255,0.35);pointer-events:none;">$</span>
+                        <input type="number" id="m-amount" placeholder="0.00" step="0.01" required>
                     </div>
                 </div>
 
                 <!-- Category + Who Paid — 2 col -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-                    <div class="form-group" style="margin:0;">
+                <div class="modal-field-row">
+                    <div class="form-group">
                         <label class="form-label">Category</label>
                         <div class="category-dropdown-wrapper" id="mCategoryDropdownWrapper">
-                            <input type="text" class="form-input" id="m-category" placeholder="e.g. Groceries" required autocomplete="off"
+                            <input type="text" id="m-category" placeholder="e.g. Groceries" required autocomplete="off"
                                    oninput="filterCategoryDropdown(this.value,'m-categoryDropdownList')"
                                    onfocus="showCategoryDropdown('m-categoryDropdownList')"
                                    onblur="hideCategoryDropdownDelayed('m-categoryDropdownList')">
@@ -7505,26 +7617,26 @@
                             <div class="category-dropdown-list" id="m-categoryDropdownList" style="display:none;"></div>
                         </div>
                     </div>
-                    <div class="form-group" style="margin:0;">
+                    <div class="form-group">
                         <label class="form-label">Who Paid</label>
-                        <select class="form-select" id="m-whoPaid" required></select>
+                        <select id="m-whoPaid" required></select>
                     </div>
                 </div>
 
                 <!-- Date + Notes — 2 col -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-                    <div class="form-group" style="margin:0;">
+                <div class="modal-field-row">
+                    <div class="form-group">
                         <label class="form-label">Date</label>
-                        <input type="date" class="form-input" id="m-date" required style="width:100%;box-sizing:border-box;">
+                        <input type="date" id="m-date" required>
                     </div>
-                    <div class="form-group" style="margin:0;">
+                    <div class="form-group">
                         <label class="form-label">Notes</label>
-                        <input type="text" class="form-input" id="m-notes" placeholder="Description…">
+                        <input type="text" id="m-notes" placeholder="Description…">
                     </div>
                 </div>
 
                 <!-- Split selector — full width -->
-                <div class="form-group" style="margin-bottom:16px;">
+                <div class="form-group" style="margin-bottom:14px;">
                     <label class="form-label">Split</label>
                     <div class="split-selector">
                         <button type="button" class="split-btn" id="m-split-solo" onclick="setModalSplit('solo')">
