@@ -845,6 +845,162 @@
             margin-bottom: 6px;
         }
 
+        /* ── Transaction Action Sheet ───────────────────────────── */
+        .txn-sheet-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 500;
+            display: flex; align-items: flex-end; justify-content: center;
+            animation: fadeInOverlay 0.15s ease;
+        }
+        @keyframes fadeInOverlay { from{opacity:0} to{opacity:1} }
+        .txn-sheet {
+            background: #16182a;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px 24px 0 0;
+            width: 100%; max-width: 520px;
+            padding: 10px 20px 36px;
+            animation: sheetSlideUp 0.22s cubic-bezier(0.4,0,0.2,1);
+        }
+        @keyframes sheetSlideUp {
+            from { transform: translateY(60px); opacity:0; }
+            to   { transform: translateY(0);    opacity:1; }
+        }
+        .txn-sheet-handle {
+            width: 40px; height: 4px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 2px; margin: 6px auto 14px;
+        }
+        .txn-sheet-summary {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 4px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            margin-bottom: 14px;
+        }
+        .txn-sheet-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+        .txn-sheet-info { flex: 1; min-width: 0; }
+        .txn-sheet-name  { font-size: 15px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .txn-sheet-meta  { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        .txn-sheet-amount { font-size: 18px; font-weight: 700; flex-shrink: 0; }
+        .txn-sheet-actions { display: flex; flex-direction: column; gap: 6px; }
+        .txn-sheet-btn {
+            display: flex; align-items: center; gap: 14px;
+            padding: 13px 14px; border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            border: none; color: #fff;
+            font-size: 14px; font-weight: 500;
+            cursor: pointer; text-align: left; width: 100%;
+            transition: background 0.12s;
+        }
+        .txn-sheet-btn:active { background: rgba(255,255,255,0.12); }
+        .txn-sheet-btn .btn-icon { font-size: 18px; width: 24px; text-align: center; }
+        .txn-sheet-btn.danger { color: #f87171; }
+        .txn-sheet-btn.danger:active { background: rgba(239,68,68,0.15); }
+        .txn-sheet-cancel {
+            display: block; width: 100%; margin-top: 10px; padding: 13px;
+            border-radius: 12px; background: rgba(255,255,255,0.05);
+            border: none; color: var(--text-secondary);
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            transition: background 0.12s;
+        }
+        .txn-sheet-cancel:active { background: rgba(255,255,255,0.1); }
+
+        /* ── Batch List Editor ──────────────────────────────────── */
+        .batch-editor-overlay {
+            position: fixed; inset: 0;
+            background: #0d0f1c;
+            z-index: 600;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        .batch-editor-header {
+            flex-shrink: 0;
+            background: rgba(22,24,42,0.98);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 16px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .batch-editor-header h2 { font-size: 17px; font-weight: 700; margin: 0; }
+        .batch-editor-header p  { font-size: 12px; color: var(--text-secondary); margin: 2px 0 0; }
+        .batch-editor-close {
+            background: rgba(255,255,255,0.08); border: none; color: #fff;
+            width: 32px; height: 32px; border-radius: 50%;
+            font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .batch-editor-list {
+            flex: 1; overflow-y: auto;
+            padding: 14px 16px 100px;
+        }
+        .batch-txn-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 16px; padding: 16px;
+            margin-bottom: 12px;
+        }
+        .batch-txn-card-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 14px; gap: 8px;
+        }
+        .batch-txn-title { font-size: 14px; font-weight: 600; color: #fff; }
+        .batch-txn-original { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+        .batch-txn-amount  { font-size: 15px; font-weight: 700; flex-shrink: 0; }
+        .batch-txn-fields {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+        .batch-txn-field { display: flex; flex-direction: column; gap: 5px; }
+        .batch-txn-field.full { grid-column: 1 / -1; }
+        .batch-txn-field label {
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.07em;
+            color: var(--text-secondary);
+        }
+        .batch-txn-field input,
+        .batch-txn-field select {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px; padding: 8px 10px;
+            color: #fff; font-size: 13px; width: 100%;
+            -webkit-appearance: none;
+        }
+        .batch-txn-field input:focus,
+        .batch-txn-field select:focus {
+            outline: none; border-color: #6366f1;
+            background: rgba(99,102,241,0.1);
+        }
+        .batch-editor-footer {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(22,24,42,0.98);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 14px 20px; display: flex; gap: 10px;
+            z-index: 601;
+        }
+        .batch-save-btn {
+            flex: 1; padding: 14px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            border: none; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+        }
+        .batch-editor-cancel-btn {
+            padding: 14px 20px; border-radius: 12px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-secondary); font-size: 14px; cursor: pointer;
+        }
+        /* Transaction tap affordance in normal mode */
+        .txn-tappable {
+            cursor: pointer;
+            transition: background 0.12s, transform 0.08s;
+        }
+        .txn-tappable:active {
+            background: rgba(255,255,255,0.05) !important;
+            transform: scale(0.99);
+        }
+
         /* Loading Animation */
         .loading {
             display: inline-block;
@@ -4467,6 +4623,116 @@
             return CATEGORY_COLORS[category] || '#6b7280';
         }
 
+        function getCategoryEmoji(category) {
+            if (!category) return '💳';
+            const c = category.toLowerCase();
+            if (c.includes('grocer') || c.includes('food') || c.includes('supermarket')) return '🛒';
+            if (c.includes('dining') || c.includes('restaur') || c.includes('cafe') || c.includes('coffee')) return '🍽️';
+            if (c.includes('transport') || c.includes('uber') || c.includes('lyft') || c.includes('transit')) return '🚗';
+            if (c.includes('entertain') || c.includes('movie') || c.includes('stream')) return '🎬';
+            if (c.includes('health') || c.includes('medical') || c.includes('pharma') || c.includes('doctor')) return '🏥';
+            if (c.includes('subscript') || c.includes('netflix') || c.includes('spotify')) return '📱';
+            if (c.includes('shop') || c.includes('amazon') || c.includes('clothing')) return '🛍️';
+            if (c.includes('utilit') || c.includes('hydro') || c.includes('electric') || c.includes('gas')) return '💡';
+            if (c.includes('rent') || c.includes('mortg') || c.includes('housing')) return '🏠';
+            if (c.includes('pet')) return '🐾';
+            if (c.includes('invest') || c.includes('saving')) return '📈';
+            if (c.includes('travel') || c.includes('hotel') || c.includes('flight') || c.includes('airbnb')) return '✈️';
+            if (c.includes('gym') || c.includes('fitness') || c.includes('sport')) return '🏋️';
+            // Extract leading emoji if present
+            const match = category.match(/^(\p{Emoji})/u);
+            if (match) return match[1];
+            return '💳';
+        }
+
+        // ── Transaction Action Sheet ──────────────────────────────
+        function openTransactionActionSheet(id) {
+            const expense = appState.expenses.find(e => e.id === id);
+            if (!expense) return;
+
+            const paidByName = appState.partners[expense.whoPaid] || 'Unknown';
+            const catColor   = getCategoryColor(expense.category);
+            const emoji      = getCategoryEmoji(expense.category);
+            const isShared   = expense.isShared !== false;
+            const dateStr    = new Date(expense.date).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+
+            const sheet = document.createElement('div');
+            sheet.className = 'txn-sheet-overlay';
+            sheet.id = 'txnActionSheet';
+            sheet.onclick = (e) => { if (e.target === sheet) closeTransactionActionSheet(); };
+
+            sheet.innerHTML = `
+                <div class="txn-sheet">
+                    <div class="txn-sheet-handle"></div>
+
+                    <div class="txn-sheet-summary">
+                        <div class="txn-sheet-icon" style="background:${catColor}22;">${emoji}</div>
+                        <div class="txn-sheet-info">
+                            <div class="txn-sheet-name">${expense.notes || expense.category}</div>
+                            <div class="txn-sheet-meta">${dateStr} · ${paidByName} · ${expense.category}</div>
+                        </div>
+                        <div class="txn-sheet-amount" style="color:${catColor};">$${expense.amount.toFixed(2)}</div>
+                    </div>
+
+                    <div class="txn-sheet-actions">
+                        <button class="txn-sheet-btn" onclick="closeTransactionActionSheet(); openExpenseModal(${id})">
+                            <span class="btn-icon">✏️</span>
+                            <div>
+                                <div style="font-weight:600;">Edit Transaction</div>
+                                <div style="font-size:12px; color:var(--text-secondary); margin-top:1px;">Change amount, category, split and more</div>
+                            </div>
+                        </button>
+                        <button class="txn-sheet-btn" onclick="closeTransactionActionSheet(); duplicateTransaction(${id})">
+                            <span class="btn-icon">📋</span>
+                            <div>
+                                <div style="font-weight:600;">Duplicate</div>
+                                <div style="font-size:12px; color:var(--text-secondary); margin-top:1px;">Create a copy of this transaction</div>
+                            </div>
+                        </button>
+                        <button class="txn-sheet-btn danger" onclick="closeTransactionActionSheet(); deleteExpense(${id})">
+                            <span class="btn-icon">🗑️</span>
+                            <div>
+                                <div style="font-weight:600;">Delete</div>
+                                <div style="font-size:12px; color:rgba(248,113,113,0.7); margin-top:1px;">Remove this transaction permanently</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <button class="txn-sheet-cancel" onclick="closeTransactionActionSheet()">Cancel</button>
+                </div>`;
+
+            document.body.appendChild(sheet);
+        }
+
+        function closeTransactionActionSheet() {
+            const el = document.getElementById('txnActionSheet');
+            if (el) el.remove();
+        }
+
+        function duplicateTransaction(id) {
+            const expense = appState.expenses.find(e => e.id === id);
+            if (!expense) return;
+            const copy = { ...expense, id: Date.now(), date: new Date().toISOString().split('T')[0] };
+            appState.expenses.push(copy);
+            if (useApi && currentHouseholdId) {
+                apiFetch('/households/' + currentHouseholdId + '/expenses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: copy.amount, category: copy.category, paidBy: copy.whoPaid,
+                        splitType: copy.splitType || '50/50', date: copy.date,
+                        notes: copy.notes ? copy.notes + ' (copy)' : '', isShared: copy.isShared
+                    })
+                }).then(data => {
+                    if (data && data.id) copy.id = data.id;
+                    saveData(); renderTransactions();
+                }).catch(() => showToast('Duplicate failed', 'error'));
+            } else {
+                saveData(); renderTransactions();
+            }
+            showToast('Transaction duplicated', 'success');
+        }
+
         function renderTransactions() {
             const container = document.getElementById('expensesList');
             const filteredExpenses = getFilteredExpenses();
@@ -4495,38 +4761,48 @@
                     const catColor = getCategoryColor(expense.category);
 
                     const isSelected = selectedTransactions.includes(expense.id);
-                    const checkboxHtml = batchSelectMode ? `
-                        <input type="checkbox" class="batch-checkbox" data-expense-id="${expense.id}"
-                               onclick="event.stopPropagation()"
-                               onchange="toggleTransactionSelection(${expense.id})"
-                               ${isSelected ? 'checked' : ''}>
-                    ` : '';
-                    const batchClass = batchSelectMode ? `batch-row${isSelected ? ' batch-selected' : ''}` : '';
-                    const batchClick = batchSelectMode ? `onclick="toggleTransactionSelection(${expense.id})"` : '';
 
+                    if (batchSelectMode) {
+                        // ── Batch select mode row ──
+                        return `
+                        <div data-expense-id="${expense.id}"
+                             class="batch-row${isSelected ? ' batch-selected' : ''}"
+                             onclick="toggleTransactionSelection(${expense.id})"
+                             style="background:${sharedBg}; border-left:3px solid ${catColor}; border-radius:10px; padding:10px 12px; margin-bottom:6px; display:flex; align-items:center; gap:10px;">
+                            <input type="checkbox" class="batch-checkbox" data-expense-id="${expense.id}"
+                                   onclick="event.stopPropagation()"
+                                   onchange="toggleTransactionSelection(${expense.id})"
+                                   ${isSelected ? 'checked' : ''}>
+                            <div style="flex:1; min-width:0;">
+                                <div style="font-weight:600; font-size:14px; color:var(--text-primary); margin-bottom:2px;">${expense.notes || expense.category}</div>
+                                <div style="font-size:12px; color:var(--text-secondary);">
+                                    ${new Date(expense.date).toLocaleDateString('en-US', {month:'short', day:'numeric'})} · ${paidByName} · <span style="color:${catColor};">${expense.category}</span>
+                                </div>
+                            </div>
+                            <div style="font-size:16px; font-weight:700; flex-shrink:0;">$${expense.amount.toFixed(2)}</div>
+                        </div>`;
+                    }
+
+                    // ── Normal mode row — tap to open action sheet ──
                     return `
-                        <div data-expense-id="${expense.id}" class="${batchClass}" ${batchClick} style="background: ${sharedBg}; border-left: 3px solid ${catColor}; border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
-                            ${checkboxHtml}
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px;">
-                                    <span style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${expense.notes || expense.category}</span>
-                                    <span style="font-size: 11px; padding: 1px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); color: ${catColor};">${expense.category}</span>
-                                </div>
-                                <div style="font-size: 12px; color: var(--text-secondary);">
-                                    ${new Date(expense.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})} · ${paidByName} · ${isShared ? '👥 Split' : '👤 Individual'}
+                        <div data-expense-id="${expense.id}" class="txn-tappable"
+                             onclick="openTransactionActionSheet(${expense.id})"
+                             style="background:${sharedBg}; border-left:3px solid ${catColor}; border-radius:10px; padding:12px 14px; margin-bottom:6px; display:flex; align-items:center; gap:12px;">
+                            <div style="width:38px; height:38px; border-radius:10px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">${getCategoryEmoji(expense.category)}</div>
+                            <div style="flex:1; min-width:0;">
+                                <div style="font-weight:600; font-size:14px; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${expense.notes || expense.category}</div>
+                                <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">
+                                    ${new Date(expense.date).toLocaleDateString('en-US', {month:'short', day:'numeric'})} · ${paidByName} · <span style="color:${catColor}; background:rgba(255,255,255,0.07); padding:1px 6px; border-radius:4px; font-size:11px;">${expense.category}</span>
                                 </div>
                             </div>
-                            <div style="text-align: right; flex-shrink: 0;">
-                                <div style="font-size: 16px; font-weight: 700;">$${expense.amount.toFixed(2)}</div>
-                                ${!batchSelectMode ? `
-                                    <div style="display: flex; gap: 4px; margin-top: 2px;">
-                                        <button onclick="editExpense(${expense.id})" style="background: none; border: 1px solid var(--glass-border); color: var(--text-secondary); padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer;">✏️</button>
-                                        <button onclick="deleteExpense(${expense.id})" style="background: none; border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer;">🗑️</button>
-                                    </div>
-                                ` : ''}
+                            <div style="text-align:right; flex-shrink:0; display:flex; align-items:center; gap:8px;">
+                                <div>
+                                    <div style="font-size:16px; font-weight:700;">$${expense.amount.toFixed(2)}</div>
+                                    <div style="font-size:11px; color:var(--text-secondary);">${isShared ? '👥 Split' : '👤 Mine'}</div>
+                                </div>
+                                <div style="color:rgba(255,255,255,0.2); font-size:16px;">›</div>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 }).join('');
         }
 
@@ -4672,69 +4948,94 @@
         }
 
         function openBatchEditModal() {
-            // Remove stale modal if it exists (re-create fresh each time)
             const existing = document.getElementById('batchEditModal');
             if (existing) existing.remove();
-            createAndShowBatchEditModal();
+            createBatchListEditor();
         }
 
-        function createAndShowBatchEditModal() {
-            const count = selectedTransactions.length;
+        function createBatchListEditor() {
+            const expenses = selectedTransactions
+                .map(id => appState.expenses.find(e => e.id === id))
+                .filter(Boolean);
+            const count = expenses.length;
 
-            // Build partner options
-            const partnerOpts = Object.entries(appState.partners).map(([k, v]) =>
-                `<option value="${k}">${v}</option>`).join('');
+            const partnerOpts = Object.entries(appState.partners)
+                .map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+            const catOpts = (appState.categories || [])
+                .map(c => `<option value="${c}">${c}</option>`).join('');
 
-            // Build category options
-            const catOpts = (appState.categories || []).map(c =>
-                `<option value="${c}">${c}</option>`).join('');
+            const txnCards = expenses.map(exp => {
+                const catColor  = getCategoryColor(exp.category);
+                const emoji     = getCategoryEmoji(exp.category);
+                const paidByName = appState.partners[exp.whoPaid] || exp.whoPaid;
+                const splitVal  = exp.isShared !== false ? 'shared' : 'individual';
+
+                return `
+                <div class="batch-txn-card" data-edit-id="${exp.id}">
+                    <div class="batch-txn-card-header">
+                        <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                            <div style="width:36px;height:36px;border-radius:10px;background:${catColor}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${emoji}</div>
+                            <div style="flex:1;min-width:0;">
+                                <div class="batch-txn-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${exp.notes || exp.category}</div>
+                                <div class="batch-txn-original" style="color:${catColor};">${exp.category} · ${paidByName}</div>
+                            </div>
+                        </div>
+                        <div class="batch-txn-amount" style="color:${catColor};">$${exp.amount.toFixed(2)}</div>
+                    </div>
+
+                    <div class="batch-txn-fields">
+                        <div class="batch-txn-field">
+                            <label>Amount</label>
+                            <input type="number" step="0.01" min="0" class="edit-amount" value="${exp.amount}" placeholder="${exp.amount}">
+                        </div>
+                        <div class="batch-txn-field">
+                            <label>Date</label>
+                            <input type="date" class="edit-date" value="${exp.date}">
+                        </div>
+                        <div class="batch-txn-field">
+                            <label>Category</label>
+                            <select class="edit-category">
+                                ${(appState.categories||[]).map(c =>
+                                    `<option value="${c}" ${c===exp.category?'selected':''}>${c}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div class="batch-txn-field">
+                            <label>Who Paid</label>
+                            <select class="edit-whopaid">
+                                ${Object.entries(appState.partners).map(([k,v]) =>
+                                    `<option value="${k}" ${k===exp.whoPaid?'selected':''}>${v}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div class="batch-txn-field">
+                            <label>Split</label>
+                            <select class="edit-split">
+                                <option value="shared"   ${splitVal==='shared'   ?'selected':''}>👥 50/50 Shared</option>
+                                <option value="individual" ${splitVal==='individual'?'selected':''}>👤 Individual</option>
+                            </select>
+                        </div>
+                        <div class="batch-txn-field">
+                            <label>Notes</label>
+                            <input type="text" class="edit-notes" value="${exp.notes || ''}" placeholder="Description…">
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
 
             const html = `
-                <div id="batchEditModal" class="batch-modal-overlay" onclick="if(event.target===this)closeBatchEditModal()">
-                    <div class="batch-modal-sheet">
-                        <div class="batch-modal-handle"></div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                            <h2 style="margin:0; font-size:18px; font-weight:700;">Edit ${count} Transaction${count !== 1 ? 's' : ''}</h2>
-                            <button onclick="closeBatchEditModal()" style="background:none;border:none;color:var(--text-secondary);font-size:22px;cursor:pointer;line-height:1;">✕</button>
+                <div id="batchEditModal" class="batch-editor-overlay">
+                    <div class="batch-editor-header">
+                        <div>
+                            <h2>Edit ${count} Transaction${count!==1?'s':''}</h2>
+                            <p>Each transaction is editable individually below</p>
                         </div>
-                        <p style="color:var(--text-secondary); font-size:13px; margin:0 0 24px;">
-                            Only fields you fill in will be updated — leave blank to keep original values.
-                        </p>
-
-                        <div style="display:flex; flex-direction:column; gap:18px;">
-                            <div>
-                                <div class="batch-field-label">Category</div>
-                                <select id="batchCategory" class="form-input" style="width:100%;">
-                                    <option value="">— Keep original —</option>
-                                    ${catOpts}
-                                </select>
-                            </div>
-                            <div>
-                                <div class="batch-field-label">Who Paid</div>
-                                <select id="batchWhoPaid" class="form-input" style="width:100%;">
-                                    <option value="">— Keep original —</option>
-                                    ${partnerOpts}
-                                </select>
-                            </div>
-                            <div>
-                                <div class="batch-field-label">Split Type</div>
-                                <select id="batchSplitType" class="form-input" style="width:100%;">
-                                    <option value="">— Keep original —</option>
-                                    <option value="shared">👥 50/50 Shared</option>
-                                    <option value="individual">👤 Individual</option>
-                                </select>
-                            </div>
-                            <div>
-                                <div class="batch-field-label">Date</div>
-                                <input type="date" id="batchDate" class="form-input" style="width:100%;">
-                                <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">Leave empty to keep original dates</div>
-                            </div>
-                        </div>
-
-                        <div style="display:flex; gap:10px; margin-top:28px;">
-                            <button onclick="closeBatchEditModal()" style="flex:1; padding:12px; border-radius:10px; background:rgba(255,255,255,0.07); border:1px solid var(--glass-border); color:var(--text-secondary); font-size:14px; cursor:pointer;">Cancel</button>
-                            <button onclick="applyBatchEdit()" style="flex:2; padding:12px; border-radius:10px; background:linear-gradient(135deg, var(--accent-start), var(--accent-end)); border:none; color:white; font-size:14px; font-weight:700; cursor:pointer;">Apply to ${count} Transaction${count !== 1 ? 's' : ''}</button>
-                        </div>
+                        <button class="batch-editor-close" onclick="closeBatchEditModal()">✕</button>
+                    </div>
+                    <div class="batch-editor-list">${txnCards}</div>
+                    <div class="batch-editor-footer">
+                        <button class="batch-editor-cancel-btn" onclick="closeBatchEditModal()">Cancel</button>
+                        <button class="batch-save-btn" onclick="applyBatchEdit()">Save ${count} Transaction${count!==1?'s':''}</button>
                     </div>
                 </div>`;
 
@@ -4747,36 +5048,37 @@
         }
 
         async function applyBatchEdit() {
-            const category  = document.getElementById('batchCategory').value;
-            const whoPaid   = document.getElementById('batchWhoPaid').value;
-            const splitType = document.getElementById('batchSplitType').value;
-            const date      = document.getElementById('batchDate').value;
+            const cards = document.querySelectorAll('#batchEditModal .batch-txn-card');
+            const toUpdate = [];
 
-            if (!category && !whoPaid && !splitType && !date) {
-                showToast('Fill in at least one field to change', 'warning');
-                return;
-            }
+            cards.forEach(card => {
+                const id       = parseInt(card.dataset.editId);
+                const expense  = appState.expenses.find(e => e.id === id);
+                if (!expense) return;
 
-            const updates = {};
-            if (category)  updates.category = category;
-            if (whoPaid)   updates.whoPaid  = whoPaid;
-            if (splitType) {
-                updates.isShared  = splitType === 'shared';
-                updates.splitType = splitType === 'shared' ? '50/50' : 'individual';
-            }
-            if (date) updates.date = date;
+                const amount   = parseFloat(card.querySelector('.edit-amount').value);
+                const date     = card.querySelector('.edit-date').value;
+                const category = card.querySelector('.edit-category').value;
+                const whoPaid  = card.querySelector('.edit-whopaid').value;
+                const split    = card.querySelector('.edit-split').value;
+                const notes    = card.querySelector('.edit-notes').value;
 
-            const toUpdate = [...selectedTransactions];
-            const count    = toUpdate.length;
+                expense.amount   = isNaN(amount) ? expense.amount : amount;
+                expense.date     = date     || expense.date;
+                expense.category = category || expense.category;
+                expense.whoPaid  = whoPaid  || expense.whoPaid;
+                expense.isShared = split !== 'individual';
+                expense.splitType = split === 'shared' ? '50/50' : 'individual';
+                expense.notes    = notes;
 
-            for (const expenseId of toUpdate) {
-                const expense = appState.expenses.find(e => e.id === expenseId);
-                if (!expense) continue;
-                Object.assign(expense, updates);
+                toUpdate.push(expense);
+            });
 
+            const count = toUpdate.length;
+            for (const expense of toUpdate) {
                 if (useApi && currentHouseholdId) {
                     try {
-                        await apiFetch(`/households/${currentHouseholdId}/expenses/${expenseId}`, {
+                        await apiFetch(`/households/${currentHouseholdId}/expenses/${expense.id}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -4790,8 +5092,8 @@
                             })
                         });
                     } catch (err) {
-                        console.error('Batch edit API error:', err);
-                        showToast('Some updates failed — check connection', 'error');
+                        console.error('Batch save error:', err);
+                        showToast('Some saves failed — check connection', 'error');
                     }
                 }
             }
@@ -4800,7 +5102,7 @@
             closeBatchEditModal();
             selectedTransactions = [];
             toggleBatchMode();
-            showToast(`${count} transaction${count !== 1 ? 's' : ''} updated ✓`, 'success');
+            showToast(`${count} transaction${count!==1?'s':''} saved ✓`, 'success');
         }
 
         function getFilteredExpenses() {
