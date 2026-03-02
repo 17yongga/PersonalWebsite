@@ -3618,9 +3618,9 @@
         }
 
         let _deletingExpense = null;
-        async function deleteExpense(id) {
+        async function deleteExpense(id, skipConfirm = false) {
             if (_deletingExpense === id) return;
-            if (confirm('Delete this expense?')) {
+            if (skipConfirm || confirm('Delete this expense?')) {
                 _deletingExpense = id;
                 const target = appState.expenses.find(e => e.id === id);
                 // Gray out the row being deleted
@@ -4325,15 +4325,19 @@
                          'Single') : 'Individual';
                     const catColor = getCategoryColor(expense.category);
                     
+                    const isSelected = selectedTransactions.includes(expense.id);
                     const checkboxHtml = batchSelectMode ? `
                         <input type="checkbox" data-expense-id="${expense.id}" 
+                               onclick="event.stopPropagation()"
                                onchange="toggleTransactionSelection(${expense.id})"
-                               ${selectedTransactions.includes(expense.id) ? 'checked' : ''}
-                               style="margin-right: 8px; transform: scale(1.2);">
+                               ${isSelected ? 'checked' : ''}
+                               style="margin-right: 8px; transform: scale(1.3); cursor: pointer; flex-shrink: 0;">
                     ` : '';
-                    
+                    const rowOnClick = batchSelectMode ? `onclick="toggleTransactionSelection(${expense.id})" style="cursor:pointer;"` : '';
+                    const selectedStyle = (batchSelectMode && isSelected) ? 'outline: 2px solid var(--accent-start); outline-offset: -2px;' : '';
+
                     return `
-                        <div data-expense-id="${expense.id}" style="background: ${sharedBg}; border-left: 3px solid ${catColor}; border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; transition: opacity 0.3s;">
+                        <div data-expense-id="${expense.id}" ${rowOnClick} style="background: ${sharedBg}; border-left: 3px solid ${catColor}; border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; transition: opacity 0.3s, outline 0.1s; ${selectedStyle}">
                             ${checkboxHtml}
                             <div style="flex: 1; min-width: 0;">
                                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px;">
@@ -4386,11 +4390,20 @@
             } else {
                 selectedTransactions.push(expenseId);
             }
-            updateBatchActionBar();
-            
-            // Update checkbox visual
+            const isNowSelected = selectedTransactions.includes(expenseId);
+
+            // Update checkbox
             const checkbox = document.querySelector(`input[data-expense-id="${expenseId}"]`);
-            if (checkbox) checkbox.checked = selectedTransactions.includes(expenseId);
+            if (checkbox) checkbox.checked = isNowSelected;
+
+            // Update row highlight
+            const row = document.querySelector(`[data-expense-id="${expenseId}"]`);
+            if (row) {
+                row.style.outline = isNowSelected ? '2px solid var(--accent-start)' : '';
+                row.style.outlineOffset = isNowSelected ? '-2px' : '';
+            }
+
+            updateBatchActionBar();
         }
 
         function updateBatchActionBar() {
@@ -4449,9 +4462,12 @@
         function openBatchEditModal() {
             const modal = document.getElementById('batchEditModal');
             if (!modal) createBatchEditModal();
-            
+
+            const count = selectedTransactions.length;
             document.getElementById('batchEditModal').style.display = 'flex';
-            document.getElementById('batchEditCount').textContent = selectedTransactions.length;
+            document.getElementById('batchEditCount').textContent = count;
+            const applyBtn = document.getElementById('batchApplyBtn');
+            if (applyBtn) applyBtn.textContent = `Apply to ${count} transaction${count !== 1 ? 's' : ''}`;
         }
 
         function createBatchEditModal() {
@@ -4498,8 +4514,8 @@
                         
                         <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
                             <button class="btn btn-ghost" onclick="closeBatchEditModal()">Cancel</button>
-                            <button class="btn" onclick="applyBatchEdit()" style="background: linear-gradient(135deg, var(--accent-start), var(--accent-end));">
-                                Apply to ${selectedTransactions.length} transactions
+                            <button id="batchApplyBtn" class="btn" onclick="applyBatchEdit()" style="background: linear-gradient(135deg, var(--accent-start), var(--accent-end));">
+                                Apply to ${selectedTransactions.length} transaction${selectedTransactions.length !== 1 ? 's' : ''}
                             </button>
                         </div>
                     </div>
@@ -4572,11 +4588,12 @@
                 }
             }
             
+            const updatedCount = selectedTransactions.length;
             saveData();
             renderTransactions();
             closeBatchEditModal();
             toggleBatchMode();
-            showToast(`${selectedTransactions.length} transactions updated`, 'success');
+            showToast(`${updatedCount} transaction${updatedCount !== 1 ? 's' : ''} updated`, 'success');
         }
 
         function getFilteredExpenses() {
