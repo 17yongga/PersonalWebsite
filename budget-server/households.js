@@ -150,6 +150,14 @@ router.post('/:id/expenses', authenticate, (req, res) => {
       [id, amount, category, paidBy || req.user.id, splitType || '50/50', customSplit || null, date, notes || '', isRecurring ? 1 : 0, isShared !== false ? 1 : 0, req.user.id]
     );
 
+    // Log activity
+    logActivity(id, req.user.id, 'added', 'expense', result.lastInsertRowid, {
+      amount: amount,
+      category: category,
+      notes: notes || '',
+      whoPaid: paidBy || req.user.id
+    });
+
     const expense = queryOne('SELECT e.*, u.name as paid_by_name FROM expenses e JOIN users u ON e.paid_by = u.id WHERE e.id = ?', [result.lastInsertRowid]);
     res.json({ expense });
   } catch (err) {
@@ -171,6 +179,13 @@ router.put('/:id/expenses/:expenseId', authenticate, (req, res) => {
       [amount, category, paidBy || req.user.id, splitType || '50/50', customSplit || null, date, notes || '', isRecurring ? 1 : 0, isShared !== false ? 1 : 0, expenseId, id]
     );
 
+    // Log activity
+    logActivity(id, req.user.id, 'edited', 'expense', expenseId, {
+      amount: amount,
+      category: category,
+      notes: notes || ''
+    });
+
     const expense = queryOne('SELECT e.*, u.name as paid_by_name FROM expenses e JOIN users u ON e.paid_by = u.id WHERE e.id = ?', [expenseId]);
     res.json({ expense });
   } catch (err) {
@@ -185,7 +200,20 @@ router.delete('/:id/expenses/:expenseId', authenticate, (req, res) => {
     const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
     if (!member) return res.status(403).json({ error: 'Not a member' });
 
+    // Get expense data before deleting for activity log
+    const existing = queryOne('SELECT * FROM expenses WHERE id = ? AND household_id = ?', [expenseId, id]);
+    
     runSql('DELETE FROM expenses WHERE id = ? AND household_id = ?', [expenseId, id]);
+    
+    // Log activity
+    if (existing) {
+      logActivity(id, req.user.id, 'deleted', 'expense', expenseId, {
+        amount: existing.amount,
+        category: existing.category,
+        notes: existing.notes || ''
+      });
+    }
+    
     res.json({ message: 'Expense deleted' });
   } catch (err) {
     console.error('Delete expense error:', err);
@@ -282,6 +310,13 @@ router.post('/:id/settlements', authenticate, (req, res) => {
 
     const result = runSql('INSERT INTO settlements (household_id, settled_by, amount, date, notes) VALUES (?,?,?,?,?)',
       [id, req.user.id, amount, date, notes || '']);
+    
+    // Log activity
+    logActivity(id, req.user.id, 'settled', 'settlement', result.lastInsertRowid, {
+      amount: amount,
+      note: notes || ''
+    });
+    
     res.json({ settlement: { id: result.lastInsertRowid, amount, date, notes } });
   } catch (err) {
     console.error('Settlement error:', err);
