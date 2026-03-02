@@ -1454,7 +1454,7 @@
             padding: 8px 20px 40px;
             width: 100%;
             max-width: 560px;
-            max-height: 92vh;
+            max-height: 78vh;
             overflow-y: auto;
             overflow-x: hidden;
             position: relative;
@@ -5473,11 +5473,76 @@
             }
 
             document.getElementById('expenseModalOverlay').classList.add('open');
-            setTimeout(() => document.getElementById('m-amount').focus(), 100);
+            setTimeout(() => {
+                document.getElementById('m-amount').focus();
+                initExpenseModalSwipe();
+            }, 100);
+        }
+
+        function initExpenseModalSwipe() {
+            const sheet   = document.getElementById('expenseModalBox');
+            const overlay = document.getElementById('expenseModalOverlay');
+            if (!sheet || sheet.dataset.swipeInit) return;
+            sheet.dataset.swipeInit = '1';
+
+            let startY = 0, startTime = 0, dragging = false;
+
+            // Only trigger swipe from the drag handle area (top ~48px of sheet)
+            // so scrolling inside the form still works
+            sheet.addEventListener('touchstart', e => {
+                const sheetTop = sheet.getBoundingClientRect().top;
+                const touchY   = e.touches[0].clientY;
+                // Only arm the swipe if touch starts in the top handle zone
+                if (touchY - sheetTop > 52) { dragging = false; return; }
+                startY    = touchY;
+                startTime = Date.now();
+                dragging  = true;
+                sheet.style.transition = 'none';
+            }, { passive: true });
+
+            sheet.addEventListener('touchmove', e => {
+                if (!dragging) return;
+                const dy = e.touches[0].clientY - startY;
+                if (dy <= 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                sheet.style.transform = `translateY(${dy}px)`;
+                overlay.style.opacity = Math.max(0, 1 - dy / 320).toString();
+            }, { passive: false });
+
+            sheet.addEventListener('touchend', e => {
+                if (!dragging) return;
+                dragging = false;
+                const dy       = e.changedTouches[0].clientY - startY;
+                const velocity = dy / (Date.now() - startTime);
+                if (dy > 80 || velocity > 0.5) {
+                    sheet.style.transition   = 'transform 0.25s cubic-bezier(0.4,0,1,1)';
+                    sheet.style.transform    = 'translateY(110%)';
+                    overlay.style.transition = 'opacity 0.25s ease';
+                    overlay.style.opacity    = '0';
+                    setTimeout(() => closeExpenseModal(), 260);
+                } else {
+                    sheet.style.transition   = 'transform 0.3s cubic-bezier(0.4,0,0.2,1)';
+                    sheet.style.transform    = 'translateY(0)';
+                    overlay.style.transition = 'opacity 0.3s ease';
+                    overlay.style.opacity    = '1';
+                }
+            }, { passive: true });
         }
 
         function closeExpenseModal() {
-            document.getElementById('expenseModalOverlay').classList.remove('open');
+            const overlay = document.getElementById('expenseModalOverlay');
+            const sheet   = document.getElementById('expenseModalBox');
+            overlay.classList.remove('open');
+            // Reset swipe state so it can re-init on next open
+            if (sheet) {
+                sheet.style.transform    = '';
+                sheet.style.transition   = '';
+                sheet.style.opacity      = '';
+                delete sheet.dataset.swipeInit;
+            }
+            overlay.style.opacity    = '';
+            overlay.style.transition = '';
             editingExpenseId = null;
         }
 
