@@ -1018,111 +1018,98 @@
 
         /* Filters */
         /* ── Filter Bar ─────────────────────────────────── */
+        /* ── Filter Bar ──────────────────────────────────────────── */
         .filter-bar {
-            padding: 16px 20px;
+            padding: 14px 16px;
             margin-bottom: 20px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
-        .filter-bar-row {
+        /* Top row: search + Add Transaction */
+        .fb-top {
             display: flex;
             gap: 10px;
             align-items: center;
-            flex-wrap: wrap;
         }
-
-        .filter-bar-row .form-input,
-        .filter-bar-row .form-select {
-            margin: 0;
-            height: 38px;
-            font-size: 13px;
-        }
-
-        .filter-search {
+        .fb-search {
             flex: 1;
-            min-width: 180px;
+            position: relative;
         }
+        .fb-search-icon {
+            position: absolute;
+            left: 13px; top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        .fb-search input {
+            width: 100%;
+            height: 42px;
+            padding: 0 14px 0 36px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 11px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s, background 0.15s;
+            box-sizing: border-box;
+        }
+        .fb-search input::placeholder { color: rgba(255,255,255,0.35); }
+        .fb-search input:focus {
+            border-color: rgba(99,102,241,0.6);
+            background: rgba(99,102,241,0.07);
+        }
+        .fb-add-btn {
+            height: 42px;
+            padding: 0 18px;
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            border: none;
+            border-radius: 11px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+            flex-shrink: 0;
+            transition: opacity 0.15s;
+        }
+        .fb-add-btn:active { opacity: 0.85; }
 
-        .filter-actions {
-            display: flex;
+        /* Secondary row: CSV · Scan · Filters — always 3 equal pills */
+        .fb-secondary {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
+        }
+        .fb-sec-btn {
+            height: 38px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: rgba(255,255,255,0.75);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: background 0.12s, border-color 0.12s, color 0.12s;
+            white-space: nowrap;
+        }
+        .fb-sec-btn:active { background: rgba(255,255,255,0.12); }
+        .fb-sec-btn.active-filter {
+            background: rgba(99,102,241,0.18);
+            border-color: rgba(99,102,241,0.5);
+            color: #a5b4fc;
         }
 
-        /* Mobile filter bar improvements */
-        @media (max-width: 768px) {
-            .filter-bar-row {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-            }
-
-            .filter-search {
-                order: -1;
-                width: 100%;
-                flex: none;
-            }
-
-            .filter-actions {
-                justify-content: center;
-                gap: 8px;
-                display: flex;
-                flex-wrap: wrap;
-            }
-
-            /* CSV and Scan buttons - make smaller on mobile */
-            .filter-actions .btn:not(:last-child) {
-                flex: 1;
-                min-width: 60px;
-                font-size: 11px;
-                padding: 8px 6px;
-            }
-
-            /* Make Add Transaction more prominent */
-            .filter-actions .btn:last-child {
-                order: -1;
-                margin-bottom: 8px;
-                font-weight: 600;
-                width: 100%;
-                flex: none;
-            }
-
-            /* Hide CSV and Scan from main row on mobile */
-            .filter-actions .btn:not(:last-child) {
-                display: none;
-            }
-
-            /* Show mobile-only buttons and style them */
-            .mobile-only {
-                display: inline-flex !important;
-                flex: 1;
-                padding: 8px 6px;
-                font-size: 11px;
-            }
-
-            /* Style the secondary actions row for mobile */
-            .mobile-secondary-actions {
-                gap: 8px !important;
-            }
-
-            .mobile-secondary-actions .btn {
-                flex: 1;
-            }
-
-            /* Hide desktop-only elements on mobile */
-            .desktop-only {
-                display: none;
-            }
-        }
-
-        /* Desktop styles - hide mobile-only buttons */
-        @media (min-width: 769px) {
-            .mobile-only {
-                display: none !important;
-            }
+        /* Mobile: stack Add Transaction below search */
+        @media (max-width: 600px) {
+            .fb-top { flex-direction: column; align-items: stretch; }
+            .fb-add-btn { width: 100%; justify-content: center; }
         }
 
         .filter-chips {
@@ -1151,26 +1138,9 @@
 
         .filter-chip option { background: #1a1a2e; }
 
-        .filter-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-shrink: 0;
-        }
-
-        .filter-actions .btn {
-            white-space: nowrap;
-            font-size: 13px;
-            padding: 7px 14px;
-            height: 34px;
-        }
-
         @media (max-width: 600px) {
             .filter-chips { gap: 6px; }
             .filter-chip { font-size: 11px; padding: 5px 10px; }
-            .filter-actions { width: 100%; }
-            .filter-actions .btn { flex: 1; }
-
         }
 
         /* Unified filter button and panel */
@@ -2371,27 +2341,23 @@
             <!-- Transactions Tab -->
             <div class="tab-content" id="transactions">
                 <div class="filter-bar glass-card">
-                    <!-- Row 1: search + add button -->
-                    <div class="filter-bar-row">
-                        <div class="filter-search">
-                            <input type="text" class="form-input" id="searchFilter" placeholder="🔍 Search transactions..." oninput="filterTransactions()" style="height:38px;font-size:13px;">
+                    <!-- Row 1: search + Add Transaction -->
+                    <div class="fb-top">
+                        <div class="fb-search">
+                            <span class="fb-search-icon">🔍</span>
+                            <input type="text" id="searchFilter" placeholder="Search transactions…" oninput="filterTransactions()" autocomplete="off">
                         </div>
-                        <div class="filter-actions">
-                            <button class="btn btn-secondary" onclick="exportTransactions('csv')" title="Export CSV">📥 CSV</button>
-                            <button class="btn btn-secondary" onclick="openScanModal()" title="Scan a receipt">📷 Scan</button>
-                            <button class="btn" onclick="openExpenseModal()" style="background: linear-gradient(135deg, var(--accent-start), var(--accent-end));">➕ Add Transaction</button>
-                        </div>
+                        <button class="fb-add-btn" onclick="openExpenseModal()">
+                            <span style="font-size:16px;line-height:1;">+</span> Add Transaction
+                        </button>
                     </div>
-                    <!-- Row 2: unified filter button + mobile secondary actions -->
-                    <div class="filter-bar-row">
-                        <div class="mobile-secondary-actions" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;">
-                            <button class="btn btn-secondary mobile-only" onclick="exportTransactions('csv')" title="Export CSV" style="font-size:11px;">📥 CSV</button>
-                            <button class="btn btn-secondary mobile-only" onclick="openScanModal()" title="Scan a receipt" style="font-size:11px;">📷 Scan</button>
-                            <button class="btn btn-secondary" id="filterToggleBtn" onclick="toggleFilterPanel()" style="font-size:13px;">
-                                🔽 Filters <span id="filterBadge" class="filter-badge" style="display:none;">0</span>
-                            </button>
-                            <span id="activeFilterSummary" class="desktop-only" style="font-size:12px;color:var(--text-secondary);"></span>
-                        </div>
+                    <!-- Row 2: CSV · Scan · Filters — 3 equal columns -->
+                    <div class="fb-secondary">
+                        <button class="fb-sec-btn" onclick="exportTransactions('csv')">📥 CSV</button>
+                        <button class="fb-sec-btn" onclick="openScanModal()">📷 Scan</button>
+                        <button class="fb-sec-btn" id="filterToggleBtn" onclick="toggleFilterPanel()">
+                            🔽 Filters <span id="filterBadge" class="filter-badge" style="display:none;">0</span>
+                        </button>
                     </div>
                     <!-- Filter panel (collapsible) -->
                     <div class="filter-panel glass-card" id="filterPanel" style="display:none;">
@@ -5148,9 +5114,12 @@
         function toggleFilterPanel() {
             filterPanelOpen = !filterPanelOpen;
             const panel = document.getElementById('filterPanel');
-            const btn = document.getElementById('filterToggleBtn');
+            const btn   = document.getElementById('filterToggleBtn');
             if (panel) panel.style.display = filterPanelOpen ? 'block' : 'none';
-            if (btn) btn.innerHTML = (filterPanelOpen ? '🔼' : '🔽') + ' Filters ' + (document.getElementById('filterBadge')?.outerHTML || '');
+            if (btn) {
+                btn.classList.toggle('active-filter', filterPanelOpen);
+                btn.innerHTML = (filterPanelOpen ? '🔼' : '🔽') + ' Filters ' + (document.getElementById('filterBadge')?.outerHTML || '');
+            }
         }
 
         function updateFilterBadge() {
