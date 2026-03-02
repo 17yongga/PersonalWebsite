@@ -774,6 +774,42 @@
             background: rgba(99,102,241,0.15);
         }
 
+        /* Filter Badge and Panel */
+        .filter-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            background: var(--accent-start);
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 6px;
+            padding: 0 4px;
+        }
+        .filter-panel {
+            margin-top: 12px;
+            padding: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        .filter-panel .filter-chips {
+            flex: 1;
+        }
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+        }
+        .btn-ghost:hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+        }
+
         /* ── Expense Modal ───────────────────────────────── */
         /* Scan receipt modal (same base as expense modal) */
         .scan-modal-overlay {
