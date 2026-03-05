@@ -848,24 +848,6 @@ function DashboardStrategies() {
             tension: 0
         });
 
-        // Compute smart Y-axis bounds: use 5th–95th percentile to clip outliers
-        // (e.g. bad bar data from stock splits causing a temporary dip)
-        const allDataVals = datasets.slice(0, -1)
-            .flatMap(ds => ds.data)
-            .filter(v => v != null && !isNaN(v))
-            .sort((a, b) => a - b);
-        let yMin, yMax;
-        if (allDataVals.length > 1) {
-            const p5 = allDataVals[Math.floor(allDataVals.length * 0.05)];
-            const p95 = allDataVals[Math.floor(allDataVals.length * 0.95)];
-            const spread = Math.max(p95 - p5, 200); // minimum spread $200
-            yMin = Math.floor((p5 - spread * 0.4) / 100) * 100;
-            yMax = Math.ceil((p95 + spread * 0.4) / 100) * 100;
-        } else {
-            yMin = 18000;
-            yMax = 22000;
-        }
-
         if (equityChart) {
             equityChart.destroy();
         }
@@ -920,8 +902,6 @@ function DashboardStrategies() {
                     },
                     y: {
                         beginAtZero: false,
-                        min: yMin,
-                        max: yMax,
                         grid: {
                             color: 'rgba(255,255,255,0.07)',
                             lineWidth: 1
