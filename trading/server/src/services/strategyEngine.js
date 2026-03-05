@@ -165,7 +165,7 @@ class StrategyEngine {
     /**
      * Execute a virtual trade
      */
-    async executeTrade(strategyId, symbol, side, quantity, price, reason = '') {
+    async executeTrade(strategyId, symbol, side, quantity, price, reason = '', reasoning = null) {
         const db = getDb();
         
         const strategy = db.prepare('SELECT * FROM strategies_v2 WHERE id = ?').get(strategyId);
@@ -244,10 +244,11 @@ class StrategyEngine {
         }
 
         // Record the trade
+        const reasoningJson = reasoning ? JSON.stringify(reasoning) : null;
         const tradeResult = db.prepare(`
-            INSERT INTO strategy_trades (strategy_id, symbol, side, quantity, price, total_value, reason, pnl)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(strategyId, symbol, side, quantity, price, totalValue, reason, pnl);
+            INSERT INTO strategy_trades (strategy_id, symbol, side, quantity, price, total_value, reason, pnl, reasoning)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(strategyId, symbol, side, quantity, price, totalValue, reason, pnl, reasoningJson);
 
         // Check for notable events
         await this.checkForEvents(strategyId, { trade: { side, symbol, pnl, totalValue } });
