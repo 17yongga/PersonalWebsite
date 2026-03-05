@@ -80,7 +80,23 @@ async function getAlpacaStrategyData() {
             };
         });
         
-        // Process filled orders per strategy — track cash flow properly
+        // Build a live price map from Alpaca positions (symbol → current price)
+        const livePriceMap = {};
+        positions.forEach(p => {
+            livePriceMap[p.symbol] = parseFloat(p.current_price || 0);
+        });
+
+        // Initialize per-strategy owned quantity tracking (separate from Alpaca's aggregated positions)
+        // Bug fix: Alpaca aggregates shares from all strategies into one position per symbol.
+        // We MUST track each strategy's own share count from its own order history.
+        Object.keys(STRATEGY_SLUGS).forEach(slug => {
+            strategies[slug].ownedQty = {}; // { symbol: { qty, totalCost } }
+            strategies[slug].realizedPnl = 0; // Track P&L from closed trades
+            strategies[slug].winTrades = 0;
+            strategies[slug].lossTrades = 0;
+        });
+
+        // Process filled orders per strategy — track cash flow AND per-strategy owned quantities
         orders.forEach(order => {
             const clientOrderId = order.client_order_id || '';
             const prefix = clientOrderId.split('-')[0];
@@ -88,26 +104,45 @@ async function getAlpacaStrategyData() {
             
             if (!strategySlug || order.status !== 'filled') return;
             
+            const symbol = order.symbol;
             const qty = parseFloat(order.filled_qty || 0);
             const price = parseFloat(order.filled_avg_price || 0);
             const cost = qty * price;
+            const s = strategies[strategySlug];
             
             // Track cash: buys decrease cash, sells increase cash
             if (order.side === 'buy') {
-                strategies[strategySlug].cashRemaining -= cost;
+                s.cashRemaining -= cost;
+                // Track owned quantity for this strategy (not Alpaca's aggregated position)
+                if (!s.ownedQty[symbol]) s.ownedQty[symbol] = { qty: 0, totalCost: 0 };
+                s.ownedQty[symbol].qty += qty;
+                s.ownedQty[symbol].totalCost += cost;
             } else {
-                strategies[strategySlug].cashRemaining += cost;
+                s.cashRemaining += cost;
+                // Compute realized P&L for win rate tracking
+                if (s.ownedQty[symbol] && s.ownedQty[symbol].qty > 0) {
+                    const avgCost = s.ownedQty[symbol].totalCost / s.ownedQty[symbol].qty;
+                    const pnl = (price - avgCost) * qty;
+                    s.realizedPnl += pnl;
+                    if (pnl > 0) s.winTrades++;
+                    else s.lossTrades++;
+                    // Reduce owned quantity
+                    const costBasisRemoved = avgCost * qty;
+                    s.ownedQty[symbol].qty -= qty;
+                    s.ownedQty[symbol].totalCost -= costBasisRemoved;
+                    if (s.ownedQty[symbol].qty <= 0.001) delete s.ownedQty[symbol];
+                }
             }
             
-            strategies[strategySlug].tradeCount++;
+            s.tradeCount++;
             
             // Store trade for display (most recent first)
-            strategies[strategySlug].trades.push({
-                symbol: order.symbol,
+            s.trades.push({
+                symbol,
                 side: order.side,
-                qty: qty,
-                price: price,
-                cost: cost,
+                qty,
+                price,
+                cost,
                 filledAt: order.filled_at || order.created_at
             });
         });
@@ -118,58 +153,47 @@ async function getAlpacaStrategyData() {
             s.trades = s.trades.slice(0, 10);
         });
         
-        // Match Alpaca positions to strategies via order history
-        for (const position of positions) {
-            const symbol = position.symbol;
-            const marketValue = parseFloat(position.market_value || 0);
-            const unrealizedPl = parseFloat(position.unrealized_pl || 0);
-            const qty = parseFloat(position.qty || 0);
-            const avgEntry = parseFloat(position.avg_entry_price || 0);
-            const currentPrice = parseFloat(position.current_price || 0);
-            
-            // Find which strategy owns this position
-            for (const [slug, prefix] of Object.entries(STRATEGY_SLUGS)) {
-                const hasOrder = orders.some(o => 
-                    o.symbol === symbol &&
-                    o.client_order_id &&
-                    o.client_order_id.startsWith(prefix + '-') &&
-                    o.status === 'filled' &&
-                    o.side === 'buy'
-                );
-                
-                if (hasOrder && strategies[slug]) {
-                    strategies[slug].positionsCount++;
-                    strategies[slug].positions.push({
-                        symbol,
-                        qty,
-                        avgEntry,
-                        currentPrice,
-                        marketValue,
-                        unrealizedPl
-                    });
-                    break; // Each position belongs to one strategy
-                }
-            }
-        }
+        // Build per-strategy positions from owned quantities + live prices
+        // This correctly attributes only the shares each strategy actually purchased
+        Object.entries(strategies).forEach(([slug, s]) => {
+            Object.entries(s.ownedQty).forEach(([symbol, owned]) => {
+                if (owned.qty <= 0.001) return;
+                const currentPrice = livePriceMap[symbol] || (owned.totalCost / owned.qty);
+                const avgEntry = owned.totalCost / owned.qty;
+                const marketValue = owned.qty * currentPrice;
+                const unrealizedPl = (currentPrice - avgEntry) * owned.qty;
+                s.positions.push({
+                    symbol,
+                    qty: owned.qty,
+                    avgEntry: Math.round(avgEntry * 100) / 100,
+                    currentPrice,
+                    marketValue,
+                    unrealizedPl
+                });
+            });
+            s.positionsCount = s.positions.length;
+        });
         
-        // Calculate currentValue = cashRemaining + sum(position market values)
+        // Calculate currentValue = cashRemaining + sum(own position market values)
+        // With per-strategy position tracking, cash + own positions = correct portfolio value
         Object.values(strategies).forEach(s => {
             const positionValue = s.positions.reduce((sum, p) => sum + p.marketValue, 0);
-            s.currentValue = Math.round((s.cashRemaining + positionValue) * 100) / 100;
+            const rawValue = s.cashRemaining + positionValue;
+            s.currentValue = Math.round(rawValue);
             
-            const totalReturn = s.currentValue - INITIAL_CAPITAL;
+            const totalReturn = rawValue - INITIAL_CAPITAL;
             const totalReturnPct = (totalReturn / INITIAL_CAPITAL) * 100;
             
             s.totalReturn = Math.round(totalReturn * 100) / 100;
             s.totalReturnPct = Math.round(totalReturnPct * 100) / 100;
             s.totalPnl = s.totalReturn;
             s.totalPnlPercent = s.totalReturnPct;
-            s.currentValue = Math.round(s.currentValue);
             
-            // Win rate: only meaningful when we have sells
-            const sellTrades = s.trades.filter(t => t.side === 'sell');
-            s.winRate = sellTrades.length > 0 ? 
-                Math.round((sellTrades.filter(t => t.price > 0).length / sellTrades.length) * 100) : 0;
+            // Win rate: based on actual closed trades (sells with tracked P&L)
+            const totalClosedTrades = s.winTrades + s.lossTrades;
+            s.winRate = totalClosedTrades > 0
+                ? Math.round((s.winTrades / totalClosedTrades) * 100)
+                : 0;
         });
         
         return Object.values(strategies);
@@ -200,10 +224,9 @@ router.get('/strategies', asyncHandler(async (req, res) => {
         // Sort by performance (totalReturnPct descending)
         strategies.sort((a, b) => b.totalReturnPct - a.totalReturnPct);
         
-        // Add ranking
+        // Add ranking — winRate is already computed correctly in getAlpacaStrategyData()
         strategies.forEach((strategy, index) => {
             strategy.rank = index + 1;
-            strategy.winRate = strategy.tradeCount > 0 ? 75.0 : 0; // Placeholder win rate
             strategy.createdAt = new Date().toISOString();
         });
         
