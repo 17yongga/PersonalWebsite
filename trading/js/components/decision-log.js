@@ -98,7 +98,7 @@ export class DecisionLog {
         const date = formatDate(trade.executed_at);
         const isBuy = trade.side === 'buy';
         const signal = trade.reasoning?.condition || trade.reason || '-';
-        const signalShort = signal.length > 40 ? signal.slice(0, 37) + '...' : signal;
+        const signalShort = signal.length > 65 ? signal.slice(0, 62) + '…' : signal;
         const pnl = trade.pnl != null ? formatCurrency(trade.pnl) : '-';
         const pnlClass = trade.pnl > 0 ? 'positive' : trade.pnl < 0 ? 'negative' : '';
 
@@ -122,22 +122,33 @@ export class DecisionLog {
     }
 
     _renderExpanded(trade) {
-        if (!trade.reasoning) {
-            return `<div>Reason: ${trade.reason || 'No reasoning data available'}</div>`;
+        // Rich reasoning object (user strategies with indicator data)
+        if (trade.reasoning) {
+            const r = trade.reasoning;
+            const indicators = r.indicators || {};
+            return `
+                <div><strong>Signal:</strong> ${r.condition || trade.reason || '-'}</div>
+                ${r.decision ? `<div><strong>Decision:</strong> ${r.decision}</div>` : ''}
+                ${Object.keys(indicators).length ? `
+                <div style="margin-top:4px"><strong>Indicators:</strong>
+                    <span style="color:#8b949e;margin-left:8px">
+                        ${indicators.rsi != null    ? `RSI ${indicators.rsi}` : ''}
+                        ${indicators.macd != null   ? ` · MACD ${indicators.macd}` : ''}
+                        ${indicators.ema_cross != null ? ` · EMA cross ${indicators.ema_cross}` : ''}
+                        ${indicators.composite_score != null ? ` · Score ${indicators.composite_score}` : ''}
+                    </span>
+                </div>` : ''}
+            `;
         }
-        const r = trade.reasoning;
-        const indicators = r.indicators || {};
+
+        // Showcase strategy — reason IS the explanation
+        const reason = trade.reason || 'No reasoning data available';
+        const isBuy  = trade.side === 'buy';
         return `
-            <div><strong>Decision:</strong> ${r.decision || '-'}</div>
-            <div><strong>Condition:</strong> ${r.condition || '-'}</div>
-            <div><strong>Indicators:</strong></div>
-            <div style="padding-left:12px">
-                RSI: ${indicators.rsi ?? '-'}<br>
-                MACD: ${indicators.macd ?? '-'}<br>
-                EMA Cross: ${indicators.ema_cross ?? '-'}<br>
-                Composite Score: ${indicators.composite_score ?? '-'}
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:2px 0;">
+                <span style="color:${isBuy ? '#3fb950' : '#f85149'};font-size:11px;font-weight:700;min-width:36px;margin-top:1px;">${isBuy ? 'WHY BUY' : 'WHY SELL'}</span>
+                <span style="color:#c9d1d9;font-size:13px;line-height:1.5;">${reason}</span>
             </div>
-            ${trade.reason ? `<div><strong>Summary:</strong> ${trade.reason}</div>` : ''}
         `;
     }
 

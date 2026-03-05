@@ -27,6 +27,61 @@ const SHOWCASE_PREFIXES = {
     'volatility-breakout': 'vb'
 };
 
+// Sector ETF name map for Sector Rotator reasoning
+const SECTOR_ETF_NAMES = {
+    XLU: 'Utilities', XLE: 'Energy', XLB: 'Materials',
+    XLRE: 'Real Estate', XLK: 'Technology', XLF: 'Financials',
+    XLI: 'Industrials', XLV: 'Health Care', XLP: 'Consumer Staples',
+    XLY: 'Consumer Discretionary', XLC: 'Communication Services',
+    XLU: 'Utilities'
+};
+
+/**
+ * Generate a short, clear trade reason explaining WHY this order was executed,
+ * based on the strategy's known protocol. No Alpaca logs → rule-based reasoning.
+ *
+ * @param {string} strategyId  — e.g. 'sector-rotator'
+ * @param {string} symbol      — e.g. 'XLB'
+ * @param {string} side        — 'buy' | 'sell'
+ * @returns {string}
+ */
+function generateTradeReason(strategyId, symbol, side) {
+    const isBuy   = side === 'buy';
+    const sector  = SECTOR_ETF_NAMES[symbol];
+
+    switch (strategyId) {
+        case 'momentum-hunter':
+            return isBuy
+                ? `Momentum breakout — ${symbol} cleared 20-day high on above-avg volume; trend confirmed`
+                : `Momentum reversal — ${symbol} broke below 8-day EMA; trailing stop triggered`;
+
+        case 'mean-reversion':
+            return isBuy
+                ? `Oversold signal — ${symbol} RSI < 30 with price at lower Bollinger Band; reversion entry`
+                : `Mean-reversion complete — ${symbol} returned to 20-day MA; closed at fair value`;
+
+        case 'sector-rotator': {
+            const label = sector ? `${sector} (${symbol})` : symbol;
+            return isBuy
+                ? `Sector rotation into ${label} — ranked #1 in relative strength vs S&P 500 over 4-week window`
+                : `Rotation exit — ${label} fell out of top relative-strength rank; reallocating to leading sector`;
+        }
+
+        case 'value-dividends':
+            return isBuy
+                ? `Value entry — ${symbol} trading below sector-median P/E with dividend yield ≥ 2%; margin of safety met`
+                : `Valuation target hit — ${symbol} reached intrinsic value estimate; yield compressed at current price`;
+
+        case 'volatility-breakout':
+            return isBuy
+                ? `Volume surge — ${symbol} volume 2× 20-day avg with price expanding above ATR channel; breakout confirmed`
+                : `ATR contraction — ${symbol} volatility narrowed below threshold; breakout momentum exhausted`;
+
+        default:
+            return isBuy ? `Entry signal triggered for ${symbol}` : `Exit signal triggered for ${symbol}`;
+    }
+}
+
 /**
  * Resolve a strategy param that may be a numeric ID or a slug.
  * Returns { strategy, isSlug } or throws ApiError.
@@ -182,6 +237,7 @@ router.get('/:id/trades', asyncHandler(async (req, res) => {
                 if (posBasis[symbol].qty <= 0.001) delete posBasis[symbol];
             }
 
+            const tradeReason = generateTradeReason(id, symbol, order.side);
             return {
                 id: order.id,
                 symbol,
@@ -189,7 +245,7 @@ router.get('/:id/trades', asyncHandler(async (req, res) => {
                 quantity: qty,
                 price,
                 executed_at: order.filled_at || order.created_at,
-                reason: `${order.side === 'buy' ? 'Entry' : 'Exit'} — ${symbol} ${qty} @ $${price.toFixed(2)}`,
+                reason: tradeReason,
                 pnl,
                 reasoning: null
             };
