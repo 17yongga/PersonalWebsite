@@ -86,6 +86,15 @@ async function getAlpacaStrategyData() {
             livePriceMap[p.symbol] = parseFloat(p.current_price || 0);
         });
 
+        // Sort orders chronologically (oldest first) — critical for correct position tracking.
+        // Alpaca returns newest-first by default; if we process sells before their matching buys,
+        // position quantities will be wrong (e.g. cyclic buy→sell→buy strategies like SR).
+        const ordersChronological = [...orders].sort((a, b) => {
+            const tA = new Date(a.filled_at || a.created_at).getTime();
+            const tB = new Date(b.filled_at || b.created_at).getTime();
+            return tA - tB;
+        });
+
         // Initialize per-strategy owned quantity tracking (separate from Alpaca's aggregated positions)
         // Bug fix: Alpaca aggregates shares from all strategies into one position per symbol.
         // We MUST track each strategy's own share count from its own order history.
@@ -97,7 +106,8 @@ async function getAlpacaStrategyData() {
         });
 
         // Process filled orders per strategy — track cash flow AND per-strategy owned quantities
-        orders.forEach(order => {
+        // Use chronological order so buy→sell→buy cycles are tracked correctly
+        ordersChronological.forEach(order => {
             const clientOrderId = order.client_order_id || '';
             const prefix = clientOrderId.split('-')[0];
             const strategySlug = Object.keys(STRATEGY_SLUGS).find(slug => STRATEGY_SLUGS[slug] === prefix);
