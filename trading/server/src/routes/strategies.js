@@ -18,6 +18,15 @@ const STRATEGY_SLUG_MAP = {
     'volatility-breakout': 'Volatility Trader'
 };
 
+// Strategy slug to Alpaca order prefix mapping (showcase strategies)
+const SHOWCASE_PREFIXES = {
+    'momentum-hunter': 'mh',
+    'mean-reversion': 'mr',
+    'sector-rotator': 'sr',
+    'value-dividends': 'vd',
+    'volatility-breakout': 'vb'
+};
+
 /**
  * Resolve a strategy param that may be a numeric ID or a slug.
  * Returns { strategy, isSlug } or throws ApiError.
@@ -112,34 +121,103 @@ router.get('/:id/candles', asyncHandler(async (req, res) => {
 
 /**
  * GET /api/v1/strategies/:id/trades
- * Get trades for a strategy with pagination and parsed reasoning (public)
+ * Get trades for a strategy with pagination and parsed reasoning (public).
+ * For showcase strategies (momentum-hunter etc.) pulls live Alpaca order history.
+ * For user strategies falls back to the strategy_trades DB table.
  */
 router.get('/:id/trades', asyncHandler(async (req, res) => {
-    const db = getDb();
-    const strat = resolveStrategy(db, req.params.id, null);
-    if (!strat) throw new ApiError('Strategy not found', 404);
-
-    const strategyId = strat.id;
+    const { id } = req.params;
     const limit = Math.min(parseInt(req.query.limit) || 50, 200);
     const offset = parseInt(req.query.offset) || 0;
 
-    const total = db.prepare('SELECT COUNT(*) as count FROM strategy_trades WHERE strategy_id = ?').get(strategyId).count;
+    const alpacaPrefix = SHOWCASE_PREFIXES[id];
+    if (alpacaPrefix) {
+        // Showcase strategy — pull from Alpaca order history
+        const apiKey    = process.env.ALPACA_API_KEY;
+        const secretKey = process.env.ALPACA_SECRET_KEY;
+        const baseUrl   = process.env.ALPACA_BASE_URL || 'https://paper-api.alpaca.markets/v2';
 
-    const trades = db.prepare(`
+        if (!apiKey || !secretKey) {
+            return res.json({ success: true, trades: [], total: 0, limit, offset });
+        }
+
+        const alpacaRes = await fetch(`${baseUrl}/orders?status=all&limit=500&direction=asc`, {
+            headers: {
+                'APCA-API-KEY-ID': apiKey,
+                'APCA-API-SECRET-KEY': secretKey
+            }
+        });
+
+        if (!alpacaRes.ok) {
+            return res.json({ success: true, trades: [], total: 0, limit, offset });
+        }
+
+        const allOrders = await alpacaRes.json();
+
+        // Filter to this strategy's filled orders, chronological (oldest first)
+        const stratOrders = allOrders.filter(o =>
+            (o.client_order_id || '').startsWith(alpacaPrefix + '-') &&
+            o.status === 'filled'
+        );
+
+        // Track cost basis per symbol to compute realized P&L on sells
+        const posBasis = {}; // { symbol: { qty, totalCost } }
+        const trades = stratOrders.map(order => {
+            const symbol = order.symbol;
+            const qty    = parseFloat(order.filled_qty || 0);
+            const price  = parseFloat(order.filled_avg_price || 0);
+            let pnl = null;
+
+            if (order.side === 'buy') {
+                if (!posBasis[symbol]) posBasis[symbol] = { qty: 0, totalCost: 0 };
+                posBasis[symbol].qty       += qty;
+                posBasis[symbol].totalCost += qty * price;
+            } else if (posBasis[symbol] && posBasis[symbol].qty > 0) {
+                const avgCost = posBasis[symbol].totalCost / posBasis[symbol].qty;
+                pnl = (price - avgCost) * qty;
+                const costRemoved = avgCost * qty;
+                posBasis[symbol].qty       -= qty;
+                posBasis[symbol].totalCost -= costRemoved;
+                if (posBasis[symbol].qty <= 0.001) delete posBasis[symbol];
+            }
+
+            return {
+                id: order.id,
+                symbol,
+                side: order.side,
+                quantity: qty,
+                price,
+                executed_at: order.filled_at || order.created_at,
+                reason: `${order.side === 'buy' ? 'Entry' : 'Exit'} — ${symbol} ${qty} @ $${price.toFixed(2)}`,
+                pnl,
+                reasoning: null
+            };
+        });
+
+        // Return newest-first with pagination
+        const sorted    = [...trades].reverse();
+        const paginated = sorted.slice(offset, offset + limit);
+
+        return res.json({ success: true, trades: paginated, total: trades.length, limit, offset });
+    }
+
+    // User-created strategy — fall back to DB
+    const db   = getDb();
+    const strat = resolveStrategy(db, id, null);
+    if (!strat) throw new ApiError('Strategy not found', 404);
+
+    const strategyId = strat.id;
+    const total = db.prepare('SELECT COUNT(*) as count FROM strategy_trades WHERE strategy_id = ?').get(strategyId).count;
+    const dbTrades = db.prepare(`
         SELECT * FROM strategy_trades
         WHERE strategy_id = ?
         ORDER BY executed_at DESC
         LIMIT ? OFFSET ?
     `).all(strategyId, limit, offset);
 
-    const parsedTrades = trades.map(trade => ({
-        ...trade,
-        reasoning: trade.reasoning ? JSON.parse(trade.reasoning) : null
-    }));
-
     res.json({
         success: true,
-        trades: parsedTrades,
+        trades: dbTrades.map(t => ({ ...t, reasoning: t.reasoning ? JSON.parse(t.reasoning) : null })),
         total,
         limit,
         offset
