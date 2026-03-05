@@ -11,11 +11,11 @@ const candleCache = new Map();
 
 // Strategy slug to name mapping for public routes
 const STRATEGY_SLUG_MAP = {
-    'momentum-hunter': 'Momentum Hunter',
-    'mean-reversion': 'Mean Reversion',
+    'momentum-hunter': 'Momentum Rider',
+    'mean-reversion': 'Contrarian',
     'sector-rotator': 'Sector Rotator',
-    'value-dividends': 'Value Dividends',
-    'volatility-breakout': 'Volatility Breakout'
+    'value-dividends': 'Dividend Hunter',
+    'volatility-breakout': 'Volatility Trader'
 };
 
 /**
@@ -147,13 +147,12 @@ router.get('/:id/trades', asyncHandler(async (req, res) => {
 }));
 
 // ─── Authenticated routes ───────────────────────────────────────
-router.use(authenticateToken);
 
 /**
  * GET /api/v1/strategies
  * Get all strategies for the authenticated user
  */
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', authenticateToken, asyncHandler(async (req, res) => {
     const db = getDb();
     
     const strategies = db.prepare(`
@@ -180,7 +179,7 @@ router.get('/', asyncHandler(async (req, res) => {
  * POST /api/v1/strategies
  * Create a new strategy
  */
-router.post('/', asyncHandler(async (req, res) => {
+router.post('/', authenticateToken, asyncHandler(async (req, res) => {
     const { name, type, config, portfolioId } = req.body;
 
     if (!name || !type || !config) {
@@ -244,9 +243,9 @@ router.post('/', asyncHandler(async (req, res) => {
  * GET /api/v1/strategies/:id
  * Get strategy details
  */
-router.get('/:id', asyncHandler(async (req, res) => {
+router.get('/:id', authenticateToken, asyncHandler(async (req, res) => {
     const strategyId = parseInt(req.params.id);
-    
+
     if (isNaN(strategyId)) {
         throw new ApiError('Invalid strategy ID', 400);
     }
@@ -276,7 +275,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
  * PATCH /api/v1/strategies/:id
  * Update strategy
  */
-router.patch('/:id', asyncHandler(async (req, res) => {
+router.patch('/:id', authenticateToken, asyncHandler(async (req, res) => {
     const strategyId = parseInt(req.params.id);
     
     if (isNaN(strategyId)) {
@@ -378,7 +377,7 @@ router.patch('/:id', asyncHandler(async (req, res) => {
  * DELETE /api/v1/strategies/:id
  * Delete strategy
  */
-router.delete('/:id', asyncHandler(async (req, res) => {
+router.delete('/:id', authenticateToken, asyncHandler(async (req, res) => {
     const strategyId = parseInt(req.params.id);
     
     if (isNaN(strategyId)) {
@@ -408,7 +407,7 @@ router.delete('/:id', asyncHandler(async (req, res) => {
  * POST /api/v1/strategies/:id/backtest
  * Run backtest for strategy
  */
-router.post('/:id/backtest', asyncHandler(async (req, res) => {
+router.post('/:id/backtest', authenticateToken, asyncHandler(async (req, res) => {
     const strategyId = parseInt(req.params.id);
     
     if (isNaN(strategyId)) {
@@ -475,7 +474,7 @@ router.post('/:id/backtest', asyncHandler(async (req, res) => {
  * GET /api/v1/strategies/:id/runs
  * Get strategy run history
  */
-router.get('/:id/runs', asyncHandler(async (req, res) => {
+router.get('/:id/runs', authenticateToken, asyncHandler(async (req, res) => {
     const strategyId = parseInt(req.params.id);
     const { limit = 50, runType } = req.query;
     
@@ -525,7 +524,7 @@ router.get('/:id/runs', asyncHandler(async (req, res) => {
  * GET /api/v1/strategies/:id/signals
  * Get latest signals for strategy
  */
-router.get('/:id/signals', asyncHandler(async (req, res) => {
+router.get('/:id/signals', authenticateToken, asyncHandler(async (req, res) => {
     const strategyId = parseInt(req.params.id);
     
     if (isNaN(strategyId)) {
@@ -613,7 +612,7 @@ function generateMockCandles(from, to) {
  * GET /api/v1/strategies/types
  * Get available strategy types and their configurations
  */
-router.get('/types', (req, res) => {
+router.get('/types', authenticateToken, (req, res) => {
     const strategyTypes = {
         momentum: {
             name: 'Momentum Strategy',
