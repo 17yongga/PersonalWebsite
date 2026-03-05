@@ -5,9 +5,13 @@ import { store } from '../store.js';
 import { toast } from '../components/toast.js';
 import modal from '../components/modal.js';
 import { formatCurrency, formatPercent, escapeHtml, formatDate } from '../utils.js';
+import { StrategyChart } from '../components/strategy-chart.js';
+import { DecisionLog } from '../components/decision-log.js';
 
 function StrategiesPage() {
     let unsubscribers = [];
+    let activeChart = null;
+    let activeLog = null;
     let strategies = [];
     let selectedStrategy = null;
 
@@ -72,7 +76,7 @@ function StrategiesPage() {
         try {
             const strategy = await api.get(`/strategies/${strategyId}`);
             selectedStrategy = strategy;
-            renderStrategyDetailContent();
+            await renderStrategyDetailContent();
         } catch (error) {
             console.error('Failed to load strategy:', error);
             toast.error('Failed to load strategy details');
@@ -80,7 +84,7 @@ function StrategiesPage() {
         }
     }
 
-    function renderStrategyDetailContent() {
+    async function renderStrategyDetailContent() {
         const container = document.getElementById('strategy-detail-content');
         if (!container || !selectedStrategy) return;
 
@@ -152,14 +156,8 @@ function StrategiesPage() {
                     </div>
 
                     <div class="equity-curve-card">
-                        <h3>Equity Curve</h3>
-                        <div class="chart-placeholder" id="equity-curve-chart">
-                            <div class="chart-placeholder-content">
-                                <i class="fas fa-chart-line"></i>
-                                <p>Chart integration coming soon</p>
-                                <small>Equity curve visualization will be added with Chart.js</small>
-                            </div>
-                        </div>
+                        <h3>Price Chart</h3>
+                        <div id="strategy-chart-mount"></div>
                     </div>
                 </div>
 
@@ -188,20 +186,23 @@ function StrategiesPage() {
             </div>
 
             <div class="trade-log-section">
-                <h3>Recent Trades</h3>
-                <div class="trade-log-table" id="trade-log">
-                    <div class="loading-placeholder">
-                        <div class="skeleton skeleton-text"></div>
-                        <div class="skeleton skeleton-text"></div>
-                        <div class="skeleton skeleton-text"></div>
-                    </div>
-                </div>
+                <h3>Decision Log</h3>
+                <div id="decision-log-mount"></div>
             </div>
         `;
 
         // Load additional data
         loadBacktestHistory(strategy.id);
-        loadTradeHistory(strategy.id);
+
+        // Initialize chart and decision log components
+        if (activeChart) activeChart.destroy();
+        if (activeLog) activeLog = null;
+
+        activeChart = new StrategyChart(document.getElementById('strategy-chart-mount'));
+        await activeChart.init(strategy.id, strategy.config?.symbol || 'SOXL');
+
+        activeLog = new DecisionLog(document.getElementById('decision-log-mount'), strategy.id);
+        await activeLog.init();
     }
 
     async function loadStrategies() {
@@ -695,6 +696,10 @@ function StrategiesPage() {
     };
 
     function destroy() {
+        // Clean up chart and log components
+        if (activeChart) { activeChart.destroy(); activeChart = null; }
+        activeLog = null;
+
         // Clean up subscriptions
         unsubscribers.forEach(unsub => unsub());
         unsubscribers = [];
