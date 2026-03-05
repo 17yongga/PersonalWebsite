@@ -368,8 +368,10 @@ function injectDashboardStyles() {
         .activity-time {
             font-size: 0.75rem;
             color: #8b949e;
-            min-width: 4rem;
+            min-width: 4.5rem;
             font-family: monospace;
+            line-height: 1.4;
+            text-align: left;
         }
 
         .activity-emoji {
@@ -846,6 +848,24 @@ function DashboardStrategies() {
             tension: 0
         });
 
+        // Compute smart Y-axis bounds: use 5th–95th percentile to clip outliers
+        // (e.g. bad bar data from stock splits causing a temporary dip)
+        const allDataVals = datasets.slice(0, -1)
+            .flatMap(ds => ds.data)
+            .filter(v => v != null && !isNaN(v))
+            .sort((a, b) => a - b);
+        let yMin, yMax;
+        if (allDataVals.length > 1) {
+            const p5 = allDataVals[Math.floor(allDataVals.length * 0.05)];
+            const p95 = allDataVals[Math.floor(allDataVals.length * 0.95)];
+            const spread = Math.max(p95 - p5, 200); // minimum spread $200
+            yMin = Math.floor((p5 - spread * 0.4) / 100) * 100;
+            yMax = Math.ceil((p95 + spread * 0.4) / 100) * 100;
+        } else {
+            yMin = 18000;
+            yMax = 22000;
+        }
+
         if (equityChart) {
             equityChart.destroy();
         }
@@ -900,6 +920,8 @@ function DashboardStrategies() {
                     },
                     y: {
                         beginAtZero: false,
+                        min: yMin,
+                        max: yMax,
                         grid: {
                             color: 'rgba(255,255,255,0.07)',
                             lineWidth: 1
@@ -1003,7 +1025,7 @@ function DashboardStrategies() {
             const pnlClass = strategy.totalPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
             
             return `
-                <div class="strategy-rank-card">
+                <div class="strategy-rank-card" data-strategy-id="${strategy.id}" style="cursor:pointer;" title="View strategy details">
                     <div class="rank-header">
                         <div class="strategy-info">
                             <div class="strategy-name">${config.name}</div>
@@ -1064,6 +1086,13 @@ function DashboardStrategies() {
                 </div>
             `;
         }).join('');
+
+        // Make cards clickable -> navigate to strategy detail
+        container.querySelectorAll('.strategy-rank-card[data-strategy-id]').forEach(card => {
+            card.addEventListener('click', () => {
+                window.location.hash = '#/strategy/' + card.dataset.strategyId;
+            });
+        });
     }
 
     function renderActivityFeed() {
@@ -1096,15 +1125,17 @@ function DashboardStrategies() {
         container.innerHTML = recentTrades.map(trade => {
             const config = STRATEGY_CONFIG[trade.strategyId];
             const time = new Date(trade.filledAt);
+            const dateStr = time.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             const timeStr = time.toLocaleTimeString('en-US', { 
                 hour12: false, 
                 hour: '2-digit', 
                 minute: '2-digit' 
             });
+            const dateTimeStr = `<span style="display:block;font-size:0.7rem;opacity:0.7">${dateStr}</span>${timeStr}`;
             
             return `
                 <div class="activity-item">
-                    <div class="activity-time">${timeStr}</div>
+                    <div class="activity-time">${dateTimeStr}</div>
                     <div class="activity-emoji">${config?.emoji || '📊'}</div>
                     <div class="activity-text">
                         <span class="activity-action" style="color:${trade.side === 'buy' ? '#3fb950' : '#f85149'}">${trade.side.toUpperCase()}</span>
