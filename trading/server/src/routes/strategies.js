@@ -9,7 +9,144 @@ const router = express.Router();
 // In-memory candle cache: key -> { data, expiry }
 const candleCache = new Map();
 
-// All strategy routes require authentication
+// Strategy slug to name mapping for public routes
+const STRATEGY_SLUG_MAP = {
+    'momentum-hunter': 'Momentum Hunter',
+    'mean-reversion': 'Mean Reversion',
+    'sector-rotator': 'Sector Rotator',
+    'value-dividends': 'Value Dividends',
+    'volatility-breakout': 'Volatility Breakout'
+};
+
+/**
+ * Resolve a strategy param that may be a numeric ID or a slug.
+ * Returns { strategy, isSlug } or throws ApiError.
+ */
+function resolveStrategy(db, idParam, userId) {
+    const numericId = parseInt(idParam);
+    if (!isNaN(numericId)) {
+        // Numeric ID — check both tables
+        const strategy = userId
+            ? db.prepare('SELECT * FROM strategies WHERE id = ? AND user_id = ?').get(numericId, userId)
+            : null;
+        const strategyV2 = !strategy
+            ? db.prepare('SELECT * FROM strategies_v2 WHERE id = ?').get(numericId)
+            : null;
+        return strategy || strategyV2 || null;
+    }
+    // Slug-based lookup via strategies_v2 name
+    const slugName = STRATEGY_SLUG_MAP[idParam];
+    if (slugName) {
+        return db.prepare('SELECT * FROM strategies_v2 WHERE name = ?').get(slugName) || null;
+    }
+    return null;
+}
+
+// ─── Public routes (no auth required) ───────────────────────────
+
+/**
+ * GET /api/v1/strategies/:id/candles
+ * Get candlestick data for a strategy's symbol (public)
+ */
+router.get('/:id/candles', asyncHandler(async (req, res) => {
+    const db = getDb();
+    const strat = resolveStrategy(db, req.params.id, null);
+    if (!strat) throw new ApiError('Strategy not found', 404);
+
+    const stratConfig = strat.config ? JSON.parse(strat.config) : (strat.config_json ? JSON.parse(strat.config_json) : {});
+    const symbol = req.query.symbol || stratConfig.symbol || 'SOXL';
+    const timeframe = req.query.timeframe || '1Day';
+    const from = req.query.from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const to = req.query.to || new Date().toISOString().split('T')[0];
+
+    const cacheKey = `${symbol}_${timeframe}_${from}_${to}`;
+    const now = Date.now();
+    const cached = candleCache.get(cacheKey);
+    if (cached && cached.expiry > now) {
+        return res.json(cached.data);
+    }
+
+    const isToday = to === new Date().toISOString().split('T')[0];
+    const ttl = isToday ? 5 * 60 * 1000 : 24 * 60 * 60 * 1000;
+
+    try {
+        const url = new URL(`${config.alpaca.dataUrl}/v2/stocks/${symbol}/bars`);
+        url.searchParams.set('timeframe', timeframe);
+        url.searchParams.set('start', from);
+        url.searchParams.set('end', to);
+        url.searchParams.set('limit', '1000');
+
+        const response = await fetch(url.toString(), {
+            headers: {
+                'APCA-API-KEY-ID': config.alpaca.apiKey,
+                'APCA-API-SECRET-KEY': config.alpaca.secretKey,
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Alpaca responded ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const candles = (data.bars || []).map(bar => ({
+            time: bar.t.split('T')[0],
+            open: bar.o,
+            high: bar.h,
+            low: bar.l,
+            close: bar.c,
+            volume: bar.v
+        }));
+
+        const result = { candles, simulated: false, symbol, timeframe };
+        candleCache.set(cacheKey, { data: result, expiry: now + ttl });
+        return res.json(result);
+    } catch (error) {
+        console.error(`Alpaca candles fetch failed for ${symbol}:`, error.message);
+
+        const candles = generateMockCandles(from, to);
+        const result = { candles, simulated: true, symbol, timeframe };
+        candleCache.set(cacheKey, { data: result, expiry: now + ttl });
+        return res.json(result);
+    }
+}));
+
+/**
+ * GET /api/v1/strategies/:id/trades
+ * Get trades for a strategy with pagination and parsed reasoning (public)
+ */
+router.get('/:id/trades', asyncHandler(async (req, res) => {
+    const db = getDb();
+    const strat = resolveStrategy(db, req.params.id, null);
+    if (!strat) throw new ApiError('Strategy not found', 404);
+
+    const strategyId = strat.id;
+    const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+    const offset = parseInt(req.query.offset) || 0;
+
+    const total = db.prepare('SELECT COUNT(*) as count FROM strategy_trades WHERE strategy_id = ?').get(strategyId).count;
+
+    const trades = db.prepare(`
+        SELECT * FROM strategy_trades
+        WHERE strategy_id = ?
+        ORDER BY executed_at DESC
+        LIMIT ? OFFSET ?
+    `).all(strategyId, limit, offset);
+
+    const parsedTrades = trades.map(trade => ({
+        ...trade,
+        reasoning: trade.reasoning ? JSON.parse(trade.reasoning) : null
+    }));
+
+    res.json({
+        success: true,
+        trades: parsedTrades,
+        total,
+        limit,
+        offset
+    });
+}));
+
+// ─── Authenticated routes ───────────────────────────────────────
 router.use(authenticateToken);
 
 /**
@@ -437,122 +574,6 @@ router.get('/:id/signals', asyncHandler(async (req, res) => {
     });
 }));
 
-/**
- * GET /api/v1/strategies/:id/candles
- * Get candlestick data for a strategy's symbol
- */
-router.get('/:id/candles', asyncHandler(async (req, res) => {
-    const strategyId = parseInt(req.params.id);
-    if (isNaN(strategyId)) throw new ApiError('Invalid strategy ID', 400);
-
-    const db = getDb();
-    const strategy = db.prepare(`
-        SELECT * FROM strategies s WHERE s.id = ? AND s.user_id = ?
-    `).get(strategyId, req.user.id);
-
-    // Also check strategies_v2
-    const strategyV2 = !strategy ? db.prepare('SELECT * FROM strategies_v2 WHERE id = ?').get(strategyId) : null;
-    const strat = strategy || strategyV2;
-    if (!strat) throw new ApiError('Strategy not found', 404);
-
-    const stratConfig = strat.config ? JSON.parse(strat.config) : (strat.config_json ? JSON.parse(strat.config_json) : {});
-    const symbol = req.query.symbol || stratConfig.symbol || 'SOXL';
-    const timeframe = req.query.timeframe || '1Day';
-    const from = req.query.from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const to = req.query.to || new Date().toISOString().split('T')[0];
-
-    const cacheKey = `${symbol}_${timeframe}_${from}_${to}`;
-    const now = Date.now();
-    const cached = candleCache.get(cacheKey);
-    if (cached && cached.expiry > now) {
-        return res.json(cached.data);
-    }
-
-    const isToday = to === new Date().toISOString().split('T')[0];
-    const ttl = isToday ? 5 * 60 * 1000 : 24 * 60 * 60 * 1000;
-
-    try {
-        const url = new URL(`${config.alpaca.dataUrl}/v2/stocks/${symbol}/bars`);
-        url.searchParams.set('timeframe', timeframe);
-        url.searchParams.set('start', from);
-        url.searchParams.set('end', to);
-        url.searchParams.set('limit', '1000');
-
-        const response = await fetch(url.toString(), {
-            headers: {
-                'APCA-API-KEY-ID': config.alpaca.apiKey,
-                'APCA-API-SECRET-KEY': config.alpaca.secretKey,
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Alpaca responded ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        const candles = (data.bars || []).map(bar => ({
-            time: bar.t.split('T')[0],
-            open: bar.o,
-            high: bar.h,
-            low: bar.l,
-            close: bar.c,
-            volume: bar.v
-        }));
-
-        const result = { candles, simulated: false, symbol, timeframe };
-        candleCache.set(cacheKey, { data: result, expiry: now + ttl });
-        return res.json(result);
-    } catch (error) {
-        console.error(`Alpaca candles fetch failed for ${symbol}:`, error.message);
-
-        // Generate mock candles as fallback
-        const candles = generateMockCandles(from, to);
-        const result = { candles, simulated: true, symbol, timeframe };
-        candleCache.set(cacheKey, { data: result, expiry: now + ttl });
-        return res.json(result);
-    }
-}));
-
-/**
- * GET /api/v1/strategies/:id/trades
- * Get trades for a strategy with pagination and parsed reasoning
- */
-router.get('/:id/trades', asyncHandler(async (req, res) => {
-    const strategyId = parseInt(req.params.id);
-    if (isNaN(strategyId)) throw new ApiError('Invalid strategy ID', 400);
-
-    const db = getDb();
-
-    // Check ownership in both strategy tables
-    const strategy = db.prepare('SELECT id FROM strategies WHERE id = ? AND user_id = ?').get(strategyId, req.user.id);
-    const strategyV2 = !strategy ? db.prepare('SELECT id FROM strategies_v2 WHERE id = ?').get(strategyId) : null;
-    if (!strategy && !strategyV2) throw new ApiError('Strategy not found', 404);
-
-    const limit = Math.min(parseInt(req.query.limit) || 50, 200);
-    const offset = parseInt(req.query.offset) || 0;
-
-    const total = db.prepare('SELECT COUNT(*) as count FROM strategy_trades WHERE strategy_id = ?').get(strategyId).count;
-
-    const trades = db.prepare(`
-        SELECT * FROM strategy_trades
-        WHERE strategy_id = ?
-        ORDER BY executed_at DESC
-        LIMIT ? OFFSET ?
-    `).all(strategyId, limit, offset);
-
-    const parsedTrades = trades.map(trade => ({
-        ...trade,
-        reasoning: trade.reasoning ? JSON.parse(trade.reasoning) : null
-    }));
-
-    res.json({
-        success: true,
-        trades: parsedTrades,
-        total,
-        limit,
-        offset
-    });
-}));
 
 /**
  * Generate ~30 realistic mock candles for fallback
