@@ -72,21 +72,21 @@ export class DecisionLog {
             </div>
             ${filtered.length === 0
                 ? '<div class="dl-empty">No trades recorded yet</div>'
-                : `<table class="dl-table">
+                : `<div class="dl-table-wrap"><table class="dl-table">
                     <thead>
                         <tr>
-                            <th>Time</th>
-                            <th>Action</th>
-                            <th>Price</th>
+                            <th style="min-width:80px">Time</th>
+                            <th style="min-width:70px">Action</th>
+                            <th style="min-width:72px">Price</th>
                             <th>Signal</th>
-                            <th>P&L</th>
-                            <th></th>
+                            <th style="min-width:64px">P&L</th>
+                            <th style="min-width:28px"></th>
                         </tr>
                     </thead>
                     <tbody>
                         ${filtered.map((t, i) => this._renderRow(t, i)).join('')}
                     </tbody>
-                </table>`
+                </table></div>`
             }
             ${!allLoaded ? '<button class="btn btn-secondary dl-load-more">Load More</button>' : ''}
         `;

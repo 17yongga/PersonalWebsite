@@ -827,8 +827,11 @@ class StrategyExecutor:
                         logger.info(f"{strategy['name']}: no cash left (${available_cash:.2f}), skipping {symbol}")
                         continue
 
-                    # Target 25% of initial capital per position, capped to actual cash
-                    target_size = strategy['initial_capital'] * 0.25
+                    # Target equal-weight allocation: capital / max_positions
+                    # (e.g. $20K / 6 positions = $3,333 each, not a flat 25%)
+                    # This ensures ALL positions filled = exactly 100% invested,
+                    # never more. Cap to available_cash as final safety.
+                    target_size = strategy['initial_capital'] / strategy['max_positions']
                     max_position_value = min(target_size, available_cash)
                     quantity = max(1, int(max_position_value / price))
 

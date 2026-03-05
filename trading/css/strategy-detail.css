@@ -49,8 +49,14 @@
 }
 
 /* Decision Log Table */
+.dl-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .dl-table {
     width: 100%;
+    min-width: 520px;   /* prevents columns from collapsing on narrow screens */
     border-collapse: collapse;
 }
 

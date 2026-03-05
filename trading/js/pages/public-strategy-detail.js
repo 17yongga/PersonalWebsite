@@ -338,24 +338,26 @@ function createPage() {
                         <div class="psd-section-header">
                             <h3 class="psd-section-title">Holdings</h3>
                         </div>
-                        <div class="psd-positions">
+                        <!-- overflow-x:auto lets it scroll horizontally on narrow screens -->
+                        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+                        <div class="psd-positions" style="min-width:520px;">
                             <!-- Column headers -->
-                            <div style="display:grid;grid-template-columns:64px 1fr 52px 100px 100px 52px 80px;gap:4px;padding:4px 0 8px;font-size:11px;color:#4d5566;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #21262d;">
+                            <div style="display:grid;grid-template-columns:56px 110px 48px 96px 96px 52px 76px;gap:4px;padding:4px 0 8px;font-size:11px;color:#4d5566;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #21262d;">
                                 <span>Symbol</span>
-                                <span style="text-align:right;">Qty @ Avg Price</span>
+                                <span style="text-align:right;">Qty @ Avg</span>
                                 <span style="text-align:right;">Alloc</span>
-                                <span style="text-align:right;">Book Value</span>
-                                <span style="text-align:right;">Market Value</span>
-                                <span style="text-align:right;">Return</span>
+                                <span style="text-align:right;">Book Val</span>
+                                <span style="text-align:right;">Mkt Val</span>
+                                <span style="text-align:right;">Ret%</span>
                                 <span style="text-align:right;">P&amp;L</span>
                             </div>
                             ${strategy.positions.map(p => {
                                 const retPct = p.bookValue > 0 ? ((p.marketValue - p.bookValue) / p.bookValue * 100).toFixed(1) : '0.0';
                                 const plColour = (p.unrealizedPl ?? 0) >= 0 ? '#3fb950' : '#f85149';
                                 return `
-                                <div class="psd-pos-row" style="display:grid;grid-template-columns:64px 1fr 52px 100px 100px 52px 80px;gap:4px;">
+                                <div class="psd-pos-row" style="display:grid;grid-template-columns:56px 110px 48px 96px 96px 52px 76px;gap:4px;">
                                     <span style="font-weight:700;color:#e6edf3;">${escapeHtml(p.symbol)}</span>
-                                    <span style="color:#8b949e;text-align:right;">${p.qty} @ ${formatCurrency(p.avgEntry)}</span>
+                                    <span style="color:#8b949e;text-align:right;font-size:12px;">${p.qty}@${formatCurrency(p.avgEntry)}</span>
                                     <span style="color:#58a6ff;font-weight:600;text-align:right;">${p.allocation ?? 0}%</span>
                                     <span style="color:#8b949e;text-align:right;">${formatCurrency(p.bookValue)}</span>
                                     <span style="color:#e6edf3;text-align:right;">${formatCurrency(p.marketValue)}</span>
@@ -366,12 +368,13 @@ function createPage() {
                             <!-- Cash / Margin row -->
                             ${(() => {
                                 const cash = strategy.cashRemaining ?? 0;
-                                const isMargin = cash < 0;
+                                if (Math.abs(cash) < 1) return '';
+                                const isMargin   = cash < 0;
                                 const cashLabel  = isMargin ? 'MARGIN' : 'CASH';
                                 const cashColour = isMargin ? '#f85149' : '#8b949e';
                                 const allocColour = isMargin ? '#f85149' : '#58a6ff';
                                 return `
-                            <div class="psd-pos-row" style="display:grid;grid-template-columns:64px 1fr 52px 100px 100px 52px 80px;gap:4px;border-top:1px solid #21262d;margin-top:4px;padding-top:8px;">
+                            <div class="psd-pos-row" style="display:grid;grid-template-columns:56px 110px 48px 96px 96px 52px 76px;gap:4px;border-top:1px solid #21262d;margin-top:4px;padding-top:8px;">
                                 <span style="font-weight:700;color:${cashColour};">${cashLabel}</span>
                                 <span></span>
                                 <span style="color:${allocColour};font-weight:600;text-align:right;">${Math.abs(strategy.cashAllocation ?? 0)}%</span>
@@ -381,6 +384,7 @@ function createPage() {
                                 <span></span>
                             </div>`;
                             })()}
+                        </div>
                         </div>
                     </div>` : ''}
 
