@@ -177,49 +177,75 @@ class StrategyExecutor:
     
     def get_alpaca_positions_for_strategy(self, strategy_id: int) -> Dict[str, Dict]:
         """Get current Alpaca positions for a specific strategy based on order history."""
+        positions, _ = self.get_strategy_state(strategy_id)
+        return positions
+
+    def get_strategy_state(self, strategy_id: int):
+        """
+        Replay all filled orders chronologically to compute:
+          - open positions  (dict: symbol -> {quantity, avg_cost_basis})
+          - available_cash  (initial_capital ± all cash flows from buys/sells)
+
+        Returns (positions, available_cash).
+
+        No-margin guarantee: available_cash reflects realized gains correctly,
+        so future buy sizing can be capped to this value.
+        """
         if strategy_id not in self.strategies:
-            return {}
-        
+            return {}, 0.0
+
         strategy = self.strategies[strategy_id]
         strategy_slug = strategy['slug']
-        
+        initial_capital = float(strategy['initial_capital'])
+
         try:
-            # Get all filled orders for this strategy
             orders = self.alpaca.get_orders_by_client_prefix(strategy_slug, status='filled')
-            
-            # Calculate net positions from order history
-            positions = {}
+            # Sort oldest-first so cash flows are applied in the right order
+            orders = sorted(orders, key=lambda o: o.get('filled_at') or o.get('created_at') or '')
+
+            raw = {}        # symbol -> {quantity, total_cost}
+            cash = initial_capital
+
             for order in orders:
-                symbol = order.get('symbol')
-                side = order.get('side')
-                qty = float(order.get('filled_qty', 0))
+                symbol     = order.get('symbol')
+                side       = order.get('side')
+                qty        = float(order.get('filled_qty', 0))
                 fill_price = float(order.get('filled_avg_price', 0))
-                
-                if symbol not in positions:
-                    positions[symbol] = {'quantity': 0, 'total_cost': 0}
-                
+                cost       = qty * fill_price
+
+                if symbol not in raw:
+                    raw[symbol] = {'quantity': 0, 'total_cost': 0}
+
                 if side == 'buy':
-                    positions[symbol]['quantity'] += qty
-                    positions[symbol]['total_cost'] += qty * fill_price
+                    raw[symbol]['quantity']   += qty
+                    raw[symbol]['total_cost'] += cost
+                    cash -= cost
                 elif side == 'sell':
-                    positions[symbol]['quantity'] -= qty
-                    # For sells, we don't adjust total_cost (keep original cost basis)
-            
-            # Calculate average cost basis and filter out zero positions
-            final_positions = {}
-            for symbol, pos in positions.items():
-                if pos['quantity'] > 0:
-                    avg_cost = pos['total_cost'] / pos['quantity'] if pos['quantity'] > 0 else 0
-                    final_positions[symbol] = {
-                        'quantity': pos['quantity'],
+                    prev_qty = raw[symbol]['quantity']
+                    if prev_qty > 0:
+                        # Reduce cost basis proportionally for the shares sold
+                        raw[symbol]['total_cost'] -= (qty / prev_qty) * raw[symbol]['total_cost']
+                    raw[symbol]['quantity'] -= qty
+                    cash += cost
+
+            # Build final positions (filter fully-sold symbols)
+            positions = {}
+            for symbol, pos in raw.items():
+                if pos['quantity'] > 0.001:
+                    avg_cost = pos['total_cost'] / pos['quantity']
+                    positions[symbol] = {
+                        'quantity':      pos['quantity'],
                         'avg_cost_basis': avg_cost,
-                        'updated_at': datetime.now().isoformat()
+                        'updated_at':    datetime.now().isoformat()
                     }
-            
-            return final_positions
+
+            logger.debug(f"Strategy {strategy['name']}: available_cash=${cash:.2f}, "
+                         f"positions={list(positions.keys())}")
+            return positions, cash
+
         except Exception as e:
-            logger.error(f"Error getting Alpaca positions for strategy {strategy_id}: {e}")
-            return {}
+            logger.error(f"Error computing strategy state for {strategy_id}: {e}")
+            return {}, initial_capital
     
     def execute_trade_via_api(self, strategy_id: int, symbol: str, side: str, quantity: int, price: float, reason: str) -> bool:
         """Execute a virtual trade via the trading server API."""
@@ -749,8 +775,9 @@ class StrategyExecutor:
         logger.info(f"Executing strategy: {strategy['name']}")
         
         try:
-            # Get current positions
-            positions = self.get_current_positions(strategy_id)
+            # Get current positions and available cash (no-margin enforcement)
+            positions, available_cash = self.get_strategy_state(strategy_id)
+            logger.info(f"Strategy {strategy['name']}: available_cash=${available_cash:.2f}")
             
             # Get historical data for the universe
             data = self.get_historical_data(strategy['universe'], days=60)
@@ -788,18 +815,35 @@ class StrategyExecutor:
                     if symbol in positions:
                         logger.info(f"Already holding {symbol}, skipping buy signal")
                         continue
-                    
+
                     if len(positions) >= strategy['max_positions']:
-                        logger.info(f"Max positions ({strategy['max_positions']}) reached, skipping buy signal for {symbol}")
+                        logger.info(f"Max positions ({strategy['max_positions']}) reached, skipping {symbol}")
                         continue
-                    
-                    # Calculate position size: max 25% of $20K = $5K per position
-                    max_position_value = strategy['initial_capital'] * 0.25
+
+                    # ── No-margin enforcement ──────────────────────────────────
+                    # available_cash is computed from the full order history above,
+                    # so realized gains from previous sells are included correctly.
+                    if available_cash <= 0:
+                        logger.info(f"{strategy['name']}: no cash left (${available_cash:.2f}), skipping {symbol}")
+                        continue
+
+                    # Target 25% of initial capital per position, capped to actual cash
+                    target_size = strategy['initial_capital'] * 0.25
+                    max_position_value = min(target_size, available_cash)
                     quantity = max(1, int(max_position_value / price))
-                    
+
+                    # Final whole-share guard — never exceed available cash
+                    if quantity * price > available_cash:
+                        quantity = int(available_cash / price)
+                    if quantity <= 0:
+                        logger.info(f"{strategy['name']}: insufficient cash for {symbol} @ ${price:.2f}, skipping")
+                        continue
+                    # ──────────────────────────────────────────────────────────
+
                     success, order_result = self.place_real_order(strategy_id, symbol, 'buy', quantity, price, reason)
                     if success:
                         positions[symbol] = {'quantity': quantity, 'avg_cost_basis': price}
+                        available_cash -= quantity * price  # keep running cash in sync
                         executed_trades += 1
                 
                 elif action == 'sell':
