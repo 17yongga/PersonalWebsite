@@ -1042,14 +1042,38 @@ function DashboardStrategies() {
                     
                     ${strategy.positions && strategy.positions.length > 0 ? `
                     <div class="strategy-positions" style="margin-top:12px;padding-top:12px;border-top:1px solid #21262d;">
-                        <div style="font-size:11px;color:#8b949e;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Open Positions</div>
+                        <div style="font-size:11px;color:#8b949e;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Holdings</div>
+                        <!-- Column headers -->
+                        <div style="display:grid;grid-template-columns:52px 1fr 42px 70px 70px 56px;gap:2px;padding:3px 0 5px;font-size:10px;color:#4d5566;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #21262d;">
+                            <span>Symbol</span><span style="text-align:right;">Qty@Avg</span><span style="text-align:right;">Alloc</span><span style="text-align:right;">Book Val</span><span style="text-align:right;">Mkt Val</span><span style="text-align:right;">P&amp;L</span>
+                        </div>
                         ${strategy.positions.map(p => `
-                            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px;">
-                                <span style="color:#e6edf3;font-weight:600;">${p.symbol}</span>
-                                <span style="color:#8b949e;">${p.qty} @ ${formatCurrency(p.avgEntry)}</span>
-                                <span style="color:${p.unrealizedPl >= 0 ? '#3fb950' : '#f85149'};">${formatCurrency(p.unrealizedPl)}</span>
+                            <div style="display:grid;grid-template-columns:52px 1fr 42px 70px 70px 56px;gap:2px;padding:4px 0;font-size:11px;border-bottom:1px solid rgba(33,38,45,0.6);">
+                                <span style="color:#e6edf3;font-weight:700;">${p.symbol}</span>
+                                <span style="color:#8b949e;text-align:right;">${p.qty}@${formatCurrency(p.avgEntry)}</span>
+                                <span style="color:#58a6ff;text-align:right;font-weight:600;">${p.allocation ?? 0}%</span>
+                                <span style="color:#8b949e;text-align:right;">${formatCurrency(p.bookValue)}</span>
+                                <span style="color:#e6edf3;text-align:right;">${formatCurrency(p.marketValue)}</span>
+                                <span style="color:${(p.unrealizedPl ?? 0) >= 0 ? '#3fb950' : '#f85149'};text-align:right;font-weight:600;">${formatCurrency(p.unrealizedPl)}</span>
                             </div>
-                        `).join('') }
+                        `).join('')}
+                        <!-- Cash / Margin row -->
+                        ${(() => {
+                            const cash = strategy.cashRemaining ?? 0;
+                            const isMargin = cash < 0;
+                            const cashLabel = isMargin ? 'MARGIN' : 'CASH';
+                            const cashColour = isMargin ? '#f85149' : '#8b949e';
+                            const allocColour = isMargin ? '#f85149' : '#58a6ff';
+                            return `
+                        <div style="display:grid;grid-template-columns:52px 1fr 42px 70px 70px 56px;gap:2px;padding:4px 0;font-size:11px;border-top:1px solid #21262d;margin-top:2px;">
+                            <span style="color:${cashColour};font-weight:700;">${cashLabel}</span>
+                            <span></span>
+                            <span style="color:${allocColour};text-align:right;font-weight:600;">${Math.abs(strategy.cashAllocation ?? 0)}%</span>
+                            <span></span>
+                            <span style="color:${cashColour};text-align:right;">${formatCurrency(cash)}</span>
+                            <span></span>
+                        </div>`;
+                        })()}
                     </div>` : ''}
                     
                     ${strategy.trades && strategy.trades.length > 0 ? `

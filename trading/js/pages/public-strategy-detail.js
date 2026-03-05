@@ -336,16 +336,51 @@ function createPage() {
                     ${strategy?.positions?.length ? `
                     <div class="psd-section">
                         <div class="psd-section-header">
-                            <h3 class="psd-section-title">Open Positions</h3>
+                            <h3 class="psd-section-title">Holdings</h3>
                         </div>
                         <div class="psd-positions">
-                            ${strategy.positions.map(p => `
-                                <div class="psd-pos-row">
-                                    <span style="font-weight:600;min-width:60px">${escapeHtml(p.symbol)}</span>
-                                    <span style="color:#8b949e;">${p.qty} shares @ ${formatCurrency(p.avgEntry)}</span>
-                                    <span style="color:${p.unrealizedPl >= 0 ? '#3fb950' : '#f85149'};">${p.unrealizedPl >= 0 ? '+' : ''}${formatCurrency(p.unrealizedPl)}</span>
-                                </div>
-                            `).join('')}
+                            <!-- Column headers -->
+                            <div style="display:grid;grid-template-columns:64px 1fr 52px 100px 100px 52px 80px;gap:4px;padding:4px 0 8px;font-size:11px;color:#4d5566;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #21262d;">
+                                <span>Symbol</span>
+                                <span style="text-align:right;">Qty @ Avg Price</span>
+                                <span style="text-align:right;">Alloc</span>
+                                <span style="text-align:right;">Book Value</span>
+                                <span style="text-align:right;">Market Value</span>
+                                <span style="text-align:right;">Return</span>
+                                <span style="text-align:right;">P&amp;L</span>
+                            </div>
+                            ${strategy.positions.map(p => {
+                                const retPct = p.bookValue > 0 ? ((p.marketValue - p.bookValue) / p.bookValue * 100).toFixed(1) : '0.0';
+                                const plColour = (p.unrealizedPl ?? 0) >= 0 ? '#3fb950' : '#f85149';
+                                return `
+                                <div class="psd-pos-row" style="display:grid;grid-template-columns:64px 1fr 52px 100px 100px 52px 80px;gap:4px;">
+                                    <span style="font-weight:700;color:#e6edf3;">${escapeHtml(p.symbol)}</span>
+                                    <span style="color:#8b949e;text-align:right;">${p.qty} @ ${formatCurrency(p.avgEntry)}</span>
+                                    <span style="color:#58a6ff;font-weight:600;text-align:right;">${p.allocation ?? 0}%</span>
+                                    <span style="color:#8b949e;text-align:right;">${formatCurrency(p.bookValue)}</span>
+                                    <span style="color:#e6edf3;text-align:right;">${formatCurrency(p.marketValue)}</span>
+                                    <span style="color:${plColour};text-align:right;font-weight:600;">${retPct >= 0 ? '+' : ''}${retPct}%</span>
+                                    <span style="color:${plColour};text-align:right;font-weight:600;">${(p.unrealizedPl ?? 0) >= 0 ? '+' : ''}${formatCurrency(p.unrealizedPl)}</span>
+                                </div>`;
+                            }).join('')}
+                            <!-- Cash / Margin row -->
+                            ${(() => {
+                                const cash = strategy.cashRemaining ?? 0;
+                                const isMargin = cash < 0;
+                                const cashLabel  = isMargin ? 'MARGIN' : 'CASH';
+                                const cashColour = isMargin ? '#f85149' : '#8b949e';
+                                const allocColour = isMargin ? '#f85149' : '#58a6ff';
+                                return `
+                            <div class="psd-pos-row" style="display:grid;grid-template-columns:64px 1fr 52px 100px 100px 52px 80px;gap:4px;border-top:1px solid #21262d;margin-top:4px;padding-top:8px;">
+                                <span style="font-weight:700;color:${cashColour};">${cashLabel}</span>
+                                <span></span>
+                                <span style="color:${allocColour};font-weight:600;text-align:right;">${Math.abs(strategy.cashAllocation ?? 0)}%</span>
+                                <span></span>
+                                <span style="color:${cashColour};text-align:right;font-weight:600;">${formatCurrency(cash)}</span>
+                                <span></span>
+                                <span></span>
+                            </div>`;
+                            })()}
                         </div>
                     </div>` : ''}
 

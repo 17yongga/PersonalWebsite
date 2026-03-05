@@ -170,15 +170,17 @@ async function getAlpacaStrategyData() {
                 if (owned.qty <= 0.001) return;
                 const currentPrice = livePriceMap[symbol] || (owned.totalCost / owned.qty);
                 const avgEntry = owned.totalCost / owned.qty;
+                const bookValue = owned.totalCost; // qty × avg_cost
                 const marketValue = owned.qty * currentPrice;
-                const unrealizedPl = (currentPrice - avgEntry) * owned.qty;
+                const unrealizedPl = marketValue - bookValue;
                 s.positions.push({
                     symbol,
                     qty: owned.qty,
-                    avgEntry: Math.round(avgEntry * 100) / 100,
-                    currentPrice,
-                    marketValue,
-                    unrealizedPl
+                    avgEntry:    Math.round(avgEntry    * 100) / 100,
+                    currentPrice: Math.round(currentPrice * 100) / 100,
+                    bookValue:   Math.round(bookValue   * 100) / 100,
+                    marketValue: Math.round(marketValue * 100) / 100,
+                    unrealizedPl: Math.round(unrealizedPl * 100) / 100
                 });
             });
             s.positionsCount = s.positions.length;
@@ -204,6 +206,22 @@ async function getAlpacaStrategyData() {
             s.winRate = totalClosedTrades > 0
                 ? Math.round((s.winTrades / totalClosedTrades) * 100)
                 : 0;
+        });
+
+        // Third pass: add allocation % (using finalised currentValue) + round cashRemaining.
+        // Allocation = what fraction of the total portfolio each holding represents.
+        // Positions are sorted largest-allocation-first for readability.
+        Object.values(strategies).forEach(s => {
+            const total = s.currentValue || 1; // guard against zero
+            s.positions.forEach(p => {
+                p.allocation = Math.round((p.marketValue / total) * 1000) / 10; // 1 decimal %
+            });
+            // Sort positions by allocation descending
+            s.positions.sort((a, b) => b.allocation - a.allocation);
+
+            // Cash holding (always present, even when 0)
+            s.cashRemaining    = Math.round(s.cashRemaining * 100) / 100;
+            s.cashAllocation   = Math.round((s.cashRemaining / total) * 1000) / 10;
         });
         
         return Object.values(strategies);
