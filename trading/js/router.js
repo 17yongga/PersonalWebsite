@@ -62,6 +62,13 @@ class Router {
             title: 'Strategy Details'
         });
 
+        // Public strategy detail page
+        this.routes.set('/strategy/:id', {
+            module: () => import('./pages/public-strategy-detail.js?v=1'),
+            requiresAuth: false,
+            title: 'Strategy Detail'
+        });
+
         // Public strategy showcase / leaderboard
         this.routes.set('/leaderboard', {
             module: () => import('./pages/dashboard-strategies.js?v=4'),
