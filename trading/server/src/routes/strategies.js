@@ -2,8 +2,12 @@ const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
 const { ApiError, asyncHandler } = require('../middleware/error');
 const { getDb } = require('../config/database');
+const config = require('../config');
 
 const router = express.Router();
+
+// In-memory candle cache: key -> { data, expiry }
+const candleCache = new Map();
 
 // All strategy routes require authentication
 router.use(authenticateToken);
@@ -432,6 +436,157 @@ router.get('/:id/signals', asyncHandler(async (req, res) => {
         timestamp: new Date().toISOString()
     });
 }));
+
+/**
+ * GET /api/v1/strategies/:id/candles
+ * Get candlestick data for a strategy's symbol
+ */
+router.get('/:id/candles', asyncHandler(async (req, res) => {
+    const strategyId = parseInt(req.params.id);
+    if (isNaN(strategyId)) throw new ApiError('Invalid strategy ID', 400);
+
+    const db = getDb();
+    const strategy = db.prepare(`
+        SELECT * FROM strategies s WHERE s.id = ? AND s.user_id = ?
+    `).get(strategyId, req.user.id);
+
+    // Also check strategies_v2
+    const strategyV2 = !strategy ? db.prepare('SELECT * FROM strategies_v2 WHERE id = ?').get(strategyId) : null;
+    const strat = strategy || strategyV2;
+    if (!strat) throw new ApiError('Strategy not found', 404);
+
+    const stratConfig = strat.config ? JSON.parse(strat.config) : (strat.config_json ? JSON.parse(strat.config_json) : {});
+    const symbol = req.query.symbol || stratConfig.symbol || 'SOXL';
+    const timeframe = req.query.timeframe || '1Day';
+    const from = req.query.from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const to = req.query.to || new Date().toISOString().split('T')[0];
+
+    const cacheKey = `${symbol}_${timeframe}_${from}_${to}`;
+    const now = Date.now();
+    const cached = candleCache.get(cacheKey);
+    if (cached && cached.expiry > now) {
+        return res.json(cached.data);
+    }
+
+    const isToday = to === new Date().toISOString().split('T')[0];
+    const ttl = isToday ? 5 * 60 * 1000 : 24 * 60 * 60 * 1000;
+
+    try {
+        const url = new URL(`${config.alpaca.dataUrl}/v2/stocks/${symbol}/bars`);
+        url.searchParams.set('timeframe', timeframe);
+        url.searchParams.set('start', from);
+        url.searchParams.set('end', to);
+        url.searchParams.set('limit', '1000');
+
+        const response = await fetch(url.toString(), {
+            headers: {
+                'APCA-API-KEY-ID': config.alpaca.apiKey,
+                'APCA-API-SECRET-KEY': config.alpaca.secretKey,
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Alpaca responded ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const candles = (data.bars || []).map(bar => ({
+            time: bar.t.split('T')[0],
+            open: bar.o,
+            high: bar.h,
+            low: bar.l,
+            close: bar.c,
+            volume: bar.v
+        }));
+
+        const result = { candles, simulated: false, symbol, timeframe };
+        candleCache.set(cacheKey, { data: result, expiry: now + ttl });
+        return res.json(result);
+    } catch (error) {
+        console.error(`Alpaca candles fetch failed for ${symbol}:`, error.message);
+
+        // Generate mock candles as fallback
+        const candles = generateMockCandles(from, to);
+        const result = { candles, simulated: true, symbol, timeframe };
+        candleCache.set(cacheKey, { data: result, expiry: now + ttl });
+        return res.json(result);
+    }
+}));
+
+/**
+ * GET /api/v1/strategies/:id/trades
+ * Get trades for a strategy with pagination and parsed reasoning
+ */
+router.get('/:id/trades', asyncHandler(async (req, res) => {
+    const strategyId = parseInt(req.params.id);
+    if (isNaN(strategyId)) throw new ApiError('Invalid strategy ID', 400);
+
+    const db = getDb();
+
+    // Check ownership in both strategy tables
+    const strategy = db.prepare('SELECT id FROM strategies WHERE id = ? AND user_id = ?').get(strategyId, req.user.id);
+    const strategyV2 = !strategy ? db.prepare('SELECT id FROM strategies_v2 WHERE id = ?').get(strategyId) : null;
+    if (!strategy && !strategyV2) throw new ApiError('Strategy not found', 404);
+
+    const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+    const offset = parseInt(req.query.offset) || 0;
+
+    const total = db.prepare('SELECT COUNT(*) as count FROM strategy_trades WHERE strategy_id = ?').get(strategyId).count;
+
+    const trades = db.prepare(`
+        SELECT * FROM strategy_trades
+        WHERE strategy_id = ?
+        ORDER BY executed_at DESC
+        LIMIT ? OFFSET ?
+    `).all(strategyId, limit, offset);
+
+    const parsedTrades = trades.map(trade => ({
+        ...trade,
+        reasoning: trade.reasoning ? JSON.parse(trade.reasoning) : null
+    }));
+
+    res.json({
+        success: true,
+        trades: parsedTrades,
+        total,
+        limit,
+        offset
+    });
+}));
+
+/**
+ * Generate ~30 realistic mock candles for fallback
+ */
+function generateMockCandles(from, to) {
+    const candles = [];
+    let price = 28 + Math.random() * 4; // SOXL-like base ~$28-32
+    const startDate = new Date(from);
+    const endDate = new Date(to);
+    const dayMs = 24 * 60 * 60 * 1000;
+    const totalDays = Math.ceil((endDate - startDate) / dayMs);
+    const step = Math.max(1, Math.floor(totalDays / 30));
+
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + step)) {
+        if (d.getDay() === 0 || d.getDay() === 6) continue; // skip weekends
+        const dailyReturn = (Math.random() - 0.5) * 0.04; // +/- 2%
+        const open = price;
+        const close = open * (1 + dailyReturn);
+        const high = Math.max(open, close) * (1 + Math.random() * 0.01);
+        const low = Math.min(open, close) * (1 - Math.random() * 0.01);
+        const volume = Math.floor(5000000 + Math.random() * 15000000);
+
+        candles.push({
+            time: d.toISOString().split('T')[0],
+            open: +open.toFixed(2),
+            high: +high.toFixed(2),
+            low: +low.toFixed(2),
+            close: +close.toFixed(2),
+            volume
+        });
+        price = close;
+    }
+    return candles;
+}
 
 /**
  * GET /api/v1/strategies/types
