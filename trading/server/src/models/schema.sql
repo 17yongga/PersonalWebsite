@@ -146,6 +146,7 @@ CREATE TABLE IF NOT EXISTS strategy_trades (
     price REAL NOT NULL,
     total_value REAL NOT NULL,
     reason TEXT, -- why the trade was made
+    reasoning TEXT, -- structured JSON reasoning {indicators, condition, decision}
     pnl REAL, -- realized P&L for sells
     executed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (strategy_id) REFERENCES strategies_v2(id)
