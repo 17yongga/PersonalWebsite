@@ -84,6 +84,7 @@ router.get('/:id/candles', asyncHandler(async (req, res) => {
         url.searchParams.set('start', from);
         url.searchParams.set('end', to);
         url.searchParams.set('limit', '1000');
+        url.searchParams.set('feed', 'iex');
 
         const response = await fetch(url.toString(), {
             headers: {

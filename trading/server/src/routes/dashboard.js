@@ -302,166 +302,173 @@ router.get('/summary', asyncHandler(async (req, res) => {
 
 /**
  * GET /api/v1/dashboard/equity-history?range=1D|1W|1M|ALL
- * Returns real equity curves built from Alpaca order history.
- * Each strategy starts at $20K. Cash flow is tracked per-strategy from fills.
- * Current positions use live market values.
+ * Returns REAL equity curves using actual Alpaca historical daily bar prices.
+ * For each trading day, portfolio value = cash + sum(qty × actual_close_price).
+ * This produces realistic fluctuating curves instead of straight-line interpolation.
  */
 router.get('/equity-history', asyncHandler(async (req, res) => {
     const { range = 'ALL' } = req.query;
-    
-    // If no Alpaca credentials, return empty
+
     if (!ALPACA_CONFIG.API_KEY || !ALPACA_CONFIG.SECRET_KEY) {
         return res.json({ snapshots: [], trades: [] });
     }
 
     try {
+        const DATA_URL = (ALPACA_CONFIG.BASE_URL || 'https://paper-api.alpaca.markets/v2')
+            .replace('paper-api.alpaca.markets/v2', 'data.alpaca.markets/v2')
+            .replace('api.alpaca.markets/v2', 'data.alpaca.markets/v2');
+
+        const INITIAL_CAPITAL = 20000;
+        const strategySlugs   = Object.keys(STRATEGY_SLUGS);
+
+        // Fetch orders + live positions in parallel
         const [positions, allOrders] = await Promise.all([
             alpacaRequest('/positions'),
             alpacaRequest('/orders?status=all&limit=500&direction=asc')
         ]);
-        
-        const INITIAL_CAPITAL = 20000;
-        const strategySlugs = Object.keys(STRATEGY_SLUGS);
-        
-        // Filter to only strategy-tagged filled orders
+
+        // Filter to strategy-tagged filled orders only
         const filledOrders = allOrders.filter(o => {
-            const coid = o.client_order_id || '';
-            const prefix = coid.split('-')[0];
+            const prefix = (o.client_order_id || '').split('-')[0];
             return Object.values(STRATEGY_SLUGS).includes(prefix) && o.status === 'filled';
         });
-        
-        // Build trade list with strategy mapping
-        const trades = filledOrders.map(o => {
-            const prefix = o.client_order_id.split('-')[0];
-            const slug = strategySlugs.find(s => STRATEGY_SLUGS[s] === prefix);
-            return {
-                timestamp: o.filled_at || o.created_at,
-                strategy: slug,
-                side: o.side,
-                symbol: o.symbol,
-                qty: parseFloat(o.filled_qty || 0),
-                price: parseFloat(o.filled_avg_price || 0),
-                cost: parseFloat(o.filled_qty || 0) * parseFloat(o.filled_avg_price || 0)
-            };
-        });
-        
-        // Sort by time
-        trades.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-        
-        // Build per-strategy position state for market value calculation
-        const strategyState = {};
-        strategySlugs.forEach(slug => {
-            strategyState[slug] = { cash: INITIAL_CAPITAL, positions: {} };
-        });
-        
-        // Get live prices from positions
-        const livePrices = {};
-        positions.forEach(p => {
-            livePrices[p.symbol] = parseFloat(p.current_price || 0);
-        });
-        
-        // Determine time window
-        const now = new Date();
-        let startTime;
+
+        if (filledOrders.length === 0) {
+            return res.json({ snapshots: [], trades: [] });
+        }
+
+        // Collect all unique symbols across all strategies
+        const allSymbols = [...new Set(filledOrders.map(o => o.symbol))];
+
+        // Determine chart date range
+        const now          = new Date();
+        const firstTradeTs = new Date(filledOrders[0].filled_at || filledOrders[0].created_at);
+        let   chartStart;
         switch (range) {
-            case '1D': startTime = new Date(now - 24 * 60 * 60 * 1000); break;
-            case '1W': startTime = new Date(now - 7 * 24 * 60 * 60 * 1000); break;
-            case '1M': startTime = new Date(now - 30 * 24 * 60 * 60 * 1000); break;
-            default:   startTime = trades.length > 0 ? new Date(new Date(trades[0].timestamp).getTime() - 60 * 60 * 1000) : new Date(now - 24 * 60 * 60 * 1000); break;
+            case '1D': chartStart = new Date(now - 24 * 60 * 60 * 1000); break;
+            case '1W': chartStart = new Date(now - 7  * 24 * 60 * 60 * 1000); break;
+            case '1M': chartStart = new Date(now - 30 * 24 * 60 * 60 * 1000); break;
+            default:   chartStart = new Date(firstTradeTs.getTime() - 24 * 60 * 60 * 1000); break;
         }
-        
-        // Build snapshots: start, trades, hourly interpolation, current
-        const snapshots = [];
-        
-        // Helper: calculate portfolio value for a strategy using cost basis
-        function calcValueAtCost(slug) {
-            const s = strategyState[slug];
-            let posValue = 0;
-            Object.entries(s.positions).forEach(([sym, pos]) => {
-                posValue += pos.qty * pos.avgCost; // Use cost basis, not live price
-            });
-            return Math.round(s.cash + posValue);
-        }
-        
-        // Helper: calculate portfolio value with live prices
-        function calcValueLive(slug) {
-            const s = strategyState[slug];
-            let posValue = 0;
-            Object.entries(s.positions).forEach(([sym, pos]) => {
-                posValue += pos.qty * (livePrices[sym] || pos.avgCost);
-            });
-            return Math.round(s.cash + posValue);
-        }
-        
-        // Initial snapshot: all strategies at $20K
-        const initialSnap = { timestamp: startTime.toISOString() };
-        strategySlugs.forEach(slug => { initialSnap[slug] = INITIAL_CAPITAL; });
-        snapshots.push(initialSnap);
-        
-        // Process trades chronologically — value positions at cost basis for historical accuracy
-        trades.forEach(trade => {
-            const state = strategyState[trade.strategy];
-            if (!state) return;
-            
-            if (trade.side === 'buy') {
-                state.cash -= trade.cost;
-                if (!state.positions[trade.symbol]) state.positions[trade.symbol] = { qty: 0, avgCost: 0 };
-                const pos = state.positions[trade.symbol];
-                const totalCost = pos.qty * pos.avgCost + trade.cost;
-                pos.qty += trade.qty;
-                pos.avgCost = pos.qty > 0 ? totalCost / pos.qty : 0;
-            } else {
-                state.cash += trade.cost;
-                if (state.positions[trade.symbol]) {
-                    state.positions[trade.symbol].qty -= trade.qty;
-                    if (state.positions[trade.symbol].qty <= 0) delete state.positions[trade.symbol];
+        const fetchStart = new Date(Math.min(chartStart.getTime(), firstTradeTs.getTime() - 24 * 60 * 60 * 1000));
+        const startStr   = fetchStart.toISOString().split('T')[0];
+        const endStr     = now.toISOString().split('T')[0];
+
+        // Fetch real daily bar prices for every symbol from Alpaca data API
+        const dailyPrices = {}; // { symbol: { 'YYYY-MM-DD': closePrice } }
+        await Promise.all(allSymbols.map(async (symbol) => {
+            try {
+                const url = `${DATA_URL}/stocks/${symbol}/bars?timeframe=1Day&start=${startStr}&end=${endStr}&limit=1000&feed=iex`;
+                const resp = await axios.get(url, {
+                    headers: {
+                        'APCA-API-KEY-ID':     ALPACA_CONFIG.API_KEY,
+                        'APCA-API-SECRET-KEY': ALPACA_CONFIG.SECRET_KEY
+                    }
+                });
+                dailyPrices[symbol] = {};
+                (resp.data.bars || []).forEach(bar => {
+                    dailyPrices[symbol][bar.t.split('T')[0]] = bar.c;
+                });
+            } catch (e) {
+                console.warn(`Could not fetch bars for ${symbol}: ${e.message}`);
+            }
+        }));
+
+        // Live price fallback from Alpaca positions
+        const livePriceMap = {};
+        positions.forEach(p => { livePriceMap[p.symbol] = parseFloat(p.current_price || 0); });
+
+        // Return the last known price on or before a given date (handles weekends/holidays)
+        function priceOnDate(symbol, dateStr) {
+            const map = dailyPrices[symbol];
+            if (map && map[dateStr]) return map[dateStr];
+            if (map) {
+                // Walk back up to 7 calendar days
+                const d = new Date(dateStr + 'T12:00:00Z');
+                for (let i = 1; i <= 7; i++) {
+                    const prev = new Date(d - i * 86400000).toISOString().split('T')[0];
+                    if (map[prev]) return map[prev];
                 }
             }
-        });
-        
-        // After processing all trades, create a snapshot at the time of the first trade
-        if (trades.length > 0) {
-            const firstTradeSnap = { timestamp: trades[0].timestamp };
-            strategySlugs.forEach(slug => { firstTradeSnap[slug] = calcValueAtCost(slug); });
-            snapshots.push(firstTradeSnap);
+            return livePriceMap[symbol] || 0;
         }
-        
-        // Add hourly interpolation points between first trade and now
-        const firstTradeTime = trades.length > 0 ? new Date(trades[0].timestamp) : startTime;
-        const hourMs = 60 * 60 * 1000;
-        let interpTime = new Date(Math.ceil(firstTradeTime.getTime() / hourMs) * hourMs);
-        
-        while (interpTime < now) {
-            // For interpolated points, blend from cost basis toward live price based on proximity to now
-            const totalSpan = now.getTime() - firstTradeTime.getTime();
-            const elapsed = interpTime.getTime() - firstTradeTime.getTime();
-            const blend = totalSpan > 0 ? elapsed / totalSpan : 1;
-            
-            const snap = { timestamp: interpTime.toISOString() };
+
+        // Build per-strategy state tracking (only own orders, chronological)
+        const stratState = {};
+        strategySlugs.forEach(s => { stratState[s] = { cash: INITIAL_CAPITAL, pos: {} }; });
+
+        // Group orders by date string for fast lookup
+        const ordersByDate = {};
+        filledOrders.forEach(o => {
+            const d = (o.filled_at || o.created_at).split('T')[0];
+            if (!ordersByDate[d]) ordersByDate[d] = [];
+            ordersByDate[d].push(o);
+        });
+
+        // Generate daily date sequence from chartStart to today
+        const dates = [];
+        const cur = new Date(chartStart);
+        cur.setUTCHours(0, 0, 0, 0);
+        while (cur <= now) { dates.push(cur.toISOString().split('T')[0]); cur.setUTCDate(cur.getUTCDate() + 1); }
+
+        // Build snapshots day by day
+        const snapshots = [];
+
+        // Opening snapshot at $20K for all strategies
+        snapshots.push(Object.assign(
+            { timestamp: new Date(chartStart).toISOString() },
+            Object.fromEntries(strategySlugs.map(s => [s, INITIAL_CAPITAL]))
+        ));
+
+        dates.forEach(dateStr => {
+            // Apply any trades that happened on this date
+            (ordersByDate[dateStr] || []).forEach(order => {
+                const prefix = (order.client_order_id || '').split('-')[0];
+                const slug   = strategySlugs.find(s => STRATEGY_SLUGS[s] === prefix);
+                if (!slug) return;
+                const st  = stratState[slug];
+                const qty = parseFloat(order.filled_qty || 0);
+                const prc = parseFloat(order.filled_avg_price || 0);
+                if (order.side === 'buy') {
+                    st.cash -= qty * prc;
+                    if (!st.pos[order.symbol]) st.pos[order.symbol] = { qty: 0, avgCost: 0 };
+                    const p = st.pos[order.symbol];
+                    p.avgCost = (p.qty * p.avgCost + qty * prc) / (p.qty + qty);
+                    p.qty += qty;
+                } else {
+                    st.cash += qty * prc;
+                    if (st.pos[order.symbol]) {
+                        st.pos[order.symbol].qty -= qty;
+                        if (st.pos[order.symbol].qty <= 0.001) delete st.pos[order.symbol];
+                    }
+                }
+            });
+
+            // Compute portfolio value using actual close prices for this day
+            const snap = { timestamp: dateStr + 'T21:00:00.000Z' }; // ~4pm ET
             strategySlugs.forEach(slug => {
-                const costVal = calcValueAtCost(slug);
-                const liveVal = calcValueLive(slug);
-                snap[slug] = Math.round(costVal + (liveVal - costVal) * blend);
+                const st       = stratState[slug];
+                const posValue = Object.entries(st.pos).reduce((sum, [sym, p]) => {
+                    return sum + p.qty * priceOnDate(sym, dateStr);
+                }, 0);
+                snap[slug] = Math.round(st.cash + posValue);
             });
             snapshots.push(snap);
-            interpTime = new Date(interpTime.getTime() + hourMs);
-        }
-        
-        // Current snapshot with live market values
-        const currentSnap = { timestamp: now.toISOString() };
-        strategySlugs.forEach(slug => { currentSnap[slug] = calcValueLive(slug); });
-        snapshots.push(currentSnap);
-        
-        // Format trades for frontend
-        const formattedTrades = trades.map(t => ({
-            timestamp: t.timestamp,
-            strategy: t.strategy,
-            action: t.side,
-            symbol: t.symbol,
-            quantity: t.qty,
-            price: t.price,
-            portfolioValueAfter: 0 // Not needed anymore
-        }));
+        });
+
+        // Format trade events for marker overlay
+        const formattedTrades = filledOrders.map(o => {
+            const prefix = (o.client_order_id || '').split('-')[0];
+            const slug   = strategySlugs.find(s => STRATEGY_SLUGS[s] === prefix);
+            return {
+                timestamp: o.filled_at || o.created_at,
+                strategy:  slug,
+                action:    o.side,
+                symbol:    o.symbol,
+                quantity:  parseFloat(o.filled_qty  || 0),
+                price:     parseFloat(o.filled_avg_price || 0)
+            };
+        });
         
         console.log(`Equity history: ${snapshots.length} snapshots, ${formattedTrades.length} trades (range: ${range})`);
         res.json({ snapshots, trades: formattedTrades });
