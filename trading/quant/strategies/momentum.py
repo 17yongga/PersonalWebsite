@@ -149,16 +149,45 @@ class MomentumStrategy(Strategy):
         
         if action != 'hold':
             reason = self._build_signal_reason(latest, action)
-            
+
+            rsi_val = float(latest['rsi'])
+            macd_bullish = latest['macd'] > latest['macd_signal']
+            ema_above = latest['ema_fast'] > latest['ema_slow']
+
+            rsi_label = 'neutral'
+            if rsi_val < 30:
+                rsi_label = 'oversold'
+            elif rsi_val < 45:
+                rsi_label = 'weakening'
+            elif rsi_val > 70:
+                rsi_label = 'overbought'
+            elif rsi_val > 55:
+                rsi_label = 'strong'
+
+            macd_label = 'bullish' if macd_bullish else 'bearish'
+            ema_label = 'above' if ema_above else 'below'
+
+            reasoning = {
+                'indicators': {
+                    'rsi': round(rsi_val, 2),
+                    'macd': macd_label,
+                    'ema_cross': ema_label,
+                    'composite_score': int(current_score)
+                },
+                'condition': f'RSI={rsi_val:.1f} [{rsi_label}], MACD {macd_label}, EMA20 {ema_label} EMA50',
+                'decision': action.upper()
+            }
+
             signal = Signal(
                 symbol=symbol_name,
                 action=action,
                 confidence=confidence,
                 price=float(latest['close']),
                 reason=reason,
-                timestamp=latest.name if hasattr(latest.name, 'timestamp') else pd.Timestamp.now()
+                timestamp=latest.name if hasattr(latest.name, 'timestamp') else pd.Timestamp.now(),
+                reasoning=reasoning
             )
-            
+
             signals.append(signal)
         
         return signals

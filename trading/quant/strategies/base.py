@@ -15,6 +15,7 @@ class Signal:
     quantity: int = 0
     reason: str = ""
     timestamp: pd.Timestamp = None
+    reasoning: dict = None
     
     def __post_init__(self):
         if self.timestamp is None:
