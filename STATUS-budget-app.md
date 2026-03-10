@@ -42,7 +42,7 @@ All changes from today's session are live on S3/CloudFront. No local-only change
 - [ ] Gary: define Phase 2 feature priorities
 - [ ] Brand the service — name + logo (see backlog)
 - [ ] Mobile UX review
-- [ ] CSV export
+- [x] CSV export — already live (📥 CSV button in transactions view)
 
 ## Decisions
 - 2026-03-09: Confirmed all batches deployed — D-002 closed
