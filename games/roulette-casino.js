@@ -15,7 +15,7 @@ class RouletteGame {
 
     // Belt config
     this.CHIP_W = 96;    // updated after first build by measuring real DOM width
-    this.TOTAL_CHIPS = 45; // 3 full cycles of 15 numbers (0-14)
+    this.TOTAL_CHIPS = 55; // max target = 44 (14+30), need ~10 chips padding after
     // TARGET_IDX is dynamic: winningNumber + 30 always lands on the correct chip
 
     this.init();
