@@ -4542,12 +4542,17 @@ html[data-theme="light"] .rl-belt-wrapper {
 }
 
 .rl-belt-track {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 0 8px;
   height: 100%;
-  will-change: transform;
+  z-index: 1;
+  /* No will-change here — it caps the GPU compositing layer size on mobile,
+     causing chips far from the start to disappear mid-animation */
 }
 
 /* Individual chips on the belt */

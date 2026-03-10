@@ -13,10 +13,10 @@ class RouletteGame {
     this.wheelAnimationComplete = false;
     this.pendingResult = null;
 
-    // Belt config
-    this.CHIP_W = 72;   // chip width 64px + gap 8px
-    this.TOTAL_CHIPS = 120;
-    this.TARGET_IDX = 100; // winning chip placed at this index
+    // Belt config — keep travel distance short so mobile GPU layer stays painted
+    this.CHIP_W = 72;    // chip 64px + 8px gap
+    this.TOTAL_CHIPS = 32;
+    this.TARGET_IDX = 26; // winning chip placed at this index (~1800px travel max)
 
     this.init();
   }
@@ -109,7 +109,8 @@ class RouletteGame {
       </div>
     `;
 
-    this.buildBelt(null);
+    // Defer buildBelt so the DOM has fully painted before we measure/populate
+    requestAnimationFrame(() => this.buildBelt(null));
     this.attachEventListeners();
     this.connectToServer();
   }
@@ -135,8 +136,12 @@ class RouletteGame {
       return `<div class="rl-chip rl-chip-${color}" data-idx="${i}">${n}</div>`;
     }).join('');
 
+    // Centre the idle belt so chips are visible in the viewport
+    const wrapper = document.getElementById('rlBeltWrapper');
+    const half = wrapper ? wrapper.offsetWidth / 2 : 400;
+    const idleTX = half - (3 * this.CHIP_W + 32); // show around chip 3 in centre
     track.style.transition = 'none';
-    track.style.transform = 'translateX(0)';
+    track.style.transform = `translate3d(${idleTX}px, 0, 0)`;
     track.offsetHeight; // force reflow
   }
 
@@ -155,7 +160,7 @@ class RouletteGame {
 
     setTimeout(() => {
       track.style.transition = 'transform 4.5s cubic-bezier(0.12, 0.85, 0.10, 1.0)';
-      track.style.transform = `translateX(${targetTX}px)`;
+      track.style.transform = `translate3d(${targetTX}px, 0, 0)`;
 
       setTimeout(() => {
         this.wheelAnimationComplete = true;
