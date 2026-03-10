@@ -4546,35 +4546,32 @@ html[data-theme="light"] .rl-belt-wrapper {
   top: 0;
   left: 0;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 8px;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
   height: 100%;
   z-index: 1;
-  /* No will-change here — it caps the GPU compositing layer size on mobile,
-     causing chips far from the start to disappear mid-animation */
 }
 
-/* Individual chips on the belt */
+/* Individual chips on the belt — square, edge to edge */
 .rl-chip {
   flex-shrink: 0;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  width: 96px;   /* matches belt height */
+  height: 100%;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #fff;
   user-select: none;
   pointer-events: none;
-  transition: box-shadow 0.3s;
 }
 
-.rl-chip-red    { background: #dc2626; box-shadow: 0 2px 10px rgba(220,38,38,0.4); }
-.rl-chip-black  { background: #1e293b; border: 2px solid rgba(148,163,184,0.3); box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-.rl-chip-green  { background: #16a34a; box-shadow: 0 2px 10px rgba(22,163,74,0.5); }
+.rl-chip-red   { background: #dc2626; }
+.rl-chip-black { background: #1a2233; }
+.rl-chip-green { background: #16a34a; }
 
 /* Winner pulse */
 .rl-chip-winner {
@@ -5063,9 +5060,8 @@ html[data-theme="light"] .rl-player-row {
   }
 
   .rl-chip {
-    width: 52px;
-    height: 52px;
-    font-size: 1.1rem;
+    width: 80px;
+    font-size: 1.2rem;
   }
 
   .rl-color-grid {
@@ -5079,7 +5075,7 @@ html[data-theme="light"] .rl-player-row {
 
 @media (max-width: 480px) {
   .rl-belt-wrapper { height: 68px; }
-  .rl-chip { width: 44px; height: 44px; font-size: 0.95rem; }
+  .rl-chip { width: 68px; font-size: 1rem; }
   .rl-codds { font-size: 0.9rem; }
   .rl-color-btn { padding: 0.7rem 0.3rem; }
 }

@@ -13,10 +13,10 @@ class RouletteGame {
     this.wheelAnimationComplete = false;
     this.pendingResult = null;
 
-    // Belt config — keep travel distance short so mobile GPU layer stays painted
-    this.CHIP_W = 72;    // chip 64px + 8px gap
+    // Belt config — chip width measured after build; TARGET_IDX controls travel distance
+    this.CHIP_W = 96;    // matches CSS (updated after first build via measureChipW)
     this.TOTAL_CHIPS = 32;
-    this.TARGET_IDX = 26; // winning chip placed at this index (~1800px travel max)
+    this.TARGET_IDX = 26;
 
     this.init();
   }
@@ -121,25 +121,33 @@ class RouletteGame {
     const track = document.getElementById('rlBeltTrack');
     if (!track) return;
 
-    const nums = Array.from({ length: 15 }, (_, i) => i); // 0–14
+    const redNums   = [1, 3, 5, 7, 9, 11, 13];
+    const blackNums = [2, 4, 6, 8, 10, 12, 14];
+    const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+
     const chips = [];
     for (let i = 0; i < this.TOTAL_CHIPS; i++) {
       if (i === this.TARGET_IDX && winningNumber !== null) {
-        chips.push(winningNumber);
+        chips.push({ n: winningNumber, color: this.getNumberColor(winningNumber) });
       } else {
-        chips.push(nums[Math.floor(Math.random() * nums.length)]);
+        const isRed = i % 2 === 0;
+        chips.push({ n: rand(isRed ? redNums : blackNums), color: isRed ? 'red' : 'black' });
       }
     }
 
-    track.innerHTML = chips.map((n, i) => {
-      const color = this.getNumberColor(n);
-      return `<div class="rl-chip rl-chip-${color}" data-idx="${i}">${n}</div>`;
-    }).join('');
+    track.innerHTML = chips.map(({ n, color }, i) =>
+      `<div class="rl-chip rl-chip-${color}" data-idx="${i}">${n}</div>`
+    ).join('');
 
-    // Centre the idle belt so chips are visible in the viewport
+    // Measure actual chip width (responsive — mobile is smaller)
+    track.offsetHeight;
+    const firstChip = track.querySelector('.rl-chip');
+    if (firstChip) this.CHIP_W = firstChip.offsetWidth || this.CHIP_W;
+
+    // Centre around chip 3 so belt is visible on load
     const wrapper = document.getElementById('rlBeltWrapper');
     const half = wrapper ? wrapper.offsetWidth / 2 : 400;
-    const idleTX = half - (3 * this.CHIP_W + 32); // show around chip 3 in centre
+    const idleTX = half - (3 * this.CHIP_W + this.CHIP_W / 2);
     track.style.transition = 'none';
     track.style.transform = `translate3d(${idleTX}px, 0, 0)`;
     track.offsetHeight; // force reflow
