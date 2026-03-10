@@ -1,4 +1,4 @@
-// Roulette Game Module - Shared Session with Auto-Spin
+// Roulette Game — Flat Modern Design (Belt-style, CSGOEmpire/Stake inspired)
 
 class RouletteGame {
   constructor(casinoManager) {
@@ -10,128 +10,171 @@ class RouletteGame {
     this.allBets = {};
     this.timerInterval = null;
     this.history = [];
+    this.wheelAnimationComplete = false;
+    this.pendingResult = null;
+
+    // Belt config
+    this.CHIP_W = 72;   // chip width 64px + gap 8px
+    this.TOTAL_CHIPS = 120;
+    this.TARGET_IDX = 100; // winning chip placed at this index
+
     this.init();
+  }
+
+  getNumberColor(num) {
+    if (num === 0) return 'green';
+    return num % 2 === 1 ? 'red' : 'black';
   }
 
   init() {
     const gameView = document.getElementById('rouletteGame');
     gameView.innerHTML = `
-      <div class="roulette-casino-container">
-        <h2 class="game-title">🎲 Roulette</h2>
-        
-        <div class="roulette-game-area">
-          <div class="roulette-wheel-section">
-            <div class="digital-roulette-display">
-              <div id="rouletteDisplay" class="roulette-display">
-                <div class="number-display" id="numberDisplay">--</div>
-                <div class="color-indicator" id="colorIndicator"></div>
-              </div>
-              <div id="winningNumber" class="winning-number"></div>
-              <div id="nextSpinTimer" class="next-spin-timer"></div>
+      <div class="rl-container">
+
+        <!-- Belt Spinner -->
+        <div class="rl-belt-section">
+          <div class="rl-belt-wrapper" id="rlBeltWrapper">
+            <div class="rl-belt-track" id="rlBeltTrack"></div>
+            <div class="rl-belt-indicator"></div>
+            <div class="rl-belt-fade rl-fade-l"></div>
+            <div class="rl-belt-fade rl-fade-r"></div>
+          </div>
+        </div>
+
+        <!-- Status Row -->
+        <div class="rl-status-row">
+          <div class="rl-last-result" id="rlLastResult">Waiting for first spin…</div>
+          <div class="rl-countdown" id="rlCountdown"></div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="rl-main-grid">
+
+          <!-- Left: Betting -->
+          <div class="rl-bet-panel">
+            <div class="rl-panel-title">Place Your Bet</div>
+
+            <div class="rl-amount-row">
+              <button class="rl-adj-btn" id="rlHalf">½</button>
+              <input type="number" id="rlBetAmount" min="1" value="100" step="10" class="rl-amount-input">
+              <button class="rl-adj-btn" id="rlDouble">2×</button>
             </div>
 
-            <!-- History Section -->
-            <div class="roulette-history-section">
-              <h3>Recent Results (Last 50)</h3>
-              <div id="rouletteHistory" class="roulette-history">
-                <p class="no-history">No history yet</p>
-              </div>
+            <div class="rl-quick-row">
+              <button class="rl-quick-btn" data-amount="50">50</button>
+              <button class="rl-quick-btn" data-amount="100">100</button>
+              <button class="rl-quick-btn" data-amount="250">250</button>
+              <button class="rl-quick-btn" data-amount="500">500</button>
+              <button class="rl-quick-btn" data-amount="1000">1K</button>
+            </div>
+
+            <div class="rl-color-grid">
+              <button id="rlBetRed" class="rl-color-btn rl-btn-red">
+                <span class="rl-cname">Red</span>
+                <span class="rl-codds">2×</span>
+                <span class="rl-cnums">1 3 5 7 9 11 13</span>
+              </button>
+              <button id="rlBetBlack" class="rl-color-btn rl-btn-black">
+                <span class="rl-cname">Black</span>
+                <span class="rl-codds">2×</span>
+                <span class="rl-cnums">2 4 6 8 10 12 14</span>
+              </button>
+              <button id="rlBetGreen" class="rl-color-btn rl-btn-green">
+                <span class="rl-cname">Green</span>
+                <span class="rl-codds">14×</span>
+                <span class="rl-cnums">0 only</span>
+              </button>
+            </div>
+
+            <div class="rl-active-bet" id="rlActiveBet">
+              <span id="rlActiveBetText">No bet placed</span>
+              <button id="rlClearBet" class="rl-clear-btn" disabled>✕ Clear</button>
             </div>
           </div>
 
-          <div class="betting-section-roulette">
-            <div class="betting-controls">
-              <h3>Place Your Bet</h3>
-              <div class="bet-input-group">
-                <label>Bet Amount:</label>
-                <input type="number" id="rouletteBetAmount" min="1" value="100" step="10">
-                <div class="quick-bets">
-                  <button class="quick-bet-btn" data-amount="50">50</button>
-                  <button class="quick-bet-btn" data-amount="100">100</button>
-                  <button class="quick-bet-btn" data-amount="250">250</button>
-                  <button class="quick-bet-btn" data-amount="500">500</button>
-                </div>
-              </div>
-
-              <div class="color-bets-section">
-                <h4>Choose Color</h4>
-                <div class="color-buttons">
-                  <button id="betRed" class="color-bet-btn red-btn">Red (2x)</button>
-                  <button id="betBlack" class="color-bet-btn black-btn">Black (2x)</button>
-                  <button id="betGreen" class="color-bet-btn green-btn">Green (14x)</button>
-                </div>
-              </div>
-
-              <div class="current-bet-display">
-                <p id="currentBetText">No bet placed</p>
-                <button id="clearBetBtn" class="btn btn-secondary" disabled>Clear Bet</button>
-              </div>
+          <!-- Right: Players + History -->
+          <div class="rl-info-panel">
+            <div class="rl-panel-title">This Round</div>
+            <div id="rlAllBets" class="rl-players-list">
+              <div class="rl-empty-msg">No bets yet</div>
             </div>
 
-            <div class="all-bets-section">
-              <h3>All Players' Bets</h3>
-              <div id="allBetsList" class="all-bets-list">
-                <p class="no-bets">No bets placed yet</p>
-              </div>
+            <div class="rl-panel-title" style="margin-top:1rem">Recent Results</div>
+            <div id="rlHistory" class="rl-history-strip">
+              <div class="rl-empty-msg">No history</div>
             </div>
           </div>
+
         </div>
       </div>
     `;
 
-    // On mobile, fix layout: reorder DOM + apply inline styles to override any cached CSS
-    if (window.innerWidth <= 768) {
-      const gameArea = gameView.querySelector('.roulette-game-area');
-      const bettingSection = gameArea.querySelector('.betting-section-roulette');
-      const wheelSection = gameArea.querySelector('.roulette-wheel-section');
-      const display = gameArea.querySelector('.digital-roulette-display');
-      const rouletteDisplay = gameArea.querySelector('.roulette-display');
-      const colorIndicator = gameArea.querySelector('.color-indicator');
-      const historySection = gameArea.querySelector('.roulette-history-section');
-      
-      if (gameArea && bettingSection) {
-        // Reorder: betting first
-        gameArea.insertBefore(bettingSection, gameArea.firstChild);
-        
-        // Force flex column layout (override any cached grid CSS)
-        gameArea.style.cssText = 'display:flex!important;flex-direction:column!important;gap:1rem;margin-top:1rem;';
-        
-        // Center and constrain the display
-        if (wheelSection) wheelSection.style.cssText = 'width:100%;text-align:center;';
-        if (display) display.style.cssText = 'padding:1rem;min-height:auto;display:flex;flex-direction:column;align-items:center;';
-        if (rouletteDisplay) rouletteDisplay.style.cssText = 'width:160px;height:160px;margin:0 auto;';
-        if (colorIndicator) colorIndicator.style.cssText = 'width:60px;height:60px;min-width:60px;min-height:60px;margin-top:0.5rem;border-radius:50%;aspect-ratio:1/1;flex-shrink:0;';
-      }
-      
-      // Fix history: horizontal scroll strip instead of vertical list
-      if (historySection) {
-        const historyGrid = historySection.querySelector('.history-grid');
-        if (historyGrid) {
-          historyGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.5rem;max-height:200px;overflow-y:auto;padding:0.5rem;';
-        }
-      }
-    }
-
-    this.createWheel();
+    this.buildBelt(null);
     this.attachEventListeners();
-    
-    // Connect to casino server after UI is rendered
     this.connectToServer();
   }
 
+  // ─── Belt ───────────────────────────────────────────────────────
+
+  buildBelt(winningNumber) {
+    const track = document.getElementById('rlBeltTrack');
+    if (!track) return;
+
+    const nums = Array.from({ length: 15 }, (_, i) => i); // 0–14
+    const chips = [];
+    for (let i = 0; i < this.TOTAL_CHIPS; i++) {
+      if (i === this.TARGET_IDX && winningNumber !== null) {
+        chips.push(winningNumber);
+      } else {
+        chips.push(nums[Math.floor(Math.random() * nums.length)]);
+      }
+    }
+
+    track.innerHTML = chips.map((n, i) => {
+      const color = this.getNumberColor(n);
+      return `<div class="rl-chip rl-chip-${color}" data-idx="${i}">${n}</div>`;
+    }).join('');
+
+    track.style.transition = 'none';
+    track.style.transform = 'translateX(0)';
+    track.offsetHeight; // force reflow
+  }
+
+  animateBeltSpin(winningNumber) {
+    const track = document.getElementById('rlBeltTrack');
+    if (!track) { this.wheelAnimationComplete = true; return; }
+
+    this.wheelAnimationComplete = false;
+    this.buildBelt(winningNumber);
+
+    const wrapper = document.getElementById('rlBeltWrapper');
+    const half = wrapper ? wrapper.offsetWidth / 2 : 400;
+
+    // Center the TARGET_IDX chip in the viewport
+    const targetTX = half - (this.TARGET_IDX * this.CHIP_W + 32);
+
+    setTimeout(() => {
+      track.style.transition = 'transform 4.5s cubic-bezier(0.12, 0.85, 0.10, 1.0)';
+      track.style.transform = `translateX(${targetTX}px)`;
+
+      setTimeout(() => {
+        this.wheelAnimationComplete = true;
+        const winner = track.querySelector(`[data-idx="${this.TARGET_IDX}"]`);
+        if (winner) winner.classList.add('rl-chip-winner');
+      }, 4700);
+    }, 60);
+  }
+
+  // ─── Socket ─────────────────────────────────────────────────────
+
   connectToServer() {
-    // Wait for socket.io to be available
     if (typeof io === 'undefined') {
-      // Try again after a short delay
       setTimeout(() => this.connectToServer(), 100);
       return;
     }
 
-    // Use shared socket from casino manager if available
     this.socket = this.casino.getSocket();
-    
     if (!this.socket) {
-      // Fallback: create own connection if casino manager doesn't have one
       try {
         const serverUrl = window.CASINO_SERVER_URL || window.location.origin;
         this.socket = io(serverUrl, {
@@ -140,47 +183,26 @@ class RouletteGame {
           reconnectionAttempts: 5,
           timeout: 20000
         });
-      } catch (error) {
-        console.error('Error connecting to roulette server:', error);
+      } catch (err) {
+        console.error('Roulette socket error:', err);
         return;
       }
     }
-    
+
     this.setupSocketListeners();
-    
-    // Wait for connection to be established before joining
-    // If already connected, wait a bit to ensure socket is ready, then join
+
     if (this.socket.connected) {
-      // Small delay to ensure socket is fully ready
       setTimeout(() => {
-        if (this.socket && this.socket.connected && this.casino.username) {
+        if (this.socket?.connected && this.casino.username) {
           this.socket.emit('joinCasino', { username: this.casino.username });
         }
       }, 100);
     }
-    // If not connected, the 'connect' event handler will join the casino
-  }
-
-  createWheel() {
-    // Digital display doesn't need wheel creation
-    // This method is kept for compatibility but does nothing
-    // The display is already created in the HTML template
-  }
-
-  getNumberColor(num) {
-    // Match server's roulette numbers: 0-14
-    // 0 = green, then alternating red/black starting with 1=red
-    if (num === 0) return 'green';
-    // Odd numbers (1, 3, 5, 7, 9, 11, 13) = red
-    // Even numbers (2, 4, 6, 8, 10, 12, 14) = black
-    return num % 2 === 1 ? 'red' : 'black';
   }
 
   setupSocketListeners() {
     if (!this.socket) return;
 
-    // Remove only roulette-specific listeners to prevent duplicates
-    // DO NOT remove 'connect', 'playerData', 'error' — those are managed by casino.js
     this.socket.removeAllListeners('rouletteState');
     this.socket.removeAllListeners('rouletteBetsUpdate');
     this.socket.removeAllListeners('rouletteSpinStart');
@@ -192,17 +214,10 @@ class RouletteGame {
       this.nextSpinTime = state.nextSpinTime;
       this.history = state.history || [];
       this.updateAllBetsDisplay();
-      this.updateNextSpinTimer();
+      this.updateCountdown();
       this.updateHistoryDisplay();
-      
-      if (state.lastResult) {
-        this.showLastResult(state.lastResult);
-      }
-      
-      if (state.spinning) {
-        // Wheel is currently spinning
-        this.spinning = true;
-      }
+      if (state.lastResult) this.showLastResult(state.lastResult);
+      if (state.spinning) this.spinning = true;
     });
 
     this.socket.on('rouletteBetsUpdate', ({ bets }) => {
@@ -214,453 +229,233 @@ class RouletteGame {
       this.spinning = true;
       this.allBets = bets;
       this.updateAllBetsDisplay();
-      // Clear any previous winning number display
-      const winningEl = document.getElementById('winningNumber');
-      if (winningEl) {
-        winningEl.textContent = '';
-        winningEl.className = 'winning-number';
-      }
-      // Hide timer during spin and result display
-      const timerEl = document.getElementById('nextSpinTimer');
-      if (timerEl) {
-        timerEl.textContent = '';
-        timerEl.style.display = 'none';
-      }
-      this.animateSpin(winningNumber);
+      const cd = document.getElementById('rlCountdown');
+      if (cd) cd.textContent = 'Spinning…';
+      this.animateBeltSpin(winningNumber);
     });
 
     this.socket.on('rouletteSpinResult', ({ winningNumber, winningColor, results, bets, history }) => {
-      // Store the result but don't show it until wheel animation completes
       this.pendingResult = { winningNumber, winningColor, results, bets };
-      
-      // Update history if provided
       if (history) {
         this.history = history;
         this.updateHistoryDisplay();
       }
-      
-      // Wait for wheel animation to complete
-      const checkAnimation = () => {
+      const check = () => {
         if (this.wheelAnimationComplete) {
           this.spinning = false;
           this.allBets = {};
           this.updateAllBetsDisplay();
           this.showResult(winningNumber, winningColor, results);
-          
-          const playerId = this.socket.id;
-          if (results[playerId]) {
-            // Record bet history
-            const bet = results[playerId].bet;
+
+          const pid = this.socket.id;
+          if (results[pid]) {
+            const bet = results[pid].bet;
             if (bet) {
-              const payout = results[playerId].won ? results[playerId].winnings : 0;
+              const payout = results[pid].won ? results[pid].winnings : 0;
               const mult = bet.color === 'green' ? 14 : 2;
-              this.casino.recordBet('roulette', bet.amount, results[playerId].won ? 'Win' : 'Loss', payout, results[playerId].won ? mult : 0, `${bet.color} → ${winningColor}`);
+              this.casino.recordBet(
+                'roulette', bet.amount,
+                results[pid].won ? 'Win' : 'Loss',
+                payout,
+                results[pid].won ? mult : 0,
+                `${bet.color} → ${winningColor}`
+              );
             }
-            // DON'T manually set credits - the server sends playerData event with correct balance
             this.currentBet = null;
             this.updateCurrentBetDisplay();
           }
-          
-          // Timer will be updated when nextSpinTime event is received
         } else {
-          // Check again after a short delay
-          setTimeout(checkAnimation, 100);
+          setTimeout(check, 100);
         }
       };
-      
-      checkAnimation();
+      check();
     });
 
     this.socket.on('nextSpinTime', ({ time }) => {
       this.nextSpinTime = time;
-      this.updateNextSpinTimer();
+      this.updateCountdown();
     });
-
   }
 
+  // ─── Event Listeners ────────────────────────────────────────────
+
   attachEventListeners() {
-    // Quick bet buttons
-    document.querySelectorAll('.quick-bet-btn').forEach(btn => {
+    document.getElementById('rlHalf')?.addEventListener('click', () => {
+      const inp = document.getElementById('rlBetAmount');
+      inp.value = Math.max(1, Math.floor(parseInt(inp.value || 0) / 2));
+    });
+
+    document.getElementById('rlDouble')?.addEventListener('click', () => {
+      const inp = document.getElementById('rlBetAmount');
+      inp.value = Math.min(this.casino.credits, parseInt(inp.value || 0) * 2);
+    });
+
+    document.querySelectorAll('.rl-quick-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const amount = parseInt(btn.dataset.amount);
-        document.getElementById('rouletteBetAmount').value = amount;
+        document.getElementById('rlBetAmount').value = btn.dataset.amount;
       });
     });
 
-    // Color bet buttons
-    document.getElementById('betRed')?.addEventListener('click', () => {
-      this.placeBet('red');
-    });
-
-    document.getElementById('betBlack')?.addEventListener('click', () => {
-      this.placeBet('black');
-    });
-
-    document.getElementById('betGreen')?.addEventListener('click', () => {
-      this.placeBet('green');
-    });
-
-    // Clear bet
-    document.getElementById('clearBetBtn')?.addEventListener('click', () => {
-      this.clearBet();
-    });
+    document.getElementById('rlBetRed')?.addEventListener('click', () => this.placeBet('red'));
+    document.getElementById('rlBetBlack')?.addEventListener('click', () => this.placeBet('black'));
+    document.getElementById('rlBetGreen')?.addEventListener('click', () => this.placeBet('green'));
+    document.getElementById('rlClearBet')?.addEventListener('click', () => this.clearBet());
   }
+
+  // ─── Bet Logic ──────────────────────────────────────────────────
 
   placeBet(color) {
     try {
-      // Set navigation guard
-      if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
-        this.casino.setBetPlacementInProgress(true);
-      }
+      if (this.casino?.setBetPlacementInProgress) this.casino.setBetPlacementInProgress(true);
 
-      if (window.casinoDebugLogger) {
-        window.casinoDebugLogger.logBetPlacement('roulette', 0, 'started', { color });
-      }
+      if (this.spinning) { this.showMsg('Wait for the spin to finish', 'error'); return; }
+      if (this.currentBet) { this.showMsg('Clear your current bet first', 'error'); return; }
 
-      if (this.spinning) {
-        const msg = 'Cannot place bets while wheel is spinning';
-        if (window.casinoDebugLogger) {
-          window.casinoDebugLogger.logBetPlacement('roulette', 0, 'failed', { reason: msg });
-        }
-        this.showTemporaryMessage(msg, 'error');
-        return;
-      }
-
-      // Check if player already has a bet placed
-      if (this.currentBet) {
-        const msg = 'You can only place one bet per round. Please clear your current bet first.';
-        if (window.casinoDebugLogger) {
-          window.casinoDebugLogger.logBetPlacement('roulette', 0, 'failed', { reason: msg });
-        }
-        this.showTemporaryMessage(msg, 'error');
-        return;
-      }
-
-      const amount = parseInt(document.getElementById('rouletteBetAmount').value);
-      if (!amount || amount < 1) {
-        const msg = 'Please enter a valid bet amount';
-        if (window.casinoDebugLogger) {
-          window.casinoDebugLogger.logBetPlacement('roulette', amount, 'failed', { reason: msg });
-        }
-        this.showTemporaryMessage(msg, 'error');
-        return;
-      }
-
-      if (amount > this.casino.credits) {
-        const msg = 'Insufficient credits';
-        if (window.casinoDebugLogger) {
-          window.casinoDebugLogger.logBetPlacement('roulette', amount, 'failed', { reason: msg });
-        }
-        this.showTemporaryMessage(msg, 'error');
-        return;
-      }
+      const amount = parseInt(document.getElementById('rlBetAmount').value);
+      if (!amount || amount < 1) { this.showMsg('Enter a valid bet amount', 'error'); return; }
+      if (amount > this.casino.credits) { this.showMsg('Insufficient credits', 'error'); return; }
 
       this.currentBet = { color, amount };
-      
-      if (window.casinoDebugLogger) {
-        window.casinoDebugLogger.logBetPlacement('roulette', amount, 'emitting', { color });
-      }
-
       this.socket.emit('placeRouletteBet', { color, amount });
       this.updateCurrentBetDisplay();
 
-      if (window.casinoDebugLogger) {
-        window.casinoDebugLogger.logBetPlacement('roulette', amount, 'completed', { color });
-      }
+      // Highlight the selected button
+      document.querySelectorAll('.rl-color-btn').forEach(b => b.classList.remove('rl-btn-active'));
+      const map = { red: 'rlBetRed', black: 'rlBetBlack', green: 'rlBetGreen' };
+      document.getElementById(map[color])?.classList.add('rl-btn-active');
 
-      // Clear navigation guard after a short delay to allow socket response
       setTimeout(() => {
-        if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
-          this.casino.setBetPlacementInProgress(false);
-        }
+        if (this.casino?.setBetPlacementInProgress) this.casino.setBetPlacementInProgress(false);
       }, 1000);
-    } catch (error) {
-      // Clear navigation guard on error
-      if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
-        this.casino.setBetPlacementInProgress(false);
-      }
-      console.error('[Roulette] Error in placeBet:', error);
-      if (window.casinoDebugLogger) {
-        window.casinoDebugLogger.logError(error, {
-          context: 'roulette placeBet',
-          color
-        });
-      }
-      this.showTemporaryMessage('Error placing bet. Please try again.', 'error');
+    } catch (err) {
+      if (this.casino?.setBetPlacementInProgress) this.casino.setBetPlacementInProgress(false);
+      console.error('[Roulette] placeBet error:', err);
     }
   }
 
   clearBet() {
-    try {
-      if (this.spinning) {
-        this.showTemporaryMessage('Cannot clear bets while wheel is spinning', 'error');
-        return;
-      }
-
-      if (this.currentBet) {
-        this.socket.emit('clearRouletteBet');
-        this.currentBet = null;
-        this.updateCurrentBetDisplay();
-      }
-    } catch (error) {
-      console.error('[Roulette] Error in clearBet:', error);
-      if (window.casinoDebugLogger) {
-        window.casinoDebugLogger.logError(error, {
-          context: 'roulette clearBet'
-        });
-      }
+    if (this.spinning) { this.showMsg('Cannot clear while spinning', 'error'); return; }
+    if (this.currentBet) {
+      this.socket.emit('clearRouletteBet');
+      this.currentBet = null;
+      this.updateCurrentBetDisplay();
+      document.querySelectorAll('.rl-color-btn').forEach(b => b.classList.remove('rl-btn-active'));
     }
   }
 
+  // ─── UI Updates ─────────────────────────────────────────────────
+
   updateCurrentBetDisplay() {
-    const currentBetText = document.getElementById('currentBetText');
-    const clearBetBtn = document.getElementById('clearBetBtn');
-    
+    const text = document.getElementById('rlActiveBetText');
+    const btn = document.getElementById('rlClearBet');
+    const wrap = document.getElementById('rlActiveBet');
+
     if (this.currentBet) {
-      currentBetText.textContent = `Your bet: ${this.currentBet.color.toUpperCase()} - ${this.currentBet.amount.toLocaleString()} credits`;
-      clearBetBtn.disabled = false;
+      text.textContent = `${this.currentBet.color.toUpperCase()} — ${this.currentBet.amount.toLocaleString()} credits`;
+      btn.disabled = false;
+      wrap.classList.add('rl-has-bet', `rl-bet-${this.currentBet.color}`);
     } else {
-      currentBetText.textContent = 'No bet placed';
-      clearBetBtn.disabled = true;
+      text.textContent = 'No bet placed';
+      btn.disabled = true;
+      wrap.className = 'rl-active-bet';
     }
   }
 
   updateAllBetsDisplay() {
-    const allBetsList = document.getElementById('allBetsList');
+    const el = document.getElementById('rlAllBets');
+    if (!el) return;
     const bets = Object.values(this.allBets);
-    
     if (bets.length === 0) {
-      allBetsList.innerHTML = '<p class="no-bets">No bets placed yet</p>';
+      el.innerHTML = '<div class="rl-empty-msg">No bets yet</div>';
       return;
     }
-
-    let html = '<ul class="bets-list">';
-    bets.forEach(bet => {
-      html += `
-        <li class="bet-item ${bet.color}">
-          <span class="bet-player">${bet.playerName}</span>
-          <span class="bet-color">${bet.color.toUpperCase()}</span>
-          <span class="bet-amount">${bet.amount.toLocaleString()} credits</span>
-        </li>
-      `;
-    });
-    html += '</ul>';
-    allBetsList.innerHTML = html;
-  }
-
-  animateSpin(winningNumber) {
-    const winningColor = this.getNumberColor(winningNumber);
-    this.animateNumberReveal(winningNumber, winningColor);
-  }
-
-  animateNumberReveal(winningNumber, winningColor) {
-    const numberDisplay = document.getElementById('numberDisplay');
-    const colorIndicator = document.getElementById('colorIndicator');
-    const displayContainer = document.getElementById('rouletteDisplay');
-    
-    if (!numberDisplay || !colorIndicator || !displayContainer) {
-      console.error('Roulette display elements not found');
-      this.wheelAnimationComplete = true;
-      return;
-    }
-    
-    // Reset display - remove all color classes
-    numberDisplay.textContent = '--';
-    colorIndicator.className = 'color-indicator';
-    displayContainer.classList.remove('spinning', 'red', 'black', 'green', 'reveal');
-    
-    // Start spinning animation
-    displayContainer.classList.add('spinning');
-    this.wheelAnimationComplete = false;
-    
-    let currentNumber = 0;
-    let iteration = 0;
-    const totalIterations = 60 + Math.floor(Math.random() * 40); // 60-100 iterations for smoother animation
-    const baseSpeed = 40; // milliseconds between number changes (faster start)
-    const maxSpeed = 800; // maximum delay at the end (increased for more suspense)
-    let currentSpeed = baseSpeed;
-    
-    const spinInterval = setInterval(() => {
-      iteration++;
-      
-      // Cycle through numbers rapidly - only show numbers 0-14
-      currentNumber = Math.floor(Math.random() * 15);
-      numberDisplay.textContent = currentNumber;
-      
-      // Update color indicator
-      const currentColor = this.getNumberColor(currentNumber);
-      colorIndicator.className = `color-indicator ${currentColor}`;
-      
-      // Gradually slow down with smooth easing curve
-      // Start slowing down earlier (at 40% of iterations) for more dramatic slowdown
-      const progress = iteration / totalIterations;
-      if (progress > 0.4) {
-        // Use quintic easing (more aggressive than cubic) for dramatic slowdown
-        const slowdownProgress = (progress - 0.4) / 0.6; // 0 to 1 as we approach end
-        const easeOut = 1 - Math.pow(1 - slowdownProgress, 5); // Quintic ease-out for more dramatic effect
-        currentSpeed = baseSpeed + (maxSpeed - baseSpeed) * easeOut;
-      }
-      
-      // Stop and reveal winning number
-      if (iteration >= totalIterations) {
-        clearInterval(spinInterval);
-        
-        // Final reveal with animation
-        setTimeout(() => {
-          numberDisplay.textContent = winningNumber;
-          colorIndicator.className = `color-indicator ${winningColor}`;
-          // Remove all color classes and spinning, then add the correct winning color
-          displayContainer.classList.remove('spinning', 'red', 'black', 'green', 'reveal');
-          displayContainer.classList.add(winningColor);
-          
-          // Add pulse effect
-          displayContainer.classList.add('reveal');
-          setTimeout(() => {
-            displayContainer.classList.remove('reveal');
-          }, 1000);
-          
-          // Mark animation as complete
-          this.wheelAnimationComplete = true;
-        }, currentSpeed);
-      }
-    }, currentSpeed);
+    el.innerHTML = bets.map(bet => `
+      <div class="rl-player-row">
+        <span class="rl-dot rl-dot-${bet.color}"></span>
+        <span class="rl-pname">${bet.playerName}</span>
+        <span class="rl-pamt">${bet.amount.toLocaleString()}</span>
+      </div>
+    `).join('');
   }
 
   showResult(winningNumber, winningColor, results) {
-    const winningEl = document.getElementById('winningNumber');
-    const playerId = this.socket.id;
-    const playerResult = results[playerId];
+    const el = document.getElementById('rlLastResult');
+    const pid = this.socket.id;
+    const pr = results[pid];
 
-    let message = `Winning Number: ${winningNumber} (${winningColor.toUpperCase()})`;
-    
-    if (playerResult) {
-      if (playerResult.won) {
-        message += ` - 🎉 You won ${playerResult.winnings.toLocaleString()} credits!`;
-      } else {
-        message += ` - 😔 You lost`;
-      }
+    let html = `
+      <span class="rl-res-chip rl-res-${winningColor}">${winningNumber}</span>
+      <span class="rl-res-label">${winningColor.toUpperCase()}</span>
+    `;
+
+    if (pr) {
+      html += pr.won
+        ? `<span class="rl-res-win">+${pr.winnings.toLocaleString()} credits 🎉</span>`
+        : `<span class="rl-res-loss">Better luck next round</span>`;
     }
 
-    winningEl.textContent = message;
-    winningEl.className = `winning-number ${winningColor}`;
-    
-    // Timer will be shown when nextSpinTime event is received (after result is displayed)
+    if (el) el.innerHTML = html;
   }
 
   showLastResult(result) {
-    const winningEl = document.getElementById('winningNumber');
-    const displayContainer = document.getElementById('rouletteDisplay');
-    const numberDisplay = document.getElementById('numberDisplay');
-    const colorIndicator = document.getElementById('colorIndicator');
-    
-    if (winningEl) {
-      winningEl.textContent = `Last Result: ${result.number} (${result.color.toUpperCase()})`;
-      winningEl.className = `winning-number ${result.color}`;
-    }
-    
-    // Update display to show last result with correct color
-    if (displayContainer && numberDisplay && colorIndicator) {
-      displayContainer.classList.remove('red', 'black', 'green', 'spinning', 'reveal');
-      displayContainer.classList.add(result.color);
-      numberDisplay.textContent = result.number;
-      colorIndicator.className = `color-indicator ${result.color}`;
+    const el = document.getElementById('rlLastResult');
+    if (el) {
+      el.innerHTML = `
+        <span class="rl-res-label">Last:</span>
+        <span class="rl-res-chip rl-res-${result.color}">${result.number}</span>
+        <span class="rl-res-label">${result.color.toUpperCase()}</span>
+      `;
     }
   }
 
-  updateNextSpinTimer() {
-    // Clear any existing timer interval
+  updateCountdown() {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
-
     if (!this.nextSpinTime) return;
 
-    const timerEl = document.getElementById('nextSpinTimer');
-    if (timerEl) {
-      // Show the timer (it was hidden during spin/result display)
-      timerEl.style.display = 'inline-block';
-    }
-
-    const updateTimer = () => {
-      const now = Date.now();
-      const timeLeft = Math.max(0, Math.floor((this.nextSpinTime - now) / 1000));
-      
-      if (timerEl) {
-        if (timeLeft > 0) {
-          timerEl.textContent = `Next spin in: ${timeLeft}s`;
-          timerEl.className = 'next-spin-timer';
-        } else {
-          timerEl.textContent = 'Spinning...';
-          timerEl.className = 'next-spin-timer spinning';
-        }
-      }
-
-      // Stop the interval if time is up
-      if (timeLeft <= 0) {
-        if (this.timerInterval) {
-          clearInterval(this.timerInterval);
-          this.timerInterval = null;
-        }
-      }
+    const el = document.getElementById('rlCountdown');
+    const tick = () => {
+      const left = Math.max(0, Math.floor((this.nextSpinTime - Date.now()) / 1000));
+      if (el) el.textContent = left > 0 ? `Next spin in ${left}s` : 'Spinning…';
+      if (left <= 0) { clearInterval(this.timerInterval); this.timerInterval = null; }
     };
-
-    // Update immediately
-    updateTimer();
-    
-    // Then update every second
-    this.timerInterval = setInterval(updateTimer, 1000);
+    tick();
+    this.timerInterval = setInterval(tick, 1000);
   }
 
   updateHistoryDisplay() {
-    const historyEl = document.getElementById('rouletteHistory');
-    if (!historyEl) return;
-
-    if (!this.history || this.history.length === 0) {
-      historyEl.innerHTML = '<p class="no-history">No history yet</p>';
+    const el = document.getElementById('rlHistory');
+    if (!el) return;
+    if (!this.history?.length) {
+      el.innerHTML = '<div class="rl-empty-msg">No history</div>';
       return;
     }
-
-    const isMobile = window.innerWidth <= 768;
-    const gridStyle = isMobile ? 'style="display:flex;flex-wrap:wrap;gap:0.4rem;max-height:180px;overflow-y:auto;padding:0.5rem;"' : '';
-    const itemStyle = isMobile ? 'style="width:44px;height:44px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;font-size:0.85rem;font-weight:bold;aspect-ratio:1/1;"' : '';
-    
-    let html = `<div class="history-grid" ${gridStyle}>`;
-    this.history.forEach((result, index) => {
-      const colorClass = result.color;
-      html += `
-        <div class="history-item ${colorClass}" ${itemStyle} title="Number: ${result.number}, Color: ${result.color}">
-          <span class="history-number">${result.number}</span>
-        </div>
-      `;
-    });
-    html += '</div>';
-
-    historyEl.innerHTML = html;
+    el.innerHTML = [...this.history].reverse().slice(0, 30).map(r => `
+      <div class="rl-hist-chip rl-hist-${r.color}" title="${r.number} (${r.color})">${r.number}</div>
+    `).join('');
   }
 
+  showMsg(msg, type) {
+    const el = document.getElementById('rlActiveBetText');
+    if (!el) return;
+    const orig = el.textContent;
+    el.textContent = msg;
+    el.style.color = type === 'error' ? '#ff5555' : '#22c55e';
+    setTimeout(() => { el.textContent = orig; el.style.color = ''; }, 2000);
+  }
+
+  // ─── Cleanup ────────────────────────────────────────────────────
+
   destroy() {
-    // Clear timer interval
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-      this.timerInterval = null;
-    }
-    
-    // Only remove ROULETTE-SPECIFIC listeners — don't touch shared ones (connect, playerData, error)
+    if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
     if (this.socket) {
-      this.socket.removeAllListeners('rouletteState');
-      this.socket.removeAllListeners('rouletteBetsUpdate');
-      this.socket.removeAllListeners('rouletteSpinStart');
-      this.socket.removeAllListeners('rouletteSpinResult');
-      this.socket.removeAllListeners('nextSpinTime');
+      ['rouletteState', 'rouletteBetsUpdate', 'rouletteSpinStart', 'rouletteSpinResult', 'nextSpinTime']
+        .forEach(ev => this.socket.removeAllListeners(ev));
     }
-    
-    // Clear any pending bet
-    if (this.currentBet && this.socket && this.socket.connected) {
-      this.socket.emit('clearRouletteBet');
-    }
+    if (this.currentBet && this.socket?.connected) this.socket.emit('clearRouletteBet');
   }
 }
 
 window.RouletteGame = RouletteGame;
-
