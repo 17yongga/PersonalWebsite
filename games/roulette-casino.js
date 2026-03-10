@@ -134,10 +134,10 @@ class RouletteGame {
     const firstChip = track.querySelector('.rl-chip');
     if (firstChip) this.CHIP_W = firstChip.offsetWidth || this.CHIP_W;
 
-    // Idle: show chips starting from 0 so green is immediately visible
+    // Idle: start at chip 17 (second cycle) so chips exist on both sides — belt never looks truncated
     const wrapper = document.getElementById('rlBeltWrapper');
     const half = wrapper ? wrapper.offsetWidth / 2 : 400;
-    const idleTX = half - (1 * this.CHIP_W + this.CHIP_W / 2); // chip 1 centred
+    const idleTX = half - (17 * this.CHIP_W + this.CHIP_W / 2); // chip 17 (=2) centred
     track.style.transition = 'none';
     track.style.transform = `translate3d(${idleTX}px, 0, 0)`;
     track.offsetHeight; // force reflow
