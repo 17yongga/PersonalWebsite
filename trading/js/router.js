@@ -91,6 +91,12 @@ class Router {
             title: 'Profile'
         });
 
+        this.routes.set('/backtest', {
+            module: () => import('./pages/backtest.js?v=1'),
+            requiresAuth: true,
+            title: 'Backtesting Lab'
+        });
+
         // 404 fallback
         this.routes.set('*', {
             module: () => import('./pages/404.js?v=1771481317'),
