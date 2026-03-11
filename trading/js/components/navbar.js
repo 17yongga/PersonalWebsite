@@ -108,10 +108,6 @@ class Navbar {
                 <i class="fas fa-robot"></i>
                 Strategies
             </a>
-            <a href="#/backtest" class="nav-link" data-route="/backtest">
-                <i class="fas fa-flask"></i>
-                Backtest
-            </a>
         `;
     }
 
@@ -137,10 +133,6 @@ class Navbar {
             <a href="#/strategies" class="mobile-nav-link" data-route="/strategies">
                 <i class="fas fa-robot"></i>
                 Strategies
-            </a>
-            <a href="#/backtest" class="mobile-nav-link" data-route="/backtest">
-                <i class="fas fa-flask"></i>
-                Backtest
             </a>
         `;
     }

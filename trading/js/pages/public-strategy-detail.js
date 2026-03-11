@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { formatCurrency, formatPercent, escapeHtml } from '../utils.js';
 import { DecisionLog } from '../components/decision-log.js';
+import { BacktestPanel, SLUG_TO_KEY } from '../components/backtest-panel.js';
 
 const STRATEGY_CONFIG = {
     'momentum-hunter':    { name: 'Momentum Hunter',    emoji: '🚀', color: '#3fb950' },
@@ -411,6 +412,17 @@ function createPage() {
                         </div>
                         <div id="psd-decision-log"></div>
                     </div>
+
+                    <div class="psd-section" id="psd-backtest-section">
+                        <div class="psd-section-header" style="margin-bottom:1.25rem">
+                            <h3 class="psd-section-title" style="display:flex;align-items:center;gap:8px">
+                                <i class="fas fa-flask" style="color:${config.color}"></i>
+                                Backtesting Lab
+                            </h3>
+                            <span style="font-size:12px;color:#8b949e">Simulate this strategy on historical data</span>
+                        </div>
+                        <div id="psd-backtest-panel"></div>
+                    </div>
                 </div>
             `;
 
@@ -447,6 +459,21 @@ function createPage() {
             const logContainer = container.querySelector('#psd-decision-log');
             const decisionLog = new DecisionLog(logContainer, strategyId);
             await decisionLog.init();
+
+            // Mount BacktestPanel
+            const backtestKey = SLUG_TO_KEY[strategyId];
+            let backtestPanel = null;
+            if (backtestKey) {
+                const panelContainer = container.querySelector('#psd-backtest-panel');
+                if (panelContainer) {
+                    backtestPanel = new BacktestPanel({
+                        strategyKey: backtestKey,
+                        strategyName: config.name,
+                        color: config.color,
+                    });
+                    backtestPanel.mount(panelContainer);
+                }
+            }
         },
 
         destroy() {

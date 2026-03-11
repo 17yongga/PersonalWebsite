@@ -7,11 +7,13 @@ import modal from '../components/modal.js';
 import { formatCurrency, formatPercent, escapeHtml, formatDate } from '../utils.js';
 import { StrategyChart } from '../components/strategy-chart.js';
 import { DecisionLog } from '../components/decision-log.js';
+import { BacktestPanel, NAME_TO_KEY } from '../components/backtest-panel.js';
 
 function StrategiesPage() {
     let unsubscribers = [];
     let activeChart = null;
     let activeLog = null;
+    let activeBacktestPanel = null;
     let strategies = [];
     let selectedStrategy = null;
 
@@ -189,6 +191,14 @@ function StrategiesPage() {
                 <h3>Decision Log</h3>
                 <div id="decision-log-mount"></div>
             </div>
+
+            <div class="backtest-inline-section">
+                <div class="backtest-inline-header">
+                    <h3><i class="fas fa-flask"></i> Backtesting Lab</h3>
+                    <span class="backtest-inline-sub">Replay this strategy on historical data</span>
+                </div>
+                <div id="strategy-backtest-panel"></div>
+            </div>
         `;
 
         // Load additional data
@@ -203,6 +213,27 @@ function StrategiesPage() {
 
         activeLog = new DecisionLog(document.getElementById('decision-log-mount'), strategy.id);
         await activeLog.init();
+
+        // Mount inline BacktestPanel
+        const backtestKey = NAME_TO_KEY[strategy.name] || NAME_TO_KEY[strategy.type] || null;
+        const backtestContainer = document.getElementById('strategy-backtest-panel');
+        if (backtestKey && backtestContainer) {
+            const STRATEGY_COLORS = {
+                momentum: '#3b82f6',
+                mean_reversion: '#8b5cf6',
+                sector_rotation: '#10b981',
+                value_dividend: '#f59e0b',
+                volatility_breakout: '#ef4444',
+            };
+            activeBacktestPanel = new BacktestPanel({
+                strategyKey: backtestKey,
+                strategyName: strategy.name,
+                color: STRATEGY_COLORS[backtestKey] || '#3b82f6',
+            });
+            activeBacktestPanel.mount(backtestContainer);
+        } else if (backtestContainer) {
+            backtestContainer.innerHTML = `<p style="color:var(--text-secondary);font-size:0.85rem">Backtesting is available for the 5 automated quant strategies.</p>`;
+        }
     }
 
     async function loadStrategies() {
@@ -665,19 +696,16 @@ function StrategiesPage() {
         }
     };
     
-    window.runBacktest = async (strategyId) => {
-        try {
-            toast.info('Starting backtest...');
-            
-            await api.post(`/strategies/${strategyId}/backtest`);
-            
-            toast.success('Backtest started! Results will be available shortly.');
-            
-            // Reload strategy data after a delay
-            setTimeout(() => loadStrategies(), 2000);
-        } catch (error) {
-            console.error('Failed to run backtest:', error);
-            toast.error('Failed to start backtest');
+    window.runBacktest = (strategyId) => {
+        // Scroll to the inline backtest panel and trigger it
+        const panel = document.getElementById('strategy-backtest-panel');
+        if (panel) {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Auto-click the Run button if panel is mounted
+            const runBtn = panel.querySelector('.btp-run');
+            if (runBtn && !runBtn.disabled) {
+                setTimeout(() => runBtn.click(), 400);
+            }
         }
     };
     
@@ -698,6 +726,7 @@ function StrategiesPage() {
     function destroy() {
         // Clean up chart and log components
         if (activeChart) { activeChart.destroy(); activeChart = null; }
+        if (activeBacktestPanel) { activeBacktestPanel.destroy(); activeBacktestPanel = null; }
         activeLog = null;
 
         // Clean up subscriptions
@@ -1154,6 +1183,41 @@ if (!document.getElementById('strategies-page-styles')) {
             font-weight: 600;
             color: var(--text-primary);
             margin: 0 0 var(--space-4) 0;
+        }
+
+        /* Inline backtesting section */
+        .backtest-inline-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            margin-top: var(--space-6);
+        }
+
+        .backtest-inline-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+            margin-bottom: var(--space-5);
+        }
+
+        .backtest-inline-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .backtest-inline-header h3 i { color: var(--accent); }
+
+        .backtest-inline-sub {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
         }
 
         /* Create Strategy Form */
