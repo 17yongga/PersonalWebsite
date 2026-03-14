@@ -5080,3 +5080,647 @@ html[data-theme="light"] .rl-player-row {
   .rl-color-btn { padding: 0.7rem 0.3rem; }
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   COMPREHENSIVE MOBILE UX PASS — 375px–768px
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Global Mobile Standards ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Prevent iOS zoom on input focus — 16px minimum */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Universal touch-action for all interactive elements */
+  button, a, input, select, textarea, .btn, .clickable,
+  .quick-bet-btn, .color-bet-btn, .odds-card, .bet-option,
+  .number-btn, .game-card, .play-btn, .pa-btn, .prb, .pbb,
+  .pqb, .cqb, .rl-color-btn, .rl-quick-btn, .rl-adj-btn,
+  .bp-btn, .quick-buy-btn {
+    touch-action: manipulation;
+  }
+
+  /* Prevent horizontal overflow at the page level */
+  .game-view, .game-container {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Scrollable areas get momentum scrolling */
+  .cs2-events-list, .cs2-my-bets, .crash-feed,
+  .pach-results, .poker-chat-msgs, .rl-players-list,
+  .rl-history-strip, .all-bets-list, .roulette-history {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── 1. Lobby — Game Cards Grid ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .game-selection {
+    margin: 1.5rem auto;
+    padding: 0 0.75rem;
+  }
+
+  .section-title {
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+    margin: 0 0 1.5rem;
+  }
+
+  .game-card {
+    padding: 1.5rem 1.25rem;
+    border-radius: 14px;
+  }
+
+  .game-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .game-card h3 {
+    font-size: 1.1rem;
+    margin: 0 0 0.4rem;
+  }
+
+  .game-card p {
+    font-size: 0.85rem;
+    margin: 0 0 0.75rem;
+  }
+
+  .game-card .play-btn {
+    min-height: 44px;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+  }
+
+  /* Casino header — compact on mobile */
+  .casino-header-actions .btn-small:not(#mobileMenuToggle):not(.btn-logout) {
+    display: none;
+  }
+  .mobile-menu-toggle {
+    display: flex;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-selection {
+    margin: 1rem auto;
+    padding: 0 0.5rem;
+  }
+
+  .game-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .game-icon {
+    font-size: 2rem;
+  }
+}
+
+/* ── 2. Blackjack — Mobile Improvements ──────────────────────────── */
+@media (max-width: 768px) {
+  /* Insurance buttons stack vertically */
+  .insurance-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .insurance-buttons .btn {
+    max-width: 100%;
+    min-width: 100%;
+    min-height: 44px;
+  }
+
+  .insurance-section {
+    padding: 1rem;
+  }
+
+  /* Quick bets — 2 cols on tablets */
+  .quick-bet-btn {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Quick bets — maintain 4-col grid but with 44px targets */
+  .quick-bet-btn {
+    min-height: 44px;
+  }
+
+  /* Game controls — full width stacked */
+  .game-controls .btn {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+}
+
+/* ── 3. Coin Flip — Mobile Improvements ──────────────────────────── */
+@media (max-width: 768px) {
+  /* Form fields full-width */
+  .coinflip-casino-container {
+    padding: 0 0.5rem;
+  }
+
+  .bet-setup-section .bet-input-group input {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .choice-btn, .btn-choice {
+    min-height: 60px;
+  }
+
+  .btn-quick-bet {
+    min-height: 44px;
+    padding: 0.6rem 1rem;
+  }
+
+  .btn-create-confirm {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  /* Room items — full width with better spacing */
+  .room-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .room-item button {
+    min-height: 44px;
+  }
+}
+
+/* ── 4. Crash — Mobile Layout Fix ────────────────────────────────── */
+@media (max-width: 768px) {
+  .crash-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sidebar (bet controls) FIRST on mobile */
+  .crash-sidebar {
+    order: -1;
+  }
+
+  .crash-main {
+    order: 0;
+  }
+
+  /* Canvas fills width */
+  .crash-canvas-wrap {
+    width: 100%;
+    aspect-ratio: 16/10;
+  }
+
+  .crash-canvas-wrap canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  .crash-multiplier {
+    font-size: 2.5rem;
+  }
+
+  /* Quick bets wrap properly */
+  .crash-quick-bets {
+    flex-wrap: wrap;
+  }
+
+  .cqb {
+    min-height: 44px;
+    flex: 1 1 calc(25% - 0.35rem);
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Auto-cashout input */
+  .crash-bet-group input {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  /* Bet/cashout button */
+  .crash-bet-section .btn,
+  .crash-bet-section .btn-full,
+  .crash-cashout-btn {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  .crash-bet-section {
+    padding: 1rem;
+  }
+
+  .crash-feed-section {
+    padding: 0.75rem;
+  }
+
+  /* History pills wrap */
+  .crash-history {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .crash-multiplier {
+    font-size: 2rem;
+  }
+
+  .crash-status {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.75rem;
+  }
+
+  .cqb {
+    flex: 1 1 calc(25% - 0.35rem);
+    font-size: 0.75rem;
+    padding: 0.4rem 0.25rem;
+  }
+}
+
+/* ── 5. Pachinko — Mobile Layout Fix ─────────────────────────────── */
+@media (max-width: 768px) {
+  .pachinko-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* Controls FIRST on mobile */
+  .pachinko-controls {
+    order: -1;
+  }
+
+  .pachinko-canvas-wrap {
+    order: 0;
+    width: 100%;
+  }
+
+  .pachinko-canvas-wrap canvas {
+    width: 100%;
+    height: auto;
+  }
+
+  /* Touch targets for controls */
+  .pqb {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .prb, .pbb {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pach-drop-btn {
+    min-height: 48px;
+    font-size: 1.05rem;
+  }
+
+  .pach-group input[type="number"] {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  /* Risk + ball button rows wrap */
+  .pach-risk-btns, .pach-ball-btns {
+    flex-wrap: wrap;
+  }
+
+  .pach-quick {
+    flex-wrap: wrap;
+  }
+
+  .pach-results {
+    max-height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pach-risk-btns .prb, .pach-ball-btns .pbb {
+    flex: 1 1 calc(33% - 0.4rem);
+    font-size: 0.8rem;
+  }
+
+  .pach-quick .pqb {
+    flex: 1 1 calc(25% - 0.35rem);
+    font-size: 0.75rem;
+  }
+}
+
+/* ── 6. Poker — Mobile Improvements ──────────────────────────────── */
+@media (max-width: 768px) {
+  .poker-casino-container {
+    padding: 0 0.5rem;
+  }
+
+  /* Lobby — readable */
+  .lobby-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  .lobby-header h3 {
+    text-align: center;
+  }
+
+  .lobby-header .btn {
+    min-height: 44px;
+  }
+
+  .poker-tables-list {
+    grid-template-columns: 1fr;
+  }
+
+  /* Create game modal — full-width fields */
+  .poker-modal-content {
+    max-width: calc(100% - 1rem);
+    margin: 0.5rem;
+  }
+
+  .poker-modal-body input[type="text"],
+  .poker-modal-body input[type="number"] {
+    font-size: 16px;
+    min-height: 44px;
+    padding: 0.75rem;
+  }
+
+  .quick-buy-in .quick-buy-btn {
+    min-height: 44px;
+  }
+
+  /* Action buttons — 2-col grid on mobile */
+  .poker-action-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .pa-btn {
+    min-height: 44px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Bet control input */
+  .bet-ctrl-row input[type="number"] {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .bp-btn {
+    min-height: 36px;
+    padding: 0.4rem 0.6rem;
+  }
+
+  /* Chat — already collapsible via toggle bar */
+  .poker-chat-section {
+    margin-top: 0.5rem;
+  }
+
+  .poker-chat-input-row input {
+    font-size: 16px;
+    min-height: 40px;
+  }
+
+  /* Table top bar */
+  .poker-table-top-bar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .poker-action-btns {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pa-btn {
+    min-height: 48px;
+    font-size: 0.8rem;
+    padding: 0.5rem 0.5rem;
+  }
+
+  /* Bet presets wrap */
+  .bet-presets {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .bp-btn {
+    flex: 1 1 auto;
+    min-width: calc(33% - 0.35rem);
+  }
+}
+
+/* ── 7. CS2 Betting — Mobile Improvements ────────────────────────── */
+@media (max-width: 768px) {
+  /* Filter/Bet tabs — horizontal scroll */
+  .bets-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+
+  .bets-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .bet-tab {
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+  }
+
+  /* Odds cards — proper touch targets */
+  .odds-card {
+    min-height: 44px;
+    padding: 0.75rem;
+  }
+
+  /* Bet slip modal — full screen on mobile */
+  .cs2-betslip-modal-content {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 12px 12px 0 0;
+    margin: 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    animation: slideUpFull 0.3s ease;
+  }
+
+  @keyframes slideUpFull {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .cs2-betslip-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  /* Bet input in betslip */
+  .cs2-bet-controls input {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .betslip-actions .btn {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  /* Tournament headers — compact */
+  .tournament-header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Match card hover — disable on touch */
+  .cs2-event-card:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .cs2-betslip-modal-content {
+    padding: 1rem 0.75rem;
+    border-radius: 12px 12px 0 0;
+    max-height: 85vh;
+  }
+
+  /* Odds buttons — row layout with team name + odds */
+  .odds-card {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 48px;
+  }
+}
+
+/* ── 8. Roulette — Fill Gaps ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* New roulette (rl-*) — bet panel improvements */
+  .rl-amount-input {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .rl-adj-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .rl-quick-btn {
+    min-height: 40px;
+    font-size: 0.82rem;
+  }
+
+  .rl-color-btn {
+    min-height: 60px;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .rl-clear-btn {
+    min-height: 36px;
+    padding: 0.4rem 0.75rem;
+  }
+
+  /* Status row wraps nicely */
+  .rl-status-row {
+    font-size: 0.85rem;
+    gap: 0.5rem;
+    padding: 0.5rem 0.6rem;
+  }
+
+  /* Old roulette — number grid on mobile */
+  .number-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.4rem;
+  }
+
+  .number-btn {
+    min-height: 44px;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .bet-option {
+    min-height: 44px;
+    padding: 0.65rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .number-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .rl-status-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+}
+
+/* ── 375px — iPhone SE minimum ───────────────────────────────────── */
+@media (max-width: 375px) {
+  /* Tighten padding globally */
+  .game-view {
+    padding: 0.375rem 0.25rem;
+  }
+
+  .game-container {
+    padding: 0 0.25rem;
+  }
+
+  /* Blackjack cards smaller */
+  .card {
+    width: 48px;
+    height: 67px;
+    min-width: 48px;
+    min-height: 67px;
+  }
+
+  /* Poker felt */
+  .poker-felt {
+    min-height: 260px;
+    padding: 35px 10px;
+    border-width: 4px;
+    border-radius: 110px/75px;
+  }
+
+  .poker-seat { width: 85px; }
+  .seat-panel { min-width: 55px; padding: 0.15rem 0.25rem; }
+  .seat-name { font-size: 0.55rem; }
+  .seat-chips { font-size: 0.5rem; }
+  .seat-cards .playing-card { width: 26px; height: 36px; }
+
+  /* Crash */
+  .crash-multiplier { font-size: 1.8rem; }
+
+  /* CS2 */
+  .cs2-event-card {
+    padding: 0.75rem;
+  }
+
+  /* Coin */
+  .coin {
+    width: clamp(100px, 28vw, 130px);
+    height: clamp(100px, 28vw, 130px);
+  }
+}
+
