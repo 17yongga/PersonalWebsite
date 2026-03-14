@@ -108,6 +108,10 @@ class Navbar {
                 <i class="fas fa-robot"></i>
                 Strategies
             </a>
+            <a href="#/risk" class="nav-link" data-route="/risk">
+                <i class="fas fa-shield-alt"></i>
+                Risk
+            </a>
         `;
     }
 
@@ -133,6 +137,10 @@ class Navbar {
             <a href="#/strategies" class="mobile-nav-link" data-route="/strategies">
                 <i class="fas fa-robot"></i>
                 Strategies
+            </a>
+            <a href="#/risk" class="mobile-nav-link" data-route="/risk">
+                <i class="fas fa-shield-alt"></i>
+                Risk
             </a>
         `;
     }

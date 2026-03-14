@@ -97,6 +97,12 @@ class Router {
             title: 'Backtesting Lab'
         });
 
+        this.routes.set('/risk', {
+            module: () => import('./pages/risk.js?v=1'),
+            requiresAuth: true,
+            title: 'Risk Dashboard'
+        });
+
         // 404 fallback
         this.routes.set('*', {
             module: () => import('./pages/404.js?v=1771481317'),

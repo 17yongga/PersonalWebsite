@@ -19,6 +19,7 @@ const strategyRoutes = require('./routes/strategies');
 const watchlistRoutes = require('./routes/watchlist');
 const dashboardRoutes = require('./routes/dashboard');
 const backtestRoutes = require('./routes/backtest');
+const riskRouter = require('./routes/risk');
 
 const app = express();
 
@@ -87,6 +88,7 @@ app.use('/api/v1/strategies', strategyRoutes);
 app.use('/api/v1/watchlist', watchlistRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes); // Public dashboard routes
 app.use('/api/v1/backtest', backtestRoutes);   // Backtesting engine
+app.use('/api/v1/risk', riskRouter);           // Risk dashboard
 
 // Serve static files in production
 if (config.nodeEnv === 'production') {
