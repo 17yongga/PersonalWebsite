@@ -283,6 +283,30 @@
     .stat-pill strong { color: var(--text); }
     .stat-pill span { color: var(--muted); }
 
+    /* ─── SAVINGS RATE CALCULATOR ─── */
+    .fi-slider {
+      width: 100%; -webkit-appearance: none; appearance: none;
+      height: 6px; border-radius: 3px;
+      background: var(--border); outline: none; cursor: pointer;
+    }
+    .fi-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--green); cursor: pointer;
+      box-shadow: 0 0 10px rgba(63,185,80,0.5);
+      transition: box-shadow 0.2s;
+    }
+    .fi-slider::-webkit-slider-thumb:hover { box-shadow: 0 0 16px rgba(63,185,80,0.8); }
+    .fi-slider::-moz-range-thumb {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--green); cursor: pointer; border: none;
+    }
+    .scenario-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 0; border-bottom: 1px solid rgba(48,54,61,0.4);
+    }
+    .scenario-row:last-child { border-bottom: none; }
+
     /* ─── RESPONSIVE ─── */
     @media (max-width: 900px) {
       main { padding: 16px; }
@@ -597,6 +621,99 @@
 
     </div>
 
+    <!-- ─── SECTION: SAVINGS RATE & FI CALCULATOR ─── -->
+    <div class="section-header">💰 Savings Rate & FI Calculator</div>
+    <div class="grid-2">
+
+      <!-- LEFT: Savings Rate Gauge -->
+      <div class="card">
+        <div class="card-title"><span class="dot dot-green"></span>Savings Rate Scorecard</div>
+
+        <div style="text-align:center; padding:4px 0 12px;">
+          <svg viewBox="0 0 200 115" style="width:230px; height:auto; overflow:visible;">
+            <!-- Track -->
+            <path d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke="#30363d" stroke-width="14" stroke-linecap="round"/>
+            <!-- FI minimum arc (43.8% = $2,407/$5,500) → angle 78.84°, endpoint (82.6, 11.7) -->
+            <path d="M 10 100 A 90 90 0 0 1 82.6 11.7" fill="none" stroke="#d29922" stroke-width="14" stroke-linecap="round" opacity="0.45"/>
+            <!-- Current rate fill (52.6%) → angle 94.68°, endpoint (107.4, 10.3) -->
+            <path d="M 10 100 A 90 90 0 0 1 107.4 10.3" fill="none" stroke="#3fb950" stroke-width="14" stroke-linecap="round"/>
+            <!-- Needle dot at current -->
+            <circle cx="107.4" cy="10.3" r="5" fill="#3fb950" filter="url(#glow)"/>
+            <defs><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+            <!-- Rate text -->
+            <text x="100" y="84" text-anchor="middle" font-size="30" font-weight="700" fill="#3fb950" font-family="-apple-system,sans-serif">52.6%</text>
+            <text x="100" y="100" text-anchor="middle" font-size="10" fill="#8b949e" font-family="-apple-system,sans-serif">OF TAKE-HOME SAVED</text>
+            <!-- Axis labels -->
+            <text x="12" y="113" font-size="9" fill="#484f58" font-family="-apple-system,sans-serif">0%</text>
+            <text x="96" y="16" font-size="9" fill="#484f58" font-family="-apple-system,sans-serif">50%</text>
+            <text x="178" y="113" font-size="9" fill="#484f58" font-family="-apple-system,sans-serif">100%</text>
+            <!-- FI min label -->
+            <text x="56" y="24" font-size="8" fill="#d29922" font-family="-apple-system,sans-serif">FI min</text>
+            <text x="56" y="34" font-size="8" fill="#d29922" font-family="-apple-system,sans-serif">43.8%</text>
+          </svg>
+        </div>
+
+        <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:14px;">
+          <div class="stat-pill"><strong style="color:var(--green)">$2,894/mo</strong> <span>deployed</span></div>
+          <div class="stat-pill"><strong style="color:var(--text)">$5,500</strong> <span>take-home</span></div>
+          <div class="stat-pill"><strong style="color:var(--yellow)">$2,407 min</strong> <span>for FI by 30</span></div>
+        </div>
+
+        <div style="background:var(--green-dim); border:1px solid var(--green); border-radius:8px; padding:12px 16px; margin-bottom:14px;">
+          <div style="font-size:0.85rem; font-weight:600; color:var(--green); margin-bottom:3px;">✅ On Track — $487/mo above FI minimum</div>
+          <div style="font-size:0.78rem; color:var(--muted);">You need $2,407/mo to reach $190K by 30. You're saving $487 more than required. Keep it up.</div>
+        </div>
+
+        <div style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px;">Where your savings come from</div>
+        <div class="flow-row"><div class="flow-label" style="font-size:0.8rem;">RRSP (pre-paycheck)</div><div class="flow-bar-wrap"><div class="flow-bar" style="width:13.6%; background:var(--purple)"></div></div><div class="flow-amount" style="color:var(--purple); font-size:0.8rem;">$394</div></div>
+        <div class="flow-row"><div class="flow-label" style="font-size:0.8rem;">TFSA</div><div class="flow-bar-wrap"><div class="flow-bar" style="width:21.8%; background:var(--green)"></div></div><div class="flow-amount pos" style="font-size:0.8rem;">$1,200</div></div>
+        <div class="flow-row"><div class="flow-label" style="font-size:0.8rem;">Travel Fund</div><div class="flow-bar-wrap"><div class="flow-bar" style="width:7.3%; background:var(--blue)"></div></div><div class="flow-amount" style="color:var(--blue); font-size:0.8rem;">$400</div></div>
+        <div class="flow-row"><div class="flow-label" style="font-size:0.8rem;">Crypto</div><div class="flow-bar-wrap"><div class="flow-bar" style="width:3.6%; background:var(--yellow)"></div></div><div class="flow-amount" style="color:var(--yellow); font-size:0.8rem;">$200</div></div>
+        <div class="flow-row"><div class="flow-label" style="font-size:0.8rem;">Joint Portfolio</div><div class="flow-bar-wrap"><div class="flow-bar" style="width:3.6%; background:var(--purple)"></div></div><div class="flow-amount" style="color:var(--purple); font-size:0.8rem;">$200</div></div>
+        <div class="flow-row"><div class="flow-label" style="font-size:0.8rem;">Floating/Unallocated</div><div class="flow-bar-wrap"><div class="flow-bar" style="width:9.1%; background:var(--muted)"></div></div><div class="flow-amount" style="color:var(--muted); font-size:0.8rem;">$500</div></div>
+      </div>
+
+      <!-- RIGHT: FI Runway Calculator -->
+      <div class="card">
+        <div class="card-title"><span class="dot dot-blue"></span>FI Runway Calculator</div>
+        <div style="font-size:0.78rem; color:var(--muted); margin-bottom:6px;">Drag to model different monthly contribution scenarios</div>
+
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+          <input type="range" id="fiSlider" min="500" max="5000" step="50" value="2894" class="fi-slider" oninput="updateFICalc(this.value)">
+          <div id="sliderVal" style="width:80px; text-align:right; font-size:1.1rem; font-weight:700; color:var(--green); flex-shrink:0;">$2,894</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+          <div style="background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:16px; text-align:center;">
+            <div style="font-size:0.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">Projected NW at 30</div>
+            <div id="projNW" style="font-size:1.9rem; font-weight:700; color:var(--green);">$216K</div>
+            <div id="projVsTarget" style="font-size:0.72rem; color:var(--green); margin-top:4px;">+$26K above target</div>
+          </div>
+          <div style="background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:16px; text-align:center;">
+            <div style="font-size:0.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">FI Status</div>
+            <div id="fiStatus" style="font-size:1.1rem; font-weight:700; color:var(--green);">✅ On Track</div>
+            <div id="fiStatusSub" style="font-size:0.72rem; color:var(--muted); margin-top:4px;">Hits $190K target</div>
+          </div>
+        </div>
+
+        <div style="font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Return scenarios at selected monthly</div>
+        <div id="scenarioRows"></div>
+
+        <div style="background:var(--blue-dim); border:1px solid var(--blue); border-radius:8px; padding:12px 16px; margin-top:16px;">
+          <div style="font-size:0.72rem; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.06em;">🎯 Next Milestone</div>
+          <div id="nextMilestone" style="font-size:1rem; font-weight:700; color:var(--blue);">$50K → May 2026</div>
+          <div id="nextMilestoneSub" style="font-size:0.78rem; color:var(--muted); margin-top:3px;">~2 months away at current pace</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Milestone Timeline (full width) -->
+    <div class="card grid-full" style="margin-bottom:20px;">
+      <div class="card-title"><span class="dot dot-green"></span>Wealth Milestone Timeline — Projected at Current Pace</div>
+      <div id="milestoneTimeline"></div>
+    </div>
+
     <!-- ─── SECTION: ACTIONS + WATCHLIST ─── -->
     <div class="section-header">Prioritized Actions & Market Watchlist</div>
     <div class="grid-2">
@@ -609,7 +726,7 @@
           <div class="action-num p1">1</div>
           <div class="action-body">
             <strong>Trim TSLA to ≤10% of TFSA</strong>
-            <span>Sell ~17% of position. Bank the +35% gain. Reinvest into SPY.</span>
+            <span>Now 27.1% of TFSA — hit a new high today even as TSLA fell 3.14%. Bank the +31.9% gain. Reinvest into SPY. Market dip = decent timing to rotate out.</span>
           </div>
           <div class="action-tag tag-urgent">🔴 URGENT</div>
         </div>
@@ -618,43 +735,43 @@
           <div class="action-num p1">2</div>
           <div class="action-body">
             <strong>Deploy $2,072 idle TFSA cash → SPY</strong>
-            <span>Sitting at 0% return. One buy order fixes this today.</span>
+            <span>S&P 500 down 2.88% YTD and dipped again today. Idle cash at 0% — this is actually a better entry than a month ago. One buy order fixes this.</span>
           </div>
           <div class="action-tag tag-urgent">🔴 URGENT</div>
         </div>
 
         <div class="action-item">
-          <div class="action-num p2">3</div>
+          <div class="action-num p1">3</div>
           <div class="action-body">
-            <strong>Build Emergency Fund $3K → $9K</strong>
-            <span>Redirect $300/mo from floating cash. Done in 20 months.</span>
+            <strong>Cut DASH — stop loss triggered</strong>
+            <span>Down 24.4% from cost. Crossed the -20% stop loss threshold. Insider selling at $176 on Mar 9, now $161. No thesis recovery in sight. Cut, take the loss, redeploy.</span>
           </div>
-          <div class="action-tag tag-soon">🟡 SOON</div>
+          <div class="action-tag tag-urgent">🔴 URGENT</div>
         </div>
 
         <div class="action-item">
           <div class="action-num p2">4</div>
           <div class="action-body">
-            <strong>Swap ARKK → QQQ</strong>
-            <span>Better tech/AI exposure, lower fees, better track record.</span>
+            <strong>Build Emergency Fund $3K → $9K</strong>
+            <span>Redirect $300/mo from floating cash. Done in 20 months. Geopolitical risk (oil $100+) makes this more pressing — job market is volatile.</span>
           </div>
           <div class="action-tag tag-soon">🟡 SOON</div>
         </div>
 
         <div class="action-item">
-          <div class="action-num p3">5</div>
+          <div class="action-num p2">5</div>
           <div class="action-body">
-            <strong>Tax refund → TFSA when it arrives</strong>
-            <span>Est. $1,400–$1,900. Tag Dr.Molt when it lands.</span>
+            <strong>Swap ARKK → QQQ</strong>
+            <span>ARKK down 24.18% from 52W high. Better tech/AI exposure, lower fees, better track record in QQQ. Clean swap.</span>
           </div>
-          <div class="action-tag tag-plan">🔵 PLAN</div>
+          <div class="action-tag tag-soon">🟡 SOON</div>
         </div>
 
         <div class="action-item">
           <div class="action-num p3">6</div>
           <div class="action-body">
-            <strong>Review DASH thesis</strong>
-            <span>Down 14.2%. Is there a real reason to hold? Or cut losses?</span>
+            <strong>Tax refund → TFSA when it arrives</strong>
+            <span>Est. $1,400–$1,900. Market pullback makes this a better deployment window. Tag Dr.Molt when it lands.</span>
           </div>
           <div class="action-tag tag-plan">🔵 PLAN</div>
         </div>
@@ -716,9 +833,209 @@
 
     </div>
 
+    <!-- ─── SECTION: ACTION LOG ─── -->
+    <div class="section-header">📋 Action Log</div>
+    <div class="card grid-full" style="margin-bottom:20px;">
+      <div class="card-title"><span class="dot dot-green"></span>Actions Taken &amp; Pending</div>
+      <div style="overflow-x:auto;">
+        <table class="holdings-table" style="width:100%;">
+          <thead>
+            <tr>
+              <th style="width:130px;">Date</th>
+              <th>Action</th>
+              <th style="width:160px;">Status</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--muted);font-size:0.8rem;white-space:nowrap;">2026-03-10</td>
+              <td style="font-weight:600;">Reviewed &amp; approved PM dashboard overhaul</td>
+              <td><span class="badge ok">✅ Done</span></td>
+              <td style="color:var(--muted);font-size:0.82rem;">Cleared all 10 pending decisions</td>
+            </tr>
+            <tr>
+              <td style="color:var(--muted);font-size:0.8rem;white-space:nowrap;">2026-03-06</td>
+              <td style="font-weight:600;">Wealth dashboard deployed to gary-yong.com/wealth.html</td>
+              <td><span class="badge ok">✅ Done</span></td>
+              <td style="color:var(--muted);font-size:0.82rem;">Password-gated, Chart.js visualizations</td>
+            </tr>
+            <tr>
+              <td style="color:var(--muted);font-size:0.8rem;white-space:nowrap;">Pending</td>
+              <td style="font-weight:600;">Build emergency fund to $9K min (currently $3K)</td>
+              <td><span class="badge warn">🔴 Blocked</span></td>
+              <td style="color:var(--muted);font-size:0.82rem;">Waiting on new job income</td>
+            </tr>
+            <tr>
+              <td style="color:var(--muted);font-size:0.8rem;white-space:nowrap;">Pending</td>
+              <td style="font-weight:600;">Deploy $2,072 idle TFSA cash</td>
+              <td><span class="badge" style="background:var(--yellow-dim);color:var(--yellow);border:1px solid var(--yellow);">🟡 In Progress</span></td>
+              <td style="color:var(--muted);font-size:0.82rem;">Awaiting allocation decision</td>
+            </tr>
+            <tr>
+              <td style="color:var(--muted);font-size:0.8rem;white-space:nowrap;">2026-03-13</td>
+              <td style="font-weight:600;">Portfolio values refreshed from market close</td>
+              <td><span class="badge ok">✅ Done</span></td>
+              <td style="color:var(--muted);font-size:0.82rem;">S&P 500 -0.61% on day. TFSA $17,404 · Crypto $1,219 · NW $42,900</td>
+            </tr>
+            <tr>
+              <td style="color:var(--muted);font-size:0.8rem;white-space:nowrap;">Pending</td>
+              <td style="font-weight:600;">Trim TSLA from 27.1% → ≤10% of TFSA</td>
+              <td><span class="badge warn">🔴 Action Required</span></td>
+              <td style="color:var(--muted);font-size:0.82rem;">TSLA -3.14% today. +31.9% gain still available to bank. Reinvest → SPY</td>
+            </tr>
+            <tr>
+              <td style="color:var(--muted);font-size:0.8rem;white-space:nowrap;">Pending</td>
+              <td style="font-weight:600;">Cut DASH — stop loss triggered (-24.4%)</td>
+              <td><span class="badge warn">🔴 Action Required</span></td>
+              <td style="color:var(--muted);font-size:0.82rem;">Crossed -20% threshold. Insiders sold Mar 9 at $176, now $161. Exit.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ACTION LOG -->
+    <div class="section-header" style="margin-top:32px;">Portfolio Maintenance Action Log</div>
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-title"><span class="dot dot-red"></span>Exact Steps — Do These Now</div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:16px;">Step-by-step instructions. Open Wealthsimple and follow each one in order.</div>
+
+      <div class="action-item">
+        <div class="action-num p1">1</div>
+        <div class="action-body">
+          <strong>Trim TSLA: Reduce from 27.1% → ≤10% of TFSA</strong>
+          <span>Wealthsimple → TFSA → TSLA → Sell. At $395 USD/share, sell ~4–5 shares to bring concentration to ~12–15%, then plan a second trim. You still have +31.9% gain to bank. TSLA fell 3.14% today alone — concentration risk is real. After sale, buy SPY with proceeds.</span>
+        </div>
+        <div class="action-tag tag-urgent">🔴 NOW</div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-num p1">2</div>
+        <div class="action-body">
+          <strong>Cut DASH entirely — stop loss triggered at -24.4%</strong>
+          <span>Wealthsimple → TFSA → DASH → Sell all (4.2578 shares ≈ $946 CAD). The -20% stop loss was crossed. Insiders sold at $176 on Mar 9, stock is now $161. No catalyst visible. Take the $222 USD loss and redeploy into SPY. Don't hold losers hoping they come back.</span>
+        </div>
+        <div class="action-tag tag-urgent">🔴 NOW</div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-num p1">3</div>
+        <div class="action-body">
+          <strong>Deploy idle TFSA cash: Buy $2,072 of SPY</strong>
+          <span>Wealthsimple → TFSA → Search SPY → Buy → Enter $2,072. S&P 500 is 2.88% below its 2026 start and geopolitical uncertainty is creating a better entry. This cash is earning 0% — one click fixes it. Takes 2 minutes.</span>
+        </div>
+        <div class="action-tag tag-urgent">🔴 NOW</div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-num p1">4</div>
+        <div class="action-body">
+          <strong>Sell SHIB entirely — tax-loss harvest</strong>
+          <span>Wealthsimple → Crypto → SHIB → Sell all (1,007,981 SHIB ≈ $7.61 CAD). Down 85.53% — it's dead weight. The $45 loss offsets future crypto gains. Reallocate that $7 to BTC on your next DCA.</span>
+        </div>
+        <div class="action-tag tag-urgent">🔴 NOW</div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-num p2">4</div>
+        <div class="action-body">
+          <strong>Swap ARKK → QQQ</strong>
+          <span>Wealthsimple → TFSA → ARKK → Sell all ($328 CAD). Then buy QQQ with proceeds. QQQ tracks Nasdaq-100, better returns, lower fees, more diversified tech exposure than Cathie Wood's concentrated bets.</span>
+        </div>
+        <div class="action-tag tag-soon">🟡 THIS WEEK</div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-num p2">5</div>
+        <div class="action-body">
+          <strong>Emergency fund: redirect $300/mo from floating cash</strong>
+          <span>Set up automatic transfer: Chequing → High-Interest Savings (EQ Bank or Wealthsimple Cash) → $300/mo. Target: $9,000. You're at $3,000 now. At $300/mo = done in 20 months. Start this month.</span>
+        </div>
+        <div class="action-tag tag-soon">🟡 THIS WEEK</div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-num p2">6</div>
+        <div class="action-body">
+          <strong>Swap ARKK → QQQ</strong>
+          <span>Wealthsimple → TFSA → ARKK → Sell all ($315 CAD). Then buy QQQ with proceeds. QQQ tracks Nasdaq-100, better returns, lower fees, more diversified tech exposure than Cathie Wood's concentrated bets. ARKK is down 24.18% from its 52W high.</span>
+        </div>
+        <div class="action-tag tag-soon">🟡 THIS WEEK</div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-num p3">7</div>
+        <div class="action-body">
+          <strong>Tax refund → TFSA when it arrives (est. $1,400–$1,900)</strong>
+          <span>When your tax refund lands in RBC/chequing: transfer the full amount to Wealthsimple TFSA → buy SPY. Don't let it sit in chequing. Message Dr.Molt when it hits and I'll remind you to deploy it.</span>
+        </div>
+        <div class="action-tag tag-plan">🔵 WHEN REFUND ARRIVES</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-title"><span class="dot dot-blue"></span>Monthly Maintenance Checklist</div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:16px;">Do this on the 1st of every month. Takes 15 minutes.</div>
+      <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);color:var(--muted);">
+            <th style="text-align:left;padding:6px 8px;width:40px;">#</th>
+            <th style="text-align:left;padding:6px 8px;">Task</th>
+            <th style="text-align:left;padding:6px 8px;">How</th>
+            <th style="text-align:left;padding:6px 8px;width:120px;">Frequency</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;color:var(--green);font-weight:700;">1</td>
+            <td style="padding:8px;font-weight:600;">Confirm TFSA auto-buys ran</td>
+            <td style="padding:8px;color:var(--muted);">Wealthsimple → Activity → check SPY ($250 bi-weekly) + NVDA ($50) + ICLN ($1.50/day) hit</td>
+            <td style="padding:8px;color:var(--muted);">Monthly</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;color:var(--green);font-weight:700;">2</td>
+            <td style="padding:8px;font-weight:600;">Check TFSA idle cash</td>
+            <td style="padding:8px;color:var(--muted);">If idle cash > $500, buy SPY. Don't let it accumulate.</td>
+            <td style="padding:8px;color:var(--muted);">Monthly</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;color:var(--yellow);font-weight:700;">3</td>
+            <td style="padding:8px;font-weight:600;">Check single-stock concentration</td>
+            <td style="padding:8px;color:var(--muted);">No single stock > 15% of TFSA. If TSLA/NVDA/AMD runs up past that, trim.</td>
+            <td style="padding:8px;color:var(--muted);">Monthly</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;color:var(--yellow);font-weight:700;">4</td>
+            <td style="padding:8px;font-weight:600;">Confirm emergency fund transfer hit</td>
+            <td style="padding:8px;color:var(--muted);">Check HISA balance grew by $300. If not, transfer manually.</td>
+            <td style="padding:8px;color:var(--muted);">Monthly</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;color:var(--blue);font-weight:700;">5</td>
+            <td style="padding:8px;font-weight:600;">Update Dr.Molt with latest balances</td>
+            <td style="padding:8px;color:var(--muted);">Screenshot Wealthsimple portfolio → send to Wealth group chat. I'll update the dashboard.</td>
+            <td style="padding:8px;color:var(--muted);">Monthly</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;color:var(--blue);font-weight:700;">6</td>
+            <td style="padding:8px;font-weight:600;">Review positions with losses > 15%</td>
+            <td style="padding:8px;color:var(--muted);">For each: is the thesis still valid? If not, cut. Dead weight stops compounding.</td>
+            <td style="padding:8px;color:var(--muted);">Quarterly</td>
+          </tr>
+          <tr>
+            <td style="padding:8px;color:var(--blue);font-weight:700;">7</td>
+            <td style="padding:8px;font-weight:600;">Check age-30 forecast progress</td>
+            <td style="padding:8px;color:var(--muted);">Net worth should grow ~$2,900/mo. If behind 2 months in a row → discuss reallocation.</td>
+            <td style="padding:8px;color:var(--muted);">Quarterly</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <!-- Footer -->
     <div style="text-align:center; padding:32px 0 16px; color:var(--muted); font-size:0.78rem;">
-      🩺 Dr.Molt Wealth Dashboard &nbsp;·&nbsp; Data as of June 13, 2026 &nbsp;·&nbsp; For informational purposes only — not financial advice
+      🩺 Dr.Molt Wealth Dashboard &nbsp;·&nbsp; Data as of March 13, 2026 &nbsp;·&nbsp; For informational purposes only — not financial advice
     </div>
 
   </main>
@@ -742,6 +1059,90 @@ function unlock() {
 Chart.defaults.color = '#8b949e';
 Chart.defaults.borderColor = '#30363d';
 Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
+
+// ─── FI CALCULATOR GLOBALS ───
+const FI_CURRENT_NW = 43018;
+const FI_TARGET = 190000;
+const FI_START = new Date(2026, 2, 1);
+
+function calcFV(pv, pmt, annualRate, months) {
+  const r = annualRate / 12;
+  return pv * Math.pow(1 + r, months) + pmt * (Math.pow(1 + r, months) - 1) / r;
+}
+function monthsToMilestone(target, pmt, rate) {
+  if (FI_CURRENT_NW >= target) return 0;
+  const r = rate / 12;
+  let nw = FI_CURRENT_NW;
+  for (let m = 1; m <= 120; m++) { nw = nw * (1 + r) + pmt; if (nw >= target) return m; }
+  return null;
+}
+function fmtMonth(months) {
+  if (months === null) return '> 10yr';
+  const d = new Date(FI_START);
+  d.setMonth(d.getMonth() + months);
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+function updateFICalc(val) {
+  const pmt = +val;
+  document.getElementById('sliderVal').textContent = '$' + pmt.toLocaleString();
+  const projBase = calcFV(FI_CURRENT_NW, pmt, 0.07, 48);
+  const delta = projBase - FI_TARGET;
+  document.getElementById('projNW').textContent = '$' + Math.round(projBase / 1000) + 'K';
+  document.getElementById('projNW').style.color = projBase >= FI_TARGET ? 'var(--green)' : 'var(--red)';
+  document.getElementById('projVsTarget').textContent = (delta >= 0 ? '+' : '') + '$' + Math.round(Math.abs(delta) / 1000) + 'K ' + (delta >= 0 ? 'above' : 'below') + ' target';
+  document.getElementById('projVsTarget').style.color = delta >= 0 ? 'var(--green)' : 'var(--red)';
+  if (projBase >= FI_TARGET) {
+    document.getElementById('fiStatus').textContent = '✅ On Track';
+    document.getElementById('fiStatus').style.color = 'var(--green)';
+    document.getElementById('fiStatusSub').textContent = 'Reaches $190K by age 30';
+  } else {
+    let needed = pmt;
+    for (let p = pmt; p <= 10000; p += 50) { if (calcFV(FI_CURRENT_NW, p, 0.07, 48) >= FI_TARGET) { needed = p; break; } }
+    document.getElementById('fiStatus').textContent = '⚠️ Off Track';
+    document.getElementById('fiStatus').style.color = 'var(--red)';
+    document.getElementById('fiStatusSub').textContent = 'Need +$' + (needed - pmt).toLocaleString() + '/mo more';
+  }
+  const scenarios = [
+    { label: 'Conservative (5% return)', rate: 0.05, color: 'var(--yellow)' },
+    { label: 'Base Case (7% return)',    rate: 0.07, color: 'var(--green)' },
+    { label: 'Optimistic (9% return)',   rate: 0.09, color: 'var(--blue)' },
+  ];
+  document.getElementById('scenarioRows').innerHTML = scenarios.map(s => {
+    const fv = calcFV(FI_CURRENT_NW, pmt, s.rate, 48);
+    const ok = fv >= FI_TARGET;
+    return `<div class="scenario-row"><div style="flex:1;font-size:0.83rem;color:var(--muted);">${s.label}</div><div style="font-size:0.9rem;font-weight:700;color:${s.color};min-width:60px;text-align:right;">$${Math.round(fv/1000)}K</div><div style="font-size:0.7rem;padding:2px 8px;border-radius:20px;margin-left:8px;background:${ok?'var(--green-dim)':'var(--red-dim)'};color:${ok?'var(--green)':'var(--red)'};white-space:nowrap;">${ok?'✓ On Track':'✗ Short'}</div></div>`;
+  }).join('');
+  const milestones = [50000, 75000, 100000, 150000, 190000, 250000];
+  const next = milestones.find(m => m > FI_CURRENT_NW);
+  if (next) {
+    const months = monthsToMilestone(next, pmt, 0.07);
+    document.getElementById('nextMilestone').textContent = '$' + (next/1000) + 'K → ' + fmtMonth(months);
+    document.getElementById('nextMilestoneSub').textContent = months !== null ? '~' + months + ' months away at current pace' : 'Beyond 10yr horizon';
+  }
+  renderMilestones(pmt);
+}
+function renderMilestones(pmt) {
+  const milestones = [
+    { target: 43018,  label: 'Today' },
+    { target: 50000,  label: '$50K' },
+    { target: 75000,  label: '$75K' },
+    { target: 100000, label: '$100K' },
+    { target: 150000, label: '$150K' },
+    { target: 190000, label: '$190K 🎯' },
+    { target: 250000, label: '$250K' },
+  ];
+  const html = '<div style="display:flex;align-items:flex-start;gap:0;position:relative;padding:24px 0 8px;overflow-x:auto;">'
+    + '<div style="position:absolute;top:32px;left:20px;right:20px;height:2px;background:var(--border);z-index:0;"></div>'
+    + milestones.map((m, i) => {
+        const reached = m.target <= FI_CURRENT_NW;
+        const months = reached ? 0 : monthsToMilestone(m.target, pmt, 0.07);
+        const dateLabel = reached ? (i === 0 ? 'Mar 2026' : '✅ Done') : fmtMonth(months);
+        const dotColor = reached ? 'var(--green)' : (m.target === 190000 ? 'var(--yellow)' : 'var(--blue)');
+        const glow = reached ? 'box-shadow:0 0 10px var(--green);' : '';
+        return `<div style="flex:1;text-align:center;position:relative;z-index:1;min-width:80px;"><div style="width:18px;height:18px;border-radius:50%;background:${reached?'var(--green)':dotColor};margin:0 auto 8px;border:2px solid ${dotColor};${glow}opacity:${reached?'1':'0.7'};"></div><div style="font-size:0.77rem;font-weight:700;color:${dotColor};margin-bottom:3px;">${m.label}</div><div style="font-size:0.68rem;color:var(--muted);">${dateLabel}</div></div>`;
+      }).join('') + '</div>';
+  document.getElementById('milestoneTimeline').innerHTML = html;
+}
 
 function renderCharts() {
 
@@ -877,6 +1278,9 @@ function renderCharts() {
       }
     }
   });
+
+  // ─── FI CALCULATOR (init) ───
+  updateFICalc(2894);
 
   // ─── 4. CASHFLOW DONUT ───
   new Chart(document.getElementById('cashflowChart'), {
