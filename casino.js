@@ -110,6 +110,21 @@ class CasinoManager {
       }
     });
 
+    // How to Play buttons (lobby cards)
+    document.querySelectorAll('.how-to-play-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const game = btn.dataset.game;
+        if (game) this.showHowToPlay(game);
+      });
+    });
+
+    // How to Play button (in-game)
+    document.getElementById('inGameHowToPlayBtn')?.addEventListener('click', () => {
+      if (this.currentGame) this.showHowToPlay(this.currentGame);
+    });
+
     // Game selection
     document.querySelectorAll('.play-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -711,7 +726,7 @@ class CasinoManager {
     }
   }
 
-  getBetHistory(limit = 50) {
+  getBetHistory(limit = 100) {
     return new Promise((resolve) => {
       if (!this.socket || !this.socket.connected) { 
         console.warn('[Bet History] Socket not connected');
@@ -733,17 +748,89 @@ class CasinoManager {
     });
   }
 
+  _bhRelativeTime(ts) {
+    const diff = Date.now() - new Date(ts).getTime();
+    const s = Math.floor(diff / 1000);
+    if (s < 60) return 'just now';
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    if (d < 7) return `${d}d ago`;
+    return new Date(ts).toLocaleDateString();
+  }
+
+  _bhGameLabel(game) {
+    const labels = {
+      blackjack: 'Blackjack',
+      pachinko: 'Pachinko',
+      roulette: 'Roulette',
+      crash: 'Crash',
+      coinflip: 'Coin Flip',
+      poker: 'Poker',
+      cs2betting: 'CS2 Betting'
+    };
+    return labels[game] || game || 'Unknown';
+  }
+
+  _bhRenderList(history, filterGame) {
+    const ICONS = { blackjack: '🃏', pachinko: '🔮', roulette: '🎰', crash: '📈', coinflip: '🪙', poker: '♠️', cs2betting: '🎮' };
+    const filtered = filterGame === 'all' ? history : history.filter(h => h.game === filterGame);
+    if (filtered.length === 0) {
+      return '<div class="bh-empty">No bets yet for this game. Start playing!</div>';
+    }
+    return filtered.map(h => {
+      const net = (h.payout || 0) - (h.bet || 0);
+      const isWin = net > 0;
+      const icon = ICONS[h.game] || '🎲';
+      const label = this._bhGameLabel(h.game);
+      const time = this._bhRelativeTime(h.timestamp);
+      const fullTime = new Date(h.timestamp).toLocaleString();
+      const mult = h.multiplier ? `<span class="bh-mult">${parseFloat(h.multiplier).toFixed(2)}x</span>` : '';
+      const result = h.result ? `<span class="bh-result-tag ${isWin ? 'win' : 'loss'}">${h.result}</span>` : '';
+      const details = h.details ? `<span class="bh-details-note">${h.details}</span>` : '';
+      return `<div class="bh-row ${isWin ? 'win' : 'loss'}">
+        <div class="bh-row-top">
+          <div class="bh-game">${icon} <span class="bh-game-name">${label}</span></div>
+          <div class="bh-payout ${isWin ? 'profit' : 'loss'}">${isWin ? '+' : ''}${net.toLocaleString()}</div>
+        </div>
+        <div class="bh-meta">
+          <span class="bh-bet-chip">Bet ${(h.bet||0).toLocaleString()}</span>
+          ${mult}${result}${details}
+        </div>
+        <div class="bh-time" title="${fullTime}">${time}</div>
+      </div>`;
+    }).join('');
+  }
+
   async showBetHistory() {
-    const history = await this.getBetHistory(50);
+    const history = await this.getBetHistory(100);
     document.getElementById('betHistoryModal')?.remove();
 
     const modal = document.createElement('div');
     modal.id = 'betHistoryModal';
     modal.className = 'bet-history-modal';
 
-    let totalWagered = 0, totalPayout = 0;
-    history.forEach(h => { totalWagered += h.bet || 0; totalPayout += h.payout || 0; });
+    let totalWagered = 0, totalPayout = 0, wins = 0;
+    history.forEach(h => {
+      totalWagered += h.bet || 0;
+      totalPayout += h.payout || 0;
+      if ((h.payout || 0) > (h.bet || 0)) wins++;
+    });
     const netProfit = totalPayout - totalWagered;
+    const winRate = history.length > 0 ? Math.round((wins / history.length) * 100) : 0;
+
+    // Build game filter options from actual data
+    const gamesInHistory = [...new Set(history.map(h => h.game).filter(Boolean))];
+    const GAME_ICONS = { blackjack: '🃏', pachinko: '🔮', roulette: '🎰', crash: '📈', coinflip: '🪙', poker: '♠️', cs2betting: '🎮' };
+    const filterBtns = [
+      `<button class="bh-filter active" data-game="all">All (${history.length})</button>`,
+      ...gamesInHistory.map(g => {
+        const cnt = history.filter(h => h.game === g).length;
+        return `<button class="bh-filter" data-game="${g}">${GAME_ICONS[g] || '🎲'} ${this._bhGameLabel(g)} (${cnt})</button>`;
+      })
+    ].join('');
 
     modal.innerHTML = `
       <div class="bet-history-content">
@@ -752,38 +839,343 @@ class CasinoManager {
           <button class="bet-history-close" id="bhCloseBtn">✕</button>
         </div>
         <div class="bet-history-summary">
-          <div class="bh-stat"><span class="bh-label">Total Wagered</span><span class="bh-value">${totalWagered.toLocaleString()}</span></div>
-          <div class="bh-stat"><span class="bh-label">Total Returned</span><span class="bh-value">${totalPayout.toLocaleString()}</span></div>
-          <div class="bh-stat"><span class="bh-label">Net P/L</span><span class="bh-value ${netProfit >= 0 ? 'profit' : 'loss'}">${netProfit >= 0 ? '+' : ''}${netProfit.toLocaleString()}</span></div>
+          <div class="bh-stat">
+            <span class="bh-label">Wagered</span>
+            <span class="bh-value">${totalWagered.toLocaleString()}</span>
+          </div>
+          <div class="bh-stat">
+            <span class="bh-label">Returned</span>
+            <span class="bh-value">${totalPayout.toLocaleString()}</span>
+          </div>
+          <div class="bh-stat">
+            <span class="bh-label">Net P/L</span>
+            <span class="bh-value ${netProfit >= 0 ? 'profit' : 'loss'}">${netProfit >= 0 ? '+' : ''}${netProfit.toLocaleString()}</span>
+          </div>
+          <div class="bh-stat">
+            <span class="bh-label">Win Rate</span>
+            <span class="bh-value ${winRate >= 50 ? 'profit' : ''}">${winRate}%</span>
+          </div>
         </div>
-        <div class="bet-history-list">
-          ${history.length === 0 ? '<div class="bh-empty">No bets yet. Start playing!</div>' : ''}
-          ${history.map(h => {
-            const net = (h.payout || 0) - (h.bet || 0);
-            const isWin = net > 0;
-            const time = new Date(h.timestamp).toLocaleString();
-            const icons = { blackjack: '🃏', pachinko: '🔮', roulette: '🎰', crash: '📈', coinflip: '🪙', poker: '♠️', cs2betting: '🎮' };
-            const icon = icons[h.game] || '🎲';
-            return `<div class="bh-row ${isWin ? 'win' : 'loss'}">
-              <div class="bh-row-top">
-                <div class="bh-game">${icon} ${h.game || 'Unknown'}</div>
-                <div class="bh-payout ${isWin ? 'profit' : 'loss'}">${isWin ? '+' : ''}${net.toLocaleString()}</div>
-              </div>
-              <div class="bh-details">
-                <span class="bh-bet">Bet: ${(h.bet||0).toLocaleString()}</span>
-                ${h.multiplier ? `<span class="bh-mult">${h.multiplier}x</span>` : ''}
-                <span class="bh-result">${h.result || ''}</span>
-              </div>
-              <div class="bh-time">${time}</div>
-            </div>`;
-          }).join('')}
+        <div class="bh-filters">${filterBtns}</div>
+        <div class="bet-history-list" id="bhList">
+          ${this._bhRenderList(history, 'all')}
         </div>
       </div>
     `;
 
     document.body.appendChild(modal);
+
+    // Filter click handlers
+    modal.querySelectorAll('.bh-filter').forEach(btn => {
+      btn.addEventListener('click', () => {
+        modal.querySelectorAll('.bh-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('bhList').innerHTML = this._bhRenderList(history, btn.dataset.game);
+      });
+    });
+
     document.getElementById('bhCloseBtn').addEventListener('click', () => modal.remove());
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  }
+
+  showHowToPlay(game) {
+    document.getElementById('howToPlayModal')?.remove();
+
+    const content = this._getHowToPlayContent(game);
+    if (!content) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'howToPlayModal';
+    modal.className = 'how-to-play-modal';
+    modal.innerHTML = `
+      <div class="how-to-play-content">
+        <div class="how-to-play-header">
+          <h2>${content.icon} How to Play — ${content.title}</h2>
+          <button class="how-to-play-close" id="htpCloseBtn">✕</button>
+        </div>
+        <div class="how-to-play-body">
+          ${content.body}
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    document.getElementById('htpCloseBtn').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  }
+
+  _getHowToPlayContent(game) {
+    const guides = {
+      blackjack: {
+        icon: '🃏', title: 'Blackjack',
+        body: `
+          <div class="htp-section">
+            <h3>🎯 Objective</h3>
+            <ul>
+              <li>Get a hand value closer to <strong>21</strong> than the dealer — without going over.</li>
+              <li>If you bust (go over 21), you lose immediately.</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>🃏 Card Values</h3>
+            <table class="htp-table">
+              <tr><th>Card</th><th>Value</th></tr>
+              <tr><td>2 – 10</td><td>Face value</td></tr>
+              <tr><td>J, Q, K</td><td>10</td></tr>
+              <tr><td>Ace</td><td>1 or 11 (whichever helps more)</td></tr>
+            </table>
+          </div>
+          <div class="htp-section">
+            <h3>🎮 Actions</h3>
+            <ul>
+              <li><strong>Hit</strong> — Draw another card</li>
+              <li><strong>Stand</strong> — Keep your current hand</li>
+              <li><strong>Double Down</strong> — Double your bet and receive exactly one more card</li>
+              <li><strong>Split</strong> — Split two same-rank cards into two hands</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>💰 Payouts</h3>
+            <ul>
+              <li>Win vs dealer: <span class="htp-tag green">2×</span> your bet</li>
+              <li>Blackjack (Ace + 10-value on first deal): <span class="htp-tag green">2.5×</span></li>
+              <li>Tie (push): <span class="htp-tag">Bet returned</span></li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>📋 Dealer Rules</h3>
+            <ul>
+              <li>Dealer must hit on 16 or below and stand on 17 or above.</li>
+            </ul>
+          </div>
+        `
+      },
+      coinflip: {
+        icon: '🪙', title: 'Coin Flip',
+        body: `
+          <div class="htp-section">
+            <h3>🎯 Objective</h3>
+            <ul>
+              <li>Predict whether the coin lands <strong>Heads</strong> or <strong>Tails</strong>.</li>
+              <li>Correct guess doubles your bet. Wrong guess and you lose it.</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>🎮 Game Modes</h3>
+            <ul>
+              <li><strong>vs Bot</strong> — Play instantly against AI</li>
+              <li><strong>Create Room</strong> — Create a private room and share the code</li>
+              <li><strong>Join Room</strong> — Enter a room code to join a friend's game</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>💰 Payouts</h3>
+            <ul>
+              <li>Win: <span class="htp-tag green">2×</span> your bet (0% house edge — completely fair)</li>
+              <li>In PvP mode, the winner takes the other player's bet</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>📋 Notes</h3>
+            <ul>
+              <li>This is the fairest game in the casino — no house edge.</li>
+              <li>Both players must commit their bet before the flip happens.</li>
+            </ul>
+          </div>
+        `
+      },
+      roulette: {
+        icon: '🎲', title: 'Roulette',
+        body: `
+          <div class="htp-section">
+            <h3>🎯 Objective</h3>
+            <ul>
+              <li>Predict where the ball lands on a custom <strong>14-number</strong> wheel.</li>
+              <li>Place your bets, spin, and collect if you guess right.</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>🎲 Bet Types & Payouts</h3>
+            <table class="htp-table">
+              <tr><th>Bet</th><th>Covers</th><th>Payout</th></tr>
+              <tr><td>Single Number</td><td>1 slot</td><td><span class="htp-tag green">14×</span></td></tr>
+              <tr><td>Color (Red/Black)</td><td>~half the wheel</td><td><span class="htp-tag green">2×</span></td></tr>
+              <tr><td>Low (1–7)</td><td>7 numbers</td><td><span class="htp-tag green">2×</span></td></tr>
+              <tr><td>High (8–14)</td><td>7 numbers</td><td><span class="htp-tag green">2×</span></td></tr>
+            </table>
+          </div>
+          <div class="htp-section">
+            <h3>📋 Notes</h3>
+            <ul>
+              <li>Custom 14-number wheel (not a standard 0–36 European wheel).</li>
+              <li>House edge: ~6.67%</li>
+              <li>You can place multiple bets in a single spin.</li>
+            </ul>
+          </div>
+        `
+      },
+      crash: {
+        icon: '🚀', title: 'Crash',
+        body: `
+          <div class="htp-section">
+            <h3>🎯 Objective</h3>
+            <ul>
+              <li>A multiplier starts at <strong>1×</strong> and rises rapidly.</li>
+              <li>Cash out before it crashes to win: <strong>bet × multiplier</strong>.</li>
+              <li>Wait too long and the rocket crashes — you lose your entire bet.</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>🎮 How to Play</h3>
+            <ul>
+              <li>Enter your bet amount and click <strong>Place Bet</strong></li>
+              <li>Watch the multiplier climb and hit <strong>Cash Out</strong> at the right moment</li>
+              <li>Set an <strong>Auto Cash Out</strong> target to exit automatically at your chosen multiplier</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>💰 Payouts</h3>
+            <ul>
+              <li>Cash out at 2×: <span class="htp-tag green">2× your bet</span></li>
+              <li>Cash out at 5×: <span class="htp-tag green">5× your bet</span></li>
+              <li>Crash before you cash out: <span class="htp-tag red">Lose your bet</span></li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>📋 Notes</h3>
+            <ul>
+              <li>House edge: ~1% (one of the fairest games here).</li>
+              <li>The crash point is determined before the round starts — timing is everything.</li>
+            </ul>
+          </div>
+        `
+      },
+      poker: {
+        icon: '♠️', title: 'Texas Hold\'em Poker',
+        body: `
+          <div class="htp-section">
+            <h3>🎯 Objective</h3>
+            <ul>
+              <li>Make the best 5-card hand using your 2 hole cards + 5 community cards.</li>
+              <li>Win the pot by having the best hand or forcing everyone else to fold.</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>🎮 Round Structure</h3>
+            <ul>
+              <li><strong>Pre-Flop</strong> — 2 hole cards dealt. Bet or fold.</li>
+              <li><strong>Flop</strong> — 3 community cards revealed. Another round of betting.</li>
+              <li><strong>Turn</strong> — 1 more community card. Bet again.</li>
+              <li><strong>River</strong> — Final community card. Last chance to bet.</li>
+              <li><strong>Showdown</strong> — Best hand wins the pot.</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>🃏 Hand Rankings (Best → Worst)</h3>
+            <ul>
+              <li>Royal Flush → Straight Flush → Four of a Kind</li>
+              <li>Full House → Flush → Straight</li>
+              <li>Three of a Kind → Two Pair → Pair → High Card</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>🎮 Actions</h3>
+            <ul>
+              <li><strong>Check</strong> — Pass without betting (only if no one has bet yet)</li>
+              <li><strong>Call</strong> — Match the current bet</li>
+              <li><strong>Raise</strong> — Increase the bet</li>
+              <li><strong>Fold</strong> — Give up your hand and forfeit bets placed</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>📋 Notes</h3>
+            <ul>
+              <li>2–6 players per table. No rake (play-money, fair game).</li>
+              <li>Create or join a table from the poker lobby.</li>
+            </ul>
+          </div>
+        `
+      },
+      cs2betting: {
+        icon: '🎮', title: 'CS2 Match Betting',
+        body: `
+          <div class="htp-section">
+            <h3>🎯 Objective</h3>
+            <ul>
+              <li>Bet credits on real Counter-Strike 2 esports matches.</li>
+              <li>Pick the winning team and multiply your credits based on the odds.</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>🎮 How to Bet</h3>
+            <ul>
+              <li>Browse upcoming matches (updated every 2 hours from bo3.gg)</li>
+              <li>Click a match to see the teams and odds</li>
+              <li>Select a team, enter your bet amount, and confirm</li>
+              <li>Bets settle automatically once the match result is in</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>💰 How Odds Work</h3>
+            <ul>
+              <li>Odds represent how much you win per credit bet.</li>
+              <li>Favourite: lower odds (e.g. 1.4×) — safer but smaller payout</li>
+              <li>Underdog: higher odds (e.g. 3.5×) — riskier but bigger payout</li>
+              <li>Win: <span class="htp-tag green">bet × odds</span></li>
+              <li>Lose: <span class="htp-tag red">bet lost</span></li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>📋 Notes</h3>
+            <ul>
+              <li>Match data sourced from bo3.gg — covers ESL Pro League and major tournaments.</li>
+              <li>Odds reflect real bookmaker lines with a typical bookmaker margin.</li>
+              <li>Cancelled matches are refunded.</li>
+            </ul>
+          </div>
+        `
+      },
+      pachinko: {
+        icon: '🔮', title: 'Pachinko',
+        body: `
+          <div class="htp-section">
+            <h3>🎯 Objective</h3>
+            <ul>
+              <li>Drop a ball from the top of the board.</li>
+              <li>It bounces off pegs and lands in a slot at the bottom — each slot has a multiplier.</li>
+              <li>Win: <strong>bet × slot multiplier</strong></li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>🎮 Risk Modes</h3>
+            <table class="htp-table">
+              <tr><th>Mode</th><th>Style</th><th>RTP</th></tr>
+              <tr><td><span class="htp-tag green">Low</span></td><td>Frequent small wins</td><td>~99%</td></tr>
+              <tr><td><span class="htp-tag yellow">Medium</span></td><td>Balanced payouts</td><td>~97%</td></tr>
+              <tr><td><span class="htp-tag red">High</span></td><td>Jackpot-style — rare big wins</td><td>~99%</td></tr>
+            </table>
+          </div>
+          <div class="htp-section">
+            <h3>🎮 How to Play</h3>
+            <ul>
+              <li>Choose a risk mode and enter your bet amount</li>
+              <li>Click <strong>Drop Ball</strong> to launch</li>
+              <li>Watch it bounce — the center slots pay the most</li>
+            </ul>
+          </div>
+          <div class="htp-section">
+            <h3>📋 Notes</h3>
+            <ul>
+              <li>Ball physics are simulated — every drop is unpredictable.</li>
+              <li>Higher risk modes have bigger jackpot multipliers but wider spread.</li>
+              <li>Low and High modes both have ~99% long-run RTP.</li>
+            </ul>
+          </div>
+        `
+      }
+    };
+
+    return guides[game] || null;
   }
 
   async showLeaderboard() {

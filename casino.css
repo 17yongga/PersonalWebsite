@@ -3172,3 +3172,217 @@ html[data-theme="light"] .mobile-actions-dropdown {
     font-size: 1.5rem;
   }
 }
+
+/* ===== Game Card Actions ===== */
+.game-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: auto;
+}
+
+.game-card-actions .play-btn {
+  width: 100%;
+}
+
+.how-to-play-btn {
+  width: 100%;
+  font-size: 0.82rem;
+  padding: 0.35rem 0.75rem;
+  opacity: 0.75;
+  transition: opacity 0.2s;
+}
+
+.how-to-play-btn:hover {
+  opacity: 1;
+}
+
+/* ===== In-Game Header with How to Play ===== */
+.game-container-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.how-to-play-ingame-btn {
+  font-size: 0.85rem;
+  padding: 0.45rem 0.9rem;
+  opacity: 0.8;
+}
+
+.how-to-play-ingame-btn:hover {
+  opacity: 1;
+}
+
+/* ===== How to Play Modal ===== */
+.how-to-play-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+.how-to-play-content {
+  position: relative;
+  background: var(--color-surface, #1a1a2e);
+  border: 1.5px solid rgba(148, 163, 184, 0.25);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+html[data-theme="light"] .how-to-play-content {
+  background: #fff;
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.how-to-play-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  position: sticky;
+  top: 0;
+  background: inherit;
+  border-radius: 18px 18px 0 0;
+  z-index: 1;
+}
+
+.how-to-play-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.how-to-play-close {
+  background: none;
+  border: 2px solid rgba(148, 163, 184, 0.3);
+  color: var(--color-text);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.how-to-play-close:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.how-to-play-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.htp-section {
+  margin-bottom: 1.25rem;
+}
+
+.htp-section:last-child {
+  margin-bottom: 0;
+}
+
+.htp-section h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-accent, #6366f1);
+  margin: 0 0 0.5rem;
+}
+
+.htp-section ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.htp-section ul li {
+  margin-bottom: 0.3rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.htp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-top: 0.25rem;
+}
+
+.htp-table th {
+  text-align: left;
+  padding: 0.3rem 0.6rem;
+  background: rgba(148, 163, 184, 0.08);
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--color-text-muted, #94a3b8);
+}
+
+.htp-table td {
+  padding: 0.3rem 0.6rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.htp-tag {
+  display: inline-block;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--color-accent, #6366f1);
+  border-radius: 4px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.htp-tag.green {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.htp-tag.red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.htp-tag.yellow {
+  background: rgba(234, 179, 8, 0.15);
+  color: #eab308;
+}
+
+@media (max-width: 480px) {
+  .how-to-play-content {
+    max-height: 92vh;
+    border-radius: 16px 16px 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+  }
+
+  .how-to-play-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+}
