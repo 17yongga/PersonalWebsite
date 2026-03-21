@@ -89,16 +89,14 @@ class Navbar {
     }
 
     renderNavLinks(isAuthenticated) {
-        if (!isAuthenticated) {
-            return `
-                <a href="#/login" class="nav-link" data-route="/login">Login</a>
-            `;
-        }
-
         return `
             <a href="#/" class="nav-link" data-route="/">
                 <i class="fas fa-tachometer-alt"></i>
                 Dashboard
+            </a>
+            <a href="#/leaderboard" class="nav-link" data-route="/leaderboard">
+                <i class="fas fa-trophy"></i>
+                Leaderboard
             </a>
             <a href="#/trade" class="nav-link" data-route="/trade">
                 <i class="fas fa-chart-line"></i>
@@ -108,27 +106,30 @@ class Navbar {
                 <i class="fas fa-robot"></i>
                 Strategies
             </a>
+            <a href="#/backtest" class="nav-link" data-route="/backtest">
+                <i class="fas fa-flask"></i>
+                Backtest
+            </a>
             <a href="#/risk" class="nav-link" data-route="/risk">
                 <i class="fas fa-shield-alt"></i>
                 Risk
+            </a>
+            <a href="#/compare" class="nav-link" data-route="/compare">
+                <i class="fas fa-balance-scale"></i>
+                Compare
             </a>
         `;
     }
 
     renderMobileNavLinks(isAuthenticated) {
-        if (!isAuthenticated) {
-            return `
-                <a href="#/login" class="mobile-nav-link" data-route="/login">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Login
-                </a>
-            `;
-        }
-
         return `
             <a href="#/" class="mobile-nav-link" data-route="/">
                 <i class="fas fa-tachometer-alt"></i>
                 Dashboard
+            </a>
+            <a href="#/leaderboard" class="mobile-nav-link" data-route="/leaderboard">
+                <i class="fas fa-trophy"></i>
+                Leaderboard
             </a>
             <a href="#/trade" class="mobile-nav-link" data-route="/trade">
                 <i class="fas fa-chart-line"></i>
@@ -138,9 +139,17 @@ class Navbar {
                 <i class="fas fa-robot"></i>
                 Strategies
             </a>
+            <a href="#/backtest" class="mobile-nav-link" data-route="/backtest">
+                <i class="fas fa-flask"></i>
+                Backtest
+            </a>
             <a href="#/risk" class="mobile-nav-link" data-route="/risk">
                 <i class="fas fa-shield-alt"></i>
                 Risk
+            </a>
+            <a href="#/compare" class="mobile-nav-link" data-route="/compare">
+                <i class="fas fa-balance-scale"></i>
+                Compare
             </a>
         `;
     }

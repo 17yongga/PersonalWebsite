@@ -28,7 +28,7 @@ class Router {
         // Define routes with their lazy-loaded modules and metadata
         this.routes.set('/', {
             module: () => import('./pages/dashboard.js?v=1771915420'),
-            requiresAuth: true,
+            requiresAuth: false,
             title: 'Dashboard'
         });
 
@@ -40,25 +40,25 @@ class Router {
 
         this.routes.set('/trade/:symbol?', {
             module: () => import('./pages/trading.js?v=1771915420'),
-            requiresAuth: true,
+            requiresAuth: false,
             title: 'Trade'
         });
 
         this.routes.set('/portfolio/:id', {
             module: () => import('./pages/portfolio.js?v=1771915420'),
-            requiresAuth: true,
+            requiresAuth: false,
             title: 'Portfolio'
         });
 
         this.routes.set('/strategies', {
             module: () => import('./pages/strategies.js?v=1771915420'),
-            requiresAuth: true,
+            requiresAuth: false,
             title: 'Strategies'
         });
 
         this.routes.set('/strategies/:id', {
             module: () => import('./pages/strategies.js?v=1771915420'),
-            requiresAuth: true,
+            requiresAuth: false,
             title: 'Strategy Details'
         });
 
@@ -81,26 +81,32 @@ class Router {
             module: () => Promise.resolve({ default: () => ({ 
                 render: () => { window.location.hash = '#/'; } 
             })}),
-            requiresAuth: true,
+            requiresAuth: false,
             title: 'Dashboard'
         });
 
         this.routes.set('/profile', {
             module: () => import('./pages/profile.js?v=1771915420'),
-            requiresAuth: true,
+            requiresAuth: false,
             title: 'Profile'
         });
 
         this.routes.set('/backtest', {
             module: () => import('./pages/backtest.js?v=1'),
-            requiresAuth: true,
+            requiresAuth: false,
             title: 'Backtesting Lab'
         });
 
         this.routes.set('/risk', {
             module: () => import('./pages/risk.js?v=1'),
-            requiresAuth: true,
+            requiresAuth: false,
             title: 'Risk Dashboard'
+        });
+
+        this.routes.set('/compare', {
+            module: () => import('./pages/compare.js?v=1'),
+            requiresAuth: false,
+            title: 'Strategy Comparison'
         });
 
         // 404 fallback
@@ -128,19 +134,7 @@ class Router {
             // Store current route in state
             store.setState('currentRoute', { path: hash, route, params });
 
-            // Check authentication
-            if (routeConfig.requiresAuth && !auth.isAuthenticated()) {
-                console.log('Route requires authentication, redirecting to login');
-                this.navigate('/login');
-                return;
-            }
-
-            // Redirect away from login if already authenticated
-            if (route === '/login' && auth.isAuthenticated()) {
-                console.log('Already authenticated, redirecting to dashboard');
-                this.navigate('/');
-                return;
-            }
+            // All routes are public — no auth redirects
 
             // Update document title
             document.title = `${routeConfig.title} | Paper Trading | Gary Yong`;
