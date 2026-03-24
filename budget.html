@@ -647,18 +647,51 @@
                 font-size: 24px;
             }
 
+            /* ── Bottom navigation bar on mobile ── */
             .tab-nav {
-                padding: 16px;
-                gap: 8px;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 200;
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+                gap: 0;
+                background: rgba(15, 15, 25, 0.95);
+                backdrop-filter: blur(20px);
+                border-top: 1px solid var(--glass-border);
             }
 
             .tab-btn {
-                padding: 10px 12px;
-                font-size: 14px;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 6px 4px;
+                border-radius: 10px;
+                font-size: 22px;
+                min-height: 50px;
+                gap: 2px;
             }
 
             .tab-text {
-                display: none;
+                display: block;
+                font-size: 10px;
+                font-weight: 500;
+                opacity: 0.75;
+                line-height: 1.1;
+            }
+
+            .tab-btn.active .tab-text {
+                opacity: 1;
+            }
+
+            /* Push content above the bottom nav */
+            .app-content {
+                padding-bottom: calc(80px + env(safe-area-inset-bottom));
             }
 
             .dashboard-grid {
@@ -1354,12 +1387,13 @@
         }
         /* Keep scan results within the modal flow */
         #scanResults.show { display: block; }
-        /* Inside the scan modal, switch to 2×2 grid so all columns fit */
+        /* Inside the scan modal, switch to 2-column grid so all columns fit */
         .scan-modal-box .result-fields {
             grid-template-columns: 1fr 1fr;
         }
+        /* Description spans full width; all others fill naturally in 2-col grid */
         .scan-modal-box .result-field:first-child {
-            grid-column: 1 / -1; /* Description spans full width */
+            grid-column: 1 / -1;
         }
         .scan-modal-header {
             display: flex;
@@ -1596,6 +1630,11 @@
             margin-bottom: 16px;
         }
         #expenseModalBox .modal-field-row .form-group { margin: 0; }
+        @media (max-width: 480px) {
+            #expenseModalBox .modal-field-row {
+                grid-template-columns: 1fr;
+            }
+        }
         /* select arrow */
         #expenseModalBox select {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -2072,6 +2111,24 @@
             border-radius: 8px;
             color: var(--text-primary);
             font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .scan-cat-item {
+            padding: 9px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            color: var(--text-primary);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .scan-cat-item:last-child { border-bottom: none; }
+        .scan-cat-item:hover { background: rgba(99,102,241,0.12); }
+
+        .result-field select {
+            appearance: auto;
+            -webkit-appearance: auto;
+            cursor: pointer;
         }
 
         .result-field select option {
@@ -2226,15 +2283,34 @@
                 </div>
             </form>
 
-            <!-- Password Reset Form -->
+            <!-- Password Reset: Step 1 — Enter email -->
             <form class="auth-form" id="resetForm" style="display: none;">
-                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 16px; text-align: center;">Enter your email to verify your account, then set a new password.</p>
+                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 16px; text-align: center;">Enter your email and we'll send you a reset link.</p>
                 <input type="email" class="auth-input" id="resetEmail" placeholder="Email" required>
-                <div id="resetNewPasswordFields" style="display: none;">
-                    <input type="password" class="auth-input" id="resetNewPassword" placeholder="New Password">
-                    <input type="password" class="auth-input" id="resetConfirmPassword" placeholder="Confirm New Password">
+                <button type="submit" class="auth-btn" id="resetSubmit">Send Reset Link</button>
+                <div style="text-align: center; margin-top: 12px;">
+                    <a href="#" onclick="cancelReset(); return false;" style="color: #818cf8; font-size: 14px; text-decoration: none;">← Back to Login</a>
                 </div>
-                <button type="submit" class="auth-btn" id="resetSubmit">Verify Email</button>
+            </form>
+
+            <!-- Password Reset: Step 2 — Check email confirmation -->
+            <div class="auth-form" id="resetSentPanel" style="display: none; text-align: center;">
+                <div style="font-size: 36px; margin-bottom: 12px;">📬</div>
+                <p style="color: #e2e8f0; font-size: 16px; font-weight: 600; margin-bottom: 8px;">Check your email</p>
+                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 20px; line-height: 1.5;">We've sent a reset link to <span id="resetSentEmail" style="color:#818cf8;font-weight:500"></span>. Tap it on your device or paste the code below.</p>
+                <button class="auth-btn" onclick="showResetStep3(); return false;">Enter reset code</button>
+                <div style="text-align: center; margin-top: 12px;">
+                    <a href="#" onclick="cancelReset(); return false;" style="color: #818cf8; font-size: 14px; text-decoration: none;">← Back to Login</a>
+                </div>
+            </div>
+
+            <!-- Password Reset: Step 3 — Enter token + new password -->
+            <form class="auth-form" id="resetTokenForm" style="display: none;">
+                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 16px; text-align: center;">Paste your reset code and choose a new password.</p>
+                <input type="text" class="auth-input" id="resetToken" placeholder="Reset code (from email)" autocomplete="off" spellcheck="false" style="font-family: monospace; letter-spacing: 0.05em;" required>
+                <input type="password" class="auth-input" id="resetNewPassword" placeholder="New Password" required>
+                <input type="password" class="auth-input" id="resetConfirmPassword" placeholder="Confirm New Password" required>
+                <button type="submit" class="auth-btn">Set New Password</button>
                 <div style="text-align: center; margin-top: 12px;">
                     <a href="#" onclick="cancelReset(); return false;" style="color: #818cf8; font-size: 14px; text-decoration: none;">← Back to Login</a>
                 </div>
@@ -2513,7 +2589,7 @@
                     <div class="fb-top">
                         <div class="fb-search">
                             <span class="fb-search-icon">🔍</span>
-                            <input type="text" id="searchFilter" placeholder="Search transactions…" oninput="filterTransactions()" autocomplete="off">
+                            <input type="text" id="searchFilter" placeholder="Search by name, amount, date, category…" oninput="filterTransactions()" autocomplete="off">
                         </div>
                         <button class="fb-add-btn" onclick="openExpenseModal()">
                             <span style="font-size:16px;line-height:1;">+</span> Add Transaction
@@ -2666,7 +2742,10 @@
                 <div class="glass-card" style="margin-bottom: 24px;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                         <h3>🕐 Change History</h3>
-                        <button class="btn btn-secondary" onclick="clearChangeHistory()" style="font-size:12px;padding:6px 14px;">🗑️ Clear</button>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn btn-secondary" onclick="renderChangeHistory()" style="font-size:12px;padding:6px 14px;">🔄 Refresh</button>
+                            <button class="btn btn-secondary" onclick="clearChangeHistory()" style="font-size:12px;padding:6px 14px;">🗑️ Clear</button>
+                        </div>
                     </div>
                     <div id="changeHistoryList">
                         <div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px;">No changes recorded yet.</div>
@@ -3434,105 +3513,88 @@
             }
         }
 
-        let resetVerifiedEmail = null;
-
         function showResetPassword() {
             document.getElementById('authForm').style.display = 'none';
             document.querySelector('.auth-toggle').style.display = 'none';
             document.getElementById('resetForm').style.display = 'block';
-            document.getElementById('resetNewPasswordFields').style.display = 'none';
-            document.getElementById('resetSubmit').textContent = 'Verify Email';
+            document.getElementById('resetSentPanel').style.display = 'none';
+            document.getElementById('resetTokenForm').style.display = 'none';
             document.getElementById('resetEmail').value = '';
-            document.getElementById('resetEmail').disabled = false;
-            resetVerifiedEmail = null;
         }
 
         function cancelReset() {
             document.getElementById('resetForm').style.display = 'none';
+            document.getElementById('resetSentPanel').style.display = 'none';
+            document.getElementById('resetTokenForm').style.display = 'none';
             document.getElementById('authForm').style.display = 'flex';
             document.querySelector('.auth-toggle').style.display = 'flex';
-            resetVerifiedEmail = null;
+        }
+
+        function showResetStep3() {
+            document.getElementById('resetSentPanel').style.display = 'none';
+            document.getElementById('resetTokenForm').style.display = 'block';
+            document.getElementById('resetToken').value = '';
+            document.getElementById('resetNewPassword').value = '';
+            document.getElementById('resetConfirmPassword').value = '';
+            document.getElementById('resetToken').focus();
         }
 
         function setupResetListener() {
+            // Step 1: send reset email
             document.getElementById('resetForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
+                const email = document.getElementById('resetEmail').value.trim().toLowerCase();
+                if (!email) { showToast('Please enter your email', 'error'); return; }
 
-                if (!resetVerifiedEmail) {
-                    // Step 1: Verify email exists (check API first, then local)
-                    const email = document.getElementById('resetEmail').value;
-                    let found = false;
-
-                    // Check API
-                    try {
-                        await apiFetch('/auth/login', {
-                            method: 'POST',
-                            body: JSON.stringify({ email, password: '___verify_only___' })
-                        });
-                    } catch (err) {
-                        // "Invalid password" means user exists; "User not found" means they don't
-                        if (err.message === 'Invalid password') {
-                            found = true;
-                        } else {
-                            // Check localStorage as fallback
-                            const users = JSON.parse(localStorage.getItem('finSyncUsers') || '[]');
-                            if (users.find(u => u.email === email)) found = true;
-                        }
-                    }
-
-                    if (!found) {
-                        showToast('No account found with that email', 'error');
-                        return;
-                    }
-
-                    resetVerifiedEmail = email;
-                    document.getElementById('resetEmail').disabled = true;
-                    document.getElementById('resetNewPasswordFields').style.display = 'block';
-                    document.getElementById('resetSubmit').textContent = 'Reset Password';
-                    showToast('Email verified! Set your new password.', 'success');
-                } else {
-                    // Step 2: Set new password
-                    const newPassword = document.getElementById('resetNewPassword').value;
-                    const confirmPassword = document.getElementById('resetConfirmPassword').value;
-
-                    if (newPassword.length < 1) {
-                        showToast('Please enter a new password', 'error');
-                        return;
-                    }
-
-                    if (newPassword !== confirmPassword) {
-                        showToast('Passwords do not match', 'error');
-                        return;
-                    }
-
-                    // Reset on API
-                    try {
-                        await apiFetch('/auth/reset-password', {
-                            method: 'POST',
-                            body: JSON.stringify({ email: resetVerifiedEmail, newPassword })
-                        });
-                    } catch (err) {
-                        console.log('API reset failed, trying local:', err.message);
-                    }
-
-                    // Also reset in localStorage
-                    const users = JSON.parse(localStorage.getItem('finSyncUsers') || '[]');
-                    const userIdx = users.findIndex(u => u.email === resetVerifiedEmail);
-                    if (userIdx !== -1) {
-                        users[userIdx].passwordHash = await hashPassword(newPassword);
-                        localStorage.setItem('finSyncUsers', JSON.stringify(users));
-                    }
-
-                    const resetEmail = resetVerifiedEmail;
-                    resetVerifiedEmail = null;
-                    cancelReset();
-
-                    document.getElementById('authEmail').value = resetEmail || '';
-                    document.getElementById('authPassword').value = '';
-                    document.getElementById('authPassword').focus();
-
-                    showToast('Password reset successful! Please log in.', 'success');
+                const btn = document.getElementById('resetSubmit');
+                btn.disabled = true;
+                btn.textContent = 'Sending…';
+                try {
+                    await apiFetch('/auth/forgot-password', {
+                        method: 'POST',
+                        body: JSON.stringify({ email })
+                    });
+                } catch (err) {
+                    // Server error only — don't reveal whether email exists
+                    showToast('Something went wrong. Please try again.', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Send Reset Link';
+                    return;
                 }
+
+                // Always show "check your email" regardless of whether account exists
+                document.getElementById('resetForm').style.display = 'none';
+                document.getElementById('resetSentEmail').textContent = email;
+                document.getElementById('resetSentPanel').style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Send Reset Link';
+            });
+
+            // Step 3: apply new password with token
+            document.getElementById('resetTokenForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const token = document.getElementById('resetToken').value.trim();
+                const newPassword = document.getElementById('resetNewPassword').value;
+                const confirmPassword = document.getElementById('resetConfirmPassword').value;
+
+                if (!token) { showToast('Please enter your reset code', 'error'); return; }
+                if (newPassword.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
+                if (newPassword !== confirmPassword) { showToast('Passwords do not match', 'error'); return; }
+
+                try {
+                    await apiFetch('/auth/reset-password', {
+                        method: 'POST',
+                        body: JSON.stringify({ token, newPassword })
+                    });
+                } catch (err) {
+                    showToast(err.message || 'Reset failed. The link may have expired.', 'error');
+                    return;
+                }
+
+                cancelReset();
+                document.getElementById('authEmail').value = '';
+                document.getElementById('authPassword').value = '';
+                showToast('Password updated! Please sign in with your new password.', 'success');
             });
         }
 
@@ -3613,6 +3675,38 @@
         }
 
         // Toast Notifications
+        // ── Date helpers (timezone-safe) ────────────────────────────
+        // Returns today's date as YYYY-MM-DD in the user's LOCAL timezone
+        function localDateStr(d) {
+            const dt = d || new Date();
+            const y  = dt.getFullYear();
+            const m  = String(dt.getMonth() + 1).padStart(2, '0');
+            const dy = String(dt.getDate()).padStart(2, '0');
+            return `${y}-${m}-${dy}`;
+        }
+
+        // Parse a YYYY-MM-DD string as LOCAL midnight (not UTC) to avoid off-by-one
+        function parseDateLocal(dateStr) {
+            if (!dateStr || typeof dateStr !== 'string') return new Date();
+            // YYYY-MM-DD → local midnight
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            }
+            return new Date(dateStr); // fallback
+        }
+
+        // Ensure a date string is valid YYYY-MM-DD; return today if not
+        function sanitizeDateStr(dateStr) {
+            if (!dateStr || typeof dateStr !== 'string') return localDateStr();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr.trim())) return dateStr.trim();
+            // Try to extract date portion from ISO timestamps (e.g. "2026-03-10T00:00:00.000Z")
+            const iso = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);
+            if (iso) return iso[1];
+            return localDateStr();
+        }
+        // ────────────────────────────────────────────────────────────
+
         function showToast(message, type = 'success', duration = 3000) {
             // Remove existing toast
             const existingToast = document.querySelector('.toast');
@@ -3797,7 +3891,7 @@
 
         function initializeApp() {
             // Set current date
-            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('expenseDate').value = localDateStr();
 
             // Initialize tabs
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -3900,22 +3994,33 @@
         }
 
         // Expense Management
-        async function ensureCategory(category) {
-            if (!category) return;
-            if (!appState.categories.includes(category)) {
+        async function ensureCategory(rawCategory) {
+            if (!rawCategory) return rawCategory;
+            // Always resolve to canonical form before any check or storage
+            const category = canonicalizeCategory(rawCategory);
+            // Check against deduplicated list (emoji-prefix-aware)
+            const existing = deduplicateCategories(appState.categories);
+            const alreadyExists = existing.some(c => stripEmojiPrefix(c).toLowerCase() === stripEmojiPrefix(category).toLowerCase());
+            if (!alreadyExists) {
                 appState.categories.push(category);
                 saveData();
                 populateSelectors();
-                // Sync to API if available
-                if (useApi && currentHouseholdId) {
-                    try {
-                        await apiFetch('/households/' + currentHouseholdId + '/categories', {
-                            method: 'POST',
-                            body: JSON.stringify({ name: category })
-                        });
-                    } catch (err) { console.error('API add category failed:', err); }
-                }
             }
+            // Sync to API (server's resolveCategory will also deduplicate server-side)
+            if (useApi && currentHouseholdId) {
+                try {
+                    const data = await apiFetch('/households/' + currentHouseholdId + '/categories', {
+                        method: 'POST',
+                        body: JSON.stringify({ name: category })
+                    });
+                    // Refresh local categories from server response (canonical source of truth)
+                    if (data.categories) {
+                        appState.categories = data.categories.map(c => emojiForCategory(c));
+                        populateSelectors();
+                    }
+                } catch (err) { console.error('API add category failed:', err); }
+            }
+            return category;
         }
 
         let _submittingExpense = false;
@@ -3924,7 +4029,7 @@
             if (_submittingExpense) return;
 
             const amount = parseFloat(document.getElementById('amount').value);
-            const category = document.getElementById('category').value.trim();
+            const category = canonicalizeCategory(document.getElementById('category').value.trim());
             const whoPaid = document.getElementById('whoPaid').value;
             const splitType = document.getElementById('splitType').value;
             const date = document.getElementById('expenseDate').value;
@@ -3980,7 +4085,7 @@
                 if (cancelBtn) cancelBtn.remove();
 
                 document.getElementById('expenseForm').reset();
-                document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('expenseDate').value = localDateStr();
                 document.getElementById('isShared').checked = true;
                 updateDisplay();
                 showToast('Expense updated! ✅', 'success');
@@ -4010,7 +4115,7 @@
 
                 addExpense(expense);
                 document.getElementById('expenseForm').reset();
-                document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('expenseDate').value = localDateStr();
                 document.getElementById('isShared').checked = true;
                 updateDisplay();
                 showToast(`${isShared ? 'Shared' : 'Individual'} expense added successfully! 💰`, 'success');
@@ -4024,45 +4129,96 @@
         }
 
         // ── Change History ───────────────────────────────────────────────────
-        let changeHistory = JSON.parse(localStorage.getItem('finSyncChangeHistory') || '[]');
-
-        function logChange(action, details) {
-            const entry = {
-                ts: new Date().toISOString(),
-                action,
-                details,
-                user: appState.partners?.partner1 || 'You'
-            };
-            changeHistory.unshift(entry); // newest first
-            if (changeHistory.length > 100) changeHistory.pop(); // keep last 100
-            localStorage.setItem('finSyncChangeHistory', JSON.stringify(changeHistory));
+        // ── Change History — server-backed, never lost on refresh ───
+        // logChange is called after client-side operations; when using the API
+        // the server already persisted the entry via activity_log. We just
+        // trigger a UI refresh so the panel stays current mid-session.
+        function logChange(action, details, isShared = false) {
+            // Re-render immediately from server so the panel updates right away
             renderChangeHistory();
         }
 
-        function renderChangeHistory() {
+        async function renderChangeHistory() {
             const el = document.getElementById('changeHistoryList');
             if (!el) return;
-            if (changeHistory.length === 0) {
+
+            // ── API mode: fetch from server activity log ──
+            if (useApi && currentHouseholdId) {
+                el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-secondary);font-size:13px;"><span class="loading" style="display:inline-block;width:16px;height:16px;margin-right:8px;"></span>Loading history…</div>';
+                try {
+                    const data = await apiFetch('/households/' + currentHouseholdId + '/activity?limit=100');
+                    const activities = data.activities || [];
+                    if (activities.length === 0) {
+                        el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px;">No changes recorded yet.</div>';
+                        return;
+                    }
+                    const actionIcon  = { added:'➕', edited:'✏️', deleted:'🗑️', settled:'🤝', budget_update:'💰' };
+                    const actionColor = { added:'#10b981', edited:'#6366f1', deleted:'#ef4444', settled:'#f59e0b', budget_update:'#06b6d4' };
+                    el.innerHTML = activities.map(e => {
+                        const details = e.details ? JSON.parse(e.details) : {};
+                        const d = new Date(e.created_at);
+                        const timeStr = d.toLocaleDateString('en-CA') + ' ' + d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+                        const color = actionColor[e.action] || '#a1a1aa';
+                        const icon  = actionIcon[e.action] || '📝';
+                        // Build description line
+                        let desc = '';
+                        if (e.entity_type === 'expense' && details.amount != null) {
+                            const verb = e.action === 'added' ? 'Added' : e.action === 'edited' ? 'Edited' : 'Deleted';
+                            const notesPart = details.notes ? ` — ${details.notes}` : '';
+                            desc = `${verb} $${parseFloat(details.amount).toFixed(2)} · ${details.category || ''}${notesPart}`;
+                        } else if (e.entity_type === 'settlement') {
+                            desc = `Settlement recorded`;
+                        } else {
+                            desc = e.action;
+                        }
+                        // Shared badge
+                        const sharedBadge = details.isShared
+                            ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;background:rgba(99,102,241,0.15);color:#818cf8;margin-left:6px;vertical-align:middle;">👥 Shared</span>`
+                            : '';
+                        return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--glass-border);">
+                            <span style="font-size:15px;flex-shrink:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:${color}22;">${icon}</span>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:13px;font-weight:500;line-height:1.4;">${desc}${sharedBadge}</div>
+                                <div style="font-size:11px;color:var(--text-secondary);margin-top:3px;">${e.user_name} · ${timeStr}</div>
+                            </div>
+                            <div style="width:3px;flex-shrink:0;border-radius:2px;align-self:stretch;background:${color};opacity:0.5;"></div>
+                        </div>`;
+                    }).join('');
+                } catch (err) {
+                    console.error('Change history fetch failed:', err);
+                    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger);font-size:13px;">Failed to load history — tap Refresh to retry.</div>';
+                }
+                return;
+            }
+
+            // ── Offline / no-API fallback: localStorage ──
+            const local = JSON.parse(localStorage.getItem('finSyncChangeHistory') || '[]');
+            if (local.length === 0) {
                 el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px;">No changes recorded yet.</div>';
                 return;
             }
-            const actionIcon = { add: '➕', edit: '✏️', delete: '🗑️', settle: '🤝', budget: '💰' };
-            el.innerHTML = changeHistory.slice(0, 50).map(e => {
+            const actionIcon  = { add:'➕', edit:'✏️', delete:'🗑️', settle:'🤝', budget:'💰' };
+            const actionColor = { add:'#10b981', edit:'#6366f1', delete:'#ef4444', settle:'#f59e0b', budget:'#06b6d4' };
+            el.innerHTML = local.slice(0, 50).map(e => {
                 const d = new Date(e.ts);
-                const timeStr = d.toLocaleDateString('en-CA') + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                const timeStr = d.toLocaleDateString('en-CA') + ' ' + d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+                const color = actionColor[e.action] || '#a1a1aa';
+                const sharedBadge = e.isShared
+                    ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;background:rgba(99,102,241,0.15);color:#818cf8;margin-left:6px;vertical-align:middle;">👥 Shared</span>`
+                    : '';
                 return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--glass-border);">
-                    <span style="font-size:16px;flex-shrink:0;">${actionIcon[e.action] || '📝'}</span>
+                    <span style="font-size:15px;flex-shrink:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:${color}22;">${actionIcon[e.action] || '📝'}</span>
                     <div style="flex:1;min-width:0;">
-                        <div style="font-size:13px;font-weight:500;">${e.details}</div>
-                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">${e.user} · ${timeStr}</div>
+                        <div style="font-size:13px;font-weight:500;line-height:1.4;">${e.details}${sharedBadge}</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px;">${e.user} · ${timeStr}</div>
                     </div>
+                    <div style="width:3px;flex-shrink:0;border-radius:2px;align-self:stretch;background:${color};opacity:0.5;"></div>
                 </div>`;
             }).join('');
         }
 
         function clearChangeHistory() {
             if (confirm('Clear all change history?')) {
-                changeHistory = [];
                 localStorage.removeItem('finSyncChangeHistory');
                 renderChangeHistory();
             }
@@ -4073,7 +4229,7 @@
             saveData();
             // Log the add
             const paidBy = appState.partners?.[expense.whoPaid] || expense.whoPaid || 'Unknown';
-            logChange('add', `Added $${expense.amount.toFixed(2)} - ${expense.category} (${paidBy}${expense.notes ? ', ' + expense.notes : ''})`);
+            logChange('add', `Added $${expense.amount.toFixed(2)} - ${expense.category} (${paidBy}${expense.notes ? ', ' + expense.notes : ''})`, expense.isShared !== false);
         }
 
         let _deletingExpense = null;
@@ -4093,7 +4249,7 @@
                 appState.expenses = appState.expenses.filter(e => e.id !== id);
                 saveData();
                 _deletingExpense = null;
-                if (target) logChange('delete', `Deleted $${target.amount.toFixed(2)} - ${target.category}${target.notes ? ' (' + target.notes + ')' : ''}`);
+                if (target) logChange('delete', `Deleted $${target.amount.toFixed(2)} - ${target.category}${target.notes ? ' (' + target.notes + ')' : ''}`, target.isShared !== false);
                 updateDisplay();
                 renderTransactions();
                 showToast('Expense deleted', 'success');
@@ -4307,7 +4463,7 @@
                 category: foundCategory,
                 whoPaid: foundPayer,
                 notes: notes.trim(),
-                date: new Date().toISOString().split('T')[0],
+                date: localDateStr(),
                 splitMode
             });
         }
@@ -4401,7 +4557,7 @@
             const currentYear = appState.currentMonth.getFullYear();
 
             return appState.expenses.filter(expense => {
-                const expenseDate = new Date(expense.date);
+                const expenseDate = parseDateLocal(expense.date);
                 return expenseDate.getMonth() === currentMonth &&
                        expenseDate.getFullYear() === currentYear;
             });
@@ -4444,13 +4600,8 @@
             const totalSettled = (appState.settlements || []).reduce((sum, s) => sum + s.amount, 0);
 
             // How much partner1 overpaid (positive = partner2 owes partner1)
-            let balance = partner1Paid - partner1Total;
-            // Settlements reduce the balance - if partner1 was owed, they got paid; if partner2 was owed, they got paid
-            if (balance > 0) {
-                balance = Math.max(0, balance - totalSettled);
-            } else {
-                balance = Math.min(0, balance + totalSettled);
-            }
+            // Subtract settlements directly — allows balance to flip negative if overpaid
+            let balance = partner1Paid - partner1Total - totalSettled;
 
             const owesWho = balance > 0 ?
                 `${appState.partners.partner2} owes ${appState.partners.partner1}` :
@@ -4519,7 +4670,7 @@
             const prevMonth = new Date(appState.currentMonth);
             prevMonth.setMonth(prevMonth.getMonth() - 1);
             const prevMonthExpenses = appState.expenses.filter(e => {
-                const d = new Date(e.date);
+                const d = parseDateLocal(e.date);
                 return d.getMonth() === prevMonth.getMonth() && d.getFullYear() === prevMonth.getFullYear();
             });
             const prevMonthTotal = prevMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -4645,8 +4796,8 @@
 
             // ── 8. Daily spending streak / recent activity ───────────────────
             if (isCurrentMonth && currentExpenses.length > 0) {
-                const todayStr = today.toISOString().split('T')[0];
-                const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().split('T')[0];
+                const todayStr = localDateStr(today);
+                const yesterdayStr = localDateStr(new Date(today.getTime() - 86400000));
                 const todaySpend = currentExpenses.filter(e => e.date === todayStr).reduce((s,e) => s+e.amount, 0);
                 const yesterdaySpend = currentExpenses.filter(e => e.date === yesterdayStr).reduce((s,e) => s+e.amount, 0);
                 const avgDaily = totalSpent / dayOfMonth;
@@ -4661,7 +4812,7 @@
             if (isCurrentMonth && currentExpenses.length > 0) {
                 let noSpendDays = 0;
                 for (let d = dayOfMonth - 1; d >= 1; d--) {
-                    const ds = new Date(appState.currentMonth.getFullYear(), appState.currentMonth.getMonth(), d).toISOString().split('T')[0];
+                    const ds = localDateStr(new Date(appState.currentMonth.getFullYear(), appState.currentMonth.getMonth(), d));
                     if (currentExpenses.some(e => e.date === ds)) break;
                     noSpendDays++;
                 }
@@ -4741,6 +4892,123 @@
             return name; // No match - return unchanged
         }
 
+        // ── Canonical category resolution ────────────────────────────
+        // Strips leading emoji from a name, then finds the existing canonical
+        // category in appState (case-insensitive, emoji-ignored comparison).
+        // If no match, runs emojiForCategory to produce a consistently-emojiied form.
+        // This is the SINGLE entry point for all user/AI category input.
+        function stripEmojiPrefix(str) {
+            return (str || '').replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]+/gu, '').trim();
+        }
+
+        // ── Duplicate-prevention: alias + keyword maps ───────────────────────
+        // Layer 1: exact name aliases (handles minor wording variants)
+        const CATEGORY_ALIASES_CLIENT = {
+            'food & dining': 'food/dining',
+            'food and dining': 'food/dining',
+            'food': 'food/dining',
+            'dining': 'food/dining',
+            'dining out': 'food/dining',
+            'meals': 'food/dining',
+            'restaurant': 'food/dining',
+            'fast food': 'food/dining',
+            'takeout': 'food/dining',
+            'take-out': 'food/dining',
+            'delivery': 'food/dining',
+            'coffee': 'food/dining',
+            'coffee shop': 'food/dining',
+            'cafe': 'food/dining',
+            'café': 'food/dining',
+            'transport': 'transportation',
+            'transit': 'transportation',
+            'uber': 'transportation',
+            'lyft': 'transportation',
+            'taxi': 'transportation',
+            'gas': 'transportation',
+            'fuel': 'transportation',
+            'parking': 'transportation',
+            'investment': 'investments',
+            'invest': 'investments',
+            'savings': 'investments',
+            'grocery': 'groceries',
+            'grocery store': 'groceries',
+            'supermarket': 'groceries',
+            'gro': 'groceries',
+            'rent/housing': 'rent/mortgage',
+            'rent/home': 'rent/mortgage',
+            'housing': 'rent/mortgage',
+            'rent': 'rent/mortgage',
+            'subscription': 'subscriptions',
+            'streaming': 'subscriptions',
+            'netflix': 'subscriptions',
+            'spotify': 'subscriptions',
+            'healthcare': 'healthcare',
+            'medical': 'healthcare',
+            'pharmacy': 'healthcare',
+            'doctor': 'healthcare',
+            'health': 'healthcare',
+            'utility': 'utilities',
+            'electricity': 'utilities',
+            'hydro': 'utilities',
+            'internet': 'utilities',
+            'phone': 'subscriptions',
+            'bar': 'alcohol/bars',
+            'pub': 'alcohol/bars',
+            'alcohol': 'alcohol/bars',
+            'beer': 'alcohol/bars',
+            'wine': 'alcohol/bars',
+            'entertainment': 'entertainment',
+            'movie': 'entertainment',
+            'cinema': 'entertainment',
+            'shopping': 'shopping',
+            'clothes': 'shopping',
+            'clothing': 'shopping',
+            'amazon': 'shopping',
+            'travel': 'travel',
+            'hotel': 'travel',
+            'flight': 'travel',
+            'airbnb': 'travel',
+            'pet': 'pet',
+            'pets': 'pet',
+            'vet': 'pet',
+        };
+
+        function normalizeCatPlain(plain) {
+            return CATEGORY_ALIASES_CLIENT[plain] || plain;
+        }
+
+        function canonicalizeCategory(name) {
+            if (!name || !name.trim()) return name;
+            const plain = stripEmojiPrefix(name).toLowerCase().trim();
+            if (!plain) return name.trim();
+
+            const existing = deduplicateCategories(appState.categories);
+
+            // Pass 1: exact alias/plain match
+            const normalized = normalizeCatPlain(plain);
+            const match = existing.find(c => normalizeCatPlain(stripEmojiPrefix(c).toLowerCase()) === normalized);
+            if (match) return match;
+
+            // Pass 2: keyword scan — check if any word in the incoming name is an alias
+            // that maps to an existing category (catches "Coffee Shop" → food/dining, etc.)
+            const words = plain.split(/[\s\/\-&,]+/).filter(Boolean);
+            for (const word of words) {
+                const wordNorm = normalizeCatPlain(word);
+                const wordMatch = existing.find(c => normalizeCatPlain(stripEmojiPrefix(c).toLowerCase()) === wordNorm);
+                if (wordMatch) return wordMatch;
+            }
+
+            // Pass 3: partial contains match against existing category names
+            const containsMatch = existing.find(c => {
+                const ep = stripEmojiPrefix(c).toLowerCase();
+                return plain.includes(ep) || ep.includes(plain);
+            });
+            if (containsMatch) return containsMatch;
+
+            // Pass 4: not found — create new with emoji prefix
+            return emojiForCategory(name.trim());
+        }
+
         const CATEGORY_COLORS = {
             'Food/Dining': '#f59e0b', 'Groceries': '#10b981', 'Rent/Housing': '#6366f1',
             'Utilities': '#8b5cf6', 'Transport': '#3b82f6', 'Entertainment': '#ec4899',
@@ -4788,7 +5056,7 @@
             const catColor   = getCategoryColor(expense.category);
             const emoji      = getCategoryEmoji(expense.category);
             const isShared   = expense.isShared !== false;
-            const dateStr    = new Date(expense.date).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+            const dateStr    = parseDateLocal(expense.date).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
 
             const sheet = document.createElement('div');
             sheet.className = 'txn-sheet-overlay';
@@ -4902,7 +5170,7 @@
         function duplicateTransaction(id) {
             const expense = appState.expenses.find(e => e.id === id);
             if (!expense) return;
-            const copy = { ...expense, id: Date.now(), date: new Date().toISOString().split('T')[0] };
+            const copy = { ...expense, id: Date.now(), date: localDateStr() };
             appState.expenses.push(copy);
             if (useApi && currentHouseholdId) {
                 apiFetch('/households/' + currentHouseholdId + '/expenses', {
@@ -4933,7 +5201,7 @@
             }
 
             container.innerHTML = filteredExpenses
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .sort((a, b) => parseDateLocal(b.date) - parseDateLocal(a.date))
                 .map(expense => {
                     const isShared = expense.isShared !== false;
                     const paidByPartner1 = expense.whoPaid === 'partner1';
@@ -4966,7 +5234,7 @@
                             <div style="flex:1; min-width:0;">
                                 <div style="font-weight:600; font-size:14px; color:var(--text-primary); margin-bottom:2px;">${expense.notes || expense.category}</div>
                                 <div style="font-size:12px; color:var(--text-secondary);">
-                                    ${new Date(expense.date).toLocaleDateString('en-US', {month:'short', day:'numeric'})} · ${paidByName} · <span style="color:${catColor};">${expense.category}</span>
+                                    ${parseDateLocal(expense.date).toLocaleDateString('en-US', {month:'short', day:'numeric'})} · ${paidByName} · <span style="color:${catColor};">${expense.category}</span>
                                 </div>
                             </div>
                             <div style="font-size:16px; font-weight:700; flex-shrink:0;">$${expense.amount.toFixed(2)}</div>
@@ -4982,7 +5250,7 @@
                             <div style="flex:1; min-width:0;">
                                 <div style="font-weight:600; font-size:14px; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${expense.notes || expense.category}</div>
                                 <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">
-                                    ${new Date(expense.date).toLocaleDateString('en-US', {month:'short', day:'numeric'})} · ${paidByName} · <span style="color:${catColor}; background:rgba(255,255,255,0.07); padding:1px 6px; border-radius:4px; font-size:11px;">${expense.category}</span>
+                                    ${parseDateLocal(expense.date).toLocaleDateString('en-US', {month:'short', day:'numeric'})} · ${paidByName} · <span style="color:${catColor}; background:rgba(255,255,255,0.07); padding:1px 6px; border-radius:4px; font-size:11px;">${expense.category}</span>
                                 </div>
                             </div>
                             <div style="text-align:right; flex-shrink:0; display:flex; align-items:center; gap:8px;">
@@ -5295,8 +5563,13 @@
             showToast(`${count} transaction${count!==1?'s':''} saved ✓`, 'success');
         }
 
+        // ── Month name lookup for smart search ──────────────────────
+        const MONTH_NAMES_FULL = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+        const MONTH_NAMES_SHORT = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+
         function getFilteredExpenses() {
-            const searchTerm = document.getElementById('searchFilter').value.toLowerCase();
+            const rawSearch = document.getElementById('searchFilter').value.trim();
+            const searchTerm = rawSearch.toLowerCase();
             const categoryFilter = document.getElementById('categoryFilter').value;
             const personFilter = document.getElementById('personFilter').value;
             const typeFilter = document.getElementById('typeFilter').value;
@@ -5304,23 +5577,55 @@
 
             return appState.expenses.filter(expense => {
                 // Migrate old expenses without isShared field
-                if (expense.isShared === undefined) {
-                    expense.isShared = true;
+                if (expense.isShared === undefined) expense.isShared = true;
+
+                if (searchTerm) {
+                    const notes    = (expense.notes || '').toLowerCase();
+                    const category = (expense.category || '').toLowerCase();
+                    const amount   = String(expense.amount);
+                    const date     = expense.date || ''; // YYYY-MM-DD
+
+                    // Amount search: strip leading $ or spaces, match start of amount
+                    const amountQuery = searchTerm.replace(/^\$\s*/, '');
+                    const matchesAmount = /^\$?[\d.]+$/.test(searchTerm) && amount.includes(amountQuery);
+
+                    // Date search: YYYY, YYYY-MM, YYYY-MM-DD, or partial date string
+                    const matchesDate = date.startsWith(searchTerm) || date.includes(searchTerm);
+
+                    // Month-name search: "march", "mar", "March 2026" etc.
+                    const expDate = new Date(date + 'T00:00:00');
+                    const expMonthIdx = isNaN(expDate.getTime()) ? -1 : expDate.getMonth();
+                    const matchesMonthName = expMonthIdx >= 0 && (
+                        MONTH_NAMES_FULL[expMonthIdx].startsWith(searchTerm) ||
+                        MONTH_NAMES_SHORT[expMonthIdx] === searchTerm.substring(0, 3) ||
+                        (searchTerm.length >= 3 && MONTH_NAMES_FULL[expMonthIdx].startsWith(searchTerm.split(' ')[0]))
+                    );
+
+                    // Type keywords: "shared", "individual", "solo", "personal", "split"
+                    const isSharedExp = expense.isShared !== false;
+                    const matchesType = (['shared', 'split'].includes(searchTerm) && isSharedExp) ||
+                                        (['individual', 'solo', 'personal', 'mine'].includes(searchTerm) && !isSharedExp);
+
+                    // Person name search
+                    const paidByName = (appState.partners?.[expense.whoPaid] || expense.whoPaid || '').toLowerCase();
+                    const matchesPerson = paidByName.includes(searchTerm);
+
+                    const matchesNotes    = notes.includes(searchTerm);
+                    const matchesCategory = category.includes(searchTerm);
+
+                    if (!matchesNotes && !matchesCategory && !matchesAmount && !matchesDate &&
+                        !matchesMonthName && !matchesType && !matchesPerson) return false;
                 }
 
-                if (searchTerm && !expense.notes.toLowerCase().includes(searchTerm) &&
-                    !expense.category.toLowerCase().includes(searchTerm)) {
-                    return false;
-                }
                 if (categoryFilter && expense.category !== categoryFilter) return false;
                 if (personFilter && expense.whoPaid !== personFilter) return false;
                 if (typeFilter) {
-                    const isShared = expense.isShared !== false; // Default to true for backwards compatibility
+                    const isShared = expense.isShared !== false;
                     if (typeFilter === 'shared' && !isShared) return false;
                     if (typeFilter === 'individual' && isShared) return false;
                 }
                 if (monthFilter) {
-                    const expenseMonth = new Date(expense.date).toISOString().substring(0, 7);
+                    const expenseMonth = localDateStr(parseDateLocal(expense.date)).substring(0, 7);
                     if (expenseMonth !== monthFilter) return false;
                 }
                 return true;
@@ -5386,7 +5691,7 @@
         }
 
         function exportTransactions(format) {
-            const expenses = getFilteredExpenses().sort((a, b) => new Date(b.date) - new Date(a.date));
+            const expenses = getFilteredExpenses().sort((a, b) => parseDateLocal(b.date) - parseDateLocal(a.date));
             if (expenses.length === 0) {
                 showToast('No transactions to export', 'error');
                 return;
@@ -5555,7 +5860,7 @@
                 document.getElementById('m-amount').value = expense.amount;
                 document.getElementById('m-category').value = expense.category;
                 document.getElementById('m-whoPaid').value = expense.whoPaid;
-                document.getElementById('m-date').value = expense.date;
+                document.getElementById('m-date').value = sanitizeDateStr(expense.date);
                 document.getElementById('m-notes').value = expense.notes || '';
                 document.getElementById('m-isRecurring').checked = !!expense.isRecurring;
                 document.getElementById('m-customSplit').value = expense.customSplit || 50;
@@ -5571,7 +5876,7 @@
                 document.getElementById('m-amount').value = prefill.amount || '';
                 document.getElementById('m-category').value = prefill.category || '';
                 document.getElementById('m-whoPaid').value = prefill.whoPaid || 'partner1';
-                document.getElementById('m-date').value = prefill.date || new Date().toISOString().split('T')[0];
+                document.getElementById('m-date').value = prefill.date || localDateStr();
                 document.getElementById('m-notes').value = prefill.notes || '';
                 document.getElementById('m-isRecurring').checked = false;
                 document.getElementById('m-customSplit').value = 50;
@@ -5582,7 +5887,7 @@
                 titleEl.textContent = '➕ Add Transaction';
                 submitBtn.textContent = '💾 Add Expense';
                 document.getElementById('expenseModalForm').reset();
-                document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
+                document.getElementById('m-date').value = localDateStr();
                 setModalSplit('50/50');
             }
 
@@ -5665,12 +5970,48 @@
         }
 
         // ── Scan Receipt Modal ────────────────────────────────────
+        let _scanPasteHandler = null;
         function openScanModal() {
             clearReceipt(); // reset to clean state
             document.getElementById('scanReceiptModal').classList.add('open');
+            // Register paste handler so users can paste screenshots/images directly
+            if (_scanPasteHandler) document.removeEventListener('paste', _scanPasteHandler);
+            _scanPasteHandler = function(e) {
+                if (!document.getElementById('scanReceiptModal').classList.contains('open')) return;
+                const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+                if (!items) return;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.startsWith('image/')) {
+                        e.preventDefault();
+                        const file = items[i].getAsFile();
+                        if (!file) continue;
+                        if (file.size > 10 * 1024 * 1024) { showToast('Pasted image too large – max 10MB', 'error'); return; }
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+                            currentReceiptImage = ev.target.result;
+                            document.getElementById('previewImage').src = ev.target.result;
+                            document.getElementById('uploadArea').style.display = 'none';
+                            document.getElementById('receiptPreview').style.display = 'block';
+                            document.getElementById('scanResults').classList.remove('show');
+                            document.getElementById('scanResultsList').innerHTML = '';
+                            scannedItems = [];
+                            _addingSelected = false;
+                            resetScanSummary();
+                            showToast('Image pasted ✓', 'success');
+                        };
+                        reader.readAsDataURL(file);
+                        return;
+                    }
+                }
+            };
+            document.addEventListener('paste', _scanPasteHandler);
         }
         function closeScanModal() {
             document.getElementById('scanReceiptModal').classList.remove('open');
+            if (_scanPasteHandler) {
+                document.removeEventListener('paste', _scanPasteHandler);
+                _scanPasteHandler = null;
+            }
         }
 
         // Split button logic for modal
@@ -5706,7 +6047,7 @@
             if (_submittingModalExpense) return;
 
             const amount = parseFloat(document.getElementById('m-amount').value);
-            const category = document.getElementById('m-category').value.trim();
+            const category = canonicalizeCategory(document.getElementById('m-category').value.trim());
             const whoPaid = document.getElementById('m-whoPaid').value;
             const splitType = document.getElementById('m-splitType').value;
             const date = document.getElementById('m-date').value;
@@ -5717,6 +6058,7 @@
 
             if (!category) { showToast('Please select or enter a category', 'error'); return; }
             if (isNaN(amount) || amount <= 0) { showToast('Please enter a valid amount', 'error'); return; }
+            if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) { showToast('Please enter a valid date (YYYY-MM-DD)', 'error'); document.getElementById('m-date').focus(); return; }
 
             await ensureCategory(category);
 
@@ -5747,7 +6089,7 @@
                     }
                     saveData();
                     const paidByName = appState.partners?.[whoPaid] || whoPaid;
-                    logChange('edit', `Edited $${amount.toFixed(2)} - ${category} (${paidByName}${notes ? ', ' + notes : ''})`);
+                    logChange('edit', `Edited $${amount.toFixed(2)} - ${category} (${paidByName}${notes ? ', ' + notes : ''})`, isShared);
                     closeExpenseModal();
                     updateDisplay();
                     renderTransactions();
@@ -5793,7 +6135,7 @@
         function cancelEdit() {
             editingExpenseId = null;
             document.getElementById('expenseForm').reset();
-            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('expenseDate').value = localDateStr();
             document.getElementById('isShared').checked = true;
             handleSharedToggle();
             const submitBtn = document.querySelector('#expenseForm button[type="submit"]');
@@ -6187,7 +6529,7 @@
                     method: 'POST',
                     body: JSON.stringify({
                         amount: Math.abs(balance.rawBalance),
-                        date: new Date().toISOString().split('T')[0],
+                        date: localDateStr(),
                         notes: `Settlement: ${balance.label}`
                     })
                 });
@@ -6343,13 +6685,13 @@
             if (expenses.length === 0) {
                 html += `<p style="color:var(--text-secondary);text-align:center;padding:20px;">No transactions in this category</p>`;
             } else {
-                expenses.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(e => {
+                expenses.sort((a, b) => parseDateLocal(b.date) - parseDateLocal(a.date)).forEach(e => {
                     const paidBy = appState.partners[e.whoPaid] || 'Unknown';
                     html += `
                         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--glass-border);">
                             <div>
                                 <div style="font-weight:500;">${e.notes || e.category}</div>
-                                <div style="font-size:12px;color:var(--text-secondary);">${new Date(e.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})} · ${paidBy}</div>
+                                <div style="font-size:12px;color:var(--text-secondary);">${parseDateLocal(e.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})} · ${paidBy}</div>
                             </div>
                             <div style="font-weight:600;">$${e.amount.toFixed(2)}</div>
                         </div>`;
@@ -6384,9 +6726,10 @@
             const deduped = deduplicateCategories(appState.categories);
             const filter = filterText.toLowerCase();
             const filtered = deduped.filter(c => !filter || c.toLowerCase().includes(filter));
-            list.innerHTML = filtered.map(cat =>
-                `<div class="category-dropdown-item" onmousedown="selectCategory('${cat.replace(/'/g, "\\'")}', '${listId}')">${cat}</div>`
-            ).join('');
+            list.innerHTML = filtered.map(cat => {
+                const safe = cat.replace(/'/g, "\\'");
+                return `<div class="category-dropdown-item" onmousedown="selectCategory('${safe}', '${listId}')" ontouchstart="event.preventDefault(); selectCategory('${safe}', '${listId}')">${cat}</div>`;
+            }).join('');
         }
 
         function showCategoryDropdown(listId) {
@@ -6518,7 +6861,7 @@
                 const month = new Date();
                 month.setMonth(month.getMonth() - i);
                 const monthExpenses = applyAnalyticsFilter(appState.expenses.filter(expense => {
-                    const expenseDate = new Date(expense.date);
+                    const expenseDate = parseDateLocal(expense.date);
                     return expenseDate.getMonth() === month.getMonth() &&
                            expenseDate.getFullYear() === month.getFullYear();
                 }));
@@ -6552,7 +6895,12 @@
                             grid: { color: '#374151' }
                         },
                         x: {
-                            ticks: { color: '#ffffff' },
+                            ticks: {
+                                color: '#ffffff',
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: window.innerWidth < 480 ? 5 : 12
+                            },
                             grid: { color: '#374151' }
                         }
                     }
@@ -6575,7 +6923,7 @@
             const cumulativeSpending = [];
 
             expenses.forEach(expense => {
-                const day = new Date(expense.date).getDate();
+                const day = parseDateLocal(expense.date).getDate();
                 dailyTotals[day - 1] += expense.amount;
             });
 
@@ -6631,7 +6979,15 @@
                     plugins: { legend: { labels: { color: '#ffffff' } } },
                     scales: {
                         y: { ticks: { color: '#ffffff' }, grid: { color: '#374151' } },
-                        x: { ticks: { color: '#ffffff' }, grid: { color: '#374151' } }
+                        x: {
+                            ticks: {
+                                color: '#ffffff',
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: window.innerWidth < 480 ? 8 : 16
+                            },
+                            grid: { color: '#374151' }
+                        }
                     }
                 }
             });
@@ -6723,7 +7079,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `finsync-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `finsync-backup-${localDateStr()}.json`;
             a.click();
             URL.revokeObjectURL(url);
         }
@@ -6774,17 +7130,21 @@
             }
         }
 
-        function addCustomCategory() {
+        async function addCustomCategory() {
             const input = document.getElementById('newCategory');
             const raw = input.value.trim();
             if (!raw) { showToast('Please enter a category name', 'warning'); return; }
-            const category = emojiForCategory(raw);
-            if (appState.categories.includes(category) || appState.categories.includes(raw)) {
-                showToast(`"${raw}" already exists`, 'warning'); return;
+            // canonicalizeCategory resolves to existing canonical or creates new with emoji
+            const category = canonicalizeCategory(raw);
+            // Check if already exists (emoji-aware)
+            const existing = deduplicateCategories(appState.categories);
+            const exists = existing.some(c => stripEmojiPrefix(c).toLowerCase() === stripEmojiPrefix(category).toLowerCase());
+            if (exists) {
+                showToast(`"${stripEmojiPrefix(category)}" already exists as "${existing.find(c => stripEmojiPrefix(c).toLowerCase() === stripEmojiPrefix(category).toLowerCase())}"`, 'warning');
+                input.value = '';
+                return;
             }
-            appState.categories.push(category);
-            saveData();
-            populateSelectors();
+            await ensureCategory(category);
             renderCustomCategories();
             input.value = '';
             showToast(`Category "${category}" added ✅`, 'success');
@@ -7240,7 +7600,7 @@
                 }
 
                 const parsedData = result.data;
-                const receiptDate = parsedData.date || new Date().toISOString().split('T')[0];
+                const receiptDate = normalizeReceiptDate(parsedData.date) || localDateStr();
 
                 scannedItems = parsedData.items.map((item, index) => ({
                     id: `scanned-${Date.now()}-${index}`,
@@ -7285,34 +7645,10 @@
                 }
             }
 
-            // Map AI-suggested categories to exact app categories (fallback)
-            const mapping = {
-                'food': 'Food/Dining', 'dining': 'Food/Dining', 'restaurant': 'Food/Dining',
-                'grocery': 'Groceries', 'groceries': 'Groceries', 'supermarket': 'Groceries',
-                'rent': 'Rent/Housing', 'housing': 'Rent/Housing', 'mortgage': 'Rent/Housing',
-                'utilities': 'Utilities', 'utility': 'Utilities', 'bills': 'Utilities',
-                'transport': 'Transport', 'transportation': 'Transport', 'gas': 'Transport', 'fuel': 'Transport',
-                'entertainment': 'Entertainment', 'fun': 'Entertainment',
-                'subscriptions': 'Subscriptions', 'subscription': 'Subscriptions',
-                'health': 'Health', 'medical': 'Health', 'pharmacy': 'Health',
-                'shopping': 'Shopping', 'clothes': 'Shopping', 'clothing': 'Shopping',
-                'travel': 'Travel', 'hotel': 'Travel', 'flight': 'Travel',
-                'gifts': 'Gifts', 'gift': 'Gifts',
-            };
-
-            // Check exact match first
-            if (appState.categories.includes(category)) return category;
-
-            // Check mapping
-            const lower = category.toLowerCase();
-            if (mapping[lower]) return mapping[lower];
-
-            // Partial match
-            for (const [key, val] of Object.entries(mapping)) {
-                if (lower.includes(key) || key.includes(lower)) return val;
-            }
-
-            return 'Other';
+            // Use canonicalizeCategory — this resolves to an existing canonical match
+            // first (emoji-aware, case-insensitive), then falls back to emojiForCategory.
+            // This replaces the hardcoded mapping table entirely and handles custom categories.
+            return canonicalizeCategory(category);
         }
 
         function getUserCategoryMappings() {
@@ -7343,11 +7679,145 @@
             return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
 
+        // ── Scan result inline category dropdown ────────────────────
+        let _scanCatHideTimers = {};
+
+        function getScanCatOptions(itemId, filter) {
+            const deduped = deduplicateCategories(appState.categories);
+            const fl = (filter || '').toLowerCase();
+            const filtered = fl ? deduped.filter(c => c.toLowerCase().includes(fl)) : deduped;
+            return filtered;
+        }
+
+        function renderScanCatDropdown(itemId, filter) {
+            const drop = document.getElementById('scanCatDrop-' + itemId);
+            if (!drop) return;
+            const opts = getScanCatOptions(itemId, filter);
+            const fl = (filter || '').trim();
+            // If typed value isn't in list show "Create" option at top
+            const exactMatch = opts.some(c => c.toLowerCase() === fl.toLowerCase());
+            let html = '';
+            if (fl && !exactMatch) {
+                const flJson = JSON.stringify(fl);
+                html += `<div class="scan-cat-item" style="color:#a78bfa;font-style:italic;"
+                              onmousedown="commitScanCat('${itemId}', ${flJson}, true)"
+                              ontouchstart="event.preventDefault(); commitScanCat('${itemId}', ${flJson}, true)">
+                              ＋ Create "${fl}"</div>`;
+            }
+            html += opts.map(cat => {
+                const catJson = JSON.stringify(cat);
+                return `<div class="scan-cat-item" onmousedown="commitScanCat('${itemId}', ${catJson}, false)" ontouchstart="event.preventDefault(); commitScanCat('${itemId}', ${catJson}, false)">${cat}</div>`;
+            }).join('');
+            if (!html) html = '<div style="padding:10px 12px;color:var(--text-secondary);font-size:13px;">No categories found</div>';
+            drop.innerHTML = html;
+        }
+
+        function showScanCatDropdown(itemId) {
+            clearTimeout(_scanCatHideTimers[itemId]);
+            const drop = document.getElementById('scanCatDrop-' + itemId);
+            const input = document.getElementById('scanCatInput-' + itemId);
+            if (!drop) return;
+            renderScanCatDropdown(itemId, input?.value || '');
+            drop.style.display = 'block';
+        }
+
+        function hideScanCatDropdownDelayed(itemId) {
+            _scanCatHideTimers[itemId] = setTimeout(() => {
+                const drop = document.getElementById('scanCatDrop-' + itemId);
+                if (drop) drop.style.display = 'none';
+                // Commit whatever is typed — canonicalize first to deduplicate
+                const input = document.getElementById('scanCatInput-' + itemId);
+                if (input && input.value.trim()) {
+                    const canonical = canonicalizeCategory(input.value.trim());
+                    const alreadyIn = deduplicateCategories(appState.categories).some(c => stripEmojiPrefix(c).toLowerCase() === stripEmojiPrefix(canonical).toLowerCase());
+                    commitScanCat(itemId, canonical, !alreadyIn);
+                }
+            }, 200);
+        }
+
+        function toggleScanCatDropdown(itemId) {
+            const drop = document.getElementById('scanCatDrop-' + itemId);
+            if (!drop) return;
+            if (drop.style.display === 'none') {
+                showScanCatDropdown(itemId);
+            } else {
+                drop.style.display = 'none';
+            }
+        }
+
+        function filterScanCatDropdown(itemId, value) {
+            const drop = document.getElementById('scanCatDrop-' + itemId);
+            if (drop && drop.style.display !== 'none') {
+                renderScanCatDropdown(itemId, value);
+            }
+        }
+
+        function commitScanCat(itemId, cat, isNew) {
+            clearTimeout(_scanCatHideTimers[itemId]);
+            const drop = document.getElementById('scanCatDrop-' + itemId);
+            const input = document.getElementById('scanCatInput-' + itemId);
+            if (drop) drop.style.display = 'none';
+            if (!cat || !cat.trim()) return;
+            // Always canonicalize — resolves to existing or new emoji-ified form
+            const finalCat = canonicalizeCategory(cat.trim());
+            if (input) input.value = finalCat;
+            ensureCategory(finalCat); // idempotent — won't duplicate
+            const item = scannedItems.find(i => i.id === itemId);
+            if (item && finalCat !== item.category) {
+                learnFromCategoryChange(item.description, finalCat);
+            }
+            updateItemField(itemId, 'category', finalCat);
+        }
+
+        // Normalize various AI-returned date strings to YYYY-MM-DD
+        function normalizeReceiptDate(dateStr) {
+            if (!dateStr) return null;
+            const s = String(dateStr).trim();
+            // Already YYYY-MM-DD
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+            // MM/DD/YYYY or MM-DD-YYYY
+            const mdy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+            if (mdy) return `${mdy[3]}-${mdy[1].padStart(2,'0')}-${mdy[2].padStart(2,'0')}`;
+            // Month name formats: "March 5, 2026" / "March 5 2026" / "5 March 2026"
+            const months = {january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12,
+                            jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+            const mnd1 = s.match(/^([a-zA-Z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
+            if (mnd1) { const m = months[mnd1[1].toLowerCase()]; if (m) return `${mnd1[3]}-${String(m).padStart(2,'0')}-${mnd1[2].padStart(2,'0')}`; }
+            const mnd2 = s.match(/^(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})$/);
+            if (mnd2) { const m = months[mnd2[2].toLowerCase()]; if (m) return `${mnd2[3]}-${String(m).padStart(2,'0')}-${mnd2[1].padStart(2,'0')}`; }
+            // DD/MM/YYYY — heuristic: if day>12 it must be DD/MM
+            const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+            if (dmy && parseInt(dmy[1]) > 12) {
+                const yr = dmy[3].length === 2 ? '20' + dmy[3] : dmy[3];
+                return `${yr}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+            }
+            // Fallback: native Date parse (use local date to avoid UTC shift)
+            const d = new Date(s);
+            if (!isNaN(d.getTime())) return localDateStr(d);
+            return null;
+        }
+
         function showScanResults(data) {
             const results = document.getElementById('scanResults');
             const list = document.getElementById('scanResultsList');
+            const deduped = deduplicateCategories(appState.categories);
 
-            list.innerHTML = scannedItems.map(item => `
+            list.innerHTML = scannedItems.map(item => {
+                // Fuzzy-match item.category against actual appState categories
+                // (handles emoji prefix mismatches e.g. "Food/Dining" vs "🍔 Food/Dining")
+                const matchedCat = deduped.find(c => c === item.category)
+                    || deduped.find(c => c.replace(/^[\p{Emoji}\s]+/u,'').trim() === item.category.replace(/^[\p{Emoji}\s]+/u,'').trim())
+                    || item.category;
+
+                const catOptions = deduped.map(cat =>
+                    `<option value="${escAttr(cat)}" ${cat === matchedCat ? 'selected' : ''}>${escAttr(cat)}</option>`
+                ).join('');
+
+                const partnerOptions = Object.keys(appState.partners).map(key =>
+                    `<option value="${escAttr(key)}" ${item.whoPaid === key ? 'selected' : ''}>${escAttr(appState.partners[key])}</option>`
+                ).join('');
+
+                return `
                 <div class="scan-result-item ${item.selected ? 'selected' : ''}" data-item-id="${item.id}">
                     <div class="result-header">
                         <input type="checkbox" class="result-checkbox" ${item.selected ? 'checked' : ''}
@@ -7365,20 +7835,33 @@
                             <input type="number" step="0.01" value="${item.amount}"
                                    onchange="updateItemField('${item.id}', 'amount', parseFloat(this.value))">
                         </div>
-                        <div class="result-field">
+                        <div class="result-field" style="position:relative;">
                             <label>Category</label>
-                            <select onchange="updateItemField('${item.id}', 'category', this.value)">
-                                ${appState.categories.map(cat =>
-                                    `<option value="${escAttr(cat)}" ${cat === item.category ? 'selected' : ''}>${escAttr(cat)}</option>`
-                                ).join('')}
-                            </select>
+                            <div style="position:relative;">
+                                <input type="text" id="scanCatInput-${item.id}"
+                                       value="${escAttr(matchedCat)}"
+                                       placeholder="Type or pick category…"
+                                       autocomplete="off"
+                                       oninput="filterScanCatDropdown('${item.id}', this.value)"
+                                       onfocus="showScanCatDropdown('${item.id}')"
+                                       onblur="hideScanCatDropdownDelayed('${item.id}')"
+                                       style="width:100%;box-sizing:border-box;padding:8px 28px 8px 10px;background:#1a1a2e;border:1px solid var(--glass-border);border-radius:8px;color:var(--text-primary);font-size:14px;">
+                                <span onclick="toggleScanCatDropdown('${item.id}')"
+                                      style="position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text-secondary);font-size:11px;user-select:none;">▼</span>
+                            </div>
+                            <div id="scanCatDrop-${item.id}"
+                                 style="display:none;position:absolute;top:100%;left:0;right:0;z-index:9999;background:#1a1a2e;border:1px solid var(--glass-border);border-radius:8px;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4);margin-top:2px;"></div>
+                        </div>
+                        <div class="result-field">
+                            <label>Date</label>
+                            <input type="date" value="${escAttr(sanitizeDateStr(item.date))}"
+                                   oninput="updateItemField('${item.id}', 'date', this.value || '${escAttr(sanitizeDateStr(item.date))}')"
+                                   onchange="updateItemField('${item.id}', 'date', this.value || '${escAttr(sanitizeDateStr(item.date))}')">
                         </div>
                         <div class="result-field">
                             <label>Who Paid</label>
                             <select onchange="updateItemField('${item.id}', 'whoPaid', this.value)">
-                                ${Object.keys(appState.partners).map(key =>
-                                    `<option value="${escAttr(key)}" ${item.whoPaid === key ? 'selected' : ''}>${escAttr(appState.partners[key])}</option>`
-                                ).join('')}
+                                ${partnerOptions}
                             </select>
                         </div>
                     </div>
@@ -7389,8 +7872,8 @@
                             <span>👥 Shared expense</span>
                         </label>
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
 
             updateScanSummary();
             results.classList.add('show');
@@ -7458,7 +7941,7 @@
                         whoPaid: item.whoPaid,
                         splitType: item.shared ? '50/50' : 'single',
                         customSplit: null,
-                        date: item.date || new Date().toISOString().split('T')[0],
+                        date: sanitizeDateStr(item.date) || localDateStr(),
                         notes: item.description,
                         isRecurring: false,
                         isShared: item.shared,
@@ -7541,6 +8024,7 @@
                 <div style="font-size: 48px; margin-bottom: 12px;">📷</div>
                 <div style="font-size: 16px; margin-bottom: 8px;">Click to select or drag & drop your receipt</div>
                 <div style="font-size: 13px; color: var(--text-secondary);">Supports JPG, PNG, WebP • Max 10MB</div>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 6px; opacity: 0.7;">📋 Or paste an image (Ctrl+V / ⌘V)</div>
             </div>
 
             <input type="file" id="receiptFile" accept="image/*" style="display: none;" onchange="handleReceiptFile(event)">
@@ -7587,7 +8071,7 @@
             <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.07);">
                 <div class="quick-add-label">💬 Quick Add</div>
                 <div class="quick-add-row">
-                    <input type="text" id="naturalInput" placeholder="e.g. 'Tim Hortons $4.50 me' or 'groceries $85 split'"
+                    <input type="text" id="naturalInput" placeholder="e.g. 'Coffee $4.50' or 'groceries $85 split'"
                            onkeydown="if(event.key==='Enter'){event.preventDefault();parseNaturalInput();}">
                     <button type="button" class="parse-btn" onclick="parseNaturalInput()">🔍 Parse</button>
                 </div>
@@ -7599,7 +8083,7 @@
                     <label class="form-label">Amount</label>
                     <div style="position:relative;">
                         <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;font-weight:700;color:rgba(255,255,255,0.35);pointer-events:none;">$</span>
-                        <input type="number" id="m-amount" placeholder="0.00" step="0.01" required>
+                        <input type="number" id="m-amount" placeholder="0.00" step="0.01" inputmode="decimal" required>
                     </div>
                 </div>
 
