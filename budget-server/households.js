@@ -2,6 +2,104 @@ const express = require('express');
 const crypto = require('crypto');
 const { queryAll, queryOne, runSql } = require('./database');
 
+// ── Category canonicalization ─────────────────────────────────────────────
+// Strips leading emoji/whitespace for comparison, then resolves to whichever
+// canonical name already exists in the household's categories table.
+// If no match, returns the cleaned-up input so a new canonical entry is created.
+function stripEmojiPrefix(str) {
+    return str.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]+/gu, '').trim();
+}
+
+// Normalize known variant names to a single canonical plain-text form for matching.
+// This prevents duplicates when e.g. AI returns "Food/Dining" but DB has "Food & Dining" (or vice versa).
+const CATEGORY_ALIASES_SERVER = {
+    'food & dining': 'food/dining',
+    'food and dining': 'food/dining',
+    'food': 'food/dining',
+    'dining': 'food/dining',
+    'dining out': 'food/dining',
+    'meals': 'food/dining',
+    'restaurant': 'food/dining',
+    'fast food': 'food/dining',
+    'takeout': 'food/dining',
+    'take-out': 'food/dining',
+    'delivery': 'food/dining',
+    'coffee': 'food/dining',
+    'coffee shop': 'food/dining',
+    'cafe': 'food/dining',
+    'café': 'food/dining',
+    'transport': 'transportation',
+    'transit': 'transportation',
+    'uber': 'transportation',
+    'lyft': 'transportation',
+    'taxi': 'transportation',
+    'gas': 'transportation',
+    'fuel': 'transportation',
+    'parking': 'transportation',
+    'investment': 'investments',
+    'invest': 'investments',
+    'savings': 'investments',
+    'grocery': 'groceries',
+    'grocery store': 'groceries',
+    'supermarket': 'groceries',
+    'gro': 'groceries',
+    'rent/housing': 'rent/mortgage',
+    'rent/home': 'rent/mortgage',
+    'housing': 'rent/mortgage',
+    'rent': 'rent/mortgage',
+    'subscription': 'subscriptions',
+    'streaming': 'subscriptions',
+    'utility': 'utilities',
+    'electricity': 'utilities',
+    'hydro': 'utilities',
+    'bar': 'alcohol/bars',
+    'pub': 'alcohol/bars',
+    'alcohol': 'alcohol/bars',
+    'entertainment': 'entertainment',
+    'movie': 'entertainment',
+    'cinema': 'entertainment',
+    'shopping': 'shopping',
+    'clothing': 'shopping',
+    'travel': 'travel',
+    'hotel': 'travel',
+    'flight': 'travel',
+    'pet': 'pet',
+    'pets': 'pet',
+};
+
+function normalizeForMatch(plain) {
+    return CATEGORY_ALIASES_SERVER[plain] || plain;
+}
+
+function resolveCategory(name, householdId) {
+    if (!name || !name.trim()) return name;
+    const plain = stripEmojiPrefix(name).toLowerCase().trim();
+    const existing = queryAll('SELECT name FROM categories WHERE household_id = ?', [householdId]);
+
+    // Pass 1: exact alias/plain match
+    const normalized = normalizeForMatch(plain);
+    const match = existing.find(r => normalizeForMatch(stripEmojiPrefix(r.name).toLowerCase()) === normalized);
+    if (match) return match.name;
+
+    // Pass 2: keyword scan — split incoming name into words and try each as an alias
+    const words = plain.split(/[\s\/\-&,]+/).filter(Boolean);
+    for (const word of words) {
+        const wordNorm = normalizeForMatch(word);
+        const wordMatch = existing.find(r => normalizeForMatch(stripEmojiPrefix(r.name).toLowerCase()) === wordNorm);
+        if (wordMatch) return wordMatch.name;
+    }
+
+    // Pass 3: partial contains match against existing category names
+    const containsMatch = existing.find(r => {
+        const ep = stripEmojiPrefix(r.name).toLowerCase();
+        return plain.includes(ep) || ep.includes(plain);
+    });
+    if (containsMatch) return containsMatch.name;
+
+    // Not found — return as-is and let the category creation handle it
+    return name.trim();
+}
+
 // Activity log helper function
 function logActivity(householdId, userId, action, entityType, entityId, details) {
     try {
@@ -34,7 +132,7 @@ router.post('/', authenticate, (req, res) => {
     runSql('INSERT INTO household_members (household_id, user_id, role, partner_name) VALUES (?, ?, ?, ?)',
       [result.lastInsertRowid, req.user.id, 'owner', partnerName || req.user.name]);
 
-    const defaultCategories = ['🍕 Food & Dining', '🛒 Groceries', '🏠 Rent/Mortgage', '🚗 Transportation', '🎬 Entertainment', '💡 Utilities', '🛍️ Shopping', '💊 Healthcare', '📱 Subscriptions', '✈️ Travel', '🐾 Pet', '💰 Investments', '📦 Other'];
+    const defaultCategories = ['🍕 Food/Dining', '🛒 Groceries', '🏠 Rent/Mortgage', '🚗 Transportation', '🎬 Entertainment', '💡 Utilities', '🛍️ Shopping', '💊 Healthcare', '📱 Subscriptions', '✈️ Travel', '🐾 Pet', '💰 Investments', '📦 Other'];
     defaultCategories.forEach(cat => {
       try { runSql('INSERT INTO categories (household_id, name) VALUES (?, ?)', [result.lastInsertRowid, cat]); } catch(e) {}
     });
@@ -140,14 +238,21 @@ router.get('/:id/expenses', authenticate, (req, res) => {
 router.post('/:id/expenses', authenticate, (req, res) => {
   try {
     const { id } = req.params;
-    const { amount, category, paidBy, splitType, customSplit, date, notes, isRecurring, isShared } = req.body;
+    const { amount, paidBy, splitType, customSplit, date, notes, isRecurring, isShared } = req.body;
+    // Resolve category to canonical form (prevents emoji-prefix duplicates)
+    const category = resolveCategory(req.body.category, id);
 
     const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
     if (!member) return res.status(403).json({ error: 'Not a member' });
 
+    // Ensure canonical category exists in categories table
+    runSql('INSERT OR IGNORE INTO categories (household_id, name) VALUES (?, ?)', [id, category]);
+
+    const resolvedIsShared = isShared !== false;
+    const resolvedSplitType = splitType || (resolvedIsShared ? '50/50' : 'single');
     const result = runSql(
       `INSERT INTO expenses (household_id, amount, category, paid_by, split_type, custom_split, date, notes, is_recurring, is_shared, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, amount, category, paidBy || req.user.id, splitType || '50/50', customSplit || null, date, notes || '', isRecurring ? 1 : 0, isShared !== false ? 1 : 0, req.user.id]
+      [id, amount, category, paidBy || req.user.id, resolvedSplitType, customSplit || null, date, notes || '', isRecurring ? 1 : 0, resolvedIsShared ? 1 : 0, req.user.id]
     );
 
     // Log activity
@@ -155,7 +260,8 @@ router.post('/:id/expenses', authenticate, (req, res) => {
       amount: amount,
       category: category,
       notes: notes || '',
-      whoPaid: paidBy || req.user.id
+      whoPaid: paidBy || req.user.id,
+      isShared: isShared !== false
     });
 
     const expense = queryOne('SELECT e.*, u.name as paid_by_name FROM expenses e JOIN users u ON e.paid_by = u.id WHERE e.id = ?', [result.lastInsertRowid]);
@@ -169,21 +275,29 @@ router.post('/:id/expenses', authenticate, (req, res) => {
 router.put('/:id/expenses/:expenseId', authenticate, (req, res) => {
   try {
     const { id, expenseId } = req.params;
-    const { amount, category, paidBy, splitType, customSplit, date, notes, isRecurring, isShared } = req.body;
+    const { amount, paidBy, splitType, customSplit, date, notes, isRecurring, isShared } = req.body;
+    // Resolve category to canonical form
+    const category = resolveCategory(req.body.category, id);
 
     const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
     if (!member) return res.status(403).json({ error: 'Not a member' });
 
+    // Ensure canonical category exists
+    runSql('INSERT OR IGNORE INTO categories (household_id, name) VALUES (?, ?)', [id, category]);
+
+    const resolvedIsSharedUpd = isShared !== false;
+    const resolvedSplitTypeUpd = splitType || (resolvedIsSharedUpd ? '50/50' : 'single');
     runSql(
       `UPDATE expenses SET amount=?, category=?, paid_by=?, split_type=?, custom_split=?, date=?, notes=?, is_recurring=?, is_shared=?, updated_at=datetime('now') WHERE id=? AND household_id=?`,
-      [amount, category, paidBy || req.user.id, splitType || '50/50', customSplit || null, date, notes || '', isRecurring ? 1 : 0, isShared !== false ? 1 : 0, expenseId, id]
+      [amount, category, paidBy || req.user.id, resolvedSplitTypeUpd, customSplit || null, date, notes || '', isRecurring ? 1 : 0, resolvedIsSharedUpd ? 1 : 0, expenseId, id]
     );
 
     // Log activity
     logActivity(id, req.user.id, 'edited', 'expense', expenseId, {
       amount: amount,
       category: category,
-      notes: notes || ''
+      notes: notes || '',
+      isShared: isShared !== false
     });
 
     const expense = queryOne('SELECT e.*, u.name as paid_by_name FROM expenses e JOIN users u ON e.paid_by = u.id WHERE e.id = ?', [expenseId]);
@@ -210,7 +324,8 @@ router.delete('/:id/expenses/:expenseId', authenticate, (req, res) => {
       logActivity(id, req.user.id, 'deleted', 'expense', expenseId, {
         amount: existing.amount,
         category: existing.category,
-        notes: existing.notes || ''
+        notes: existing.notes || '',
+        isShared: existing.is_shared !== 0
       });
     }
     
@@ -273,11 +388,12 @@ router.put('/:id/budgets', authenticate, (req, res) => {
 router.post('/:id/categories', authenticate, (req, res) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
     const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
     if (!member) return res.status(403).json({ error: 'Not a member' });
 
-    try { runSql('INSERT INTO categories (household_id, name) VALUES (?, ?)', [id, name]); } catch(e) {}
+    // Resolve to canonical form — if a match exists, silently return that instead of creating a duplicate
+    const canonical = resolveCategory(req.body.name, id);
+    runSql('INSERT OR IGNORE INTO categories (household_id, name) VALUES (?, ?)', [id, canonical]);
     res.json({ categories: queryAll('SELECT name FROM categories WHERE household_id = ?', [id]).map(c => c.name) });
   } catch (err) {
     console.error('Add category error:', err);
@@ -408,7 +524,7 @@ router.delete('/:id', authenticate, (req, res) => {
 // Get activity log
 router.get('/:id/activity', authenticate, (req, res) => {
     const { id } = req.params;
-    const limit = parseInt(req.query.limit) || 50;
+    const limit = parseInt(req.query.limit) || 100;
     
     try {
         const activities = queryAll(
