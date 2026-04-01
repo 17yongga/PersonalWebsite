@@ -2707,7 +2707,13 @@
 
                 <div class="chart-grid">
                     <div class="glass-card">
-                        <h3 style="margin-bottom: 20px;">📈 Monthly Comparison</h3>
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+                            <h3 style="margin:0;">📈 Monthly Comparison</h3>
+                            <select id="monthlyCategoryFilter" onchange="renderMonthlyChart()"
+                                style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;padding:6px 10px;font-size:13px;cursor:pointer;outline:none;">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
                         <div class="chart-container">
                             <canvas id="monthlyChart"></canvas>
                         </div>
@@ -2768,9 +2774,13 @@
                     <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
                         <span style="color: var(--text-secondary);">Logged in as: <strong id="currentUserEmail"></strong></span>
                     </div>
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
                         <button class="btn btn-secondary" onclick="logout()">🚪 Logout</button>
                         <button class="btn" onclick="openSpaceManager()">🏠 Manage Spaces</button>
+                    </div>
+                    <div style="border-top: 1px solid var(--glass-border); padding-top: 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                        <button onclick="deleteAccount()" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); color: #f87171; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; transition: background 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.18)'" onmouseout="this.style.background='rgba(239,68,68,0.08)'">🗑️ Delete Account</button>
+                        <a href="https://gary-yong.com/flowt-privacy.html" target="_blank" style="color: var(--text-secondary); font-size: 13px; text-decoration: none; opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">Privacy Policy ↗</a>
                     </div>
                 </div>
 
@@ -3326,6 +3336,20 @@
                 }
             } catch (err) {
                 showToast(err.message || 'Failed to delete space', 'error');
+            }
+        }
+
+        async function deleteAccount() {
+            if (!confirm('Delete your Flowt account?\n\nThis permanently removes your account and all your data. If you share a household, your partner keeps their data.\n\nThis cannot be undone.')) return;
+            if (!confirm('Final confirmation: your account, expenses, and settings will be deleted forever. Continue?')) return;
+            try {
+                await apiFetch('/auth/account', { method: 'DELETE' });
+                // Clear all local data
+                ['finSyncToken', 'finSyncUser', 'finSyncHouseholdId', 'finSyncUsers', 'finSyncExpenses', 'finSyncBudgets'].forEach(k => localStorage.removeItem(k));
+                showToast('Account deleted', 'success');
+                setTimeout(() => { window.location.reload(); }, 1200);
+            } catch (err) {
+                showToast(err.message || 'Failed to delete account. Please try again.', 'error');
             }
         }
 
@@ -4043,14 +4067,15 @@
                 return;
             }
 
-            // Auto-add new category
-            await ensureCategory(category);
-
+            // Lock immediately — before any await — to prevent double-submission on rapid taps
             _submittingExpense = true;
             const formSubmitBtn = document.querySelector('#expenseForm button[type="submit"]');
             const origBtnText = formSubmitBtn.textContent;
             formSubmitBtn.disabled = true;
             formSubmitBtn.textContent = '⏳ Saving...';
+
+            // Auto-add new category
+            await ensureCategory(category);
 
             try {
 
@@ -5988,16 +6013,30 @@
                         if (file.size > 10 * 1024 * 1024) { showToast('Pasted image too large – max 10MB', 'error'); return; }
                         const reader = new FileReader();
                         reader.onload = function(ev) {
-                            currentReceiptImage = ev.target.result;
-                            document.getElementById('previewImage').src = ev.target.result;
-                            document.getElementById('uploadArea').style.display = 'none';
-                            document.getElementById('receiptPreview').style.display = 'block';
-                            document.getElementById('scanResults').classList.remove('show');
-                            document.getElementById('scanResultsList').innerHTML = '';
-                            scannedItems = [];
-                            _addingSelected = false;
-                            resetScanSummary();
-                            showToast('Image pasted ✓', 'success');
+                            const img = new Image();
+                            img.onload = function() {
+                                const MAX_DIM = 1920;
+                                let w = img.width, h = img.height;
+                                if (w > MAX_DIM || h > MAX_DIM) {
+                                    if (w > h) { h = Math.round(h * MAX_DIM / w); w = MAX_DIM; }
+                                    else { w = Math.round(w * MAX_DIM / h); h = MAX_DIM; }
+                                }
+                                const canvas = document.createElement('canvas');
+                                canvas.width = w; canvas.height = h;
+                                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                                const jpeg = canvas.toDataURL('image/jpeg', 0.85);
+                                currentReceiptImage = jpeg;
+                                document.getElementById('previewImage').src = jpeg;
+                                document.getElementById('uploadArea').style.display = 'none';
+                                document.getElementById('receiptPreview').style.display = 'block';
+                                document.getElementById('scanResults').classList.remove('show');
+                                document.getElementById('scanResultsList').innerHTML = '';
+                                scannedItems = [];
+                                _addingSelected = false;
+                                resetScanSummary();
+                                showToast('Image pasted ✓', 'success');
+                            };
+                            img.src = ev.target.result;
                         };
                         reader.readAsDataURL(file);
                         return;
@@ -6060,13 +6099,14 @@
             if (isNaN(amount) || amount <= 0) { showToast('Please enter a valid amount', 'error'); return; }
             if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) { showToast('Please enter a valid date (YYYY-MM-DD)', 'error'); document.getElementById('m-date').focus(); return; }
 
-            await ensureCategory(category);
-
+            // Lock immediately — before any await — to prevent double-submission on rapid taps
             _submittingModalExpense = true;
             const submitBtn = document.getElementById('expenseModalSubmitBtn');
             const origText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Saving...';
+
+            await ensureCategory(category);
 
             try {
                 if (editingExpenseId !== null) {
@@ -6562,9 +6602,20 @@
             if (currentAnalyticsView === 'combined') return expenses;
             if (currentAnalyticsView === 'shared') return expenses.filter(e => e.isShared !== false);
             if (currentAnalyticsView.startsWith('partner')) {
-                return expenses.filter(e => e.whoPaid === currentAnalyticsView);
+                // True cost view: include all shared (halved) + this partner's personal (full)
+                return expenses.filter(e => e.isShared !== false || e.whoPaid === currentAnalyticsView);
             }
             return expenses;
+        }
+
+        // Returns the effective cost of an expense for the current analytics view.
+        // Partner views: shared expenses count at 50%, personal at full.
+        // All other views: raw amount.
+        function effectiveCost(expense) {
+            if (currentAnalyticsView.startsWith('partner') && expense.isShared !== false) {
+                return expense.amount / 2;
+            }
+            return expense.amount;
         }
 
         function getAnalyticsExpenses() {
@@ -6616,7 +6667,7 @@
             const categoryTotals = {};
 
             expenses.forEach(expense => {
-                categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + expense.amount;
+                categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + effectiveCost(expense);
             });
 
             let data = Object.entries(categoryTotals).map(([category, amount]) => ({
@@ -6673,7 +6724,7 @@
         // Category drill-down modal
         function showCategoryTransactionsModal(categoryName) {
             const expenses = getAnalyticsExpenses().filter(e => e.category === categoryName);
-            const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+            const total = expenses.reduce((sum, e) => sum + effectiveCost(e), 0);
 
             let html = `
                 <div class="category-modal-overlay" id="categoryModalOverlay" onclick="if(event.target===this)closeCategoryModal()">
@@ -6687,13 +6738,23 @@
             } else {
                 expenses.sort((a, b) => parseDateLocal(b.date) - parseDateLocal(a.date)).forEach(e => {
                     const paidBy = appState.partners[e.whoPaid] || 'Unknown';
+                    const isPartnerView = currentAnalyticsView.startsWith('partner');
+                    const isSharedExp = e.isShared !== false;
+                    const cost = effectiveCost(e);
+                    // Right side: show effective cost; if shared in partner view, show "½ of $X" hint
+                    const amountHtml = isPartnerView && isSharedExp
+                        ? `<div style="text-align:right;">
+                               <div style="font-weight:600;">$${cost.toFixed(2)}</div>
+                               <div style="font-size:11px;color:var(--text-secondary);">½ of $${e.amount.toFixed(2)} · ${paidBy} paid</div>
+                           </div>`
+                        : `<div style="font-weight:600;">$${cost.toFixed(2)}</div>`;
                     html += `
                         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--glass-border);">
                             <div>
                                 <div style="font-weight:500;">${e.notes || e.category}</div>
-                                <div style="font-size:12px;color:var(--text-secondary);">${parseDateLocal(e.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})} · ${paidBy}</div>
+                                <div style="font-size:12px;color:var(--text-secondary);">${parseDateLocal(e.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}${!isPartnerView ? ' · ' + paidBy : ''}</div>
                             </div>
-                            <div style="font-weight:600;">$${e.amount.toFixed(2)}</div>
+                            ${amountHtml}
                         </div>`;
                 });
             }
@@ -6849,58 +6910,77 @@
         function renderMonthlyChart() {
             const ctx = document.getElementById('monthlyChart').getContext('2d');
 
-            // Destroy existing chart to prevent memory leaks
             if (window.monthlyChart instanceof Chart) {
                 window.monthlyChart.destroy();
             }
 
+            // Populate category filter dropdown from all expenses
+            const catFilter = document.getElementById('monthlyCategoryFilter');
+            if (catFilter) {
+                const selectedCat = catFilter.value;
+                const allCats = [...new Set(appState.expenses.map(e => e.category))].sort();
+                catFilter.innerHTML = '<option value="">All Categories</option>' +
+                    allCats.map(c => `<option value="${c}" ${c === selectedCat ? 'selected' : ''}>${c}</option>`).join('');
+            }
+            const filterCat = catFilter ? catFilter.value : '';
+
+            const now = new Date();
             const months = [];
             const totals = [];
 
             for (let i = 5; i >= 0; i--) {
-                const month = new Date();
-                month.setMonth(month.getMonth() - i);
+                // Create a fresh Date each iteration — avoids mutation-based duplicate label bug
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
                 const monthExpenses = applyAnalyticsFilter(appState.expenses.filter(expense => {
                     const expenseDate = parseDateLocal(expense.date);
-                    return expenseDate.getMonth() === month.getMonth() &&
-                           expenseDate.getFullYear() === month.getFullYear();
+                    if (expenseDate.getMonth() !== d.getMonth() ||
+                        expenseDate.getFullYear() !== d.getFullYear()) return false;
+                    if (filterCat && expense.category !== filterCat) return false;
+                    return true;
                 }));
 
-                months.push(month.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }));
-                totals.push(monthExpenses.reduce((sum, e) => sum + e.amount, 0));
+                months.push(d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }));
+                totals.push(monthExpenses.reduce((sum, e) => sum + effectiveCost(e), 0));
             }
+
+            const hasData = totals.some(t => t > 0);
+            const viewLabel = analyticsViewLabel();
+            const catLabel = filterCat ? ` · ${filterCat}` : '';
 
             window.monthlyChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: months,
                     datasets: [{
-                        label: `Monthly Spending (${analyticsViewLabel()})`,
+                        label: `${viewLabel}${catLabel}`,
                         data: totals,
-                        backgroundColor: '#6366f1'
+                        backgroundColor: totals.map((_, i) => i === 5 ? '#818cf8' : '#6366f1'),
+                        borderRadius: 6,
+                        borderSkipped: false,
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            labels: { color: '#ffffff' }
+                        legend: { labels: { color: '#ffffff', font: { size: 12 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ` $${ctx.parsed.y.toFixed(2)}`
+                            }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: { color: '#ffffff' },
+                            ticks: {
+                                color: '#ffffff',
+                                callback: v => `$${v >= 1000 ? (v/1000).toFixed(1)+'k' : v}`
+                            },
                             grid: { color: '#374151' }
                         },
                         x: {
-                            ticks: {
-                                color: '#ffffff',
-                                maxRotation: 0,
-                                autoSkip: true,
-                                maxTicksLimit: window.innerWidth < 480 ? 5 : 12
-                            },
+                            ticks: { color: '#ffffff', maxRotation: 0 },
                             grid: { color: '#374151' }
                         }
                     }
@@ -6924,7 +7004,7 @@
 
             expenses.forEach(expense => {
                 const day = parseDateLocal(expense.date).getDate();
-                dailyTotals[day - 1] += expense.amount;
+                dailyTotals[day - 1] += effectiveCost(expense);
             });
 
             let cumulative = 0;
@@ -7534,15 +7614,44 @@
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                currentReceiptImage = e.target.result;
-                document.getElementById('previewImage').src = e.target.result;
-                document.getElementById('uploadArea').style.display = 'none';
-                document.getElementById('receiptPreview').style.display = 'block';
-                document.getElementById('scanResults').classList.remove('show');
-                document.getElementById('scanResultsList').innerHTML = '';
-                scannedItems = [];
-                _addingSelected = false;
-                resetScanSummary();
+                const rawDataUrl = e.target.result;
+                // Normalize to JPEG via canvas — handles HEIC/HEIF from iOS and any
+                // exotic format the vision API might reject
+                const img = new Image();
+                img.onload = function() {
+                    const MAX_DIM = 1920;
+                    let w = img.width, h = img.height;
+                    if (w > MAX_DIM || h > MAX_DIM) {
+                        if (w > h) { h = Math.round(h * MAX_DIM / w); w = MAX_DIM; }
+                        else { w = Math.round(w * MAX_DIM / h); h = MAX_DIM; }
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    const jpeg = canvas.toDataURL('image/jpeg', 0.85);
+                    currentReceiptImage = jpeg;
+                    document.getElementById('previewImage').src = jpeg;
+                    document.getElementById('uploadArea').style.display = 'none';
+                    document.getElementById('receiptPreview').style.display = 'block';
+                    document.getElementById('scanResults').classList.remove('show');
+                    document.getElementById('scanResultsList').innerHTML = '';
+                    scannedItems = [];
+                    _addingSelected = false;
+                    resetScanSummary();
+                };
+                img.onerror = function() {
+                    // Fallback: send as-is if canvas decode fails
+                    currentReceiptImage = rawDataUrl;
+                    document.getElementById('previewImage').src = rawDataUrl;
+                    document.getElementById('uploadArea').style.display = 'none';
+                    document.getElementById('receiptPreview').style.display = 'block';
+                    document.getElementById('scanResults').classList.remove('show');
+                    document.getElementById('scanResultsList').innerHTML = '';
+                    scannedItems = [];
+                    _addingSelected = false;
+                    resetScanSummary();
+                };
+                img.src = rawDataUrl;
             };
             reader.readAsDataURL(file);
         }
