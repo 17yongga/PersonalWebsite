@@ -7,15 +7,18 @@
 const express = require('express');
 const { spawn } = require('child_process');
 const path = require('path');
-const { authenticateToken } = require('../middleware/auth');
 const { ApiError, asyncHandler } = require('../middleware/error');
 
 const router = express.Router();
 
-// Absolute path to the quant directory on the server
-// In production this runs on EC2 at /home/ubuntu/PersonalWebsite/trading/
-const QUANT_DIR = path.resolve(__dirname, '../../../../quant');
-const PYTHON_BIN = path.join(QUANT_DIR, 'venv', 'bin', 'python3');
+// Paths — handle local dev vs EC2 production
+const IS_EC2 = require('fs').existsSync('/home/ubuntu/trading-quant/venv/bin/python3');
+const QUANT_DIR = IS_EC2
+    ? '/home/ubuntu/PersonalWebsite/trading/quant'
+    : path.resolve(__dirname, '../../../../quant');
+const PYTHON_BIN = IS_EC2
+    ? '/home/ubuntu/trading-quant/venv/bin/python3'
+    : path.join(QUANT_DIR, 'venv', 'bin', 'python3');
 const RUNNER_SCRIPT = path.join(QUANT_DIR, 'backtest_runner.py');
 
 const STRATEGY_META = {
@@ -75,7 +78,7 @@ router.get('/strategies', (req, res) => {
  *
  * Body: { strategy, startDate, endDate, initialCapital }
  */
-router.post('/run', authenticateToken, asyncHandler(async (req, res) => {
+router.post('/run', asyncHandler(async (req, res) => {
     const { strategy, startDate, endDate, initialCapital = 10000 } = req.body;
 
     // ── Validation ────────────────────────────────────────────────────────
@@ -134,7 +137,7 @@ function runPythonBacktest({ strategy, start, end, capital }) {
         ];
 
         // Try venv python first, fall back to system python3
-        const pythonBin = require('fs').existsSync(PYTHON_BIN) ? PYTHON_BIN : 'python3';
+        const pythonBin = require('fs').existsSync(PYTHON_BIN) ? PYTHON_BIN : '/usr/bin/python3';
 
         const proc = spawn(pythonBin, args, {
             cwd: QUANT_DIR,

@@ -526,4 +526,73 @@ router.get('/equity-history', asyncHandler(async (req, res) => {
     }
 }));
 
+/**
+ * POST /api/v1/dashboard/strategies/:strategyId/snapshot
+ * Called by the Python strategy executor after each run.
+ * Saves current Alpaca portfolio value to strategy_snapshots for Sharpe/drawdown calculations.
+ */
+// Map executor strategy IDs (1-5) to dashboard slugs
+const EXECUTOR_ID_TO_SLUG = {
+    1: 'momentum-hunter',
+    2: 'mean-reversion',
+    3: 'sector-rotator',
+    4: 'value-dividends',
+    5: 'volatility-breakout',
+};
+
+router.post('/strategies/:strategyId/snapshot', asyncHandler(async (req, res) => {
+    const strategyId = parseInt(req.params.strategyId);
+    const slug = EXECUTOR_ID_TO_SLUG[strategyId];
+
+    if (!slug) {
+        return res.status(400).json({ ok: false, error: `Unknown strategy ID: ${strategyId}` });
+    }
+
+    if (!ALPACA_CONFIG.API_KEY || !ALPACA_CONFIG.SECRET_KEY) {
+        return res.json({ ok: false, error: 'No Alpaca credentials configured' });
+    }
+
+    const db = getDb();
+    if (!db) {
+        return res.json({ ok: false, error: 'No database connection' });
+    }
+
+    try {
+        const strategies = await getAlpacaStrategyData();
+        const strategy = strategies.find(s => s.id === slug);
+
+        if (!strategy) {
+            return res.json({ ok: false, error: `Strategy ${slug} not found in Alpaca data` });
+        }
+
+        const INITIAL_CAPITAL = 20000;
+        const portfolioValue = strategy.currentValue;
+        const cashBalance = strategy.cashRemaining;
+        const positionsValue = strategy.positions.reduce((sum, p) => sum + p.marketValue, 0);
+        const totalPnl = portfolioValue - INITIAL_CAPITAL;
+        const totalPnlPct = (totalPnl / INITIAL_CAPITAL) * 100;
+        const numPositions = strategy.positionsCount;
+
+        db.prepare(`
+            INSERT INTO strategy_snapshots
+                (strategy_id, portfolio_value, cash_balance, positions_value, total_pnl, total_pnl_pct, num_positions, snapshot_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        `).run(strategyId, portfolioValue, cashBalance, positionsValue, totalPnl, totalPnlPct, numPositions);
+
+        console.log(`[snapshot] Strategy ${strategyId} (${slug}): $${portfolioValue.toFixed(2)}, P&L: ${totalPnlPct.toFixed(2)}%`);
+
+        res.json({
+            ok: true,
+            strategyId,
+            slug,
+            portfolioValue,
+            totalPnlPct: parseFloat(totalPnlPct.toFixed(4)),
+        });
+    } catch (error) {
+        console.error(`[snapshot] Error for strategy ${strategyId}:`, error.message);
+        res.json({ ok: false, error: error.message });
+    }
+}));
+
 module.exports = router;
+

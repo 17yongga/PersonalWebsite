@@ -565,6 +565,13 @@ class CS2ModernBettingGame {
       return;
     }
 
+    // Auth check BEFORE disabling button so toast is visible above modal
+    const userId = this.casino.username || sessionStorage.getItem('casinoUsername');
+    if (!userId) {
+      this.showToast('❌ Please login to place a bet', 'error');
+      return;
+    }
+
     const placeBetBtn = document.getElementById('placeBetBtn');
     const originalContent = placeBetBtn.innerHTML;
     
@@ -575,11 +582,6 @@ class CS2ModernBettingGame {
         <div class="loading-spinner" style="width: 16px; height: 16px; margin-right: 8px;"></div>
         Placing Bet...
       `;
-
-      const userId = this.casino.username || sessionStorage.getItem('casinoUsername');
-      if (!userId) {
-        throw new Error('Please login first');
-      }
 
       const serverUrl = this.getServerUrl();
       const response = await fetch(`${serverUrl}/api/cs2/bets`, {
@@ -1202,7 +1204,7 @@ class CS2ModernBettingGame {
       const data = await response.json();
 
       if (data.success) {
-        this.bets = data.bets || [];
+        this.bets = (data.bets || []).map(b => b.bet ? b.bet : b);
         this.showBets('open'); // Show current tab
       }
     } catch (error) {

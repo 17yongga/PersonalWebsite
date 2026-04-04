@@ -1,5 +1,5 @@
 # Trading Platform (PaperTrade) — STATUS.md
-> Updated: 2026-03-11 17:30 EDT
+> Updated: 2026-03-22 11:17 EDT
 
 ## What's Live
 - **Frontend:** https://gary-yong.com/trading/index.html#/leaderboard (S3/CloudFront)
@@ -48,8 +48,20 @@
    - Equity curve vs SPY, underwater drawdown chart, monthly returns heatmap
    - Key metrics (Sharpe, Sortino, Calmar, win rate, profit factor, VaR)
    - Full trade log with entry/exit reasons
-2. **Risk Dashboard** — drawdown, Sharpe ratio, position concentration at a glance
-3. **Strategy Comparison** — side-by-side performance of all strategies
+2. ✅ **Risk Dashboard** — SHIPPED 2026-03-14, FIXED 2026-03-15 (route: #/risk)
+   - Drawdown curve, Sharpe ratio cards per strategy, position concentration heatmap, daily loss limit progress bar
+   - **Bug fixes (Mar 15):** Auth removed (was blocking all access) · Rewired to live Alpaca data · Added snapshot endpoint (`POST /dashboard/strategies/:id/snapshot`) so strategy runner saves portfolio values for Sharpe tracking · Portfolio now shows real $97K · 14 open positions visible in heatmap · Sharpe: "Tracking (1d)" — will compute after 5 trading days
+3. ✅ **All pages made public** — SHIPPED 2026-03-14
+   - Auth middleware made optional (defaults to Gary's account, no 401s)
+   - All router routes set to `requiresAuth: false`, auth redirects removed
+   - Full nav (Dashboard · Leaderboard · Trade · Strategies · Backtest · Risk) visible to all visitors
+4. ✅ **Strategy Comparison** — SHIPPED 2026-03-21 (route: #/compare)
+   - Side-by-side performance view of all 5 strategies
+   - Metrics table: Sharpe, Sortino, win rate, max drawdown, profit factor — color-coded, bold winners per column
+   - Equity curve overlay (Chart.js line) with toggle buttons per strategy + SPY benchmark
+   - Radar chart — multi-axis performance fingerprint per strategy
+   - Rankings strip — at-a-glance leaderboard across key metrics
+   - **Phase 2 roadmap complete** ✅
 
 ## Circuit Breaker / Auto-trader
 - ✅ **Auto-trader is LIVE** — all 5 strategies running cleanly as of 2026-03-10
@@ -79,6 +91,10 @@ aws cloudfront create-invalidation --distribution-id EUVZ94LCG1QV2 --paths "/tra
 | 2026-03-10 | Phase 2 scoped: Backtesting → Risk Dashboard → Strategy Comparison |
 | 2026-03-10 | Auto-trader re-enable queued for overnight (circuit breaker first) |
 | 2026-03-10 | **Bug fix deployed** — 3 bugs fixed in `strategy_executor.py`, auto-trader confirmed live |
+| 2026-03-14 | Risk Dashboard shipped (#/risk) — drawdown, Sharpe, concentration heatmap, daily loss limit |
+| 2026-03-14 | **All pages made public** — removed login requirement, auth middleware now optional (defaults to Gary) |
+| 2026-03-15 | **Risk Dashboard bug fixes** — 4 root causes fixed: (1) wrong deploy dir `/trading-server/` vs actual PM2 path, (2) auth middleware blocking all requests, (3) empty DB tables used instead of live Alpaca data, (4) missing snapshot endpoint. Portfolio now $97K live, 14 positions visible, snapshot pipeline wired up for Sharpe tracking |
+| 2026-03-21 | **Strategy Comparison shipped** — #/compare page, side-by-side all 5 strategies, Sharpe/Sortino/win rate/drawdown |
 
 ## Bug Fix Log (2026-03-10)
 | # | File | Bug | Impact | Fix |

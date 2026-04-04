@@ -8,24 +8,34 @@
     <meta name="description" content="Articles and writing by Gary Yong about technology and projects." />
     <link rel="stylesheet" href="styles.css?v=202602131450" />
     <style>
+      /* Blog grid: 3 columns wide, 2 medium, 1 mobile */
       .blog-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 28px;
-        max-width: 1100px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        max-width: 1140px;
         margin: 0 auto;
       }
-      @media (max-width: 768px) {
+      @media (max-width: 1024px) {
+        .blog-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (max-width: 640px) {
         .blog-grid { grid-template-columns: 1fr; }
+      }
+      /* Make anchor fill card height */
+      .blog-grid > a {
+        display: flex;
+        flex-direction: column;
       }
       .blog-card {
         background: rgba(15, 23, 42, 0.96);
         border: 1px solid rgba(148, 163, 184, 0.15);
-        border-radius: 16px;
+        border-radius: 14px;
         overflow: hidden;
         transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
         display: flex;
         flex-direction: column;
+        flex: 1;
       }
       .blog-card:hover {
         transform: translateY(-4px);
@@ -34,17 +44,18 @@
       }
       .blog-card-illustration {
         width: 100%;
-        height: 200px;
+        height: 160px;
         display: flex;
         align-items: center;
         justify-content: center;
         background: linear-gradient(135deg, rgba(0, 212, 255, 0.08) 0%, rgba(14, 165, 233, 0.05) 50%, rgba(30, 41, 59, 0.8) 100%);
         border-bottom: 1px solid rgba(148, 163, 184, 0.08);
-        padding: 24px;
+        padding: 20px;
+        flex-shrink: 0;
       }
       .blog-card-illustration img {
-        max-height: 160px;
-        max-width: 80%;
+        max-height: 120px;
+        max-width: 75%;
         width: auto;
         height: auto;
         transition: transform 0.3s ease;
@@ -53,25 +64,30 @@
         transform: scale(1.05);
       }
       .blog-card-body {
-        padding: 24px 28px 28px;
+        padding: 20px 22px 24px;
         flex: 1;
         display: flex;
         flex-direction: column;
       }
+      .blog-card-body .blog-tags {
+        margin-bottom: 10px;
+        min-height: 24px;
+      }
       .blog-card-body h3 {
-        font-size: 1.25rem;
+        font-size: 1.05rem;
         font-weight: 700;
         color: #f1f5f9;
         margin-bottom: 8px;
         line-height: 1.4;
+        min-height: 2.8em;
       }
       .blog-card-body .meta {
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         color: rgba(148, 163, 184, 0.7);
-        margin-bottom: 12px;
+        margin-bottom: 10px;
       }
       .blog-card-body .excerpt {
-        font-size: 0.92rem;
+        font-size: 0.88rem;
         color: rgba(203, 213, 225, 0.85);
         line-height: 1.6;
         margin-bottom: 16px;
@@ -80,12 +96,13 @@
       .blog-card-body .read-link {
         color: #00d4ff;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         text-decoration: none;
         transition: color 0.2s;
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        margin-top: auto;
       }
       .blog-card-body .read-link:hover {
         color: #38bdf8;
@@ -99,14 +116,13 @@
       }
       .blog-tag {
         display: inline-block;
-        font-size: 0.7rem;
-        padding: 3px 10px;
+        font-size: 0.68rem;
+        padding: 3px 9px;
         border-radius: 20px;
         background: rgba(0, 212, 255, 0.1);
         color: #00d4ff;
         font-weight: 600;
-        margin-right: 6px;
-        margin-bottom: 10px;
+        margin-right: 5px;
       }
       /* Light theme overrides */
       [data-theme="light"] .blog-card {
@@ -182,7 +198,7 @@
                   <img src="/blog/img/artificial-intelligence.svg" alt="AI Hype vs Reality">
                 </div>
                 <div class="blog-card-body">
-                  <div>
+                  <div class="blog-tags">
                     <span class="blog-tag">AI</span>
                     <span class="blog-tag">Technology</span>
                   </div>
@@ -200,7 +216,7 @@
                   <img src="/blog/img/launching.svg" alt="AI Projects">
                 </div>
                 <div class="blog-card-body">
-                  <div>
+                  <div class="blog-tags">
                     <span class="blog-tag">AI</span>
                     <span class="blog-tag">Automation</span>
                   </div>
@@ -218,7 +234,7 @@
                   <img src="/blog/img/stepping-up.svg" alt="Career Journey">
                 </div>
                 <div class="blog-card-body">
-                  <div>
+                  <div class="blog-tags">
                     <span class="blog-tag">Career</span>
                     <span class="blog-tag">Business</span>
                   </div>
@@ -236,13 +252,13 @@
                   <img src="/blog/img/master-plan.svg" alt="AI Playbook">
                 </div>
                 <div class="blog-card-body">
-                  <div>
+                  <div class="blog-tags">
                     <span class="blog-tag">AI Strategy</span>
                     <span class="blog-tag">Consulting</span>
                   </div>
                   <h3 data-i18n="blog.post4.title">The Enterprise AI Playbook: 5 Steps I Use With Every Client</h3>
                   <p class="meta" data-i18n="blog.post4.meta">February 5, 2025</p>
-                  <p class="excerpt" data-i18n="blog.post4.excerpt">A proven methodology for evaluating, planning, and implementing AI solutions in enterprise environments, with real case studies.</p>
+                  <p class="excerpt" data-i18n="blog.post4.excerpt">A structured methodology for evaluating, planning, and implementing AI in enterprise environments — built from hands-on consulting experience.</p>
                   <span class="read-link" data-i18n="blog.read_more">Read more</span>
                 </div>
               </article>
@@ -254,7 +270,7 @@
                   <img src="/blog/img/thought-process.svg" alt="Building Ask Gary">
                 </div>
                 <div class="blog-card-body">
-                  <div>
+                  <div class="blog-tags">
                     <span class="blog-tag">Tech Projects</span>
                   </div>
                   <h3 data-i18n="blog.post5.title">I Built an AI Clone of Myself — Here's What Happened</h3>

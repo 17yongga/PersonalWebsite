@@ -9,16 +9,10 @@ const i18n = {
   supportedLangs: ['en', 'zh'],
   
   async init() {
-    // Check saved preference or browser language
+    // Check saved preference; always default to English if no preference saved
     const saved = localStorage.getItem('lang');
     if (saved && this.supportedLangs.includes(saved)) {
       this.currentLang = saved;
-    } else {
-      // Check browser language
-      const browserLang = navigator.language.slice(0, 2);
-      if (browserLang === 'zh') {
-        this.currentLang = 'zh';
-      }
     }
     
     // Load translations

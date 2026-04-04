@@ -137,6 +137,20 @@ async function initialize() {
     )
   `);
 
+  // Password reset tokens — one-time use, 1 hour expiry
+  // token_hash stores SHA-256 of the raw token (never store raw tokens)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      used INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
   saveDb();
 }
 
