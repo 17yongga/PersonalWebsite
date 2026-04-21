@@ -515,7 +515,7 @@
   if (btn2 && btn1) btn2.addEventListener('click', function() { btn1.click(); });
 })();
 
-// Light bulb decorations around game cards
+// Light bulb decorations around game cards — appear on hover only
 (function() {
   var ns = 'http://www.w3.org/2000/svg';
   var gameColorMap = {
@@ -524,45 +524,46 @@
     pachinko: 'violet',
     cs2betting: 'green'
   };
-  function addCardBulbs() {
-    var cards = document.querySelectorAll('.lobby-games .game-card');
-    // Batch all layout reads first to avoid forced reflows per card
-    var sizes = Array.prototype.map.call(cards, function(card) {
-      return { card: card, w: card.offsetWidth, h: card.offsetHeight, game: card.dataset.game };
+  function buildBulbsSvg(card) {
+    var w = card.offsetWidth, h = card.offsetHeight;
+    if (!w || !h) return null;
+    var r = 2.5, spacing = 14, circles = [], delay = 0;
+    for (var x = r * 2; x <= w - r; x += spacing)
+      circles.push('<circle cx="' + Math.round(x) + '" cy="' + r + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
+    for (var x = r * 2; x <= w - r; x += spacing)
+      circles.push('<circle cx="' + Math.round(x) + '" cy="' + (h - r) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
+    for (var y = spacing + r; y <= h - spacing; y += spacing)
+      circles.push('<circle cx="' + r + '" cy="' + Math.round(y) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
+    for (var y = spacing + r; y <= h - spacing; y += spacing)
+      circles.push('<circle cx="' + (w - r) + '" cy="' + Math.round(y) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', 'card-bulbs-svg');
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+    var color = gameColorMap[card.dataset.game] || 'amber';
+    if (color !== 'amber') svg.setAttribute('data-color', color);
+    svg.innerHTML = circles.join('');
+    return svg;
+  }
+  function attachHoverBulbs(card) {
+    card.addEventListener('mouseenter', function() {
+      if (!card.querySelector('.card-bulbs-svg')) {
+        var svg = buildBulbsSvg(card);
+        if (svg) card.appendChild(svg);
+      }
     });
-    sizes.forEach(function(s) {
-      if (s.card.querySelector('.card-bulbs-svg')) return;
-      var w = s.w, h = s.h;
-      if (!w || !h) return;
-      var r = 2.5, spacing = 14, circles = [], delay = 0;
-      for (var x = r * 2; x <= w - r; x += spacing)
-        circles.push('<circle cx="' + Math.round(x) + '" cy="' + r + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
-      for (var x = r * 2; x <= w - r; x += spacing)
-        circles.push('<circle cx="' + Math.round(x) + '" cy="' + (h - r) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
-      for (var y = spacing + r; y <= h - spacing; y += spacing)
-        circles.push('<circle cx="' + r + '" cy="' + Math.round(y) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
-      for (var y = spacing + r; y <= h - spacing; y += spacing)
-        circles.push('<circle cx="' + (w - r) + '" cy="' + Math.round(y) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
-      var svg = document.createElementNS(ns, 'svg');
-      svg.setAttribute('class', 'card-bulbs-svg');
-      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-      var color = gameColorMap[s.game] || 'amber';
-      if (color !== 'amber') svg.setAttribute('data-color', color);
-      svg.innerHTML = circles.join('');
-      s.card.appendChild(svg);
+    card.addEventListener('mouseleave', function() {
+      var svg = card.querySelector('.card-bulbs-svg');
+      if (svg) svg.remove();
     });
   }
-  var resizeTimer;
-  function reset() {
-    document.querySelectorAll('.card-bulbs-svg').forEach(function(s) { s.remove(); });
-    addCardBulbs();
+  function init() {
+    document.querySelectorAll('.lobby-games .game-card').forEach(attachHoverBulbs);
   }
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() { setTimeout(addCardBulbs, 150); });
+    document.addEventListener('DOMContentLoaded', init);
   } else {
-    setTimeout(addCardBulbs, 150);
+    init();
   }
-  window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(reset, 300); });
 })();
 </script>
 </body>
