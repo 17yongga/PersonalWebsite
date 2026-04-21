@@ -963,12 +963,15 @@ a { color: inherit; }
   letter-spacing: .01em;
 }
 
-.game-title-amber  { color: var(--amber);      text-shadow: 0 0 10px var(--amber),      0 0 30px rgba(255,181,77,.6),  0 0 60px rgba(255,181,77,.25); }
-.game-title-pink   { color: var(--neon-pink);  text-shadow: 0 0 10px var(--neon-pink),  0 0 30px rgba(255,90,168,.6),  0 0 60px rgba(255,90,168,.25); }
-.game-title-violet { color: var(--neon-violet); text-shadow: 0 0 10px var(--neon-violet), 0 0 30px rgba(176,100,255,.6), 0 0 60px rgba(176,100,255,.25); }
-.game-title-green  { color: var(--green);       text-shadow: 0 0 10px var(--green),       0 0 30px rgba(52,211,153,.6),  0 0 60px rgba(52,211,153,.25); }
+.game-title-amber  { color: var(--amber); }
+.game-title-pink   { color: var(--neon-pink); }
+.game-title-violet { color: var(--neon-violet); }
+.game-title-green  { color: var(--green); }
 
-.game-card:hover .game-card-title { animation: neonBreath 2.4s ease-in-out infinite; }
+.game-card:hover .game-title-amber  { text-shadow: 0 0 8px rgba(255,181,77,.5); }
+.game-card:hover .game-title-pink   { text-shadow: 0 0 8px rgba(255,90,168,.5); }
+.game-card:hover .game-title-violet { text-shadow: 0 0 8px rgba(176,100,255,.5); }
+.game-card:hover .game-title-green  { text-shadow: 0 0 8px rgba(52,211,153,.5); }
 
 .game-card-desc {
   font-family: var(--font-sans);
