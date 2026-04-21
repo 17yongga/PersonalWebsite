@@ -5725,77 +5725,161 @@ html[data-theme="light"] .rl-player-row {
 }
 
 /* ========== NEON 777 COLOR OVERRIDES ========== */
-/* Force neon dark palette on all game views when inside casino */
 
-body:has(#mainCasinoScreen) .game-title {
-  background: linear-gradient(135deg, var(--n-amber, #ffb54d), var(--n-neon-pink, #ff5aa8));
+.game-title {
+  background: linear-gradient(135deg, var(--amber), var(--neon-pink));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  font-family: 'Monoton', cursive;
+  font-family: var(--font-display);
+  text-shadow: none;
 }
 
-body:has(#mainCasinoScreen) .betting-section {
-  background: var(--n-surface, #1a0718);
-  border-color: var(--n-line, rgba(255,180,120,.18));
+.betting-section {
+  background: var(--surface);
+  border-color: var(--line);
+  border-radius: 0;
 }
 
-body:has(#mainCasinoScreen) .betting-section label {
-  color: var(--n-ink, #fff3e4);
+.betting-section label {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .18em;
 }
 
-body:has(#mainCasinoScreen) .bet-input-group input {
-  background: var(--n-bg-2, #140612);
-  border-color: var(--n-line-strong, rgba(255,180,120,.34));
-  color: var(--n-ink, #fff3e4);
+.bet-input-group input {
+  background: var(--bg-2);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  border-radius: 0;
 }
 
-body:has(#mainCasinoScreen) .bet-input-group input:focus {
-  border-color: var(--n-amber, #ffb54d);
-  box-shadow: 0 0 0 3px rgba(255,181,77,.15);
+.bet-input-group input:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 12px rgba(255,181,77,.2);
+  outline: none;
 }
 
-body:has(#mainCasinoScreen) .quick-bets button,
-body:has(#mainCasinoScreen) .quick-bet-btn {
+.quick-bets button,
+.quick-bet-btn {
   background: rgba(255,243,228,.05);
-  border-color: var(--n-line, rgba(255,180,120,.18));
-  color: var(--n-ink-muted, rgba(255,243,228,.64));
+  border: 1px solid var(--line);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border-radius: 0;
 }
 
-body:has(#mainCasinoScreen) .quick-bets button:hover,
-body:has(#mainCasinoScreen) .quick-bet-btn:hover {
+.quick-bets button:hover,
+.quick-bet-btn:hover {
   background: rgba(255,243,228,.1);
-  border-color: var(--n-amber, #ffb54d);
+  border-color: var(--amber);
+  color: var(--amber);
 }
 
-body:has(#mainCasinoScreen) .game-section,
-body:has(#mainCasinoScreen) .game-room-section,
-body:has(#mainCasinoScreen) .dealer-section,
-body:has(#mainCasinoScreen) .player-section {
-  background: var(--n-surface, #1a0718);
-  border-color: var(--n-line, rgba(255,180,120,.18));
+.game-section,
+.game-room-section,
+.dealer-section,
+.player-section {
+  background: var(--surface);
+  border-color: var(--line);
+  border-radius: 0;
 }
 
-body:has(#mainCasinoScreen) .score-display {
-  color: var(--n-amber, #ffb54d);
+.score-display {
+  color: var(--amber);
+  font-family: var(--font-deco);
+  text-shadow: 0 0 10px rgba(255,181,77,.4);
 }
 
-body:has(#mainCasinoScreen) .game-controls .btn {
-  font-family: 'Space Grotesk', sans-serif;
+.game-controls .btn {
+  font-family: var(--font-deco);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  border-radius: 4px;
 }
 
-body:has(#mainCasinoScreen) .game-controls .btn-primary,
-body:has(#mainCasinoScreen) .btn-primary {
-  background: linear-gradient(135deg, var(--n-amber, #ffb54d), var(--n-amber-hot, #ff8a2b));
+.game-controls .btn-primary,
+.game-view .btn-primary {
+  background: var(--amber);
   border: none;
-  color: var(--n-bg, #0a0308);
+  color: var(--bg);
+  box-shadow: 0 0 20px rgba(255,181,77,.4), 0 4px 0 rgba(0,0,0,.4);
 }
 
-body:has(#mainCasinoScreen) .game-controls .btn-primary:not(:disabled):hover {
-  box-shadow: 0 4px 12px rgba(255,181,77,.3);
+.game-controls .btn-primary:not(:disabled):hover,
+.game-view .btn-primary:not(:disabled):hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 24px rgba(255,181,77,.5), 0 4px 0 rgba(0,0,0,.4);
 }
 
-body:has(#mainCasinoScreen) .card.card-back {
-  background: linear-gradient(135deg, var(--n-neon-violet, #b064ff), var(--n-neon-pink, #ff5aa8));
+.game-controls .btn-secondary,
+.game-view .btn-secondary {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-muted);
+}
+
+.game-controls .btn-secondary:hover,
+.game-view .btn-secondary:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.card.card-back {
+  background: repeating-linear-gradient(45deg, var(--neon-violet) 0 4px, var(--neon-pink) 4px 8px);
+  border-color: var(--line-strong);
+}
+
+.game-result {
+  font-family: var(--font-display);
+  text-shadow: 0 0 12px currentColor;
+}
+
+.game-status-message {
+  font-family: var(--font-deco);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+/* Crash game */
+.crash-multiplier {
+  font-family: var(--font-display);
+  color: var(--neon-pink);
+  text-shadow: 0 0 14px var(--neon-pink);
+}
+
+.crash-graph-area {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+/* Roulette */
+.roulette-wheel-container {
+  border-color: var(--amber);
+}
+
+/* Poker */
+.poker-table {
+  background: radial-gradient(ellipse at center, rgba(255,181,77,.06), var(--surface));
+  border-color: var(--amber);
+}
+
+.seat-panel {
+  background: var(--bg-2);
+  border-color: var(--line);
+}
+
+/* Pachinko */
+.pachinko-container canvas {
+  border: 1px solid var(--line);
+}
+
+/* Coinflip */
+.coin {
+  box-shadow: 0 0 24px rgba(255,181,77,.3);
 }
 
