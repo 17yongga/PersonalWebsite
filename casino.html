@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Bungee&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="/img/logo-dark.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Casino - Gary's Personal Website</title>
   <meta name="description" content="Play Blackjack, Coinflip, and Roulette at Gary's Casino">
   <link rel="stylesheet" href="styles.css?v=202602131450">
-  <link rel="stylesheet" href="casino.css?v=202603161600">
+  <link rel="stylesheet" href="casino.css?v=202604211400">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
@@ -55,43 +59,65 @@
     <!-- Sign In Screen -->
     <div id="signInScreen" class="casino-screen">
       <div class="casino-container">
-        <div class="casino-welcome">
-          <h1 class="casino-title">🎰 Welcome to the Casino</h1>
-          <p class="casino-subtitle">Login or create an account to start playing</p>
-          
-          <!-- Login/Register Toggle -->
-          <div class="auth-tabs">
-            <button id="loginTab" class="auth-tab active">Login</button>
-            <button id="registerTab" class="auth-tab">Register</button>
+        <!-- Left brand panel -->
+        <div class="neon-brand-panel">
+          <h1 class="neon-brand-title">NEON<br>777</h1>
+          <p class="neon-brand-tagline">The house is open. Pull up a stool and try your luck under the bulbs.</p>
+          <div class="neon-brand-stats">
+            <div class="neon-brand-stat">
+              <span class="neon-brand-stat-value">247</span>
+              <span class="neon-brand-stat-label">Floor tonight</span>
+            </div>
+            <div class="neon-brand-stat">
+              <span class="neon-brand-stat-value">$1.2M</span>
+              <span class="neon-brand-stat-label">Paid out today</span>
+            </div>
           </div>
+        </div>
 
-          <!-- Login Form -->
-          <div id="loginForm" class="auth-form">
-            <form id="loginFormElement" onsubmit="return false;">
-              <div class="signin-form">
-                <input type="text" id="loginUsername" placeholder="Username" maxlength="20" autocomplete="username">
-                <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
-                <button id="loginBtn" class="btn btn-primary">Login</button>
-              </div>
-            </form>
-            <p id="loginError" class="error-message hidden"></p>
+        <!-- Right form panel -->
+        <div class="neon-form-panel">
+          <div class="casino-welcome">
+            <h1 class="casino-title">Welcome to the Casino</h1>
+            <p class="casino-subtitle">Login or create an account to start playing</p>
+
+            <!-- Login/Register Toggle -->
+            <div class="auth-tabs">
+              <button id="loginTab" class="auth-tab active">Login</button>
+              <button id="registerTab" class="auth-tab">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form">
+              <form id="loginFormElement" onsubmit="return false;">
+                <div class="signin-form">
+                  <input type="text" id="loginUsername" placeholder="Username" maxlength="20" autocomplete="username">
+                  <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+                  <button id="loginBtn" class="btn btn-primary">Login</button>
+                </div>
+              </form>
+              <p id="loginError" class="error-message hidden"></p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="auth-form hidden">
+              <form id="registerFormElement" onsubmit="return false;">
+                <div class="signin-form">
+                  <input type="text" id="registerUsername" placeholder="Username (3-20 characters)" maxlength="20" autocomplete="username">
+                  <input type="password" id="registerPassword" placeholder="Password (min 6 characters)" autocomplete="new-password">
+                  <input type="password" id="registerPasswordConfirm" placeholder="Confirm Password" autocomplete="new-password">
+                  <button id="registerBtn" class="btn btn-primary">Create Account</button>
+                </div>
+              </form>
+              <p id="registerError" class="error-message hidden"></p>
+              <p id="registerSuccess" class="success-message hidden"></p>
+            </div>
+
+            <div class="neon-welcome-bonus">
+              <span class="bonus-amount">10K credits</span> welcome bonus
+            </div>
+            <p class="credits-info">Start with <span class="credit-amount">10,000</span> credits!</p>
           </div>
-
-          <!-- Register Form -->
-          <div id="registerForm" class="auth-form hidden">
-            <form id="registerFormElement" onsubmit="return false;">
-              <div class="signin-form">
-                <input type="text" id="registerUsername" placeholder="Username (3-20 characters)" maxlength="20" autocomplete="username">
-                <input type="password" id="registerPassword" placeholder="Password (min 6 characters)" autocomplete="new-password">
-                <input type="password" id="registerPasswordConfirm" placeholder="Confirm Password" autocomplete="new-password">
-                <button id="registerBtn" class="btn btn-primary">Create Account</button>
-              </div>
-            </form>
-            <p id="registerError" class="error-message hidden"></p>
-            <p id="registerSuccess" class="success-message hidden"></p>
-          </div>
-
-          <p class="credits-info">Start with <span class="credit-amount">10,000</span> credits!</p>
         </div>
       </div>
     </div>
@@ -138,69 +164,83 @@
 
       <!-- Game Selection -->
       <div id="gameSelection" class="game-selection">
-        <h2 class="section-title">Choose Your Game</h2>
+        <div class="neon-hero">
+          <h2 class="neon-hero-title">The house never sleeps</h2>
+        </div>
         <div class="games-grid">
           <div class="game-card" data-game="blackjack">
+            <span class="game-tag hot">HOT</span>
             <div class="game-icon">🃏</div>
             <h3>Blackjack</h3>
             <p>Beat the dealer without going over 21</p>
+            <div class="game-card-meta"><span>RTP 99.5%</span><span>10 - 5K</span></div>
             <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">Play Now</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="blackjack">📖 How to Play</button>
+              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
+              <button class="btn btn-ghost how-to-play-btn" data-game="blackjack">How to Play</button>
             </div>
           </div>
           <div class="game-card" data-game="coinflip">
             <div class="game-icon">🪙</div>
             <h3>Coinflip</h3>
             <p>Heads or tails? Double your bet!</p>
+            <div class="game-card-meta"><span>RTP 98%</span><span>10 - 10K</span></div>
             <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">Play Now</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="coinflip">📖 How to Play</button>
+              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
+              <button class="btn btn-ghost how-to-play-btn" data-game="coinflip">How to Play</button>
             </div>
           </div>
           <div class="game-card" data-game="roulette">
+            <span class="game-tag live">LIVE</span>
             <div class="game-icon">🎲</div>
             <h3>Roulette</h3>
             <p>Spin the wheel and test your luck</p>
+            <div class="game-card-meta"><span>RTP 97.3%</span><span>10 - 5K</span></div>
             <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">Play Now</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="roulette">📖 How to Play</button>
+              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
+              <button class="btn btn-ghost how-to-play-btn" data-game="roulette">How to Play</button>
             </div>
           </div>
           <div class="game-card" data-game="cs2betting">
+            <span class="game-tag live">LIVE</span>
             <div class="game-icon">🎮</div>
             <h3>CS2 Betting</h3>
             <p>Bet on Counter-Strike 2 matches</p>
+            <div class="game-card-meta"><span>Real odds</span><span>50 - 10K</span></div>
             <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">Play Now</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="cs2betting">📖 How to Play</button>
+              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
+              <button class="btn btn-ghost how-to-play-btn" data-game="cs2betting">How to Play</button>
             </div>
           </div>
           <div class="game-card" data-game="poker">
+            <span class="game-tag new">NEW</span>
             <div class="game-icon">🃏</div>
             <h3>Poker</h3>
             <p>Texas Hold'em - Up to 6 players</p>
+            <div class="game-card-meta"><span>Multiplayer</span><span>100 - 10K</span></div>
             <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">Play Now</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="poker">📖 How to Play</button>
+              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
+              <button class="btn btn-ghost how-to-play-btn" data-game="poker">How to Play</button>
             </div>
           </div>
           <div class="game-card" data-game="crash">
+            <span class="game-tag hot">HOT</span>
             <div class="game-icon">🚀</div>
             <h3>Crash</h3>
             <p>Cash out before the rocket crashes!</p>
+            <div class="game-card-meta"><span>RTP 97%</span><span>10 - 5K</span></div>
             <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">Play Now</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="crash">📖 How to Play</button>
+              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
+              <button class="btn btn-ghost how-to-play-btn" data-game="crash">How to Play</button>
             </div>
           </div>
           <div class="game-card" data-game="pachinko">
             <div class="game-icon">🔮</div>
             <h3>Pachinko</h3>
             <p>Drop balls and hit big multipliers!</p>
+            <div class="game-card-meta"><span>Up to 1000x</span><span>10 - 1K</span></div>
             <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">Play Now</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="pachinko">📖 How to Play</button>
+              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
+              <button class="btn btn-ghost how-to-play-btn" data-game="pachinko">How to Play</button>
             </div>
           </div>
         </div>
@@ -221,6 +261,34 @@
         <div id="pokerGame" class="game-view hidden"></div>
         <div id="crashGame" class="game-view hidden"></div>
         <div id="pachinkoGame" class="game-view hidden"></div>
+      </div>
+    </div>
+    <!-- Bottom Nav (mobile) -->
+    <nav class="neon-bottom-nav">
+      <div class="neon-bottom-nav-inner">
+        <button class="neon-bottom-nav-item active"><span class="nav-icon">🎰</span>Floor</button>
+        <button class="neon-bottom-nav-item"><span class="nav-icon">🔴</span>Live</button>
+        <button class="neon-bottom-nav-item"><span class="nav-icon">📊</span>Bets</button>
+        <button class="neon-bottom-nav-item"><span class="nav-icon">👤</span>Me</button>
+      </div>
+    </nav>
+
+    <!-- Ticker Strip -->
+    <div class="neon-ticker">
+      <div class="neon-ticker-content">
+        <span>&#9670; neon_nova won <span class="ticker-amount">18,400</span> on Crash</span>
+        <span>&#9670; ace_of_spades hit Royal Flush &middot; <span class="ticker-amount">12,000</span></span>
+        <span>&#9670; cherrybomb <span class="ticker-amount">24,000</span> on Blackjack</span>
+        <span>&#9670; high_roller won <span class="ticker-amount">45,200</span> on Roulette</span>
+        <span>&#9670; lucky7s cashed out <span class="ticker-amount">8,800</span> at 4.4x Crash</span>
+        <span>&#9670; phantom_bet hit <span class="ticker-amount">31,000</span> on Pachinko</span>
+        <!-- duplicate for seamless loop -->
+        <span>&#9670; neon_nova won <span class="ticker-amount">18,400</span> on Crash</span>
+        <span>&#9670; ace_of_spades hit Royal Flush &middot; <span class="ticker-amount">12,000</span></span>
+        <span>&#9670; cherrybomb <span class="ticker-amount">24,000</span> on Blackjack</span>
+        <span>&#9670; high_roller won <span class="ticker-amount">45,200</span> on Roulette</span>
+        <span>&#9670; lucky7s cashed out <span class="ticker-amount">8,800</span> at 4.4x Crash</span>
+        <span>&#9670; phantom_bet hit <span class="ticker-amount">31,000</span> on Pachinko</span>
       </div>
     </div>
   </main>
