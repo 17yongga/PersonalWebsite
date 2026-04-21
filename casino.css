@@ -953,14 +953,16 @@ a { color: inherit; }
   font-family: var(--font-display);
   font-size: 38px;
   line-height: .95;
-  letter-spacing: .02em;
+  letter-spacing: .18em;
   margin: 0;
   text-transform: uppercase;
+  color: var(--amber);
+  text-shadow: none;
 }
 
 .featured .game-card-title {
   font-size: 64px;
-  letter-spacing: .01em;
+  letter-spacing: .18em;
 }
 
 .game-title-amber  { color: var(--amber); }
@@ -968,10 +970,11 @@ a { color: inherit; }
 .game-title-violet { color: var(--neon-violet); }
 .game-title-green  { color: var(--green); }
 
-.game-card:hover .game-title-amber  { text-shadow: 0 0 8px rgba(255,181,77,.5); }
-.game-card:hover .game-title-pink   { text-shadow: 0 0 8px rgba(255,90,168,.5); }
-.game-card:hover .game-title-violet { text-shadow: 0 0 8px rgba(176,100,255,.5); }
-.game-card:hover .game-title-green  { text-shadow: 0 0 8px rgba(52,211,153,.5); }
+/* Neon glow on hover — matches hero-line-amber text-shadow treatment */
+.game-card:hover .game-title-amber  { text-shadow: 0 0 1px rgba(255,181,77,.6), 0 0 8px rgba(255,181,77,.35); }
+.game-card:hover .game-title-pink   { text-shadow: 0 0 1px rgba(255,90,168,.6), 0 0 8px rgba(255,90,168,.3); }
+.game-card:hover .game-title-violet { text-shadow: 0 0 1px rgba(176,100,255,.6), 0 0 8px rgba(176,100,255,.3); }
+.game-card:hover .game-title-green  { text-shadow: 0 0 1px rgba(52,211,153,.6), 0 0 8px rgba(52,211,153,.3); }
 
 .game-card-desc {
   font-family: var(--font-sans);
