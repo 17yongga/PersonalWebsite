@@ -915,22 +915,32 @@ a { color: inherit; }
 .game-tag.cards-tag { border: 1px solid var(--ink-dim); color: var(--ink-dim); }
 .game-tag.multiplier-tag { border: 1px solid var(--cream); color: var(--cream); text-shadow: 0 0 8px rgba(255,233,181,.5); }
 
-/* Card title */
-.game-card-title {
+/* Card text block — stacked at bottom via flex */
+.game-card-text {
   position: absolute;
-  bottom: 70px;
+  bottom: 52px;
   left: 20px;
   right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 2;
+}
+
+.featured .game-card-text {
+  bottom: 60px;
+}
+
+/* Card title */
+.game-card-title {
   font-family: var(--font-display);
   font-size: 44px;
   line-height: .9;
   margin: 0;
-  z-index: 2;
 }
 
 .featured .game-card-title {
   font-size: 72px;
-  bottom: 80px;
 }
 
 .game-title-amber { color: var(--amber); text-shadow: 0 0 12px var(--amber), 0 0 28px rgba(255,181,77,.5); }
@@ -941,19 +951,14 @@ a { color: inherit; }
 .game-card:hover .game-card-title { animation: neonBreath 2.4s ease-in-out infinite; }
 
 .game-card-desc {
-  position: absolute;
-  bottom: 50px;
-  left: 20px;
-  right: 20px;
   font-family: var(--font-serif);
   font-size: 14px;
   color: var(--cream);
   margin: 0;
-  z-index: 2;
   line-height: 1.4;
 }
 
-.featured .game-card-desc { font-size: 20px; bottom: 56px; }
+.featured .game-card-desc { font-size: 20px; }
 
 /* Card footer */
 .game-card-footer {
@@ -1520,67 +1525,308 @@ a { color: inherit; }
   scrollbar-color: rgba(255,181,77,.3) transparent;
 }
 
-/* ---- Bet History ---- */
+/* ---- Bet History — Neon777 Theater Marquee Redesign ---- */
+
+/* Override content panel specifically for bet history */
+.bet-history-content {
+  background: #0e0610;
+  border: 1px solid rgba(255,181,77,.3);
+  border-top: 3px solid var(--amber);
+  border-radius: 0;
+  width: 100%;
+  max-width: 760px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 0 0 1px rgba(255,181,77,.08),
+    0 0 40px rgba(255,181,77,.18),
+    0 0 80px rgba(255,90,168,.1),
+    0 32px 100px rgba(0,0,0,.8);
+}
+
+/* Theater marquee header */
+.bet-history-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 28px 20px;
+  border-bottom: 1px solid rgba(255,181,77,.18);
+  flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(255,181,77,.06) 0%, transparent 100%);
+  overflow: hidden;
+}
+
+/* Marquee title wrapper — bulbs injected here via JS */
+.bh-marquee-title {
+  position: relative;
+  display: inline-block;
+  padding: 14px 28px;
+  border: 1px solid rgba(255,181,77,.35);
+}
+
+.bh-marquee-title h2 {
+  font-family: 'Monoton', sans-serif !important;
+  font-size: 22px !important;
+  color: var(--amber) !important;
+  letter-spacing: .16em !important;
+  margin: 0 !important;
+  text-shadow:
+    0 0 8px var(--amber),
+    0 0 20px rgba(255,181,77,.6),
+    0 0 40px rgba(255,181,77,.3);
+  animation: neonBreath 3.2s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+
+/* SVG bulb border injected dynamically */
+.bh-marquee-title .bh-bulbs-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+
+.bh-marquee-title .bh-bulbs-svg circle {
+  fill: var(--bulb);
+  filter: drop-shadow(0 0 4px var(--bulb)) drop-shadow(0 0 8px rgba(255,217,138,.6));
+  animation: bulbFlicker 3s ease-in-out infinite;
+}
+
+/* Summary stats strip */
 .bet-history-summary {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  padding: 16px 24px;
-  border-bottom: 1px solid rgba(255,181,77,.1);
+  gap: 0;
+  border-bottom: 1px solid rgba(255,181,77,.12);
 }
-.bh-stat {
-  background: rgba(255,181,77,.06);
-  border: 1px solid rgba(255,181,77,.12);
-  border-radius: 8px;
-  padding: 10px 12px;
-  text-align: center;
-}
-.bh-label { font-family: 'Space Grotesk', sans-serif; font-size: 10px; color: rgba(255,235,200,.45); text-transform: uppercase; letter-spacing:.1em; display:block; }
-.bh-value { font-family: 'Space Mono', monospace; font-size: 16px; color: #fff; margin-top: 2px; display:block; }
-.bh-value.profit { color: #4ede8f; }
-.bh-value.loss   { color: #ff5aa8; }
 
+.bh-stat {
+  padding: 14px 16px;
+  text-align: center;
+  border-right: 1px solid rgba(255,181,77,.1);
+  background: rgba(0,0,0,.2);
+}
+
+.bh-stat:last-child { border-right: none; }
+
+.bh-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,235,200,.38);
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.bh-value {
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cream);
+  display: block;
+}
+
+.bh-value.profit { color: #4ede8f; text-shadow: 0 0 8px rgba(78,222,143,.4); }
+.bh-value.loss   { color: var(--neon-pink); text-shadow: 0 0 8px rgba(255,90,168,.4); }
+
+/* ALL / WIN / LOSS filter tabs */
 .bh-filters {
   display: flex;
-  gap: 6px;
-  padding: 12px 24px;
-  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 24px;
   border-bottom: 1px solid rgba(255,181,77,.1);
+  align-items: center;
 }
+
+.bh-filters-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  color: rgba(255,235,200,.3);
+  margin-right: 4px;
+}
+
 .bh-filter {
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.1);
-  color: rgba(255,235,200,.6);
-  border-radius: 20px;
-  padding: 4px 12px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 12px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,235,200,.45);
+  border-radius: 2px;
+  padding: 5px 18px;
+  font-family: 'Bungee', sans-serif;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all .15s;
 }
-.bh-filter:hover, .bh-filter.active {
-  background: rgba(255,181,77,.15);
-  border-color: var(--amber);
+
+.bh-filter:hover {
+  border-color: rgba(255,181,77,.4);
   color: var(--amber);
 }
 
+.bh-filter.active[data-filter="all"] {
+  background: rgba(255,181,77,.12);
+  border-color: var(--amber);
+  color: var(--amber);
+  box-shadow: 0 0 10px rgba(255,181,77,.2);
+}
+
+.bh-filter.active[data-filter="win"] {
+  background: rgba(78,222,143,.1);
+  border-color: #4ede8f;
+  color: #4ede8f;
+  box-shadow: 0 0 10px rgba(78,222,143,.2);
+}
+
+.bh-filter.active[data-filter="loss"] {
+  background: rgba(255,90,168,.1);
+  border-color: var(--neon-pink);
+  color: var(--neon-pink);
+  box-shadow: 0 0 10px rgba(255,90,168,.2);
+}
+
+/* Bet rows — clean table style */
 .bh-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 36px 1fr auto auto auto;
   align-items: center;
   gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255,255,255,.05);
+  padding: 11px 24px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
   font-family: 'Space Grotesk', sans-serif;
   font-size: 13px;
+  transition: background .12s;
 }
+
+.bh-row:hover { background: rgba(255,181,77,.03); }
 .bh-row:last-child { border-bottom: none; }
-.bh-game-icon { font-size: 18px; width: 28px; text-align: center; flex-shrink:0; }
-.bh-game-name { flex: 1; color: rgba(255,235,200,.8); font-size: 13px; }
-.bh-bet  { color: rgba(255,235,200,.5); font-family:'Space Mono',monospace; font-size:12px; }
-.bh-payout { font-family:'Space Mono',monospace; font-size:13px; font-weight:600; }
+
+.bh-game-icon {
+  font-size: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.bh-game-name {
+  color: var(--cream);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bh-bet {
+  color: rgba(255,235,200,.4);
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.bh-result-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 2px;
+  font-family: 'Bungee', sans-serif;
+  font-size: 9px;
+  letter-spacing: .1em;
+  white-space: nowrap;
+}
+
+.bh-result-badge.win {
+  background: rgba(78,222,143,.12);
+  border: 1px solid rgba(78,222,143,.4);
+  color: #4ede8f;
+}
+
+.bh-result-badge.loss {
+  background: rgba(255,90,168,.1);
+  border: 1px solid rgba(255,90,168,.35);
+  color: var(--neon-pink);
+}
+
+.bh-payout {
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
 .bh-payout.profit { color: #4ede8f; }
-.bh-payout.loss   { color: #ff5aa8; }
-.bh-time  { color: rgba(255,235,200,.3); font-size: 11px; white-space: nowrap; }
+.bh-payout.loss   { color: var(--neon-pink); }
+
+/* Legacy field names (kept for backward compat in _bhRenderList) */
+.bh-time  { color: rgba(255,235,200,.25); font-size: 10px; white-space: nowrap; font-family: 'Space Mono', monospace; }
+.bh-mult  { color: var(--amber); font-family: 'Space Mono', monospace; font-size: 11px; background: rgba(255,181,77,.08); border: 1px solid rgba(255,181,77,.2); padding: 1px 6px; border-radius: 2px; margin-left: 4px; }
+.bh-details-note { font-size: 11px; color: rgba(255,235,200,.35); margin-left: 6px; }
+.bh-bet-chip { font-family: 'Space Mono', monospace; font-size: 11px; color: rgba(255,235,200,.4); }
+.bh-result-tag { display:none; } /* replaced by bh-result-badge */
+
+/* Empty state */
+.bh-empty {
+  text-align: center;
+  color: rgba(255,235,200,.3);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  padding: 48px 24px;
+  letter-spacing: .04em;
+}
+
+.bh-empty::before {
+  content: '◈';
+  display: block;
+  font-size: 36px;
+  color: rgba(255,181,77,.2);
+  margin-bottom: 12px;
+}
+
+/* Scrollable bet list */
+.bet-history-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,181,77,.25) transparent;
+}
+
+/* Close btn override for bet history */
+.bet-history-close {
+  background: rgba(255,181,77,.06);
+  border: 1px solid rgba(255,181,77,.2);
+  color: var(--amber);
+  border-radius: 2px;
+  width: 34px;
+  height: 34px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, border-color .15s;
+  font-family: 'Space Mono', monospace;
+}
+
+.bet-history-close:hover {
+  background: rgba(255,181,77,.18);
+  border-color: var(--amber);
+}
+
+/* Open/close animation */
+@keyframes bhSlideIn {
+  from { transform: translateY(24px) scale(.97); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.bet-history-content { animation: bhSlideIn .22s cubic-bezier(.22,1,.36,1) both; }
 
 /* ---- Leaderboard ---- */
 .leaderboard-tabs {
