@@ -4,68 +4,59 @@
 
 /* ========== NEON 777 DESIGN SYSTEM ========== */
 :root {
-  --n-bg: #0a0308;
-  --n-bg-2: #140612;
-  --n-bg-3: #1d0a1b;
-  --n-ink: #fff3e4;
-  --n-ink-muted: rgba(255,243,228,.64);
-  --n-ink-dim: rgba(255,243,228,.42);
-  --n-amber: #ffb54d;
-  --n-amber-hot: #ff8a2b;
-  --n-neon-red: #ff3a5c;
-  --n-neon-pink: #ff5aa8;
-  --n-neon-violet: #b064ff;
-  --n-cream: #ffe9b5;
-  --n-bulb: #ffd98a;
-  --n-line: rgba(255,180,120,.18);
-  --n-line-strong: rgba(255,180,120,.34);
-  --n-surface: #1a0718;
-  --n-surface-2: #25092a;
+  --bg: #0a0308;
+  --bg-2: #140612;
+  --bg-3: #1d0a1b;
+  --ink: #fff3e4;
+  --ink-muted: rgba(255,243,228,.64);
+  --ink-dim: rgba(255,243,228,.42);
+  --amber: #ffb54d;
+  --amber-hot: #ff8a2b;
+  --neon-red: #ff3a5c;
+  --neon-pink: #ff5aa8;
+  --neon-violet: #b064ff;
+  --cream: #ffe9b5;
+  --bulb: #ffd98a;
+  --line: rgba(255,180,120,.18);
+  --line-strong: rgba(255,180,120,.34);
+  --surface: #1a0718;
+  --surface-2: #25092a;
+  --font-display: 'Monoton', Impact, sans-serif;
+  --font-deco: 'Bungee', Impact, sans-serif;
+  --font-body: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+  --font-serif: 'DM Serif Display', serif;
 }
 
 /* Force neon dark theme on casino pages regardless of site theme toggle */
 body:has(#signInScreen),
 body:has(#mainCasinoScreen) {
-  background: var(--n-bg);
-  color: var(--n-ink);
-  --color-text: var(--n-ink);
-  --color-muted: var(--n-ink-muted);
-  --color-surface: var(--n-surface);
-  --color-primary: var(--n-amber);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,90,168,.18), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(176,100,255,.14), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(255,138,43,.12), transparent 60%),
+    var(--bg);
+  color: var(--ink);
+  --color-text: var(--ink);
+  --color-muted: var(--ink-muted);
+  --color-surface: var(--surface);
+  --color-primary: var(--amber);
   --color-primary-soft: rgba(255,181,77,.2);
 }
 
-/* Radial gradient background */
+/* Film grain overlay */
 body:has(#signInScreen)::before,
 body:has(#mainCasinoScreen)::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  background:
-    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(255,90,168,.12) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 40% at 80% 20%, rgba(176,100,255,.10) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(255,181,77,.08) 0%, transparent 60%),
-    var(--n-bg);
-  pointer-events: none;
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9000;opacity:.06;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode:overlay;
 }
 
-/* Film grain overlay */
+/* Scanlines overlay */
 body:has(#signInScreen)::after,
 body:has(#mainCasinoScreen)::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(255,243,228,.015) 2px,
-    rgba(255,243,228,.015) 4px
-  );
-  pointer-events: none;
-  opacity: .04;
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9001;opacity:.04;
+  background-image:repeating-linear-gradient(0deg, rgba(0,0,0,.5) 0 1px, transparent 1px 3px);
 }
 
 /* Ensure all content is above overlays */
@@ -79,7 +70,7 @@ body:has(#mainCasinoScreen) > * {
 body:has(#signInScreen),
 body:has(#mainCasinoScreen) {
   scrollbar-width: thin;
-  scrollbar-color: var(--n-amber) var(--n-bg-2);
+  scrollbar-color: var(--amber) var(--bg-2);
 }
 body:has(#signInScreen)::-webkit-scrollbar,
 body:has(#mainCasinoScreen)::-webkit-scrollbar {
@@ -87,11 +78,11 @@ body:has(#mainCasinoScreen)::-webkit-scrollbar {
 }
 body:has(#signInScreen)::-webkit-scrollbar-track,
 body:has(#mainCasinoScreen)::-webkit-scrollbar-track {
-  background: var(--n-bg-2);
+  background: var(--bg-2);
 }
 body:has(#signInScreen)::-webkit-scrollbar-thumb,
 body:has(#mainCasinoScreen)::-webkit-scrollbar-thumb {
-  background: var(--n-amber);
+  background: var(--amber);
   border-radius: 4px;
 }
 
@@ -99,7 +90,7 @@ body:has(#mainCasinoScreen)::-webkit-scrollbar-thumb {
 body:has(#signInScreen) ::selection,
 body:has(#mainCasinoScreen) ::selection {
   background: rgba(255,181,77,.3);
-  color: var(--n-ink);
+  color: var(--ink);
 }
 
 /* ========== ANIMATIONS ========== */
@@ -123,40 +114,20 @@ body:has(#mainCasinoScreen) ::selection {
   50% { transform: translateY(-10px); }
 }
 
-/* ========== SITE HEADER NEON OVERRIDE ========== */
-body:has(#signInScreen) .site-header,
-body:has(#mainCasinoScreen) .site-header {
-  background: rgba(10,3,8,.92) !important;
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--n-line) !important;
+@keyframes bulbFlicker {
+  0%, 100% { opacity: 1; }
+  7% { opacity: .72; }
+  12% { opacity: 1; }
+  36% { opacity: .92; }
+  64% { opacity: 1; }
+  73% { opacity: .84; }
 }
 
-body:has(#signInScreen) .site-header a,
-body:has(#mainCasinoScreen) .site-header a {
-  color: var(--n-ink-muted) !important;
-}
-
-body:has(#signInScreen) .site-header a.active,
-body:has(#mainCasinoScreen) .site-header a.active {
-  color: var(--n-amber) !important;
-}
-
-body:has(#signInScreen) .site-header a:hover,
-body:has(#mainCasinoScreen) .site-header a:hover {
-  color: var(--n-ink) !important;
-}
-
-/* ========== SITE FOOTER NEON OVERRIDE ========== */
-body:has(#signInScreen) .site-footer,
-body:has(#mainCasinoScreen) .site-footer {
-  background: var(--n-bg) !important;
-  border-top: 1px solid var(--n-line);
-  color: var(--n-ink-dim);
-}
+/* Site header/footer removed — casino is standalone */
 
 /* ========== AUTH SCREEN ========== */
 .casino-screen {
-  min-height: calc(100vh - 200px);
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -174,11 +145,11 @@ body:has(#mainCasinoScreen) .site-footer {
   width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: var(--n-surface);
+  background: var(--surface);
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 24px 80px rgba(0,0,0,.6);
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
   margin: 2rem auto;
   animation: fadeInUp 0.5s ease-out;
 }
@@ -197,7 +168,7 @@ body:has(#mainCasinoScreen) .site-footer {
   padding: 3rem 2rem;
   background:
     radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255,90,168,.08) 0%, transparent 70%),
-    var(--n-bg-2);
+    var(--bg-2);
   text-align: center;
   min-height: 400px;
 }
@@ -205,7 +176,7 @@ body:has(#mainCasinoScreen) .site-footer {
 .neon-brand-title {
   font-family: 'Monoton', cursive;
   font-size: clamp(2.5rem, 5vw, 4rem);
-  color: var(--n-amber);
+  color: var(--amber);
   animation: neonBreath 3s ease-in-out infinite;
   margin: 0 0 1rem;
   line-height: 1.2;
@@ -215,7 +186,7 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .neon-brand-tagline {
-  color: var(--n-ink-muted);
+  color: var(--ink-muted);
   font-family: 'Space Grotesk', sans-serif;
   font-size: 1rem;
   max-width: 320px;
@@ -236,12 +207,12 @@ body:has(#mainCasinoScreen) .site-footer {
   font-family: 'Space Mono', monospace;
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--n-cream);
+  color: var(--cream);
 }
 
 .neon-brand-stat-label {
   font-size: .75rem;
-  color: var(--n-ink-dim);
+  color: var(--ink-dim);
   text-transform: uppercase;
   letter-spacing: .08em;
 }
@@ -252,19 +223,19 @@ body:has(#mainCasinoScreen) .site-footer {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: var(--n-surface);
+  background: var(--surface);
 }
 
 .casino-title {
   font-family: 'Bungee', cursive;
   font-size: clamp(1.5rem, 3vw, 2rem);
   margin: 0 0 0.5rem;
-  color: var(--n-ink);
+  color: var(--ink);
   text-align: center;
 }
 
 .casino-subtitle {
-  color: var(--n-ink-muted);
+  color: var(--ink-muted);
   margin: 0 0 2rem;
   font-size: 1rem;
   text-align: center;
@@ -276,7 +247,7 @@ body:has(#mainCasinoScreen) .site-footer {
   display: flex;
   gap: 0;
   margin-bottom: 1.5rem;
-  border-bottom: 2px solid var(--n-line);
+  border-bottom: 2px solid var(--line);
 }
 
 .auth-tab {
@@ -285,7 +256,7 @@ body:has(#mainCasinoScreen) .site-footer {
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: var(--n-ink-dim);
+  color: var(--ink-dim);
   font-size: 1rem;
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
@@ -295,12 +266,12 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .auth-tab:hover {
-  color: var(--n-ink);
+  color: var(--ink);
 }
 
 .auth-tab.active {
-  color: var(--n-amber);
-  border-bottom-color: var(--n-amber);
+  color: var(--amber);
+  border-bottom-color: var(--amber);
 }
 
 /* Auth forms */
@@ -319,9 +290,9 @@ body:has(#mainCasinoScreen) .site-footer {
   padding: 0.9rem 0;
   border-radius: 0;
   border: none;
-  border-bottom: 2px solid var(--n-line-strong);
+  border-bottom: 2px solid var(--line-strong);
   background: transparent;
-  color: var(--n-ink);
+  color: var(--ink);
   font-size: 1rem;
   font-family: 'Space Grotesk', sans-serif;
   transition: all 0.3s ease;
@@ -329,18 +300,18 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .signin-form input::placeholder {
-  color: var(--n-ink-dim);
+  color: var(--ink-dim);
 }
 
 .signin-form input:focus {
-  border-bottom-color: var(--n-amber);
-  box-shadow: 0 2px 0 0 var(--n-amber);
+  border-bottom-color: var(--amber);
+  box-shadow: 0 2px 0 0 var(--amber);
 }
 
 .signin-form .btn-primary {
-  background: linear-gradient(135deg, var(--n-amber), var(--n-amber-hot));
+  background: linear-gradient(135deg, var(--amber), var(--amber-hot));
   border: none;
-  color: var(--n-bg);
+  color: var(--bg);
   font-weight: 700;
   font-family: 'Space Grotesk', sans-serif;
   font-size: 1rem;
@@ -358,7 +329,7 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .error-message {
-  color: var(--n-neon-red);
+  color: var(--neon-red);
   font-size: 0.9rem;
   margin-top: 0.5rem;
   text-align: center;
@@ -372,7 +343,7 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .credits-info {
-  color: var(--n-ink-muted);
+  color: var(--ink-muted);
   font-size: 0.95rem;
   text-align: center;
   font-family: 'Space Grotesk', sans-serif;
@@ -380,24 +351,24 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .neon-welcome-bonus {
   background: linear-gradient(135deg, rgba(255,181,77,.12), rgba(255,90,168,.08));
-  border: 1px solid var(--n-amber);
+  border: 1px solid var(--amber);
   border-radius: 12px;
   padding: 1rem;
   text-align: center;
   margin-top: 1rem;
   animation: neonBreath 4s ease-in-out infinite;
-  color: var(--n-amber);
+  color: var(--amber);
 }
 
 .neon-welcome-bonus .bonus-amount {
   font-family: 'Space Mono', monospace;
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--n-amber);
+  color: var(--amber);
 }
 
 .credit-amount {
-  color: var(--n-amber);
+  color: var(--amber);
   font-weight: bold;
   font-size: 1.2em;
   font-family: 'Space Mono', monospace;
@@ -414,7 +385,7 @@ body:has(#mainCasinoScreen) .site-footer {
 /* ========== CASINO HEADER ========== */
 .casino-header {
   background: rgba(10,3,8,.88);
-  border-bottom: 1px solid var(--n-line);
+  border-bottom: 1px solid var(--line);
   padding: 0.75rem 0;
   position: sticky;
   top: 0;
@@ -457,7 +428,7 @@ body:has(#mainCasinoScreen) .site-footer {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--n-neon-pink), var(--n-neon-violet));
+  background: linear-gradient(135deg, var(--neon-pink), var(--neon-violet));
 }
 
 .player-info span:not(.player-icon):not(.credits-separator) {
@@ -471,18 +442,18 @@ body:has(#mainCasinoScreen) .site-footer {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--n-ink);
+  color: var(--ink);
 }
 
 .credits-separator {
-  color: var(--n-ink-dim);
+  color: var(--ink-dim);
   margin: 0 clamp(0.15rem, 0.5vw, 0.25rem);
   font-weight: 400;
   flex-shrink: 0;
 }
 
 .credits-label {
-  color: var(--n-ink-muted);
+  color: var(--ink-muted);
   white-space: nowrap;
   font-weight: 500;
   margin-right: clamp(0.15rem, 0.5vw, 0.25rem);
@@ -491,13 +462,13 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 #creditsAmount {
-  color: var(--n-amber);
+  color: var(--amber);
   font-weight: bold;
   white-space: nowrap;
   font-size: clamp(0.9rem, 2vw, 1.2em);
   font-family: 'Space Mono', monospace;
   padding: 0.2rem 0.6rem;
-  border: 1px solid var(--n-amber);
+  border: 1px solid var(--amber);
   border-radius: 6px;
   background: rgba(255,181,77,.06);
 }
@@ -517,8 +488,8 @@ body:has(#mainCasinoScreen) .site-footer {
   white-space: nowrap;
   flex-shrink: 0;
   background: rgba(255,243,228,.05);
-  border: 1px solid var(--n-line);
-  color: var(--n-ink-muted);
+  border: 1px solid var(--line);
+  color: var(--ink-muted);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -527,8 +498,8 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .btn-small:hover {
   background: rgba(255,243,228,.1);
-  border-color: var(--n-amber);
-  color: var(--n-ink);
+  border-color: var(--amber);
+  color: var(--ink);
 }
 
 .btn-logout {
@@ -541,12 +512,12 @@ body:has(#mainCasinoScreen) .site-footer {
   justify-content: center;
   background: rgba(255,58,92,.1);
   border-color: rgba(255,58,92,.3);
-  color: var(--n-neon-red);
+  color: var(--neon-red);
 }
 
 .btn-logout:hover {
   background: rgba(255,58,92,.2);
-  border-color: var(--n-neon-red);
+  border-color: var(--neon-red);
 }
 
 /* ========== GAME SELECTION / LOBBY ========== */
@@ -568,7 +539,7 @@ body:has(#mainCasinoScreen) .site-footer {
   font-size: clamp(2rem, 5vw, 3.5rem);
   line-height: 1.2;
   margin: 0 0 1rem;
-  background: linear-gradient(135deg, var(--n-amber), var(--n-neon-pink), var(--n-neon-violet));
+  background: linear-gradient(135deg, var(--amber), var(--neon-pink), var(--neon-violet));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -580,7 +551,7 @@ body:has(#mainCasinoScreen) .site-footer {
   text-align: center;
   font-size: clamp(1.8rem, 3vw, 2.5rem);
   margin: 0 0 2.5rem;
-  background: linear-gradient(135deg, var(--n-amber), var(--n-neon-pink), var(--n-neon-violet));
+  background: linear-gradient(135deg, var(--amber), var(--neon-pink), var(--neon-violet));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -608,10 +579,10 @@ body:has(#mainCasinoScreen) .site-footer {
 
 /* ========== GAME CARDS ========== */
 .game-card {
-  background: var(--n-surface);
+  background: var(--surface);
   border-radius: 16px;
   padding: 2rem 1.5rem;
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
   box-shadow: 0 8px 32px rgba(0,0,0,.3);
   text-align: center;
   transition: all 0.3s ease;
@@ -640,34 +611,45 @@ body:has(#mainCasinoScreen) .site-footer {
 /* Game-specific accent gradients */
 .game-card[data-game="blackjack"] { border-color: rgba(255,181,77,.25); }
 .game-card[data-game="blackjack"]::before { background: linear-gradient(135deg, rgba(255,181,77,.08), transparent 60%); }
-.game-card[data-game="blackjack"]:hover { border-color: var(--n-amber); box-shadow: 0 16px 48px rgba(255,181,77,.15); }
+.game-card[data-game="blackjack"]:hover { border-color: var(--amber); box-shadow: 0 16px 48px rgba(255,181,77,.15); }
 
 .game-card[data-game="roulette"] { border-color: rgba(255,58,92,.25); }
 .game-card[data-game="roulette"]::before { background: linear-gradient(135deg, rgba(255,58,92,.08), transparent 60%); }
-.game-card[data-game="roulette"]:hover { border-color: var(--n-neon-red); box-shadow: 0 16px 48px rgba(255,58,92,.15); }
+.game-card[data-game="roulette"]:hover { border-color: var(--neon-red); box-shadow: 0 16px 48px rgba(255,58,92,.15); }
 
 .game-card[data-game="coinflip"] { border-color: rgba(255,233,181,.25); }
 .game-card[data-game="coinflip"]::before { background: linear-gradient(135deg, rgba(255,233,181,.08), transparent 60%); }
-.game-card[data-game="coinflip"]:hover { border-color: var(--n-cream); box-shadow: 0 16px 48px rgba(255,233,181,.15); }
+.game-card[data-game="coinflip"]:hover { border-color: var(--cream); box-shadow: 0 16px 48px rgba(255,233,181,.15); }
 
 .game-card[data-game="crash"] { border-color: rgba(255,90,168,.25); }
 .game-card[data-game="crash"]::before { background: linear-gradient(135deg, rgba(255,90,168,.08), transparent 60%); }
-.game-card[data-game="crash"]:hover { border-color: var(--n-neon-pink); box-shadow: 0 16px 48px rgba(255,90,168,.15); }
+.game-card[data-game="crash"]:hover { border-color: var(--neon-pink); box-shadow: 0 16px 48px rgba(255,90,168,.15); }
 
 .game-card[data-game="pachinko"] { border-color: rgba(176,100,255,.25); }
 .game-card[data-game="pachinko"]::before { background: linear-gradient(135deg, rgba(176,100,255,.08), transparent 60%); }
-.game-card[data-game="pachinko"]:hover { border-color: var(--n-neon-violet); box-shadow: 0 16px 48px rgba(176,100,255,.15); }
+.game-card[data-game="pachinko"]:hover { border-color: var(--neon-violet); box-shadow: 0 16px 48px rgba(176,100,255,.15); }
 
 .game-card[data-game="poker"] { border-color: rgba(255,138,43,.25); }
 .game-card[data-game="poker"]::before { background: linear-gradient(135deg, rgba(255,138,43,.08), transparent 60%); }
-.game-card[data-game="poker"]:hover { border-color: var(--n-amber-hot); box-shadow: 0 16px 48px rgba(255,138,43,.15); }
+.game-card[data-game="poker"]:hover { border-color: var(--amber-hot); box-shadow: 0 16px 48px rgba(255,138,43,.15); }
 
-.game-card[data-game="cs2betting"] { border-color: rgba(255,90,168,.25); }
-.game-card[data-game="cs2betting"]::before { background: linear-gradient(135deg, rgba(255,90,168,.08), transparent 60%); }
-.game-card[data-game="cs2betting"]:hover { border-color: var(--n-neon-pink); box-shadow: 0 16px 48px rgba(255,90,168,.15); }
+.game-card[data-game="cs2betting"] { border-color: rgba(63,185,80,.25); }
+.game-card[data-game="cs2betting"]::before { background: linear-gradient(135deg, rgba(63,185,80,.08), transparent 60%); }
+.game-card[data-game="cs2betting"]:hover { border-color: #3fb950; box-shadow: 0 16px 48px rgba(63,185,80,.15); }
 
 .game-card:hover::before {
   opacity: 1;
+}
+
+/* Featured card (Blackjack) spans 2 columns on desktop */
+.game-card.featured {
+  grid-column: span 2;
+}
+
+@media (max-width: 480px) {
+  .game-card.featured {
+    grid-column: span 1;
+  }
 }
 
 /* Tag chips */
@@ -686,7 +668,7 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .game-tag.hot {
   background: rgba(255,58,92,.2);
-  color: var(--n-neon-red);
+  color: var(--neon-red);
   border: 1px solid rgba(255,58,92,.4);
 }
 
@@ -698,8 +680,20 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .game-tag.new {
   background: rgba(176,100,255,.2);
-  color: var(--n-neon-violet);
+  color: var(--neon-violet);
   border: 1px solid rgba(176,100,255,.4);
+}
+
+.game-tag.warm {
+  background: rgba(255,233,181,.2);
+  color: var(--cream);
+  border: 1px solid rgba(255,233,181,.4);
+}
+
+.game-tag.esports {
+  background: rgba(63,185,80,.2);
+  color: #3fb950;
+  border: 1px solid rgba(63,185,80,.4);
 }
 
 .game-icon {
@@ -713,11 +707,11 @@ body:has(#mainCasinoScreen) .site-footer {
   font-family: 'Bungee', cursive;
   font-size: 1.2rem;
   margin: 0 0 0.5rem;
-  color: var(--n-ink);
+  color: var(--ink);
 }
 
 .game-card p {
-  color: var(--n-ink-muted);
+  color: var(--ink-muted);
   margin: 0 0 0.5rem;
   font-size: 0.9rem;
   font-family: 'Space Grotesk', sans-serif;
@@ -729,7 +723,7 @@ body:has(#mainCasinoScreen) .site-footer {
   justify-content: center;
   margin-bottom: 1rem;
   font-size: .78rem;
-  color: var(--n-ink-dim);
+  color: var(--ink-dim);
   font-family: 'Space Mono', monospace;
 }
 
@@ -743,9 +737,9 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .game-card-actions .play-btn {
   width: 100%;
-  background: linear-gradient(135deg, var(--n-amber), var(--n-amber-hot));
+  background: linear-gradient(135deg, var(--amber), var(--amber-hot));
   border: none;
-  color: var(--n-bg);
+  color: var(--bg);
   font-weight: 700;
   font-family: 'Space Grotesk', sans-serif;
   border-radius: 8px;
@@ -768,8 +762,8 @@ body:has(#mainCasinoScreen) .site-footer {
   opacity: 0.6;
   transition: opacity 0.2s;
   background: transparent;
-  border: 1px solid var(--n-line);
-  color: var(--n-ink-muted);
+  border: 1px solid var(--line);
+  color: var(--ink-muted);
   border-radius: 6px;
   cursor: pointer;
   font-family: 'Space Grotesk', sans-serif;
@@ -777,7 +771,7 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .how-to-play-btn:hover {
   opacity: 1;
-  border-color: var(--n-line-strong);
+  border-color: var(--line-strong);
 }
 
 /* ========== GAME CONTAINER ========== */
@@ -805,9 +799,9 @@ body:has(#mainCasinoScreen) .site-footer {
   gap: 0.5rem;
   margin-bottom: 0.5rem;
   padding: clamp(0.35rem, 1vw, 0.45rem) clamp(0.75rem, 1.8vw, 0.9rem);
-  background: var(--n-surface);
-  border: 1px solid var(--n-line-strong);
-  color: var(--n-ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -819,10 +813,10 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .back-btn:hover {
-  background: var(--n-surface-2);
-  border-color: var(--n-amber);
+  background: var(--surface-2);
+  border-color: var(--amber);
   transform: translateX(-3px);
-  color: var(--n-amber);
+  color: var(--amber);
 }
 
 .how-to-play-ingame-btn {
@@ -830,8 +824,8 @@ body:has(#mainCasinoScreen) .site-footer {
   padding: 0.45rem 0.9rem;
   opacity: 0.8;
   background: transparent;
-  border: 1px solid var(--n-line);
-  color: var(--n-ink-muted);
+  border: 1px solid var(--line);
+  color: var(--ink-muted);
   border-radius: 8px;
   cursor: pointer;
   font-family: 'Space Grotesk', sans-serif;
@@ -839,7 +833,7 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .how-to-play-ingame-btn:hover {
   opacity: 1;
-  border-color: var(--n-line-strong);
+  border-color: var(--line-strong);
 }
 
 .game-view {
@@ -859,8 +853,8 @@ body:has(#mainCasinoScreen) .site-footer {
 #blackjackGame.game-view:not(.hidden),
 #coinflipGame.game-view:not(.hidden),
 #rouletteGame.game-view:not(.hidden) {
-  background: var(--n-surface);
-  border: 1px solid var(--n-line);
+  background: var(--surface);
+  border: 1px solid var(--line);
   box-shadow: 0 24px 60px rgba(0,0,0,.5);
   padding: clamp(1rem, 2.5vw, 1.5rem);
 }
@@ -872,8 +866,8 @@ body:has(#mainCasinoScreen) .site-footer {
   left: 0;
   right: 0;
   z-index: 200;
-  background: var(--n-bg-2);
-  border-top: 1px solid var(--n-line);
+  background: var(--bg-2);
+  border-top: 1px solid var(--line);
   overflow: hidden;
   height: 32px;
   display: flex;
@@ -887,7 +881,7 @@ body:has(#mainCasinoScreen) .site-footer {
   animation: tickerScroll 30s linear infinite;
   font-family: 'Space Mono', monospace;
   font-size: 0.75rem;
-  color: var(--n-ink-dim);
+  color: var(--ink-dim);
 }
 
 .neon-ticker-content span {
@@ -897,7 +891,7 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .neon-ticker-content .ticker-amount {
-  color: var(--n-amber);
+  color: var(--amber);
   font-weight: 700;
 }
 
@@ -1071,8 +1065,8 @@ body:has(#mainCasinoScreen) .site-footer {
 .mobile-menu-toggle {
   display: none;
   background: rgba(255,243,228,.06);
-  border: 1px solid var(--n-line);
-  color: var(--n-ink);
+  border: 1px solid var(--line);
+  color: var(--ink);
   border-radius: 8px;
   padding: 0.5rem;
   cursor: pointer;
@@ -1108,8 +1102,8 @@ body:has(#mainCasinoScreen) .site-footer {
   position: absolute;
   top: 100%;
   right: 0;
-  background: var(--n-surface);
-  border: 1px solid var(--n-line-strong);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0,0,0,.6);
   backdrop-filter: blur(16px);
@@ -1141,8 +1135,8 @@ body:has(#mainCasinoScreen) .site-footer {
   justify-content: flex-start;
   gap: 0.5rem;
   background: transparent;
-  border: 1px solid var(--n-line);
-  color: var(--n-ink-muted);
+  border: 1px solid var(--line);
+  color: var(--ink-muted);
   transition: all 0.2s ease;
   position: relative;
   overflow: visible;
@@ -1154,8 +1148,8 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .mobile-actions-dropdown .btn-small:hover {
   background: rgba(255,243,228,.06);
-  border-color: var(--n-line-strong);
-  color: var(--n-ink);
+  border-color: var(--line-strong);
+  color: var(--ink);
 }
 
 /* ========== COINFLIP GAME STYLES ========== */
@@ -1166,10 +1160,10 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .game-section {
-  background: var(--n-surface);
+  background: var(--surface);
   border-radius: 12px;
   padding: 1.5rem;
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
   margin-bottom: 1.5rem;
 }
 
@@ -1182,7 +1176,7 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .room-selection-header h3 {
   margin: 0;
-  color: var(--n-ink);
+  color: var(--ink);
   font-family: 'Space Grotesk', sans-serif;
 }
 
@@ -1207,14 +1201,14 @@ body:has(#mainCasinoScreen) .site-footer {
   align-items: center;
   padding: 1rem;
   background: rgba(255,243,228,.03);
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
   border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .room-item:hover {
   background: rgba(255,243,228,.06);
-  border-color: var(--n-amber);
+  border-color: var(--amber);
 }
 
 .room-info {
@@ -1225,11 +1219,11 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .room-creator {
   font-weight: 600;
-  color: var(--n-ink);
+  color: var(--ink);
 }
 
 .room-bet {
-  color: var(--n-amber);
+  color: var(--amber);
   font-size: 0.9rem;
   font-family: 'Space Mono', monospace;
 }
@@ -1241,10 +1235,10 @@ body:has(#mainCasinoScreen) .site-footer {
 
 /* Game room styles */
 .game-room-section {
-  background: var(--n-surface);
+  background: var(--surface);
   border-radius: 12px;
   padding: 1.5rem;
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
 }
 
 .room-header {
@@ -1253,12 +1247,12 @@ body:has(#mainCasinoScreen) .site-footer {
   align-items: center;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid var(--n-line);
+  border-bottom: 1px solid var(--line);
 }
 
 .room-id-display {
   font-weight: 600;
-  color: var(--n-ink);
+  color: var(--ink);
 }
 
 .players-container {
@@ -1271,7 +1265,7 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .player-card {
   background: rgba(255,243,228,.03);
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 1rem;
   text-align: center;
@@ -1286,11 +1280,11 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .player-card-name {
   font-weight: 600;
-  color: var(--n-ink);
+  color: var(--ink);
 }
 
 .player-card-bet {
-  color: var(--n-amber);
+  color: var(--amber);
   font-size: 0.9rem;
   font-family: 'Space Mono', monospace;
 }
@@ -1340,13 +1334,13 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .coin-front {
-  background: linear-gradient(135deg, var(--n-amber), var(--n-amber-hot));
-  border: 3px solid var(--n-amber);
+  background: linear-gradient(135deg, var(--amber), var(--amber-hot));
+  border: 3px solid var(--amber);
 }
 
 .coin-back {
-  background: linear-gradient(135deg, var(--n-neon-violet), #8b5cf6);
-  border: 3px solid var(--n-neon-violet);
+  background: linear-gradient(135deg, var(--neon-violet), #8b5cf6);
+  border: 3px solid var(--neon-violet);
   transform: rotateY(180deg);
 }
 
@@ -1379,12 +1373,12 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .bet-setup-section, .confirmation-section {
-  background: var(--n-surface);
+  background: var(--surface);
   border-radius: 12px;
   padding: 1.5rem;
   max-width: 500px;
   width: 100%;
-  border: 1px solid var(--n-line-strong);
+  border: 1px solid var(--line-strong);
   position: relative;
 }
 
@@ -1394,19 +1388,19 @@ body:has(#mainCasinoScreen) .site-footer {
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--n-line);
+  border-bottom: 1px solid var(--line);
 }
 
 .bet-setup-header h4 {
   margin: 0;
-  color: var(--n-ink);
+  color: var(--ink);
   font-family: 'Space Grotesk', sans-serif;
 }
 
 .btn-close {
   background: none;
   border: none;
-  color: var(--n-ink-dim);
+  color: var(--ink-dim);
   font-size: 1.2rem;
   cursor: pointer;
   padding: 0.25rem;
@@ -1416,7 +1410,7 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .btn-close:hover {
   background: rgba(255,243,228,.06);
-  color: var(--n-ink);
+  color: var(--ink);
 }
 
 .bet-input-group {
@@ -1427,7 +1421,7 @@ body:has(#mainCasinoScreen) .site-footer {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: var(--n-ink);
+  color: var(--ink);
   font-family: 'Space Grotesk', sans-serif;
 }
 
@@ -1435,16 +1429,16 @@ body:has(#mainCasinoScreen) .site-footer {
   width: 100%;
   padding: 0.75rem;
   border-radius: 8px;
-  border: 1px solid var(--n-line-strong);
-  background: var(--n-bg-2);
-  color: var(--n-ink);
+  border: 1px solid var(--line-strong);
+  background: var(--bg-2);
+  color: var(--ink);
   font-size: 1rem;
   margin-bottom: 0.5rem;
   font-family: 'Space Mono', monospace;
 }
 
 .bet-input-group input:focus {
-  border-color: var(--n-amber);
+  border-color: var(--amber);
   outline: none;
   box-shadow: 0 0 0 2px rgba(255,181,77,.15);
 }
@@ -1457,9 +1451,9 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .btn-quick-bet {
   padding: 0.5rem;
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
   background: rgba(255,243,228,.05);
-  color: var(--n-ink-muted);
+  color: var(--ink-muted);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1468,9 +1462,9 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .btn-quick-bet:hover, .btn-quick-bet.active {
-  background: var(--n-amber);
-  color: var(--n-bg);
-  border-color: var(--n-amber);
+  background: var(--amber);
+  color: var(--bg);
+  border-color: var(--amber);
 }
 
 .choice-section {
@@ -1481,7 +1475,7 @@ body:has(#mainCasinoScreen) .site-footer {
   display: block;
   margin-bottom: 0.75rem;
   font-weight: 600;
-  color: var(--n-ink);
+  color: var(--ink);
   font-family: 'Space Grotesk', sans-serif;
 }
 
@@ -1497,9 +1491,9 @@ body:has(#mainCasinoScreen) .site-footer {
   align-items: center;
   gap: 0.5rem;
   padding: 1rem;
-  border: 2px solid var(--n-line);
+  border: 2px solid var(--line);
   background: rgba(255,243,228,.03);
-  color: var(--n-ink);
+  color: var(--ink);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1507,14 +1501,14 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .btn-choice:hover {
-  border-color: var(--n-amber);
+  border-color: var(--amber);
   background: rgba(255,181,77,.06);
 }
 
 .btn-choice.active {
-  border-color: var(--n-amber);
-  background: var(--n-amber);
-  color: var(--n-bg);
+  border-color: var(--amber);
+  background: var(--amber);
+  color: var(--bg);
 }
 
 .choice-icon {
@@ -1528,7 +1522,7 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .status-message {
   font-size: 1.1rem;
-  color: var(--n-ink);
+  color: var(--ink);
   margin-bottom: 1rem;
   font-family: 'Space Grotesk', sans-serif;
 }
@@ -1549,8 +1543,8 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .result-message.win { color: #22c55e; }
-.result-message.loss { color: var(--n-neon-red); }
-.result-message.tie { color: var(--n-amber); }
+.result-message.loss { color: var(--neon-red); }
+.result-message.tie { color: var(--amber); }
 
 /* Mobile layout for Coinflip */
 @media (max-width: 768px) {
@@ -1585,10 +1579,10 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .roulette-wheel-section {
-  background: var(--n-surface);
+  background: var(--surface);
   border-radius: 12px;
   padding: 1.5rem;
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
 }
 
 .digital-roulette-display {
@@ -1597,17 +1591,17 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .roulette-display {
-  background: var(--n-bg);
+  background: var(--bg);
   border-radius: 12px;
   padding: 2rem;
   margin-bottom: 1rem;
-  border: 3px solid var(--n-line-strong);
+  border: 3px solid var(--line-strong);
 }
 
 .number-display {
   font-size: 4rem;
   font-weight: bold;
-  color: var(--n-ink);
+  color: var(--ink);
   margin-bottom: 0.5rem;
   font-family: 'Space Mono', monospace;
   text-shadow: 0 0 10px rgba(255,243,228,.3);
@@ -1618,31 +1612,31 @@ body:has(#mainCasinoScreen) .site-footer {
   height: 60px;
   border-radius: 50%;
   margin: 0 auto;
-  border: 2px solid var(--n-line-strong);
+  border: 2px solid var(--line-strong);
   background: #666;
 }
 
 .winning-number {
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--n-amber);
+  color: var(--amber);
   margin-bottom: 1rem;
   font-family: 'Space Mono', monospace;
 }
 
 .next-spin-timer {
   font-size: 1.1rem;
-  color: var(--n-ink);
+  color: var(--ink);
   background: rgba(255,243,228,.05);
   padding: 0.75rem;
   border-radius: 8px;
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
   font-family: 'Space Mono', monospace;
 }
 
 .roulette-history-section h3 {
   margin-bottom: 1rem;
-  color: var(--n-ink);
+  color: var(--ink);
   font-family: 'Space Grotesk', sans-serif;
 }
 
@@ -1653,9 +1647,9 @@ body:has(#mainCasinoScreen) .site-footer {
   max-height: 200px;
   overflow-y: auto;
   padding: 0.5rem;
-  background: var(--n-bg-2);
+  background: var(--bg-2);
   border-radius: 8px;
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
 }
 
 .history-number {
@@ -1668,7 +1662,7 @@ body:has(#mainCasinoScreen) .site-footer {
   font-weight: bold;
   font-size: 0.9rem;
   color: white;
-  border: 2px solid var(--n-line-strong);
+  border: 2px solid var(--line-strong);
 }
 
 .history-number.red { background: #ef4444; border-color: #dc2626; }
@@ -1676,16 +1670,16 @@ body:has(#mainCasinoScreen) .site-footer {
 .history-number.green { background: #22c55e; border-color: #16a34a; }
 
 .betting-section-roulette {
-  background: var(--n-surface);
+  background: var(--surface);
   border-radius: 12px;
   padding: 1.5rem;
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
   height: fit-content;
 }
 
 .betting-controls h3 {
   margin-bottom: 1rem;
-  color: var(--n-ink);
+  color: var(--ink);
   font-family: 'Space Grotesk', sans-serif;
 }
 
@@ -1701,7 +1695,7 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .bet-section h4 {
   margin-bottom: 0.75rem;
-  color: var(--n-ink);
+  color: var(--ink);
   font-size: 1rem;
   font-family: 'Space Grotesk', sans-serif;
 }
@@ -1717,9 +1711,9 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .bet-btn {
   padding: 0.75rem 0.5rem;
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
   background: rgba(255,243,228,.05);
-  color: var(--n-ink);
+  color: var(--ink);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1733,14 +1727,14 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .bet-btn:hover {
-  border-color: var(--n-amber);
+  border-color: var(--amber);
   background: rgba(255,181,77,.1);
 }
 
 .bet-btn.active {
-  background: var(--n-amber);
-  color: var(--n-bg);
-  border-color: var(--n-amber);
+  background: var(--amber);
+  color: var(--bg);
+  border-color: var(--amber);
 }
 
 .bet-btn.red { background-color: rgba(239,68,68,.2); color: #ef4444; border-color: rgba(239,68,68,.3); }
@@ -1758,19 +1752,19 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .current-bet-display h4 {
   margin-bottom: 0.5rem;
-  color: var(--n-amber);
+  color: var(--amber);
   font-family: 'Space Grotesk', sans-serif;
 }
 
 .current-bet-info {
-  color: var(--n-ink);
+  color: var(--ink);
   font-size: 0.9rem;
 }
 
 .clear-bet-btn {
   width: 100%;
   background: rgba(255,58,92,.1) !important;
-  color: var(--n-neon-red) !important;
+  color: var(--neon-red) !important;
   border-color: rgba(255,58,92,.3) !important;
   margin-top: 0.75rem;
 }
@@ -1826,85 +1820,85 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 @keyframes bhFadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
 .bet-history-content {
-  background: var(--n-surface); border-radius: 18px; width: 100%; max-width: 620px;
+  background: var(--surface); border-radius: 18px; width: 100%; max-width: 620px;
   max-height: 82vh; display: flex; flex-direction: column;
-  border: 1px solid var(--n-line-strong); box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+  border: 1px solid var(--line-strong); box-shadow: 0 24px 80px rgba(0,0,0,0.7);
   overflow: hidden;
 }
 .bet-history-header {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--n-line);
+  padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--line);
   flex-shrink: 0;
 }
-.bet-history-header h2 { margin: 0; font-size: 1.2rem; color: var(--n-ink); font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
+.bet-history-header h2 { margin: 0; font-size: 1.2rem; color: var(--ink); font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
 .bet-history-close {
-  background: rgba(255,243,228,.06); border: 1px solid var(--n-line);
-  color: var(--n-ink-dim); font-size: 1.1rem; border-radius: 8px;
+  background: rgba(255,243,228,.06); border: 1px solid var(--line);
+  color: var(--ink-dim); font-size: 1.1rem; border-radius: 8px;
   cursor: pointer; padding: 0.35rem 0.6rem; line-height: 1; transition: all 0.2s;
 }
-.bet-history-close:hover { background: rgba(255,243,228,.12); color: var(--n-ink); }
+.bet-history-close:hover { background: rgba(255,243,228,.12); color: var(--ink); }
 
 .bet-history-summary {
   display: flex; gap: 0; padding: 0;
-  border-bottom: 1px solid var(--n-line); flex-shrink: 0;
+  border-bottom: 1px solid var(--line); flex-shrink: 0;
 }
 .bh-stat {
   flex: 1; text-align: center; padding: 0.9rem 0.5rem;
-  border-right: 1px solid var(--n-line);
+  border-right: 1px solid var(--line);
 }
 .bh-stat:last-child { border-right: none; }
-.bh-label { display: block; font-size: 0.65rem; color: var(--n-ink-dim); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.8px; font-family: 'Space Grotesk', sans-serif; }
-.bh-value { display: block; font-size: 1rem; font-weight: 700; color: var(--n-ink); font-family: 'Space Mono', monospace; }
+.bh-label { display: block; font-size: 0.65rem; color: var(--ink-dim); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.8px; font-family: 'Space Grotesk', sans-serif; }
+.bh-value { display: block; font-size: 1rem; font-weight: 700; color: var(--ink); font-family: 'Space Mono', monospace; }
 .bh-value.profit { color: #22c55e; }
-.bh-value.loss { color: var(--n-neon-red); }
+.bh-value.loss { color: var(--neon-red); }
 
 .bh-filters {
   display: flex; gap: 0.4rem; padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--n-line);
+  border-bottom: 1px solid var(--line);
   overflow-x: auto; flex-shrink: 0; scrollbar-width: none;
 }
 .bh-filters::-webkit-scrollbar { display: none; }
 .bh-filter {
-  background: rgba(255,243,228,.05); border: 1px solid var(--n-line);
-  color: var(--n-ink-dim); padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.75rem;
+  background: rgba(255,243,228,.05); border: 1px solid var(--line);
+  color: var(--ink-dim); padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.75rem;
   cursor: pointer; white-space: nowrap; transition: all 0.15s; font-weight: 500;
   font-family: 'Space Grotesk', sans-serif;
 }
-.bh-filter:hover { background: rgba(255,243,228,.1); color: var(--n-ink); }
+.bh-filter:hover { background: rgba(255,243,228,.1); color: var(--ink); }
 .bh-filter.active {
   background: rgba(255,181,77,.15); border-color: rgba(255,181,77,.5);
-  color: var(--n-amber); font-weight: 600;
+  color: var(--amber); font-weight: 600;
 }
 
-.bet-history-list { overflow-y: auto; padding: 0.6rem 0.75rem; flex: 1; scrollbar-width: thin; scrollbar-color: var(--n-amber) transparent; }
-.bh-empty { text-align: center; color: var(--n-ink-dim); padding: 3rem 1rem; font-size: 0.9rem; }
+.bet-history-list { overflow-y: auto; padding: 0.6rem 0.75rem; flex: 1; scrollbar-width: thin; scrollbar-color: var(--amber) transparent; }
+.bh-empty { text-align: center; color: var(--ink-dim); padding: 3rem 1rem; font-size: 0.9rem; }
 .bh-row {
   display: flex; flex-direction: column; gap: 0.3rem;
   padding: 0.7rem 0.85rem; border-radius: 10px; margin-bottom: 0.45rem;
   border: 1px solid transparent; transition: border-color 0.15s;
 }
-.bh-row:hover { border-color: var(--n-line); }
+.bh-row:hover { border-color: var(--line); }
 .bh-row.win { background: rgba(34,197,94,0.07); }
 .bh-row.loss { background: rgba(255,58,92,0.06); }
 .bh-row-top { display: flex; justify-content: space-between; align-items: center; }
 .bh-game { display: flex; align-items: center; gap: 0.4rem; }
-.bh-game-name { color: var(--n-ink); font-weight: 600; font-size: 0.9rem; }
+.bh-game-name { color: var(--ink); font-weight: 600; font-size: 0.9rem; }
 .bh-payout { font-weight: 700; font-size: 0.95rem; white-space: nowrap; font-family: 'Space Mono', monospace; }
 .bh-payout.profit { color: #22c55e; }
-.bh-payout.loss { color: var(--n-neon-red); }
+.bh-payout.loss { color: var(--neon-red); }
 .bh-meta { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .bh-bet-chip {
-  background: rgba(255,243,228,.05); border: 1px solid var(--n-line);
-  color: var(--n-ink-dim); padding: 0.15rem 0.5rem; border-radius: 5px; font-size: 0.75rem;
+  background: rgba(255,243,228,.05); border: 1px solid var(--line);
+  color: var(--ink-dim); padding: 0.15rem 0.5rem; border-radius: 5px; font-size: 0.75rem;
 }
-.bh-mult { color: var(--n-amber); font-weight: 700; font-size: 0.8rem; }
+.bh-mult { color: var(--amber); font-weight: 700; font-size: 0.8rem; }
 .bh-result-tag {
   font-size: 0.73rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.4px;
 }
 .bh-result-tag.win { background: rgba(34,197,94,0.15); color: #4ade80; }
-.bh-result-tag.loss { background: rgba(255,58,92,0.15); color: var(--n-neon-red); }
-.bh-details-note { color: var(--n-ink-dim); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
-.bh-time { color: var(--n-ink-dim); font-size: 0.68rem; }
+.bh-result-tag.loss { background: rgba(255,58,92,0.15); color: var(--neon-red); }
+.bh-details-note { color: var(--ink-dim); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.bh-time { color: var(--ink-dim); font-size: 0.68rem; }
 
 @media (max-width: 600px) {
   .bet-history-modal { padding: 0; align-items: flex-end; }
@@ -1929,38 +1923,38 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .leaderboard-content {
-  background: var(--n-surface); border-radius: 16px; max-width: 600px; width: 100%;
-  max-height: 90vh; border: 1px solid var(--n-line-strong); display: flex; flex-direction: column;
+  background: var(--surface); border-radius: 16px; max-width: 600px; width: 100%;
+  max-height: 90vh; border: 1px solid var(--line-strong); display: flex; flex-direction: column;
 }
 
 .leaderboard-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 1.5rem 2rem; border-bottom: 1px solid var(--n-line);
+  padding: 1.5rem 2rem; border-bottom: 1px solid var(--line);
 }
 
 .leaderboard-header h2 {
   margin: 0; font-size: 1.5rem; font-family: 'Bungee', cursive;
-  background: linear-gradient(135deg, var(--n-amber), var(--n-amber-hot));
+  background: linear-gradient(135deg, var(--amber), var(--amber-hot));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
 .leaderboard-close {
-  background: none; border: none; font-size: 1.5rem; color: var(--n-ink-dim);
+  background: none; border: none; font-size: 1.5rem; color: var(--ink-dim);
   cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: all 0.2s;
 }
-.leaderboard-close:hover { background: rgba(255,243,228,.06); color: var(--n-ink); }
+.leaderboard-close:hover { background: rgba(255,243,228,.06); color: var(--ink); }
 
 .leaderboard-tabs {
-  display: flex; gap: 0; padding: 0 2rem; border-bottom: 1px solid var(--n-line);
+  display: flex; gap: 0; padding: 0 2rem; border-bottom: 1px solid var(--line);
 }
 
 .leaderboard-tab {
-  flex: 1; padding: 1rem; background: none; border: none; color: var(--n-ink-dim);
+  flex: 1; padding: 1rem; background: none; border: none; color: var(--ink-dim);
   cursor: pointer; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s;
   font-family: 'Space Grotesk', sans-serif;
 }
-.leaderboard-tab.active { color: var(--n-amber); border-bottom-color: var(--n-amber); }
-.leaderboard-tab:hover:not(.active) { color: var(--n-ink); }
+.leaderboard-tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+.leaderboard-tab:hover:not(.active) { color: var(--ink); }
 
 .leaderboard-list { flex: 1; overflow-y: auto; padding: 1rem 2rem; }
 
@@ -1971,20 +1965,20 @@ body:has(#mainCasinoScreen) .site-footer {
 .lb-row:hover { background: rgba(255,243,228,.06); }
 .lb-row.current-user { background: rgba(255,181,77,.08); border: 1px solid rgba(255,181,77,.2); }
 
-.lb-rank { font-weight: 700; font-size: 1.1rem; color: var(--n-amber); min-width: 2.5rem; position: relative; }
+.lb-rank { font-weight: 700; font-size: 1.1rem; color: var(--amber); min-width: 2.5rem; position: relative; }
 .lb-rank[data-rank="1"]::before { content: "🥇"; margin-right: 0.25rem; }
 .lb-rank[data-rank="2"]::before { content: "🥈"; margin-right: 0.25rem; }
 .lb-rank[data-rank="3"]::before { content: "🥉"; margin-right: 0.25rem; }
 
 .lb-player { flex: 1; }
-.lb-username { font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; color: var(--n-ink); }
-.lb-stats { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--n-ink-dim); }
+.lb-username { font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; color: var(--ink); }
+.lb-stats { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--ink-dim); }
 .lb-profits { text-align: right; }
 .lb-netpl { font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem; font-family: 'Space Mono', monospace; }
 .lb-netpl.profit { color: #22c55e; }
-.lb-netpl.loss { color: var(--n-neon-red); }
-.lb-biggest { font-size: 0.8rem; color: var(--n-ink-dim); }
-.lb-empty { text-align: center; padding: 3rem; color: var(--n-ink-dim); }
+.lb-netpl.loss { color: var(--neon-red); }
+.lb-biggest { font-size: 0.8rem; color: var(--ink-dim); }
+.lb-empty { text-align: center; padding: 3rem; color: var(--ink-dim); }
 
 .games-tabs {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -1993,15 +1987,15 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .game-tab {
   padding: 0.75rem; background: rgba(255,243,228,.05); border: none; border-radius: 8px;
-  color: var(--n-ink); cursor: pointer; font-size: 0.9rem; transition: all 0.2s;
+  color: var(--ink); cursor: pointer; font-size: 0.9rem; transition: all 0.2s;
   font-family: 'Space Grotesk', sans-serif;
 }
 .game-tab:hover { background: rgba(255,243,228,.1); }
-.game-tab.active { background: var(--n-amber); color: var(--n-bg); }
+.game-tab.active { background: var(--amber); color: var(--bg); }
 
 .lb-score { text-align: right; }
-.lb-value { font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem; color: var(--n-amber); font-family: 'Space Mono', monospace; }
-.lb-metric { font-size: 0.8rem; color: var(--n-ink-dim); }
+.lb-value { font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem; color: var(--amber); font-family: 'Space Mono', monospace; }
+.lb-metric { font-size: 0.8rem; color: var(--ink-dim); }
 
 /* ========== ACHIEVEMENTS MODAL ========== */
 .achievements-modal {
@@ -2011,40 +2005,40 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .achievements-content {
-  background: var(--n-surface); border-radius: 16px; max-width: 700px; width: 100%;
-  max-height: 90vh; border: 1px solid var(--n-line-strong); display: flex; flex-direction: column;
+  background: var(--surface); border-radius: 16px; max-width: 700px; width: 100%;
+  max-height: 90vh; border: 1px solid var(--line-strong); display: flex; flex-direction: column;
 }
 
 .achievements-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 1.5rem 2rem; border-bottom: 1px solid var(--n-line);
+  padding: 1.5rem 2rem; border-bottom: 1px solid var(--line);
 }
 
 .achievements-header h2 {
   margin: 0; font-size: 1.5rem; font-family: 'Bungee', cursive;
-  background: linear-gradient(135deg, var(--n-amber), var(--n-amber-hot));
+  background: linear-gradient(135deg, var(--amber), var(--amber-hot));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
 .achievements-close {
-  background: none; border: none; font-size: 1.5rem; color: var(--n-ink-dim);
+  background: none; border: none; font-size: 1.5rem; color: var(--ink-dim);
   cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: all 0.2s;
 }
-.achievements-close:hover { background: rgba(255,243,228,.06); color: var(--n-ink); }
+.achievements-close:hover { background: rgba(255,243,228,.06); color: var(--ink); }
 
 .achievements-list { flex: 1; overflow-y: auto; padding: 2rem; }
 
 .achievements-summary { margin-bottom: 2rem; text-align: center; }
 
 .ach-progress-bar {
-  width: 100%; height: 8px; background: var(--n-bg-2); border-radius: 4px;
+  width: 100%; height: 8px; background: var(--bg-2); border-radius: 4px;
   overflow: hidden; margin-bottom: 0.5rem;
 }
 .ach-progress-fill {
-  height: 100%; background: linear-gradient(135deg, var(--n-amber), var(--n-amber-hot));
+  height: 100%; background: linear-gradient(135deg, var(--amber), var(--amber-hot));
   border-radius: 4px; transition: width 0.5s ease;
 }
-.ach-progress-text { color: var(--n-ink-dim); font-size: 0.9rem; }
+.ach-progress-text { color: var(--ink-dim); font-size: 0.9rem; }
 
 .achievements-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;
@@ -2052,7 +2046,7 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .achievement-card {
   display: flex; align-items: center; gap: 1rem; padding: 1.5rem; border-radius: 12px;
-  border: 1px solid var(--n-line); transition: all 0.2s;
+  border: 1px solid var(--line); transition: all 0.2s;
 }
 .achievement-card.earned { background: rgba(34,197,94,.08); border-color: rgba(34,197,94,.25); }
 .achievement-card.locked { background: rgba(255,243,228,.02); opacity: 0.6; }
@@ -2060,8 +2054,8 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .ach-icon { font-size: 2.5rem; flex-shrink: 0; }
 .ach-info { flex: 1; }
-.ach-name { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.25rem; color: var(--n-ink); }
-.ach-description { color: var(--n-ink-muted); font-size: 0.9rem; margin-bottom: 0.5rem; }
+.ach-name { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.25rem; color: var(--ink); }
+.ach-description { color: var(--ink-muted); font-size: 0.9rem; margin-bottom: 0.5rem; }
 .ach-earned { color: #22c55e; font-size: 0.8rem; font-weight: 500; display: flex; align-items: center; gap: 0.25rem; }
 
 /* ========== STATS MODAL ========== */
@@ -2072,26 +2066,26 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .stats-content {
-  background: var(--n-surface); border-radius: 16px; max-width: 800px; width: 100%;
-  max-height: 90vh; border: 1px solid var(--n-line-strong); display: flex; flex-direction: column;
+  background: var(--surface); border-radius: 16px; max-width: 800px; width: 100%;
+  max-height: 90vh; border: 1px solid var(--line-strong); display: flex; flex-direction: column;
 }
 
 .stats-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 1.5rem 2rem; border-bottom: 1px solid var(--n-line);
+  padding: 1.5rem 2rem; border-bottom: 1px solid var(--line);
 }
 
 .stats-header h2 {
   margin: 0; font-size: 1.5rem; font-family: 'Bungee', cursive;
-  background: linear-gradient(135deg, var(--n-neon-violet), var(--n-neon-pink));
+  background: linear-gradient(135deg, var(--neon-violet), var(--neon-pink));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
 .stats-close {
-  background: none; border: none; font-size: 1.5rem; color: var(--n-ink-dim);
+  background: none; border: none; font-size: 1.5rem; color: var(--ink-dim);
   cursor: pointer; padding: 0.5rem; border-radius: 8px; transition: all 0.2s;
 }
-.stats-close:hover { background: rgba(255,243,228,.06); color: var(--n-ink); }
+.stats-close:hover { background: rgba(255,243,228,.06); color: var(--ink); }
 
 .stats-body { flex: 1; overflow-y: auto; padding: 2rem; }
 
@@ -2102,29 +2096,29 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .stat-card {
   text-align: center; padding: 1.5rem; background: rgba(255,243,228,.03);
-  border-radius: 12px; border: 1px solid var(--n-line);
+  border-radius: 12px; border: 1px solid var(--line);
 }
 .stat-card.profit { background: rgba(34,197,94,.08); border-color: rgba(34,197,94,.2); }
 .stat-card.loss { background: rgba(255,58,92,.08); border-color: rgba(255,58,92,.2); }
 
 .stat-value { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; font-family: 'Space Mono', monospace; }
 .stat-card.profit .stat-value { color: #22c55e; }
-.stat-card.loss .stat-value { color: var(--n-neon-red); }
+.stat-card.loss .stat-value { color: var(--neon-red); }
 
-.stat-label { color: var(--n-ink-dim); font-size: 0.9rem; font-family: 'Space Grotesk', sans-serif; }
+.stat-label { color: var(--ink-dim); font-size: 0.9rem; font-family: 'Space Grotesk', sans-serif; }
 
 .stats-details { display: grid; gap: 2rem; }
-.stats-section h3 { margin: 0 0 1rem; color: var(--n-ink); font-size: 1.2rem; font-family: 'Space Grotesk', sans-serif; }
+.stats-section h3 { margin: 0 0 1rem; color: var(--ink); font-size: 1.2rem; font-family: 'Space Grotesk', sans-serif; }
 .stats-grid { display: grid; gap: 0.75rem; }
 
 .stat-row {
   display: flex; justify-content: space-between; align-items: center;
   padding: 0.75rem 1rem; background: rgba(255,243,228,.03); border-radius: 8px;
 }
-.stat-name { color: var(--n-ink); }
+.stat-name { color: var(--ink); }
 .stat-val { font-weight: 600; font-family: 'Space Mono', monospace; }
 .stat-val.profit { color: #22c55e; }
-.stat-val.loss { color: var(--n-neon-red); }
+.stat-val.loss { color: var(--neon-red); }
 
 .game-stats {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;
@@ -2132,18 +2126,18 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .game-stat {
   padding: 1rem; background: rgba(255,243,228,.03); border-radius: 8px;
-  border: 1px solid var(--n-line);
+  border: 1px solid var(--line);
 }
 .game-stat-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
 .game-icon { font-size: 1.2rem; }
-.game-name { font-weight: 600; color: var(--n-ink); }
-.game-stat-details { display: flex; gap: 1rem; font-size: 0.9rem; color: var(--n-ink-dim); }
+.game-name { font-weight: 600; color: var(--ink); }
+.game-stat-details { display: flex; gap: 1rem; font-size: 0.9rem; color: var(--ink-dim); }
 
 /* ========== ACHIEVEMENT TOAST ========== */
 .achievement-toast {
   position: fixed; top: 20px; right: 20px;
-  background: linear-gradient(135deg, var(--n-amber), var(--n-amber-hot));
-  color: var(--n-bg); padding: 1rem 1.5rem; border-radius: 12px;
+  background: linear-gradient(135deg, var(--amber), var(--amber-hot));
+  color: var(--bg); padding: 1rem 1.5rem; border-radius: 12px;
   box-shadow: 0 10px 40px rgba(255,181,77,.3); z-index: 1100; max-width: 350px;
   cursor: pointer; transform: translateX(100%); opacity: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2184,7 +2178,7 @@ body:has(#mainCasinoScreen) .site-footer {
 /* ========== ACHIEVEMENT BADGE ========== */
 .achievement-badge {
   position: absolute; top: -4px; right: -4px;
-  background: var(--n-neon-red); color: white; font-size: 0.7rem; font-weight: 600;
+  background: var(--neon-red); color: white; font-size: 0.7rem; font-weight: 600;
   padding: 0.2rem 0.4rem; border-radius: 10px; min-width: 18px; text-align: center;
 }
 .achievement-badge.hidden { display: none; }
@@ -2215,8 +2209,8 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .pachinko-canvas-wrap {
   position: relative; display: flex; justify-content: center;
-  background: var(--n-surface); border-radius: 12px; padding: 1rem;
-  border: 1px solid var(--n-line);
+  background: var(--surface); border-radius: 12px; padding: 1rem;
+  border: 1px solid var(--line);
 }
 
 #pachinkoCanvas {
@@ -2225,26 +2219,26 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .pachinko-controls {
   display: flex; flex-direction: column; gap: 1rem;
-  background: var(--n-surface); border-radius: 12px; padding: 1.5rem;
-  border: 1px solid var(--n-line); height: fit-content;
+  background: var(--surface); border-radius: 12px; padding: 1.5rem;
+  border: 1px solid var(--line); height: fit-content;
 }
 
 .pach-group { display: flex; flex-direction: column; gap: 0.5rem; }
-.pach-group label { font-weight: 600; color: var(--n-ink); font-size: 0.9rem; font-family: 'Space Grotesk', sans-serif; }
+.pach-group label { font-weight: 600; color: var(--ink); font-size: 0.9rem; font-family: 'Space Grotesk', sans-serif; }
 .pach-group input {
-  padding: 0.75rem; border-radius: 8px; border: 1px solid var(--n-line-strong);
-  background: var(--n-bg-2); color: var(--n-ink); font-size: 1rem; font-family: 'Space Mono', monospace;
+  padding: 0.75rem; border-radius: 8px; border: 1px solid var(--line-strong);
+  background: var(--bg-2); color: var(--ink); font-size: 1rem; font-family: 'Space Mono', monospace;
 }
 
 .pach-quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
 
 .pqb, .prb, .pbb {
-  padding: 0.5rem; border: 1px solid var(--n-line); background: rgba(255,243,228,.05);
-  color: var(--n-ink-muted); border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+  padding: 0.5rem; border: 1px solid var(--line); background: rgba(255,243,228,.05);
+  color: var(--ink-muted); border-radius: 6px; cursor: pointer; font-size: 0.85rem;
   transition: all 0.2s ease;
 }
-.pqb:hover, .prb:hover, .pbb:hover { background: rgba(255,243,228,.1); border-color: var(--n-amber); }
-.prb.active, .pbb.active { background: var(--n-amber); color: var(--n-bg); border-color: var(--n-amber); }
+.pqb:hover, .prb:hover, .pbb:hover { background: rgba(255,243,228,.1); border-color: var(--amber); }
+.prb.active, .pbb.active { background: var(--amber); color: var(--bg); border-color: var(--amber); }
 
 .pach-risk-btns, .pach-ball-btns {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
@@ -2252,28 +2246,28 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .pach-drop-btn {
   padding: 1rem; font-size: 1.1rem; font-weight: 600;
-  background: linear-gradient(135deg, var(--n-amber), var(--n-amber-hot));
-  border: none; border-radius: 8px; color: var(--n-bg); cursor: pointer;
+  background: linear-gradient(135deg, var(--amber), var(--amber-hot));
+  border: none; border-radius: 8px; color: var(--bg); cursor: pointer;
   transition: all 0.3s ease; margin-top: 0.5rem; font-family: 'Space Grotesk', sans-serif;
 }
 .pach-drop-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,181,77,.3); }
 
 .pach-results {
   max-height: 200px; overflow-y: auto; margin-top: 1rem;
-  border: 1px solid var(--n-line); border-radius: 8px; padding: 0.5rem; background: var(--n-bg-2);
+  border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem; background: var(--bg-2);
 }
 
 .pach-result {
   display: flex; justify-content: space-between; padding: 0.5rem; margin-bottom: 0.25rem;
   border-radius: 4px; font-size: 0.85rem;
 }
-.pach-result.big-win { background: rgba(176,100,255,.1); color: var(--n-neon-violet); }
+.pach-result.big-win { background: rgba(176,100,255,.1); color: var(--neon-violet); }
 .pach-result.win { background: rgba(34,197,94,.1); color: #22c55e; }
-.pach-result.loss { background: rgba(255,58,92,.1); color: var(--n-neon-red); }
+.pach-result.loss { background: rgba(255,58,92,.1); color: var(--neon-red); }
 
 @media (max-width: 768px) {
   .pachinko-layout { grid-template-columns: 1fr; gap: 1rem; }
-  .pachinko-controls { order: -1; padding: 1rem; background: var(--n-surface); }
+  .pachinko-controls { order: -1; padding: 1rem; background: var(--surface); }
   .pachinko-canvas-wrap { padding: 0.5rem; }
   .pach-group { gap: 0.25rem; }
   .pach-group label { font-size: 0.8rem; }
@@ -2292,8 +2286,8 @@ body:has(#mainCasinoScreen) .site-footer {
 .crash-main { display: flex; flex-direction: column; gap: 1rem; }
 
 .crash-canvas-wrap {
-  position: relative; background: var(--n-surface); border-radius: 12px; padding: 1rem;
-  border: 1px solid var(--n-line); overflow: hidden;
+  position: relative; background: var(--surface); border-radius: 12px; padding: 1rem;
+  border: 1px solid var(--line); overflow: hidden;
 }
 
 #crashCanvas {
@@ -2306,9 +2300,9 @@ body:has(#mainCasinoScreen) .site-footer {
   text-shadow: 0 0 20px rgba(34,197,94,.5); z-index: 10; transition: all 0.3s ease;
   font-family: 'Space Mono', monospace;
 }
-.crash-multiplier.betting-label { color: var(--n-amber); text-shadow: 0 0 20px rgba(255,181,77,.5); font-size: 2rem; top: 40%; }
+.crash-multiplier.betting-label { color: var(--amber); text-shadow: 0 0 20px rgba(255,181,77,.5); font-size: 2rem; top: 40%; }
 .crash-multiplier.running { color: #22c55e; animation: pulse 1s infinite; }
-.crash-multiplier.crashed { color: var(--n-neon-red); text-shadow: 0 0 20px rgba(255,58,92,.5); animation: shake 0.5s; }
+.crash-multiplier.crashed { color: var(--neon-red); text-shadow: 0 0 20px rgba(255,58,92,.5); animation: shake 0.5s; }
 
 @keyframes pulse {
   0%, 100% { transform: translate(-50%, -50%) scale(1); }
@@ -2323,53 +2317,53 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .crash-status {
   position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-  background: var(--n-surface); padding: 0.5rem 1rem; border-radius: 8px;
-  font-weight: 600; border: 1px solid var(--n-line); z-index: 10;
+  background: var(--surface); padding: 0.5rem 1rem; border-radius: 8px;
+  font-weight: 600; border: 1px solid var(--line); z-index: 10;
   font-size: 1rem; min-width: 200px; text-align: center;
   font-family: 'Space Mono', monospace;
 }
-.crash-status.betting { color: var(--n-amber); border-color: rgba(255,181,77,.3); }
-.crash-status.crashed { color: var(--n-neon-red); border-color: rgba(255,58,92,.3); }
+.crash-status.betting { color: var(--amber); border-color: rgba(255,181,77,.3); }
+.crash-status.crashed { color: var(--neon-red); border-color: rgba(255,58,92,.3); }
 
 .crash-history {
   display: flex; gap: 0.5rem; flex-wrap: wrap; padding: 1rem;
-  background: var(--n-surface); border-radius: 12px; border: 1px solid var(--n-line);
+  background: var(--surface); border-radius: 12px; border: 1px solid var(--line);
 }
 
 .crash-hist-pill {
   padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
   font-family: 'Space Mono', monospace;
 }
-.crash-hist-pill.high { background: rgba(176,100,255,.2); color: var(--n-neon-violet); }
+.crash-hist-pill.high { background: rgba(176,100,255,.2); color: var(--neon-violet); }
 .crash-hist-pill.mid { background: rgba(34,197,94,.2); color: #22c55e; }
-.crash-hist-pill.low { background: rgba(255,58,92,.2); color: var(--n-neon-red); }
+.crash-hist-pill.low { background: rgba(255,58,92,.2); color: var(--neon-red); }
 
 .crash-sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
 
 .crash-bet-section, .crash-feed-section {
-  background: var(--n-surface); border-radius: 12px; padding: 1.5rem;
-  border: 1px solid var(--n-line);
+  background: var(--surface); border-radius: 12px; padding: 1.5rem;
+  border: 1px solid var(--line);
 }
 .crash-bet-section h3, .crash-feed-section h3 {
-  margin: 0 0 1rem; color: var(--n-ink); font-size: 1.1rem; font-weight: 600;
+  margin: 0 0 1rem; color: var(--ink); font-size: 1.1rem; font-weight: 600;
   font-family: 'Space Grotesk', sans-serif;
 }
 
 .crash-bet-group { margin-bottom: 1rem; }
-.crash-bet-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--n-ink); font-size: 0.9rem; font-family: 'Space Grotesk', sans-serif; }
+.crash-bet-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ink); font-size: 0.9rem; font-family: 'Space Grotesk', sans-serif; }
 .crash-bet-group input {
-  width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--n-line-strong);
-  background: var(--n-bg-2); color: var(--n-ink); font-size: 1rem; font-family: 'Space Mono', monospace;
+  width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--line-strong);
+  background: var(--bg-2); color: var(--ink); font-size: 1rem; font-family: 'Space Mono', monospace;
 }
 
 .crash-quick-bets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem; }
 
 .cqb {
-  padding: 0.5rem; border: 1px solid var(--n-line); background: rgba(255,243,228,.05);
-  color: var(--n-ink-muted); border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+  padding: 0.5rem; border: 1px solid var(--line); background: rgba(255,243,228,.05);
+  color: var(--ink-muted); border-radius: 6px; cursor: pointer; font-size: 0.85rem;
   transition: all 0.2s ease;
 }
-.cqb:hover { background: rgba(255,243,228,.1); border-color: var(--n-amber); }
+.cqb:hover { background: rgba(255,243,228,.1); border-color: var(--amber); }
 
 .crash-cashout-btn {
   background: linear-gradient(135deg, #22c55e, #16a34a) !important;
@@ -2384,8 +2378,8 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 .crash-bet-status.ok { background: rgba(34,197,94,.1); color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
 .crash-bet-status.win { background: rgba(34,197,94,.1); color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
-.crash-bet-status.loss { background: rgba(255,58,92,.1); color: var(--n-neon-red); border: 1px solid rgba(255,58,92,.3); }
-.crash-bet-status.err { background: rgba(255,58,92,.1); color: var(--n-neon-red); border: 1px solid rgba(255,58,92,.3); }
+.crash-bet-status.loss { background: rgba(255,58,92,.1); color: var(--neon-red); border: 1px solid rgba(255,58,92,.3); }
+.crash-bet-status.err { background: rgba(255,58,92,.1); color: var(--neon-red); border: 1px solid rgba(255,58,92,.3); }
 
 .crash-feed { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; }
 
@@ -2393,10 +2387,10 @@ body:has(#mainCasinoScreen) .site-footer {
   display: flex; justify-content: space-between; align-items: center; padding: 0.5rem;
   background: rgba(255,243,228,.03); border-radius: 6px; font-size: 0.85rem;
 }
-.feed-name { font-weight: 600; color: var(--n-ink); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.feed-mult { color: var(--n-amber); font-weight: 600; margin: 0 0.5rem; font-family: 'Space Mono', monospace; }
+.feed-name { font-weight: 600; color: var(--ink); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feed-mult { color: var(--amber); font-weight: 600; margin: 0 0.5rem; font-family: 'Space Mono', monospace; }
 .feed-win { color: #22c55e; font-weight: 600; font-family: 'Space Mono', monospace; }
-.feed-empty { text-align: center; color: var(--n-ink-dim); font-style: italic; padding: 1rem; }
+.feed-empty { text-align: center; color: var(--ink-dim); font-style: italic; padding: 1rem; }
 
 @media (max-width: 768px) {
   .crash-layout { grid-template-columns: 1fr; gap: 1rem; }
@@ -2412,44 +2406,44 @@ body:has(#mainCasinoScreen) .site-footer {
 .blackjack-container { max-width: 800px; margin: 0 auto; }
 
 .betting-section {
-  background: var(--n-surface); border-radius: 12px; padding: 1.5rem;
-  border: 1px solid var(--n-line); margin-bottom: 1rem;
+  background: var(--surface); border-radius: 12px; padding: 1.5rem;
+  border: 1px solid var(--line); margin-bottom: 1rem;
 }
-.betting-section label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--n-ink); font-family: 'Space Grotesk', sans-serif; }
+.betting-section label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ink); font-family: 'Space Grotesk', sans-serif; }
 
 .bet-input-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
 .bet-input-group input {
-  padding: 0.75rem; border-radius: 8px; border: 1px solid var(--n-line-strong);
-  background: var(--n-bg-2); color: var(--n-ink); font-size: 1rem; font-family: 'Space Mono', monospace;
+  padding: 0.75rem; border-radius: 8px; border: 1px solid var(--line-strong);
+  background: var(--bg-2); color: var(--ink); font-size: 1rem; font-family: 'Space Mono', monospace;
 }
 
 .quick-bets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
 
 .quick-bet-btn {
-  padding: 0.5rem; border: 1px solid var(--n-line); background: rgba(255,243,228,.05);
-  color: var(--n-ink-muted); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; min-height: 44px;
+  padding: 0.5rem; border: 1px solid var(--line); background: rgba(255,243,228,.05);
+  color: var(--ink-muted); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; min-height: 44px;
 }
-.quick-bet-btn:hover { background: rgba(255,243,228,.1); border-color: var(--n-amber); }
+.quick-bet-btn:hover { background: rgba(255,243,228,.1); border-color: var(--amber); }
 
 .game-area { display: flex; flex-direction: column; gap: 1.5rem; }
 
 .dealer-section, .player-section {
-  background: var(--n-surface); border-radius: 12px; padding: 1.5rem;
-  border: 1px solid var(--n-line);
+  background: var(--surface); border-radius: 12px; padding: 1.5rem;
+  border: 1px solid var(--line);
 }
-.dealer-section h3, .player-section h3 { margin: 0 0 0.5rem; color: var(--n-ink); font-size: 1.2rem; font-family: 'Space Grotesk', sans-serif; }
+.dealer-section h3, .player-section h3 { margin: 0 0 0.5rem; color: var(--ink); font-size: 1.2rem; font-family: 'Space Grotesk', sans-serif; }
 
-.score-display { font-size: 1.1rem; font-weight: 600; color: var(--n-amber); margin-bottom: 1rem; font-family: 'Space Mono', monospace; }
+.score-display { font-size: 1.1rem; font-weight: 600; color: var(--amber); margin-bottom: 1rem; font-family: 'Space Mono', monospace; }
 
 .cards-container { display: flex; gap: 0.5rem; flex-wrap: wrap; min-height: 100px; align-items: center; }
 
 .card {
-  width: 60px; height: 84px; border-radius: 8px; border: 1px solid var(--n-line);
+  width: 60px; height: 84px; border-radius: 8px; border: 1px solid var(--line);
   background: white; display: flex; align-items: center; justify-content: center;
   box-shadow: 0 4px 8px rgba(0,0,0,.2); transition: transform 0.2s ease; flex-shrink: 0;
 }
 .card:hover { transform: translateY(-5px); }
-.card.card-back { background: linear-gradient(135deg, var(--n-neon-violet), var(--n-neon-pink)); color: white; font-size: 2rem; }
+.card.card-back { background: linear-gradient(135deg, var(--neon-violet), var(--neon-pink)); color: white; font-size: 2rem; }
 
 .result-display {
   text-align: center; padding: 1rem; border-radius: 8px; font-size: 1.2rem;
@@ -2457,15 +2451,15 @@ body:has(#mainCasinoScreen) .site-footer {
   justify-content: center; font-family: 'Space Grotesk', sans-serif;
 }
 .result-display.win { background: rgba(34,197,94,.1); color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
-.result-display.loss { background: rgba(255,58,92,.1); color: var(--n-neon-red); border: 1px solid rgba(255,58,92,.3); }
-.result-display.push { background: rgba(255,181,77,.1); color: var(--n-amber); border: 1px solid rgba(255,181,77,.3); }
+.result-display.loss { background: rgba(255,58,92,.1); color: var(--neon-red); border: 1px solid rgba(255,58,92,.3); }
+.result-display.push { background: rgba(255,181,77,.1); color: var(--amber); border: 1px solid rgba(255,181,77,.3); }
 
 .insurance-section {
   background: rgba(255,181,77,.08); border: 1px solid rgba(255,181,77,.3);
   border-radius: 8px; padding: 1rem; text-align: center;
 }
-.insurance-prompt p { margin: 0.5rem 0; color: var(--n-ink); }
-.insurance-info { font-size: 0.9rem; color: var(--n-ink-muted); }
+.insurance-prompt p { margin: 0.5rem 0; color: var(--ink); }
+.insurance-info { font-size: 0.9rem; color: var(--ink-muted); }
 .insurance-buttons { display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem; }
 
 .game-controls { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
@@ -2511,28 +2505,28 @@ body:has(#mainCasinoScreen) .site-footer {
 }
 
 .how-to-play-content {
-  position: relative; background: var(--n-surface); border: 1.5px solid var(--n-line-strong);
+  position: relative; background: var(--surface); border: 1.5px solid var(--line-strong);
   border-radius: 18px; width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto;
   box-shadow: 0 24px 64px rgba(0,0,0,.55); animation: modalFadeIn 0.25s ease-out;
 }
 
 .how-to-play-header {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 1.25rem 1.5rem 1rem; border-bottom: 1px solid var(--n-line);
-  position: sticky; top: 0; background: var(--n-surface); border-radius: 18px 18px 0 0; z-index: 1;
+  padding: 1.25rem 1.5rem 1rem; border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; background: var(--surface); border-radius: 18px 18px 0 0; z-index: 1;
 }
 
 .how-to-play-header h2 {
   margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;
-  color: var(--n-ink); font-family: 'Space Grotesk', sans-serif;
+  color: var(--ink); font-family: 'Space Grotesk', sans-serif;
 }
 
 .how-to-play-close {
-  background: none; border: 2px solid var(--n-line); color: var(--n-ink);
+  background: none; border: 2px solid var(--line); color: var(--ink);
   width: 32px; height: 32px; border-radius: 50%; font-size: 1.1rem; cursor: pointer;
   display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
 }
-.how-to-play-close:hover { background: rgba(255,58,92,.12); border-color: var(--n-neon-red); color: var(--n-neon-red); }
+.how-to-play-close:hover { background: rgba(255,58,92,.12); border-color: var(--neon-red); color: var(--neon-red); }
 
 .how-to-play-body { padding: 1.25rem 1.5rem 1.5rem; }
 
@@ -2540,25 +2534,25 @@ body:has(#mainCasinoScreen) .site-footer {
 .htp-section:last-child { margin-bottom: 0; }
 .htp-section h3 {
   font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-  color: var(--n-amber); margin: 0 0 0.5rem; font-family: 'Space Grotesk', sans-serif;
+  color: var(--amber); margin: 0 0 0.5rem; font-family: 'Space Grotesk', sans-serif;
 }
 .htp-section ul { margin: 0; padding-left: 1.25rem; }
-.htp-section ul li { margin-bottom: 0.3rem; font-size: 0.92rem; line-height: 1.5; color: var(--n-ink); }
+.htp-section ul li { margin-bottom: 0.3rem; font-size: 0.92rem; line-height: 1.5; color: var(--ink); }
 
 .htp-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 0.25rem; }
 .htp-table th {
   text-align: left; padding: 0.3rem 0.6rem; background: rgba(255,243,228,.05);
-  font-weight: 600; font-size: 0.82rem; color: var(--n-ink-dim);
+  font-weight: 600; font-size: 0.82rem; color: var(--ink-dim);
 }
-.htp-table td { padding: 0.3rem 0.6rem; border-top: 1px solid var(--n-line); color: var(--n-ink); }
+.htp-table td { padding: 0.3rem 0.6rem; border-top: 1px solid var(--line); color: var(--ink); }
 
 .htp-tag {
-  display: inline-block; background: rgba(255,181,77,.15); color: var(--n-amber);
+  display: inline-block; background: rgba(255,181,77,.15); color: var(--amber);
   border-radius: 4px; padding: 0.1rem 0.45rem; font-size: 0.78rem; font-weight: 600;
 }
 .htp-tag.green { background: rgba(34,197,94,.15); color: #22c55e; }
-.htp-tag.red { background: rgba(255,58,92,.15); color: var(--n-neon-red); }
-.htp-tag.yellow { background: rgba(255,181,77,.15); color: var(--n-amber); }
+.htp-tag.red { background: rgba(255,58,92,.15); color: var(--neon-red); }
+.htp-tag.yellow { background: rgba(255,181,77,.15); color: var(--amber); }
 
 @media (max-width: 480px) {
   .how-to-play-content {
@@ -2576,8 +2570,8 @@ body:has(#mainCasinoScreen) .site-footer {
   left: 0;
   right: 0;
   z-index: 150;
-  background: var(--n-bg-2);
-  border-top: 1px solid var(--n-line);
+  background: var(--bg-2);
+  border-top: 1px solid var(--line);
   padding: 0.4rem 0;
 }
 
@@ -2594,7 +2588,7 @@ body:has(#mainCasinoScreen) .site-footer {
   align-items: center;
   gap: 2px;
   padding: 0.3rem 0.5rem;
-  color: var(--n-ink-dim);
+  color: var(--ink-dim);
   font-size: 0.6rem;
   font-family: 'Space Grotesk', sans-serif;
   text-transform: uppercase;
@@ -2612,7 +2606,7 @@ body:has(#mainCasinoScreen) .site-footer {
 
 .neon-bottom-nav-item.active,
 .neon-bottom-nav-item:hover {
-  color: var(--n-amber);
+  color: var(--amber);
 }
 
 @media (max-width: 768px) {
