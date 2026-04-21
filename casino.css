@@ -856,14 +856,14 @@ a { color: inherit; }
   flex-direction: column;
 }
 
-/* Per-game ambient glow at rest */
-.game-card[data-game="blackjack"]  { border-color: rgba(255,181,77,.4); box-shadow: 0 0 20px rgba(255,181,77,.12), inset 0 0 30px rgba(255,181,77,.05); background: linear-gradient(160deg, rgba(40,22,0,.9) 0%, var(--bg-2) 100%); }
-.game-card[data-game="coinflip"]   { border-color: rgba(255,181,77,.4); box-shadow: 0 0 20px rgba(255,181,77,.12), inset 0 0 30px rgba(255,181,77,.05); background: linear-gradient(160deg, rgba(40,22,0,.9) 0%, var(--bg-2) 100%); }
-.game-card[data-game="poker"]      { border-color: rgba(255,181,77,.4); box-shadow: 0 0 20px rgba(255,181,77,.12), inset 0 0 30px rgba(255,181,77,.05); background: linear-gradient(160deg, rgba(40,22,0,.9) 0%, var(--bg-2) 100%); }
-.game-card[data-game="roulette"]   { border-color: rgba(255,90,168,.4);  box-shadow: 0 0 20px rgba(255,90,168,.12),  inset 0 0 30px rgba(255,90,168,.05);  background: linear-gradient(160deg, rgba(40,0,22,.9) 0%, var(--bg-2) 100%); }
-.game-card[data-game="crash"]      { border-color: rgba(255,90,168,.4);  box-shadow: 0 0 20px rgba(255,90,168,.12),  inset 0 0 30px rgba(255,90,168,.05);  background: linear-gradient(160deg, rgba(40,0,22,.9) 0%, var(--bg-2) 100%); }
-.game-card[data-game="pachinko"]   { border-color: rgba(176,100,255,.4); box-shadow: 0 0 20px rgba(176,100,255,.12), inset 0 0 30px rgba(176,100,255,.05); background: linear-gradient(160deg, rgba(20,0,40,.9) 0%, var(--bg-2) 100%); }
-.game-card[data-game="cs2betting"] { border-color: rgba(52,211,153,.4);  box-shadow: 0 0 20px rgba(52,211,153,.12),  inset 0 0 30px rgba(52,211,153,.05);  background: linear-gradient(160deg, rgba(0,30,20,.9) 0%, var(--bg-2) 100%); }
+/* Per-game resting state — dark/dormant, accent only on hover */
+.game-card[data-game="blackjack"]  { border-color: rgba(255,181,77,.15); box-shadow: none; background: var(--bg-2); }
+.game-card[data-game="coinflip"]   { border-color: rgba(255,181,77,.15); box-shadow: none; background: var(--bg-2); }
+.game-card[data-game="poker"]      { border-color: rgba(255,181,77,.15); box-shadow: none; background: var(--bg-2); }
+.game-card[data-game="roulette"]   { border-color: rgba(255,90,168,.15);  box-shadow: none; background: var(--bg-2); }
+.game-card[data-game="crash"]      { border-color: rgba(255,90,168,.15);  box-shadow: none; background: var(--bg-2); }
+.game-card[data-game="pachinko"]   { border-color: rgba(176,100,255,.15); box-shadow: none; background: var(--bg-2); }
+.game-card[data-game="cs2betting"] { border-color: rgba(52,211,153,.15);  box-shadow: none; background: var(--bg-2); }
 
 /* Per-game hover glow */
 .game-card[data-game="blackjack"]:hover,
@@ -1569,28 +1569,22 @@ a { color: inherit; }
     0 32px 100px rgba(0,0,0,.8);
 }
 
-/* Theater marquee header */
-.bet-history-header {
+/* Theater marquee header — full-width header wrap with bulbs */
+.bh-header-wrap {
   position: relative;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28px 28px 20px;
+  padding: 22px 28px 18px;
   border-bottom: 1px solid rgba(255,181,77,.18);
   flex-shrink: 0;
   background: linear-gradient(180deg, rgba(255,181,77,.06) 0%, transparent 100%);
-  overflow: hidden;
+  overflow: visible;
+  box-sizing: border-box;
 }
 
-/* Marquee title wrapper — bulbs injected here via JS */
-.bh-marquee-title {
-  position: relative;
-  display: inline-block;
-  padding: 14px 28px;
-  border: 1px solid rgba(255,181,77,.35);
-}
-
-.bh-marquee-title h2 {
+.bh-header-title {
   font-family: 'Monoton', sans-serif !important;
   font-size: 22px !important;
   color: var(--amber) !important;
@@ -1605,8 +1599,8 @@ a { color: inherit; }
   z-index: 2;
 }
 
-/* SVG bulb border injected dynamically */
-.bh-marquee-title .bh-bulbs-svg {
+/* SVG bulb border injected dynamically into header wrap */
+.bh-header-wrap .bh-bulbs-svg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -1616,9 +1610,9 @@ a { color: inherit; }
   overflow: visible;
 }
 
-.bh-marquee-title .bh-bulbs-svg circle {
+.bh-header-wrap .bh-bulbs-svg circle {
   fill: var(--bulb);
-  filter: drop-shadow(0 0 4px var(--bulb)) drop-shadow(0 0 8px rgba(255,217,138,.6));
+  filter: drop-shadow(0 0 3px var(--bulb)) drop-shadow(0 0 6px rgba(255,217,138,.6));
   animation: bulbFlicker 3s ease-in-out infinite;
 }
 
@@ -1822,6 +1816,11 @@ a { color: inherit; }
 }
 
 /* Close btn override for bet history */
+.bh-header-wrap .bet-history-close {
+  position: relative;
+  z-index: 2;
+}
+
 .bet-history-close {
   background: rgba(255,181,77,.06);
   border: 1px solid rgba(255,181,77,.2);

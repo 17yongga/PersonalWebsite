@@ -774,11 +774,21 @@ class CasinoManager {
     return labels[game] || game || 'Unknown';
   }
 
-  _bhRenderList(history, filterGame) {
+  _bhRenderList(history, filterMode) {
     const ICONS = { blackjack: '🃏', pachinko: '🔮', roulette: '🎰', crash: '📈', coinflip: '🪙', poker: '♠️', cs2betting: '🎮' };
-    const filtered = filterGame === 'all' ? history : history.filter(h => h.game === filterGame);
+    let filtered;
+    if (filterMode === 'win') {
+      filtered = history.filter(h => (h.payout || 0) > (h.bet || 0));
+    } else if (filterMode === 'loss') {
+      filtered = history.filter(h => (h.payout || 0) <= (h.bet || 0));
+    } else {
+      filtered = history;
+    }
     if (filtered.length === 0) {
-      return '<div class="bh-empty">No bets yet for this game. Start playing!</div>';
+      const msg = filterMode === 'win' ? 'No winning bets yet. Keep playing!' :
+                  filterMode === 'loss' ? 'No losses on record. Lucky you!' :
+                  'No bets yet. Start playing!';
+      return `<div class="bh-empty">${msg}</div>`;
     }
     return filtered.map(h => {
       const net = (h.payout || 0) - (h.bet || 0);
@@ -787,21 +797,48 @@ class CasinoManager {
       const label = this._bhGameLabel(h.game);
       const time = this._bhRelativeTime(h.timestamp);
       const fullTime = new Date(h.timestamp).toLocaleString();
-      const mult = h.multiplier ? `<span class="bh-mult">${parseFloat(h.multiplier).toFixed(2)}x</span>` : '';
-      const result = h.result ? `<span class="bh-result-tag ${isWin ? 'win' : 'loss'}">${h.result}</span>` : '';
-      const details = h.details ? `<span class="bh-details-note">${h.details}</span>` : '';
+      const mult = h.multiplier ? ` <span class="bh-mult">${parseFloat(h.multiplier).toFixed(2)}x</span>` : '';
       return `<div class="bh-row ${isWin ? 'win' : 'loss'}">
-        <div class="bh-row-top">
-          <div class="bh-game">${icon} <span class="bh-game-name">${label}</span></div>
-          <div class="bh-payout ${isWin ? 'profit' : 'loss'}">${isWin ? '+' : ''}${net.toLocaleString()}</div>
-        </div>
-        <div class="bh-meta">
-          <span class="bh-bet-chip">Bet ${(h.bet||0).toLocaleString()}</span>
-          ${mult}${result}${details}
-        </div>
-        <div class="bh-time" title="${fullTime}">${time}</div>
+        <div class="bh-game-icon">${icon}</div>
+        <div class="bh-game-name">${label}${mult}</div>
+        <div class="bh-bet">${(h.bet||0).toLocaleString()}</div>
+        <div class="bh-result-badge ${isWin ? 'win' : 'loss'}">${isWin ? 'WIN' : 'LOSS'}</div>
+        <div class="bh-payout ${isWin ? 'profit' : 'loss'}" title="${fullTime}">${isWin ? '+' : ''}${net.toLocaleString()}</div>
       </div>`;
     }).join('');
+  }
+
+  _bhInjectMarqueeBulbs(wrapEl) {
+    // Generate SVG light bulbs around the full-width header wrap — theater marquee style
+    const ns = 'http://www.w3.org/2000/svg';
+    const w = wrapEl.offsetWidth;
+    const h = wrapEl.offsetHeight;
+    if (!w || !h) return;
+    const r = 2;
+    const spacing = 12;
+    const circles = [];
+    let delay = 0;
+    // Top row
+    for (let x = spacing; x <= w - spacing / 2; x += spacing) {
+      circles.push(`<circle cx="${Math.round(x)}" cy="${r}" r="${r}" style="animation-delay:${((delay++ * 0.17) % 3).toFixed(2)}s"/>`);
+    }
+    // Bottom row
+    for (let x = spacing; x <= w - spacing / 2; x += spacing) {
+      circles.push(`<circle cx="${Math.round(x)}" cy="${h - r}" r="${r}" style="animation-delay:${((delay++ * 0.17) % 3).toFixed(2)}s"/>`);
+    }
+    // Left column (skip corners)
+    for (let y = spacing * 1.5; y <= h - spacing * 1.5; y += spacing) {
+      circles.push(`<circle cx="${r}" cy="${Math.round(y)}" r="${r}" style="animation-delay:${((delay++ * 0.17) % 3).toFixed(2)}s"/>`);
+    }
+    // Right column (skip corners)
+    for (let y = spacing * 1.5; y <= h - spacing * 1.5; y += spacing) {
+      circles.push(`<circle cx="${w - r}" cy="${Math.round(y)}" r="${r}" style="animation-delay:${((delay++ * 0.17) % 3).toFixed(2)}s"/>`);
+    }
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', 'bh-bulbs-svg');
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svg.innerHTML = circles.join('');
+    wrapEl.appendChild(svg);
   }
 
   async showBetHistory() {
@@ -820,32 +857,18 @@ class CasinoManager {
     });
     const netProfit = totalPayout - totalWagered;
     const winRate = history.length > 0 ? Math.round((wins / history.length) * 100) : 0;
-
-    // Build game filter options from actual data
-    const gamesInHistory = [...new Set(history.map(h => h.game).filter(Boolean))];
-    const GAME_ICONS = { blackjack: '🃏', pachinko: '🔮', roulette: '🎰', crash: '📈', coinflip: '🪙', poker: '♠️', cs2betting: '🎮' };
-    const filterBtns = [
-      `<button class="bh-filter active" data-game="all">All (${history.length})</button>`,
-      ...gamesInHistory.map(g => {
-        const cnt = history.filter(h => h.game === g).length;
-        return `<button class="bh-filter" data-game="${g}">${GAME_ICONS[g] || '🎲'} ${this._bhGameLabel(g)} (${cnt})</button>`;
-      })
-    ].join('');
+    const losses = history.length - wins;
 
     modal.innerHTML = `
       <div class="bet-history-content">
-        <div class="bet-history-header">
-          <h2>📊 Bet History</h2>
+        <div class="bh-header-wrap" id="bhHeaderWrap">
+          <h2 class="bh-header-title">BET HISTORY</h2>
           <button class="bet-history-close" id="bhCloseBtn">✕</button>
         </div>
         <div class="bet-history-summary">
           <div class="bh-stat">
             <span class="bh-label">Wagered</span>
             <span class="bh-value">${totalWagered.toLocaleString()}</span>
-          </div>
-          <div class="bh-stat">
-            <span class="bh-label">Returned</span>
-            <span class="bh-value">${totalPayout.toLocaleString()}</span>
           </div>
           <div class="bh-stat">
             <span class="bh-label">Net P/L</span>
@@ -855,8 +878,17 @@ class CasinoManager {
             <span class="bh-label">Win Rate</span>
             <span class="bh-value ${winRate >= 50 ? 'profit' : ''}">${winRate}%</span>
           </div>
+          <div class="bh-stat">
+            <span class="bh-label">Bets</span>
+            <span class="bh-value">${history.length}</span>
+          </div>
         </div>
-        <div class="bh-filters">${filterBtns}</div>
+        <div class="bh-filters">
+          <span class="bh-filters-label">Filter</span>
+          <button class="bh-filter active" data-filter="all">ALL</button>
+          <button class="bh-filter" data-filter="win">WIN <span style="opacity:.6;font-size:10px">${wins}</span></button>
+          <button class="bh-filter" data-filter="loss">LOSS <span style="opacity:.6;font-size:10px">${losses}</span></button>
+        </div>
         <div class="bet-history-list" id="bhList">
           ${this._bhRenderList(history, 'all')}
         </div>
@@ -865,12 +897,18 @@ class CasinoManager {
 
     document.body.appendChild(modal);
 
-    // Filter click handlers
+    // Inject marquee bulbs around full-width header after DOM is rendered
+    requestAnimationFrame(() => {
+      const wrapEl = document.getElementById('bhHeaderWrap');
+      if (wrapEl) this._bhInjectMarqueeBulbs(wrapEl);
+    });
+
+    // Filter click handlers (ALL / WIN / LOSS)
     modal.querySelectorAll('.bh-filter').forEach(btn => {
       btn.addEventListener('click', () => {
         modal.querySelectorAll('.bh-filter').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById('bhList').innerHTML = this._bhRenderList(history, btn.dataset.game);
+        document.getElementById('bhList').innerHTML = this._bhRenderList(history, btn.dataset.filter);
       });
     });
 
