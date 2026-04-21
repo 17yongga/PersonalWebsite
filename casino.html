@@ -518,39 +518,41 @@
 // Light bulb decorations around game cards
 (function() {
   var ns = 'http://www.w3.org/2000/svg';
+  var gameColorMap = {
+    blackjack: 'amber', coinflip: 'amber', poker: 'amber',
+    roulette: 'pink', crash: 'pink',
+    pachinko: 'violet',
+    cs2betting: 'green'
+  };
   function addCardBulbs() {
-    document.querySelectorAll('.lobby-games .game-card').forEach(function(card) {
-      if (card.querySelector('.card-bulbs-svg')) return; // already added
-      var w = card.offsetWidth;
-      var h = card.offsetHeight;
+    var cards = document.querySelectorAll('.lobby-games .game-card');
+    // Batch all layout reads first to avoid forced reflows per card
+    var sizes = Array.prototype.map.call(cards, function(card) {
+      return { card: card, w: card.offsetWidth, h: card.offsetHeight, game: card.dataset.game };
+    });
+    sizes.forEach(function(s) {
+      if (s.card.querySelector('.card-bulbs-svg')) return;
+      var w = s.w, h = s.h;
       if (!w || !h) return;
-      var r = 3;
-      var spacing = 16;
-      var circles = [];
-      var delay = 0;
-      // Top row
-      for (var x = r * 2; x <= w - r; x += spacing) {
-        circles.push('<circle cx="' + Math.round(x) + '" cy="' + r + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.13) % 3).toFixed(2) + 's"/>');
-      }
-      // Bottom row
-      for (var x = r * 2; x <= w - r; x += spacing) {
-        circles.push('<circle cx="' + Math.round(x) + '" cy="' + (h - r) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.13) % 3).toFixed(2) + 's"/>');
-      }
-      // Left column (skip corners)
-      for (var y = spacing + r; y <= h - spacing; y += spacing) {
-        circles.push('<circle cx="' + r + '" cy="' + Math.round(y) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.13) % 3).toFixed(2) + 's"/>');
-      }
-      // Right column (skip corners)
-      for (var y = spacing + r; y <= h - spacing; y += spacing) {
-        circles.push('<circle cx="' + (w - r) + '" cy="' + Math.round(y) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.13) % 3).toFixed(2) + 's"/>');
-      }
+      var r = 2.5, spacing = 14, circles = [], delay = 0;
+      for (var x = r * 2; x <= w - r; x += spacing)
+        circles.push('<circle cx="' + Math.round(x) + '" cy="' + r + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
+      for (var x = r * 2; x <= w - r; x += spacing)
+        circles.push('<circle cx="' + Math.round(x) + '" cy="' + (h - r) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
+      for (var y = spacing + r; y <= h - spacing; y += spacing)
+        circles.push('<circle cx="' + r + '" cy="' + Math.round(y) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
+      for (var y = spacing + r; y <= h - spacing; y += spacing)
+        circles.push('<circle cx="' + (w - r) + '" cy="' + Math.round(y) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
       var svg = document.createElementNS(ns, 'svg');
       svg.setAttribute('class', 'card-bulbs-svg');
       svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      var color = gameColorMap[s.game] || 'amber';
+      if (color !== 'amber') svg.setAttribute('data-color', color);
       svg.innerHTML = circles.join('');
-      card.appendChild(svg);
+      s.card.appendChild(svg);
     });
   }
+  var resizeTimer;
   function reset() {
     document.querySelectorAll('.card-bulbs-svg').forEach(function(s) { s.remove(); });
     addCardBulbs();
@@ -560,7 +562,7 @@
   } else {
     setTimeout(addCardBulbs, 150);
   }
-  window.addEventListener('resize', function() { setTimeout(reset, 50); });
+  window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(reset, 300); });
 })();
 </script>
 </body>
