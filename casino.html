@@ -500,6 +500,54 @@
   var btn1 = document.getElementById('achievementsBtn');
   if (btn2 && btn1) btn2.addEventListener('click', function() { btn1.click(); });
 })();
+
+// Light bulb decorations around game cards
+(function() {
+  var ns = 'http://www.w3.org/2000/svg';
+  function addCardBulbs() {
+    document.querySelectorAll('.lobby-games .game-card').forEach(function(card) {
+      if (card.querySelector('.card-bulbs-svg')) return; // already added
+      var w = card.offsetWidth;
+      var h = card.offsetHeight;
+      if (!w || !h) return;
+      var r = 5;
+      var spacing = 28;
+      var circles = [];
+      var delay = 0;
+      // Top row
+      for (var x = spacing; x <= w - spacing / 2; x += spacing) {
+        circles.push('<circle cx="' + Math.round(x) + '" cy="' + r + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.13) % 3).toFixed(2) + 's"/>');
+      }
+      // Bottom row
+      for (var x = spacing; x <= w - spacing / 2; x += spacing) {
+        circles.push('<circle cx="' + Math.round(x) + '" cy="' + (h - r) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.13) % 3).toFixed(2) + 's"/>');
+      }
+      // Left column (skip corners)
+      for (var y = spacing * 2; y <= h - spacing * 2; y += spacing) {
+        circles.push('<circle cx="' + r + '" cy="' + Math.round(y) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.13) % 3).toFixed(2) + 's"/>');
+      }
+      // Right column (skip corners)
+      for (var y = spacing * 2; y <= h - spacing * 2; y += spacing) {
+        circles.push('<circle cx="' + (w - r) + '" cy="' + Math.round(y) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.13) % 3).toFixed(2) + 's"/>');
+      }
+      var svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('class', 'card-bulbs-svg');
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      svg.innerHTML = circles.join('');
+      card.appendChild(svg);
+    });
+  }
+  function reset() {
+    document.querySelectorAll('.card-bulbs-svg').forEach(function(s) { s.remove(); });
+    addCardBulbs();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(addCardBulbs, 150); });
+  } else {
+    setTimeout(addCardBulbs, 150);
+  }
+  window.addEventListener('resize', function() { setTimeout(reset, 50); });
+})();
 </script>
 </body>
 </html>

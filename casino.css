@@ -115,12 +115,26 @@ body:has(#mainCasinoScreen) ::selection {
 }
 
 @keyframes bulbFlicker {
-  0%, 100% { opacity: 1; }
-  7% { opacity: .72; }
-  12% { opacity: 1; }
-  36% { opacity: .92; }
-  64% { opacity: 1; }
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 8px var(--bulb)); }
+  7%  { opacity: .72; filter: drop-shadow(0 0 2px var(--bulb)); }
+  12% { opacity: 1;   filter: drop-shadow(0 0 10px var(--bulb)); }
+  36% { opacity: .92; filter: drop-shadow(0 0 6px var(--bulb)); }
+  64% { opacity: 1;   filter: drop-shadow(0 0 12px var(--bulb)); }
   73% { opacity: .84; }
+}
+
+/* ===== CARD BULB DECORATIONS ===== */
+.card-bulbs-svg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+}
+.card-bulbs-svg circle {
+  fill: var(--bulb);
+  animation: bulbFlicker 3s ease-in-out infinite;
 }
 
 /* Site header/footer removed — casino is standalone */
