@@ -958,6 +958,7 @@ a { color: inherit; }
   letter-spacing: 0;
   margin: 0;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .featured .game-card-title {
