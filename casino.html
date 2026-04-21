@@ -10,7 +10,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NEON 777 Casino</title>
   <meta name="description" content="Play Blackjack, Coinflip, Roulette, Crash, Poker, Pachinko and CS2 Betting at NEON 777">
-  <link rel="stylesheet" href="casino.css?v=202604211430">
+  <link rel="stylesheet" href="casino.css?v=202604211600">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
@@ -86,25 +86,30 @@
       <!-- Casino Header -->
       <div class="casino-header">
         <div class="casino-header-content">
-          <div class="player-info">
-            <span class="player-icon">👤</span>
-            <span id="playerNameDisplay"></span>
-            <span class="credits-separator">•</span>
-            <span class="credits-label">Credits:</span>
-            <span id="creditsAmount" class="credit-amount">0</span>
+          <!-- Logo + Nav -->
+          <div class="header-left">
+            <span class="neon-logo-header">NEON <span class="logo-777">777</span></span>
+            <nav class="header-nav">
+              <button class="header-nav-btn active" onclick="if(typeof casinoManager!=='undefined')casinoManager.backToLobby()">FLOOR</button>
+              <button class="header-nav-btn" id="betHistoryBtn">HISTORY</button>
+              <button class="header-nav-btn" id="leaderboardBtn">LEADERS</button>
+              <button class="header-nav-btn" id="achievementsBtn">
+                BADGES
+                <span id="achievementBadge" class="achievement-badge hidden">0</span>
+              </button>
+              <button class="header-nav-btn" id="statsBtn">STATS</button>
+            </nav>
           </div>
-          <div class="casino-header-actions">
-            <button id="leaderboardBtn" class="btn btn-secondary btn-small">🏆 Leaderboard</button>
-            <button id="achievementsBtn" class="btn btn-secondary btn-small">
-              🏅 Achievements
-              <span id="achievementBadge" class="achievement-badge hidden">0</span>
-            </button>
-            <button id="statsBtn" class="btn btn-secondary btn-small">📊 My Stats</button>
-            <button id="betHistoryBtn" class="btn btn-secondary btn-small">📈 History</button>
-            
+          <!-- Balance + Player -->
+          <div class="header-right">
+            <span id="creditsAmount" class="header-balance credit-amount">0</span>
+            <button class="btn-add-credits">+ CREDITS</button>
+            <div class="player-info">
+              <span class="player-icon">👤</span>
+              <span id="playerNameDisplay"></span>
+            </div>
             <!-- Mobile dropdown toggle -->
             <button id="mobileMenuToggle" class="mobile-menu-toggle" aria-label="Open menu" onclick="if(typeof casinoManager!=='undefined')casinoManager.toggleMobileMenu()">☰</button>
-            
             <!-- Mobile dropdown menu -->
             <div id="mobileActionsDropdown" class="mobile-actions-dropdown">
               <button id="leaderboardBtnMobile" class="btn btn-secondary btn-small">🏆 Leaderboard</button>
@@ -115,97 +120,266 @@
               <button id="statsBtnMobile" class="btn btn-secondary btn-small">📊 My Stats</button>
               <button id="betHistoryBtnMobile" class="btn btn-secondary btn-small">📈 History</button>
             </div>
-            
             <button id="logoutBtn" class="btn btn-secondary btn-small btn-logout">Logout</button>
           </div>
         </div>
       </div>
 
-      <!-- Game Selection -->
+      <!-- Game Selection / Lobby -->
       <div id="gameSelection" class="game-selection">
+
+        <!-- HERO SECTION -->
         <div class="neon-hero">
-          <h2 class="neon-hero-title">The house never sleeps</h2>
-        </div>
-        <div class="games-grid">
-          <div class="game-card featured" data-game="blackjack">
-            <span class="game-tag hot">HOT</span>
-            <div class="game-icon">🃏</div>
-            <h3>Blackjack</h3>
-            <p>Beat the dealer without going over 21</p>
-            <div class="game-card-meta"><span>RTP 99.5%</span><span>10 - 5K</span></div>
-            <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="blackjack">How to Play</button>
+          <div class="neon-hero-left">
+            <div class="neon-hero-starburst" aria-hidden="true"></div>
+            <div class="neon-hero-headline">
+              <span class="hero-line-amber">THE HOUSE</span>
+              <span class="hero-line-pink">NEVER SLEEPS</span>
+            </div>
+            <p class="neon-hero-sub">Seven games. Live dealers. Real chips on the table. Tonight's pot is looking big.</p>
+            <div class="neon-hero-ctas">
+              <button class="btn-hero-outline" onclick="if(typeof casinoManager!=='undefined' && casinoManager.continueLastGame)casinoManager.continueLastGame()">CONTINUE LAST GAME</button>
+              <button class="btn-hero-filled" onclick="if(typeof casinoManager!=='undefined')casinoManager.showTour ? casinoManager.showTour() : null">TAKE THE TOUR</button>
             </div>
           </div>
-          <div class="game-card" data-game="coinflip">
-            <span class="game-tag warm">QUICK</span>
-            <div class="game-icon">🪙</div>
-            <h3>Coinflip</h3>
-            <p>Heads or tails? Double your bet!</p>
-            <div class="game-card-meta"><span>RTP 98%</span><span>10 - 10K</span></div>
-            <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="coinflip">How to Play</button>
-            </div>
-          </div>
-          <div class="game-card" data-game="roulette">
-            <span class="game-tag live">LIVE</span>
-            <div class="game-icon">🎲</div>
-            <h3>Roulette</h3>
-            <p>Spin the wheel and test your luck</p>
-            <div class="game-card-meta"><span>RTP 97.3%</span><span>10 - 5K</span></div>
-            <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="roulette">How to Play</button>
-            </div>
-          </div>
-          <div class="game-card" data-game="cs2betting">
-            <span class="game-tag esports">LIVE</span>
-            <div class="game-icon">🎮</div>
-            <h3>CS2 Betting</h3>
-            <p>Bet on Counter-Strike 2 matches</p>
-            <div class="game-card-meta"><span>Real odds</span><span>50 - 10K</span></div>
-            <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="cs2betting">How to Play</button>
-            </div>
-          </div>
-          <div class="game-card" data-game="poker">
-            <span class="game-tag new">NEW</span>
-            <div class="game-icon">🃏</div>
-            <h3>Poker</h3>
-            <p>Texas Hold'em - Up to 6 players</p>
-            <div class="game-card-meta"><span>Multiplayer</span><span>100 - 10K</span></div>
-            <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="poker">How to Play</button>
-            </div>
-          </div>
-          <div class="game-card" data-game="crash">
-            <span class="game-tag hot">HOT</span>
-            <div class="game-icon">🚀</div>
-            <h3>Crash</h3>
-            <p>Cash out before the rocket crashes!</p>
-            <div class="game-card-meta"><span>RTP 97%</span><span>10 - 5K</span></div>
-            <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="crash">How to Play</button>
-            </div>
-          </div>
-          <div class="game-card" data-game="pachinko">
-            <span class="game-tag new">NEW</span>
-            <div class="game-icon">🔮</div>
-            <h3>Pachinko</h3>
-            <p>Drop balls and hit big multipliers!</p>
-            <div class="game-card-meta"><span>Up to 1000x</span><span>10 - 1K</span></div>
-            <div class="game-card-actions">
-              <button class="btn btn-primary play-btn">PLAY &rarr;</button>
-              <button class="btn btn-ghost how-to-play-btn" data-game="pachinko">How to Play</button>
+          <div class="neon-hero-right">
+            <div class="hero-stats-panel">
+              <div class="hero-stats-title">YOUR NIGHT SO FAR</div>
+              <div class="hero-stats-grid">
+                <div class="hero-stat-item">
+                  <span class="hero-stat-label">BALANCE</span>
+                  <span class="hero-stat-value hero-stat-amber" id="heroBalance">$0</span>
+                </div>
+                <div class="hero-stat-item">
+                  <span class="hero-stat-label">LEVEL</span>
+                  <span class="hero-stat-value hero-stat-amber" id="heroLevel">1 NEWCOMER</span>
+                </div>
+                <div class="hero-stat-item">
+                  <span class="hero-stat-label">WIN RATE</span>
+                  <span class="hero-stat-value" id="heroWinRate">—%</span>
+                </div>
+                <div class="hero-stat-item">
+                  <span class="hero-stat-label">DAILY STREAK</span>
+                  <span class="hero-stat-value" id="heroStreak">0</span>
+                </div>
+              </div>
+              <div class="hero-xp-bar-wrap">
+                <div class="hero-xp-label"><span>XP</span><span id="heroXpText">0 / 1000</span></div>
+                <div class="hero-xp-track"><div class="hero-xp-fill" id="heroXpFill" style="width:0%"></div></div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+
+        <!-- FLOOR LABEL + FILTER TABS -->
+        <div class="lobby-section-header">
+          <div class="lobby-section-meta">
+            <span class="lobby-floor-label">FLOOR · 7 GAMES</span>
+            <h2 class="lobby-section-title">PICK YOUR POISON</h2>
+          </div>
+          <div class="lobby-filter-tabs">
+            <button class="filter-tab active" data-filter="all">ALL</button>
+            <button class="filter-tab" data-filter="cards">CARDS</button>
+            <button class="filter-tab" data-filter="skill">SKILL</button>
+            <button class="filter-tab" data-filter="live">LIVE</button>
+            <button class="filter-tab" data-filter="esports">ESPORTS</button>
+          </div>
+        </div>
+
+        <!-- LOBBY BODY: games + sidebar -->
+        <div class="lobby-body">
+
+          <!-- LEFT: game cards grid -->
+          <div class="lobby-games">
+            <div class="games-grid">
+              <!-- Blackjack - featured, spans 2 cols -->
+              <div class="game-card featured" data-game="blackjack" data-categories="cards">
+                <div class="game-card-tags">
+                  <span class="game-tag hot">HOT</span>
+                  <span class="game-tag cards-tag">CARDS</span>
+                  <span class="game-tag multiplier-tag">4×/3×</span>
+                </div>
+                <h3 class="game-card-title game-title-amber">Blackjack</h3>
+                <p class="game-card-desc">Beat the dealer without going over 21. Natural blackjack pays 3:2.</p>
+                <div class="game-card-footer">
+                  <div class="game-card-stats">
+                    <span class="game-stat"><span class="stat-label">MIN</span> 10</span>
+                    <span class="game-stat"><span class="stat-label">MAX</span> 5K</span>
+                    <span class="game-stat"><span class="stat-label">RTP</span> 99.5%</span>
+                  </div>
+                  <button class="btn-play play-btn">PLAY →</button>
+                </div>
+              </div>
+              <!-- Roulette -->
+              <div class="game-card" data-game="roulette" data-categories="live">
+                <div class="game-card-tags">
+                  <span class="game-tag live">LIVE</span>
+                </div>
+                <h3 class="game-card-title game-title-pink">Roulette</h3>
+                <p class="game-card-desc">Spin the wheel and test your luck. Red, black, or your lucky number.</p>
+                <div class="game-card-footer">
+                  <div class="game-card-stats">
+                    <span class="game-stat"><span class="stat-label">MIN</span> 10</span>
+                    <span class="game-stat"><span class="stat-label">MAX</span> 5K</span>
+                    <span class="game-stat"><span class="stat-label">RTP</span> 97.3%</span>
+                  </div>
+                  <button class="btn-play play-btn">PLAY →</button>
+                </div>
+              </div>
+              <!-- Coinflip -->
+              <div class="game-card" data-game="coinflip" data-categories="skill">
+                <div class="game-card-tags">
+                  <span class="game-tag warm">QUICK</span>
+                  <span class="game-tag multiplier-tag">2×</span>
+                </div>
+                <h3 class="game-card-title game-title-amber">Coinflip</h3>
+                <p class="game-card-desc">Heads or tails? Simple, fast, and ruthless. Double your bet or lose it.</p>
+                <div class="game-card-footer">
+                  <div class="game-card-stats">
+                    <span class="game-stat"><span class="stat-label">MIN</span> 10</span>
+                    <span class="game-stat"><span class="stat-label">MAX</span> 10K</span>
+                    <span class="game-stat"><span class="stat-label">RTP</span> 98%</span>
+                  </div>
+                  <button class="btn-play play-btn">PLAY →</button>
+                </div>
+              </div>
+              <!-- Crash -->
+              <div class="game-card" data-game="crash" data-categories="skill">
+                <div class="game-card-tags">
+                  <span class="game-tag hot">HOT</span>
+                </div>
+                <h3 class="game-card-title game-title-pink">Crash</h3>
+                <p class="game-card-desc">Cash out before the rocket crashes. The longer you hold, the bigger the payout.</p>
+                <div class="game-card-footer">
+                  <div class="game-card-stats">
+                    <span class="game-stat"><span class="stat-label">MIN</span> 10</span>
+                    <span class="game-stat"><span class="stat-label">MAX</span> 5K</span>
+                    <span class="game-stat"><span class="stat-label">RTP</span> 97%</span>
+                  </div>
+                  <button class="btn-play play-btn">PLAY →</button>
+                </div>
+              </div>
+              <!-- Pachinko -->
+              <div class="game-card" data-game="pachinko" data-categories="skill">
+                <div class="game-card-tags">
+                  <span class="game-tag new">NEW</span>
+                  <span class="game-tag multiplier-tag">1000×</span>
+                </div>
+                <h3 class="game-card-title game-title-violet">Pachinko</h3>
+                <p class="game-card-desc">Drop balls through a field of pegs and hit massive multiplier slots at the bottom.</p>
+                <div class="game-card-footer">
+                  <div class="game-card-stats">
+                    <span class="game-stat"><span class="stat-label">MIN</span> 10</span>
+                    <span class="game-stat"><span class="stat-label">MAX</span> 1K</span>
+                    <span class="game-stat"><span class="stat-label">MAX</span> 1000×</span>
+                  </div>
+                  <button class="btn-play play-btn">PLAY →</button>
+                </div>
+              </div>
+              <!-- Texas Hold'em / Poker -->
+              <div class="game-card" data-game="poker" data-categories="cards live">
+                <div class="game-card-tags">
+                  <span class="game-tag live">LIVE</span>
+                  <span class="game-tag cards-tag">CARDS</span>
+                </div>
+                <h3 class="game-card-title game-title-amber">Texas Hold'em</h3>
+                <p class="game-card-desc">Up to 6 players. Real chips, real pressure. May the best hand win.</p>
+                <div class="game-card-footer">
+                  <div class="game-card-stats">
+                    <span class="game-stat"><span class="stat-label">MIN</span> 100</span>
+                    <span class="game-stat"><span class="stat-label">MAX</span> 10K</span>
+                    <span class="game-stat"><span class="stat-label">MODE</span> MP</span>
+                  </div>
+                  <button class="btn-play play-btn">PLAY →</button>
+                </div>
+              </div>
+              <!-- CS2 Betting -->
+              <div class="game-card" data-game="cs2betting" data-categories="esports live">
+                <div class="game-card-tags">
+                  <span class="game-tag esports">ESPORTS</span>
+                  <span class="game-tag live">LIVE</span>
+                </div>
+                <h3 class="game-card-title game-title-green">CS2 Betting</h3>
+                <p class="game-card-desc">Bet on live Counter-Strike 2 matches with real-time odds from the pros.</p>
+                <div class="game-card-footer">
+                  <div class="game-card-stats">
+                    <span class="game-stat"><span class="stat-label">MIN</span> 50</span>
+                    <span class="game-stat"><span class="stat-label">MAX</span> 10K</span>
+                    <span class="game-stat"><span class="stat-label">ODDS</span> REAL</span>
+                  </div>
+                  <button class="btn-play play-btn">PLAY →</button>
+                </div>
+              </div>
+            </div>
+          </div><!-- /lobby-games -->
+
+          <!-- RIGHT: sidebar -->
+          <aside class="lobby-sidebar">
+
+            <!-- Free Pull widget -->
+            <div class="sidebar-card sidebar-freepull">
+              <div class="freepull-label">DAILY SPIN</div>
+              <div class="freepull-heading">FREE PULL</div>
+              <p class="freepull-desc">Spin the wheel once per day for bonus credits, XP, or rare badges.</p>
+              <div class="freepull-streak">
+                <div class="freepull-streak-bar">
+                  <div class="freepull-streak-fill" style="width:57%"></div>
+                </div>
+                <span class="freepull-streak-label">Streak: 4 days</span>
+              </div>
+              <button class="btn-spin" onclick="if(typeof casinoManager!=='undefined' && casinoManager.doFreeSpin)casinoManager.doFreeSpin()">SPIN THE WHEEL</button>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="sidebar-card">
+              <div class="sidebar-card-header">
+                <span class="sidebar-card-title">LEADERBOARD</span>
+                <span class="sidebar-card-sub">TODAY</span>
+              </div>
+              <div id="sidebarLeaderboard" class="sidebar-leaderboard">
+                <div class="lb-row"><span class="lb-rank">1</span><span class="lb-name">neon_nova</span><span class="lb-amount lb-green">+18,400</span></div>
+                <div class="lb-row"><span class="lb-rank">2</span><span class="lb-name">ace_spades</span><span class="lb-amount lb-green">+12,000</span></div>
+                <div class="lb-row"><span class="lb-rank">3</span><span class="lb-name">cherrybomb</span><span class="lb-amount lb-green">+9,200</span></div>
+                <div class="lb-row"><span class="lb-rank">4</span><span class="lb-name">high_roller</span><span class="lb-amount lb-pink">-3,100</span></div>
+                <div class="lb-row"><span class="lb-rank">5</span><span class="lb-name">lucky7s</span><span class="lb-amount lb-green">+8,800</span></div>
+              </div>
+            </div>
+
+            <!-- Floor Chat -->
+            <div class="sidebar-card sidebar-chat-card">
+              <div class="sidebar-card-header">
+                <span class="sidebar-card-title">FLOOR CHAT</span>
+                <span class="sidebar-live-dot"></span>
+              </div>
+              <div id="sidebarChat" class="sidebar-chat">
+                <div class="chat-msg"><span class="chat-user">neon_nova</span><span class="chat-text">just hit 8.2x on crash 🔥</span></div>
+                <div class="chat-msg"><span class="chat-user">ace_spades</span><span class="chat-text">natural blackjack two hands in a row wtf</span></div>
+                <div class="chat-msg"><span class="chat-user">phantom_bet</span><span class="chat-text">roulette is rigged, red 6 times straight</span></div>
+                <div class="chat-msg"><span class="chat-user">lucky7s</span><span class="chat-text">lmao the house always wins</span></div>
+                <div class="chat-msg"><span class="chat-user">cherrybomb</span><span class="chat-text">Texas hold'em room 3 has a whale, come watch</span></div>
+              </div>
+            </div>
+
+            <!-- Badges -->
+            <div class="sidebar-card">
+              <div class="sidebar-card-header">
+                <span class="sidebar-card-title">BADGES</span>
+                <span class="sidebar-card-sub">5 / 18</span>
+              </div>
+              <div id="sidebarBadges" class="sidebar-badges-grid">
+                <span class="badge-icon unlocked" title="First Win">⭐</span>
+                <span class="badge-icon unlocked" title="Hot Streak">🔥</span>
+                <span class="badge-icon unlocked" title="High Roller">💎</span>
+                <span class="badge-icon unlocked" title="Crash Master">🚀</span>
+                <span class="badge-icon unlocked" title="Card Shark">🃏</span>
+                <span class="badge-icon locked" title="???">🔒</span>
+              </div>
+              <button class="btn-open-chest" id="achievementsBtn2">OPEN CHEST →</button>
+            </div>
+
+          </aside><!-- /lobby-sidebar -->
+        </div><!-- /lobby-body -->
+      </div><!-- /gameSelection -->
 
       <!-- Game Containers -->
       <div id="gameContainer" class="game-container hidden">
@@ -283,6 +457,50 @@
 
 <!-- Modern UI Scripts - Auto-generated -->
 <script src="js/cs2-modern.js"></script>
+
+<script>
+// ---- Lobby v3 enhancements ----
+
+// Sync hero balance with creditsAmount (observe DOM changes)
+(function() {
+  var creditsEl = document.getElementById('creditsAmount');
+  var heroBalEl = document.getElementById('heroBalance');
+  if (!creditsEl || !heroBalEl) return;
+  function syncBalance() {
+    var raw = creditsEl.textContent.replace(/[^0-9.]/g, '');
+    if (raw) heroBalEl.textContent = '$' + Number(raw).toLocaleString();
+  }
+  syncBalance();
+  var obs = new MutationObserver(syncBalance);
+  obs.observe(creditsEl, { childList: true, characterData: true, subtree: true });
+})();
+
+// Filter tabs for game cards
+(function() {
+  document.querySelectorAll('.filter-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.filter-tab').forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      var filter = tab.dataset.filter;
+      document.querySelectorAll('.lobby-games .game-card').forEach(function(card) {
+        if (filter === 'all') {
+          card.style.display = '';
+        } else {
+          var cats = (card.dataset.categories || '').toLowerCase();
+          card.style.display = cats.indexOf(filter) !== -1 ? '' : 'none';
+        }
+      });
+    });
+  });
+})();
+
+// Wire achievementsBtn2 -> achievementsBtn click
+(function() {
+  var btn2 = document.getElementById('achievementsBtn2');
+  var btn1 = document.getElementById('achievementsBtn');
+  if (btn2 && btn1) btn2.addEventListener('click', function() { btn1.click(); });
+})();
+</script>
 </body>
 </html>
 
