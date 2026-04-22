@@ -16,11 +16,12 @@ const ALLOWED_ORIGINS = [
 ];
 
 const CATEGORIES = [
-  'Food/Dining', 'Groceries', 'Rent/Housing', 'Utilities', 'Transport',
-  'Entertainment', 'Subscriptions', 'Health', 'Shopping', 'Travel', 'Gifts',
-  'Insurance', 'Education', 'Personal Care', 'Pets', 'Home Maintenance',
-  'Alcohol/Bars', 'Coffee/Cafe', 'Fitness/Gym', 'Clothing', 'Electronics',
-  'Charity/Donations', 'Parking', 'Phone/Internet', 'Other'
+  '🍕 Food/Dining', '🛒 Groceries', '🏠 Rent/Mortgage', '🚗 Transportation',
+  '🎬 Entertainment', '💡 Utilities', '🛍️ Shopping', '💊 Healthcare',
+  '📱 Subscriptions', '✈️ Travel', '🐾 Pet', '💰 Investments', '📦 Other',
+  '🛡️ Insurance', '📚 Education', '💄 Personal Care', '🔧 Home Maintenance',
+  '🍺 Alcohol/Bars', '☕ Coffee/Cafe', '💪 Fitness/Gym', '👗 Clothing',
+  '💻 Electronics', '❤️ Charity/Donations', '🅿️ Parking', '📱 Phone/Internet', '🎁 Gifts'
 ];
 
 const PROMPT = `You are a receipt analyzer. Analyze this receipt/transaction image and extract ALL individual line items.
@@ -31,7 +32,7 @@ Return ONLY a valid JSON object (no markdown, no fences, no extra text):
   "date": "YYYY-MM-DD",
   "currency": "CAD",
   "items": [
-    { "description": "item name", "amount": 12.99, "category": "suggested category" }
+    { "description": "item name", "amount": 12.99, "category": "suggested category", "date": "YYYY-MM-DD" }
   ],
   "total": 45.99
 }
@@ -40,10 +41,12 @@ Categories: ${CATEGORIES.join(', ')}
 
 Rules:
 - Extract every individual line item with its price
-- If it's a bank/credit card statement, extract each transaction separately
+- If it's a bank/credit card statement, extract each transaction separately with its OWN date
+- Each item MUST have its own "date" field. If individual dates exist per line item (e.g. bank statements), use those. If only one date appears (e.g. receipt header), apply it to all items.
+- Dates must be in YYYY-MM-DD format. Use the current year (${new Date().getFullYear()}) if the year is not visible.
 - Amounts should be positive numbers
-- Pick the most fitting category for each item
-- If date is not visible, use null
+- Pick the most fitting category from the list above (use the EXACT category name including emoji)
+- If date is not visible at all, use null
 - Return ONLY the JSON object`;
 
 function corsHeaders(req) {
@@ -169,6 +172,7 @@ const server = http.createServer((req, res) => {
           description: String(item.description || item.name || 'Unknown'),
           amount: Math.abs(parseFloat(item.amount) || 0),
           category: String(item.category || 'Other'),
+          date: item.date || parsed.date || null,
         }));
 
         console.log(`[${new Date().toISOString()}] ✓ ${parsed.items.length} items found`);

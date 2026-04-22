@@ -67,6 +67,28 @@ const CATEGORY_ALIASES_SERVER = {
     'pets': 'pet',
 };
 
+const CATEGORY_EMOJI_SERVER = {
+    'food/dining': '🍕', 'groceries': '🛒', 'rent/mortgage': '🏠', 'transportation': '🚗',
+    'entertainment': '🎬', 'utilities': '💡', 'shopping': '🛍️', 'healthcare': '💊',
+    'subscriptions': '📱', 'travel': '✈️', 'pet': '🐾', 'investments': '💰', 'other': '📦',
+    'insurance': '🛡️', 'education': '📚', 'personal care': '💄', 'home maintenance': '🔧',
+    'alcohol/bars': '🍺', 'coffee/cafe': '☕', 'fitness/gym': '💪', 'clothing': '👗',
+    'electronics': '💻', 'charity/donations': '❤️', 'parking': '🅿️', 'phone/internet': '📱',
+    'gifts': '🎁', 'health': '💊',
+};
+
+function emojiForCategoryServer(name) {
+    const plain = stripEmojiPrefix(name).toLowerCase().trim();
+    if (/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]/u.test(name)) return name;
+    const normalized = CATEGORY_ALIASES_SERVER[plain] || plain;
+    const emoji = CATEGORY_EMOJI_SERVER[normalized];
+    if (emoji) return emoji + ' ' + name.trim();
+    for (const [key, em] of Object.entries(CATEGORY_EMOJI_SERVER)) {
+        if (normalized.includes(key) || key.includes(normalized)) return em + ' ' + name.trim();
+    }
+    return name.trim();
+}
+
 function normalizeForMatch(plain) {
     return CATEGORY_ALIASES_SERVER[plain] || plain;
 }
@@ -96,8 +118,8 @@ function resolveCategory(name, householdId) {
     });
     if (containsMatch) return containsMatch.name;
 
-    // Not found — return as-is and let the category creation handle it
-    return name.trim();
+    // Not found — add emoji prefix so new categories are consistent
+    return emojiForCategoryServer(name);
 }
 
 // Activity log helper function

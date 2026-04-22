@@ -1,0 +1,365 @@
+/* ═══════════════════════════════════════════════════════════════════
+   NEON 777 — CS2 Betting theme override
+   Loaded LAST so its cascade wins over cs2-modern-betting-ui.css and
+   cs2-animations.css. Remaps every --cs2-* token to Neon 777 values
+   and patches the handful of rules that hardcode green/orange instead
+   of using tokens (odds pills, etc.).
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Brand ── */
+  --cs2-primary:         #ffb54d;
+  --cs2-primary-dark:    #ff8a2b;
+  --cs2-primary-light:   #ffd98a;
+  --cs2-primary-rgb:     255, 181, 77;
+
+  /* ── Accent / Secondary ── */
+  --cs2-accent:          #ff5aa8;
+  --cs2-accent-dark:     #cc3d7e;
+  --cs2-accent-light:    #ffe9b5;
+  --cs2-accent-rgb:      255, 90, 168;
+  --cs2-secondary:       #b064ff;
+  --cs2-secondary-light: #d1a5ff;
+
+  /* ── Glassmorphism ── */
+  --cs2-glass-bg:        rgba(26,7,24,.7);
+  --cs2-glass-border:    rgba(255,180,120,.2);
+  --cs2-glass-blur:      blur(24px) saturate(160%);
+
+  /* ── Tiers ── */
+  --cs2-tier-s:          #ffd98a;
+  --cs2-tier-s-rgb:      255, 217, 138;
+  --cs2-tier-a:          #ffe9b5;
+  --cs2-tier-a-rgb:      255, 233, 181;
+  --cs2-tier-b:          #b49a6f;
+  --cs2-tier-b-rgb:      180, 154, 111;
+
+  /* ── Status ── */
+  --cs2-success:         #ffb54d;
+  --cs2-success-light:   #ffe9b5;
+  --cs2-warning:         #ff8a2b;
+  --cs2-warning-light:   #ffd98a;
+  --cs2-danger:          #ff3a5c;
+  --cs2-danger-light:    #ff5c75;
+  --cs2-info:            #b064ff;
+  --cs2-info-light:      #d1a5ff;
+
+  /* ── Backgrounds (plum, not slate) ── */
+  --cs2-bg-primary:      #0a0308;
+  --cs2-bg-secondary:    #140612;
+  --cs2-bg-elevated:     #1a0718;
+  --cs2-bg-card:         #1a0718;
+  --cs2-bg-card-hover:   #25092a;
+  --cs2-bg-overlay:      rgba(10,3,8,.92);
+
+  /* ── Text ── */
+  --cs2-text-primary:    #fff3e4;
+  --cs2-text-secondary:  #ffe9b5;
+  --cs2-text-muted:      rgba(255,243,228,.64);
+  --cs2-text-disabled:   rgba(255,243,228,.42);
+
+  /* ── Borders ── */
+  --cs2-border:          rgba(255,180,120,.18);
+  --cs2-border-active:   rgba(255,181,77,.5);
+  --cs2-border-hover:    rgba(255,180,120,.34);
+
+  /* ── Favorite / Underdog remap ── */
+  --cs2-favorite:        #ffb54d;
+  --cs2-favorite-rgb:    255, 181, 77;
+  --cs2-underdog:        #ff5aa8;
+  --cs2-underdog-rgb:    255, 90, 168;
+
+  /* ── Fonts ── */
+  --cs2-font-family:     'Space Grotesk', system-ui, sans-serif;
+  --cs2-font-mono:       'Space Mono', ui-monospace, monospace;
+  --cs2-font-display:    'Monoton', Impact, sans-serif;
+  --cs2-font-deco:       'Bungee', Impact, sans-serif;
+
+  /* ── Radius — flatten everything (Neon 777 is hard-edged) ── */
+  --cs2-radius-xs:       0;
+  --cs2-radius-sm:       0;
+  --cs2-radius-md:       2px;
+  --cs2-radius-lg:       2px;
+  --cs2-radius-xl:       2px;
+  --cs2-radius-2xl:      2px;
+  --cs2-radius-full:     2px;
+}
+
+/* ═════════════════════════════════════════
+   HARDCODED COLOR PATCHES
+   Rules inside cs2-modern-betting-ui.css that
+   use hex/rgba NOT driven by the --cs2-* tokens.
+   ═════════════════════════════════════════ */
+
+/* Odds pill base — amber/pink palette for favorite/underdog */
+.odds-pill.favorite {
+  background: linear-gradient(145deg, rgba(255,181,77,.18), rgba(255,181,77,.06)) !important;
+  border-color: rgba(255,181,77,.4) !important;
+  color: var(--amber) !important;
+  text-shadow: 0 0 12px rgba(255,181,77,.35) !important;
+  box-shadow: 0 2px 12px rgba(255,181,77,.12), inset 0 1px 0 rgba(255,181,77,.08) !important;
+}
+.odds-pill.favorite .odds-team-label { color: rgba(255,181,77,.7) !important; }
+.odds-pill.favorite::after          { color: rgba(255,181,77,.6) !important; }
+.odds-pill.favorite:hover:not(.disabled) {
+  background: linear-gradient(145deg, rgba(255,181,77,.28), rgba(255,181,77,.1)) !important;
+  border-color: rgba(255,181,77,.6) !important;
+  box-shadow: 0 8px 28px rgba(255,181,77,.28), 0 0 20px rgba(255,181,77,.12) !important;
+  text-shadow: 0 0 14px rgba(255,181,77,.55) !important;
+}
+
+.odds-pill.underdog {
+  background: linear-gradient(145deg, rgba(255,90,168,.18), rgba(255,90,168,.06)) !important;
+  border-color: rgba(255,90,168,.4) !important;
+  color: var(--neon-pink) !important;
+  text-shadow: 0 0 12px rgba(255,90,168,.35) !important;
+  box-shadow: 0 2px 12px rgba(255,90,168,.12), inset 0 1px 0 rgba(255,90,168,.08) !important;
+}
+.odds-pill.underdog .odds-team-label { color: rgba(255,90,168,.7) !important; }
+.odds-pill.underdog::after          { color: rgba(255,90,168,.6) !important; }
+.odds-pill.underdog:hover:not(.disabled) {
+  background: linear-gradient(145deg, rgba(255,90,168,.28), rgba(255,90,168,.1)) !important;
+  border-color: rgba(255,90,168,.6) !important;
+  box-shadow: 0 8px 28px rgba(255,90,168,.28), 0 0 20px rgba(255,90,168,.12) !important;
+  text-shadow: 0 0 14px rgba(255,90,168,.55) !important;
+}
+
+/* Odds pill selected state — already uses tokens but make sure it's amber */
+.odds-pill.selected {
+  border-color: var(--amber) !important;
+  background: linear-gradient(145deg, rgba(255,181,77,.26), rgba(255,181,77,.1)) !important;
+  color: var(--amber) !important;
+  box-shadow: 0 0 24px rgba(255,181,77,.3), 0 4px 16px rgba(0,0,0,.3), 0 0 0 3px rgba(255,181,77,.2) !important;
+}
+
+/* Odds base — font */
+.odds-pill {
+  font-family: var(--font-mono) !important;
+  font-weight: 700 !important;
+  letter-spacing: .02em !important;
+}
+.odds-pill .odds-team-label { font-family: var(--font-mono) !important; letter-spacing: .1em; }
+
+/* ═════════════════════════════════════════
+   FONT WEIGHT / TYPE CORRECTIONS
+   Neon 777 uses Monoton (display) + Bungee (deco) + Space Grotesk (body) +
+   Space Mono (numerics). Inter and JetBrains Mono are too generic.
+   ═════════════════════════════════════════ */
+
+.cs2-betting-container,
+.cs2-betting-container * {
+  font-family: var(--font-body);
+}
+
+.cs2-betting-container h1,
+.cs2-betting-container h2,
+.cs2-page-title,
+.cs2-header h1,
+.cs2-header h2,
+.cs2-events-panel-title,
+.cs2-section-title {
+  font-family: var(--font-deco) !important;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--amber);
+}
+
+.cs2-betting-container h3,
+.cs2-betting-container h4,
+.cs2-tournament-title,
+.cs2-empty-state h3 {
+  font-family: var(--font-deco) !important;
+  letter-spacing: .06em;
+}
+
+/* Numerics / odds / stats */
+.odds-value-display,
+.odds-pill .odds-value-display,
+.cs2-balance-amount,
+.cs2-balance-value,
+.cs2-stat-value,
+.balance-amount,
+.bet-amount,
+.match-time-countdown,
+.countdown-timer {
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Team names — keep readable, but use Neon body font */
+.team-side .team-name,
+.team-name { font-family: var(--font-body) !important; font-weight: 700; }
+
+.team-acronym-circle { font-family: var(--font-deco) !important; letter-spacing: 0; }
+
+/* Tier badges */
+.cs2-tier-badge { font-family: var(--font-mono) !important; letter-spacing: .12em; }
+
+/* Status badge ("UPCOMING", "LIVE") */
+.match-status-badge { font-family: var(--font-deco) !important; letter-spacing: .1em; border-radius: 2px !important; }
+.match-status-badge.upcoming,
+.match-status-badge.scheduled {
+  background: rgba(176,100,255,.14) !important;
+  color: var(--neon-violet) !important;
+  border: 1px solid rgba(176,100,255,.4) !important;
+  text-shadow: 0 0 6px rgba(176,100,255,.4);
+}
+.match-status-badge.live {
+  background: rgba(255,58,92,.14) !important;
+  color: var(--neon-red) !important;
+  border: 1px solid rgba(255,58,92,.4) !important;
+  text-shadow: 0 0 6px rgba(255,58,92,.4);
+}
+.match-status-badge.finished {
+  background: rgba(255,243,228,.08) !important;
+  color: var(--ink-muted) !important;
+  border: 1px solid var(--line) !important;
+}
+
+/* Countdown timers — amber/cream */
+.match-time-countdown { border-radius: 2px !important; }
+
+/* ═════════════════════════════════════════
+   OVERLAYS / MODALS / BUTTONS
+   ═════════════════════════════════════════ */
+
+/* Modal overlays */
+.cs2-modal-overlay,
+.bet-slip-overlay,
+.cs2-toast-container > *,
+.poker-modal-overlay {
+  background: rgba(10,3,8,.88) !important;
+  backdrop-filter: blur(12px);
+}
+
+/* Refresh / history buttons */
+.cs2-btn,
+.cs2-refresh-btn,
+.cs2-history-btn,
+.refresh-btn,
+.history-btn {
+  border-radius: 2px !important;
+  font-family: var(--font-deco) !important;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+/* Pink history button — retheme to match */
+.cs2-history-btn,
+.history-btn {
+  background: linear-gradient(145deg, var(--neon-pink), #cc3d7e) !important;
+  border: none !important;
+  color: var(--bg) !important;
+  box-shadow: 0 0 16px rgba(255,90,168,.4), 0 4px 0 rgba(0,0,0,.4) !important;
+}
+.cs2-history-btn:hover,
+.history-btn:hover { filter: brightness(1.1); }
+
+/* Open/History tab pills inside My Bets */
+.cs2-tab,
+.bets-tab {
+  border-radius: 2px !important;
+  font-family: var(--font-deco) !important;
+  letter-spacing: .1em;
+}
+.cs2-tab.active,
+.bets-tab.active {
+  background: var(--amber) !important;
+  color: var(--bg) !important;
+  box-shadow: 0 0 14px rgba(255,181,77,.4);
+}
+
+/* W/L stat pills */
+.cs2-stat-pill {
+  border-radius: 2px !important;
+  font-family: var(--font-mono) !important;
+  letter-spacing: .08em;
+}
+
+/* Balance pill — amber glow instead of teal */
+.cs2-balance,
+.cs2-balance-pill,
+.balance-display {
+  border-radius: 2px !important;
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 16px rgba(255,181,77,.18) !important;
+}
+
+/* Warning / disclaimer banner */
+.cs2-disclaimer,
+.cs2-warning-banner {
+  background: rgba(255,181,77,.06) !important;
+  border: 1px dashed var(--line-strong) !important;
+  border-radius: 2px !important;
+  color: var(--amber);
+  font-family: var(--font-mono);
+}
+
+/* Tournament sections / event cards / panels — flat + amber borders */
+.cs2-events-panel,
+.cs2-bets-panel,
+.cs2-section,
+.cs2-tournament-section,
+.cs2-event-card,
+.cs2-bet-card,
+.cs2-card,
+.event-card,
+.match-card {
+  border-radius: 2px !important;
+  border-color: var(--line) !important;
+  background: var(--surface) !important;
+}
+
+.cs2-event-card:hover,
+.event-card:hover,
+.match-card:hover {
+  border-color: var(--amber) !important;
+  box-shadow: 0 8px 28px rgba(0,0,0,.5), 0 0 20px rgba(255,181,77,.12) !important;
+}
+
+/* Tournament / panel headers */
+.cs2-tournament-header,
+.cs2-events-panel-header,
+.cs2-section-header {
+  background: linear-gradient(180deg, rgba(255,181,77,.06) 0%, transparent 100%) !important;
+  border-bottom: 1px solid var(--line-strong) !important;
+}
+
+/* Empty state */
+.cs2-empty-state,
+.empty-state {
+  color: var(--ink-muted) !important;
+  font-family: var(--font-body);
+}
+.cs2-empty-state h3,
+.empty-state h3 { color: var(--cream) !important; }
+
+/* B-Tier / A-Tier / S-Tier badges — keep tier intent, use amber/cream */
+.cs2-tier-badge.tier-s,
+.cs2-tier-badge.tier-a,
+.cs2-tier-badge.tier-b {
+  border-radius: 2px !important;
+}
+
+/* Dropdown arrow & filter chips */
+.cs2-filter-chip,
+.filter-chip,
+.cs2-expand-toggle {
+  border-radius: 2px !important;
+  font-family: var(--font-mono);
+}
+
+/* Refresh spin button icon */
+.cs2-refresh-btn .refresh-icon { color: var(--amber); }
+
+/* Toast container */
+.cs2-toast {
+  border-radius: 2px !important;
+  font-family: var(--font-mono);
+  border: 1px solid var(--amber) !important;
+  box-shadow: 0 0 20px rgba(255,181,77,.25) !important;
+}
+
+/* Score/stat text that was hardcoded cyan/green in CS2 legacy */
+.cs2-wallet-label,
+.cs2-stat-label { color: var(--ink-dim) !important; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .14em; }

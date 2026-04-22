@@ -573,8 +573,10 @@ class CasinoManager {
     if (this.currentGame !== gameName) {
       this._lastManualCreditUpdate = null;
     }
-    
+
     this.currentGame = gameName;
+    // Persist last game so "Continue last game" on the hero can resume it.
+    try { localStorage.setItem('neon777.lastGame', gameName); } catch (e) { /* ignore storage errors */ }
     
     const gameSelectionEl = document.getElementById('gameSelection');
     const gameContainerEl = document.getElementById('gameContainer');
@@ -716,6 +718,214 @@ class CasinoManager {
       window.currentGameInstance.destroy?.();
       window.currentGameInstance = null;
     }
+  }
+
+  // ========== NEON 777 — DAILY SPIN ==========
+  // Free daily-pull wheel. Awards credits, persists streak in localStorage.
+  doFreeSpin() {
+    const SPIN_KEY = 'neon777.lastSpin';
+    const STREAK_KEY = 'neon777.spinStreak';
+    const now = Date.now();
+    const last = parseInt(localStorage.getItem(SPIN_KEY) || '0', 10);
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const hoursSince = (now - last) / (60 * 60 * 1000);
+
+    // Gate: 1 spin per 20h window (so a "daily" feels forgiving)
+    if (last && hoursSince < 20) {
+      const hoursLeft = Math.ceil(20 - hoursSince);
+      this._showSpinModal({ locked: true, hoursLeft });
+      return;
+    }
+
+    this._showSpinModal({ locked: false });
+  }
+
+  _showSpinModal({ locked, hoursLeft }) {
+    const existing = document.getElementById('spinModalOverlay');
+    if (existing) existing.remove();
+
+    const prizes = [
+      { label: '+100',    color: 'var(--cream)',       credits: 100 },
+      { label: '+250',    color: 'var(--amber)',       credits: 250 },
+      { label: '+50',     color: 'var(--cream)',       credits: 50 },
+      { label: '+500',    color: 'var(--neon-pink)',   credits: 500 },
+      { label: '+100',    color: 'var(--cream)',       credits: 100 },
+      { label: 'x2',      color: 'var(--neon-violet)', credits: 300 },
+      { label: '+250',    color: 'var(--amber)',       credits: 250 },
+      { label: 'JACKPOT', color: 'var(--neon-red)',    credits: 2500 },
+    ];
+    const seg = 360 / prizes.length;
+    const gradient = prizes.map((p, i) => `${p.color} ${i * seg}deg ${(i + 1) * seg}deg`).join(',');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'spinModalOverlay';
+    overlay.className = 'spin-modal-overlay';
+    overlay.innerHTML = `
+      <div class="spin-modal-content" role="dialog" aria-labelledby="spinModalTitle">
+        <div class="spin-modal-header">
+          <h2 id="spinModalTitle" class="spin-modal-title">DAILY SPIN</h2>
+          <button class="spin-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="spin-modal-body">
+          ${locked ? `
+            <div class="spin-locked">
+              <div class="spin-locked-icon">⏳</div>
+              <div class="spin-locked-heading">Come back later</div>
+              <div class="spin-locked-sub">Next pull in about <b>${hoursLeft} hr${hoursLeft === 1 ? '' : 's'}</b></div>
+            </div>
+          ` : `
+            <div class="spin-wheel-wrap">
+              <div class="spin-wheel-pointer"></div>
+              <div class="spin-wheel" id="spinWheel" style="background:conic-gradient(${gradient});">
+                ${prizes.map((p, i) => `
+                  <div class="spin-wheel-label" style="transform:translateX(-50%) rotate(${(i + 0.5) * seg}deg) translateY(0);">${p.label}</div>
+                `).join('')}
+              </div>
+              <div class="spin-wheel-hub">777</div>
+            </div>
+            <div class="spin-prize-result" id="spinPrizeResult"></div>
+            <button class="spin-pull-btn" id="spinPullBtn">PULL THE LEVER</button>
+          `}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close = () => overlay.remove();
+    overlay.querySelector('.spin-modal-close')?.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+    if (locked) return;
+
+    const pullBtn = overlay.querySelector('#spinPullBtn');
+    const wheel = overlay.querySelector('#spinWheel');
+    const resultEl = overlay.querySelector('#spinPrizeResult');
+    let spinning = false;
+
+    pullBtn.addEventListener('click', () => {
+      if (spinning) return;
+      spinning = true;
+      pullBtn.disabled = true;
+      pullBtn.textContent = 'SPINNING…';
+      resultEl.textContent = '';
+
+      const idx = Math.floor(Math.random() * prizes.length);
+      const prize = prizes[idx];
+      // Compute rotation so the pointer (at top) lands on this segment.
+      const baseTurns = 6;
+      const targetDeg = 360 - (idx * seg + seg / 2);
+      const finalDeg = baseTurns * 360 + targetDeg;
+      wheel.style.transition = 'transform 3.2s cubic-bezier(.2,.7,.15,1)';
+      wheel.style.transform = `rotate(${finalDeg}deg)`;
+
+      setTimeout(() => {
+        // Award credits — go through updateCredits so the server-backed flow stays intact.
+        if (typeof this.updateCredits === 'function') {
+          this.updateCredits(prize.credits);
+        } else {
+          this.credits = (this.credits || 0) + prize.credits;
+          this.updateCreditsDisplay?.();
+        }
+        // Persist streak + timestamp
+        const SPIN_KEY = 'neon777.lastSpin';
+        const STREAK_KEY = 'neon777.spinStreak';
+        const prevSpin = parseInt(localStorage.getItem(SPIN_KEY) || '0', 10);
+        const DAY_MS = 24 * 60 * 60 * 1000;
+        const within48h = prevSpin && (Date.now() - prevSpin) < (2 * DAY_MS);
+        const newStreak = within48h ? (parseInt(localStorage.getItem(STREAK_KEY) || '0', 10) + 1) : 1;
+        localStorage.setItem(SPIN_KEY, String(Date.now()));
+        localStorage.setItem(STREAK_KEY, String(newStreak));
+
+        // Reflect on the sidebar freepull streak bar if present
+        const fill = document.querySelector('.freepull-streak-fill');
+        if (fill) fill.style.width = Math.min(100, (newStreak / 7) * 100) + '%';
+        const label = document.querySelector('.freepull-streak-label');
+        if (label) label.textContent = `Streak: ${newStreak} day${newStreak === 1 ? '' : 's'}`;
+
+        resultEl.innerHTML = `<span class="spin-result-prize" style="color:${prize.color};text-shadow:0 0 14px ${prize.color};">${prize.label}</span><span class="spin-result-sub">Added to your balance · +${prize.credits.toLocaleString()}</span>`;
+        pullBtn.textContent = 'COME BACK TOMORROW';
+        // Leave the button disabled after a successful spin
+      }, 3300);
+    });
+  }
+
+  // ========== NEON 777 — CONTINUE LAST GAME ==========
+  continueLastGame() {
+    const last = localStorage.getItem('neon777.lastGame');
+    if (!last) {
+      this._toast('No recent game — pick one below.');
+      return;
+    }
+    // Guard against stale game IDs that no longer map
+    const validGames = ['blackjack','coinflip','roulette','crash','pachinko','poker','cs2betting'];
+    if (!validGames.includes(last)) {
+      localStorage.removeItem('neon777.lastGame');
+      this._toast('No recent game — pick one below.');
+      return;
+    }
+    this.startGame(last);
+  }
+
+  // ========== NEON 777 — TOUR ==========
+  showTour() {
+    const existing = document.getElementById('tourOverlay');
+    if (existing) { existing.remove(); return; }
+
+    const steps = [
+      { icon: '🎰', title: 'Seven tables', body: 'Blackjack, Roulette, Coinflip, Crash, Pachinko, Hold’em, and live CS2 odds. Pick your poison.' },
+      { icon: '💎', title: 'Your bankroll', body: 'You start with 10,000 credits. Balance sits in the top-right, and every hand writes to your ledger.' },
+      { icon: '🎡', title: 'Daily pull', body: 'Once a day, spin the wheel for free credits. Streaks give better odds — check the sidebar.' },
+      { icon: '🏆', title: 'Leaderboards', body: 'The top row runs nightly. Hit streaks, chase the jackpots, climb the rankings.' },
+    ];
+
+    const overlay = document.createElement('div');
+    overlay.id = 'tourOverlay';
+    overlay.className = 'tour-overlay';
+    overlay.innerHTML = `
+      <div class="tour-content">
+        <div class="tour-header">
+          <h2 class="tour-title">TAKE THE TOUR</h2>
+          <button class="tour-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="tour-steps">
+          ${steps.map((s, i) => `
+            <div class="tour-step">
+              <div class="tour-step-icon" aria-hidden="true">${s.icon}</div>
+              <div class="tour-step-body">
+                <div class="tour-step-title">${String(i + 1).padStart(2, '0')} · ${s.title}</div>
+                <div class="tour-step-copy">${s.body}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="tour-footer">
+          <button class="tour-cta" id="tourStartBtn">ENTER THE FLOOR</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close = () => overlay.remove();
+    overlay.querySelector('.tour-close')?.addEventListener('click', close);
+    overlay.querySelector('#tourStartBtn')?.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  }
+
+  // ========== NEON 777 — TOAST ==========
+  _toast(msg) {
+    let host = document.getElementById('neonToastHost');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'neonToastHost';
+      host.className = 'neon-toast-host';
+      document.body.appendChild(host);
+    }
+    const t = document.createElement('div');
+    t.className = 'neon-toast';
+    t.textContent = msg;
+    host.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-8px)'; }, 2400);
+    setTimeout(() => t.remove(), 3000);
   }
 
   // ========== BET HISTORY ==========

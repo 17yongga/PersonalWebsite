@@ -1,5 +1,11 @@
 # Budget App — STATUS.md
-> Updated: 2026-04-03 (23:33 EDT)
+> Updated: 2026-04-07 (17:21 EDT)
+
+## Business Registration (CRA)
+- **Business Number (BN9):** 78908 2971
+- **GST/HST Account:** 78908 2971 RT0001
+- **Registered:** 2026-04-11
+- **GST/HST filing:** Annual (voluntary registration, under $30K threshold)
 
 ## Infrastructure
 - **receipt-server** (PM2 id:5, port 3002) — receipt/screenshot scan backend, Groq vision API, proxied at `api.gary-yong.com/receipt`. Part of Flowt — needed, do not remove.
@@ -11,12 +17,45 @@
 - Backend: PM2 `budget-server` on EC2, port 3002, online
 - Receipt scanner: PM2 `receipt-server` on EC2, port 3002 (proxied via nginx)
 
-## Current State (2026-04-03)
+## Current State (2026-04-15)
 
-### Build #16 (2f2829e) — IN PROGRESS ~23:33 ET
+### 📱 v1.0.1 Bug Fix Sprint (Apr 15 session)
+- **Scan receipt — skip edit screen:** "Add X Transactions" now POSTs directly to API, no more per-item Add Expense modal
+- **Category auto-correct:** AI-returned categories auto-matched to existing emoji categories via alias map (rent→🏠 Rent/Mortgage, etc.)
+- **Category picker on review screen:** Tappable category on each scanned item with searchable dropdown
+- **Date post-processing:** `normalizeReceiptDate` clamps wrong years (>1yr off → current year), future dates → today
+- **Tappable date on review screen:** Inline date editor with "Use today" quick button
+- **Overlay animations fixed:** Smooth opacity+translateY transitions, no more background jumping; body scroll locked on open
+- **Keyboard dismiss:** Tapping outside form inputs now dismisses keyboard
+- **Dashboard/Charts stat cards:** Numbers auto-shrink to fit (no more 2-line wrapping)
+- **"My Transactions" filter:** New filter pill showing all transactions user paid for + all shared
+- **Add/Edit expense form compacted:** Amount+Category and Date+Notes side-by-side; Quick Summary card removed
+- **Receipt server model swap:** Groq Llama 4 Maverick → Llama 4 Scout (vision-capable, free)
+- **Version bumped:** v1.0.1 build 16, committed and pushed to GitHub
+- **EAS build:** Upload hanging from CLI — Gary running manually
+
+### 🔄 App Store Review — Round 2 IN PROGRESS (Apr 13)
+- Gary submitted another round of App Store review after Apple rejection (Guideline 2.1(b))
+- **Rejection reason:** Apple asked 4 questions about the monetization model
+- **Response sent:** Clarified Flowt Pro IAP features, no external purchase paths
+- **Now waiting for Apple review response**
+
+### 📱 Code Changes (Apr 13 session)
+- Dashboard: Together/Personal sections → navigate to Transactions pre-filtered
+- Dashboard: Balance section tappable → Settle page
+- Settings: N-member household support
+- Settlement: N-member balance calc
+- All changes committed to GitHub (commit 8df47a5)
+
+### 🎉 App Store Submission — SUBMITTED FOR REVIEW ✅ (Apr 7)
+- Gary submitted Flowt v1.0 to App Store Connect for review
+- Production build (0d0d0093) used for submission
+- EAS URL: https://expo.dev/accounts/17yongga/projects/flowt/builds/0d0d0093-6517-4249-b0c5-bdc0e1681eae
+- Signed: dist cert 74AEB572 (valid until Mar 2027), provisioning profile 59D99DX3P8
+
+### Build #16 (2f2829e) — FINISHED ✅ (superseded by production build)
 - EAS URL: https://expo.dev/accounts/17yongga/projects/flowt/builds/c000ac5c-c152-4e4b-b7b5-b024f7fad9e1
 - Profile: preview-device (installs on iPhone)
-- **This is the build to install**
 
 **Build #16 Changes (6 commits):**
 1. Scan Receipt: custom split ratio per item when marked Shared (presets 50/50, 60/40, 70/30 + custom input)
@@ -67,11 +106,22 @@
 
 **Root cause discovered:** `style={({ pressed }) => ({...})}` on Pressable fails silently on device — backgrounds render transparent. Fixed across all screens by switching to static `style={{...}}` objects.
 
+### Tonight's Session (2026-04-04)
+**App Store Submission Prep:**
+1. ✅ App Store metadata prepared (Opus quality) — Name, Subtitle, Keywords, Description, What's New
+2. ✅ Demo accounts documented — gary@flowt.app + emily@flowt.app / Flowt2026!
+3. ✅ App Review notes written — Error 23 explained, shared expense flow walkthrough, permissions listed
+4. ✅ Screenshots received from Gary (6 files)
+5. ✅ Production build queued and FINISHED — IPA ready
+
 ### Next Actions
-- [ ] Install Build #16 on iPhone + full QA pass
-- [ ] Test: 4-lane transaction colours, scan receipt custom split, budget amounts
-- [ ] App Store screenshots (5 screens: Dashboard, Transactions, Charts, Settlement, Scan Receipt)
-- [ ] App Store submission (blocked on screenshots)
+- [x] ~~Submit for App Store Review~~ ✅ (Apr 7)
+- [x] ~~Respond to Apple Guideline 2.1(b) rejection~~ ✅ (Apr 13)
+- [x] ~~Submit Round 2 for App Store Review~~ ✅ (Apr 13)
+- [x] ~~v1.0.1 bug fixes~~ ✅ (Apr 15) — 10+ fixes committed
+- [ ] Wait for Apple review response — Round 2 in progress
+- [ ] Complete EAS production build for v1.0.1 (upload hanging — Gary to run manually)
+- [ ] Submit v1.0.1 to App Store Connect
 - [ ] Budget Settings: rename "Shared Budget" label → "Household Budget" in the UI
 - [ ] PostgreSQL migration (SQLite → AWS RDS)
 - [ ] Google Play Developer account ($25)
@@ -112,7 +162,7 @@ ssh ubuntu@52.86.178.139 -i ~/.ssh/id_ed25519 "pm2 restart budget-server"
 ## Key Files
 - `budget.html` — frontend (S3)
 - `/home/ubuntu/budget-server/households.js` — API routes
-- `/home/ubuntu/receipt-server.js` — AI vision scanner (Llama 4 Scout via Groq)
+- `/home/ubuntu/receipt-server.js` — AI vision scanner (Llama 4 Scout via Groq, fallback from Maverick)
 - `/home/ubuntu/budget-server/finsync.db` — SQLite DB
 - `~/clawd/flowt-app/app/(app)/(tabs)/index.tsx` — dashboard
 - `~/clawd/flowt-app/app/(app)/(tabs)/settlement.tsx` — settlement

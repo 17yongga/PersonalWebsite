@@ -63,13 +63,22 @@ class CS2ModernBettingGame {
             <div class="cs2-header-content">
               <h1 class="cs2-title">
                 <span class="cs2-title-icon">🎮</span>
-                CS2 Fantasy Betting
+                <span>CS2 Fantasy Betting</span>
               </h1>
-              <div class="header-actions">
+              <div class="cs2-header-stats">
+                <div class="cs2-header-balance" id="cs2HeaderBalance">
+                  <span class="balance-label">Balance</span>
+                  <span class="balance-value" id="cs2HeaderBalanceValue">--</span>
+                  <span class="balance-currency">credits</span>
+                </div>
                 <button id="creditHistoryBtn" class="credit-history-btn" title="View Credit History">
                   <span>💳</span>
                   History
                 </button>
+                <div class="cs2-header-quick-stats">
+                  <span class="cs2-quick-stat wins" id="cs2QuickWins">W: 0</span>
+                  <span class="cs2-quick-stat losses" id="cs2QuickLosses">L: 0</span>
+                </div>
               </div>
             </div>
           </div>
@@ -125,19 +134,19 @@ class CS2ModernBettingGame {
           </div>
         </div>
 
-        <!-- Enhanced Bet Slip Modal -->
+        <!-- Enhanced Bet Slip - Slide-in Panel -->
         <div id="cs2BetSlipModal" class="cs2-betslip-modal hidden">
           <div class="cs2-betslip-modal-overlay"></div>
           <div class="cs2-betslip-modal-content">
             <div class="betslip-modal-header">
-              <h3>🎯 Bet Slip</h3>
+              <h3>Bet Slip</h3>
               <button id="closeBetSlipBtn" class="close-btn" title="Close">&times;</button>
             </div>
-            
+
             <!-- Selection Display -->
             <div id="cs2BetSlip" class="betslip-selection">
               <div class="empty-state">
-                <div class="empty-state-icon">🎲</div>
+                <div class="empty-state-icon">&#127922;</div>
                 <div class="empty-state-text">Select a match outcome</div>
                 <div class="empty-state-subtext">Choose your prediction to continue</div>
               </div>
@@ -146,31 +155,41 @@ class CS2ModernBettingGame {
             <!-- Bet Controls -->
             <div id="cs2BetControls" class="cs2-bet-controls hidden">
               <div class="bet-input-group">
-                <label for="cs2BetAmount">💰 Bet Amount (Credits)</label>
-                <input type="number" id="cs2BetAmount" class="bet-amount-input" 
+                <label for="cs2BetAmount">Bet Amount (Credits)</label>
+                <input type="number" id="cs2BetAmount" class="bet-amount-input"
                        min="1" value="100" step="10" placeholder="Enter amount">
                 <div class="quick-bets">
-                  <button class="quick-bet-btn" data-amount="50">50</button>
                   <button class="quick-bet-btn" data-amount="100">100</button>
-                  <button class="quick-bet-btn" data-amount="250">250</button>
                   <button class="quick-bet-btn" data-amount="500">500</button>
+                  <button class="quick-bet-btn" data-amount="1000">1K</button>
+                  <button class="quick-bet-btn" data-amount="all">ALL-IN</button>
                 </div>
               </div>
-              
+
               <div id="cs2PotentialPayout" class="potential-payout hidden">
                 <div class="payout-info">
                   <div class="loading-spinner" style="width: 20px; height: 20px;"></div>
                   <div class="loading-text">Calculating payout...</div>
                 </div>
               </div>
-              
+
               <div class="betslip-actions">
                 <button id="placeBetBtn" class="btn btn-primary btn-large">
-                  <span class="bet-btn-icon">🎯</span>
                   Place Bet
                 </button>
                 <button id="cancelBetBtn" class="btn btn-secondary">Cancel</button>
               </div>
+            </div>
+
+            <!-- Success overlay -->
+            <div class="betslip-success-overlay hidden" id="betslipSuccessOverlay">
+              <div class="success-checkmark-circle">
+                <svg viewBox="0 0 52 52" class="success-checkmark-svg">
+                  <circle cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="2"/>
+                  <path fill="none" stroke="currentColor" stroke-width="3" d="M14 27l7 7 16-16"/>
+                </svg>
+              </div>
+              <div class="success-particles"></div>
             </div>
           </div>
         </div>
@@ -263,7 +282,8 @@ class CS2ModernBettingGame {
     document.querySelectorAll('.quick-bet-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         this.triggerHapticFeedback('light');
-        const amount = parseInt(btn.dataset.amount);
+        const rawAmount = btn.dataset.amount;
+        const amount = rawAmount === 'all' ? this.currentBalance : parseInt(rawAmount);
         this.setBetAmount(amount);
         this.animateQuickBetSelection(btn);
       });
@@ -289,9 +309,9 @@ class CS2ModernBettingGame {
   attachModernInteractions() {
     // Enhanced odds card interactions
     document.addEventListener('click', (e) => {
-      if (e.target.closest('.odds-card:not(.disabled)')) {
+      if (e.target.closest('.odds-pill:not(.disabled)')) {
         e.preventDefault();
-        this.handleOddsSelection(e.target.closest('.odds-card'));
+        this.handleOddsSelection(e.target.closest('.odds-pill'));
       }
     });
 
@@ -367,7 +387,7 @@ class CS2ModernBettingGame {
     });
 
     // Prevent zoom on double-tap for betting buttons
-    const bettingElements = document.querySelectorAll('.odds-card, .quick-bet-btn, .btn');
+    const bettingElements = document.querySelectorAll('.odds-pill, .quick-bet-btn, .btn');
     bettingElements.forEach(element => {
       element.style.touchAction = 'manipulation';
     });
@@ -541,13 +561,13 @@ class CS2ModernBettingGame {
 
   animateOddsSelection(oddsCard) {
     // Remove previous selections
-    document.querySelectorAll('.odds-card').forEach(card => {
+    document.querySelectorAll('.odds-pill').forEach(card => {
       card.classList.remove('selected');
     });
-    
+
     // Add selection with animation
     oddsCard.classList.add('selected');
-    
+
     // Pulse animation
     oddsCard.style.transform = 'scale(0.95)';
     setTimeout(() => {
@@ -628,13 +648,20 @@ class CS2ModernBettingGame {
 
   animateBetSuccess() {
     const modal = document.querySelector('.cs2-betslip-modal-content');
-    modal.style.transform = 'scale(1.05)';
     modal.style.borderColor = 'var(--cs2-success)';
-    
+
+    // Show success overlay with confetti
+    const successOverlay = document.getElementById('betslipSuccessOverlay');
+    if (successOverlay) {
+      successOverlay.classList.remove('hidden');
+      setTimeout(() => {
+        successOverlay.classList.add('hidden');
+      }, 1500);
+    }
+
     setTimeout(() => {
-      modal.style.transform = 'scale(1)';
       modal.style.borderColor = 'var(--cs2-border)';
-    }, 300);
+    }, 1500);
   }
 
   connectToServer() {
@@ -693,6 +720,16 @@ class CS2ModernBettingGame {
     // The casino manager is the single source of truth for balance.
     this.currentBalance = this.casino.credits || 0;
     console.log(`[CS2 Balance] Using casino manager balance: ${this.currentBalance}`);
+    this.updateHeaderBalance();
+  }
+
+  updateHeaderBalance() {
+    const el = document.getElementById('cs2HeaderBalanceValue');
+    if (el) {
+      el.textContent = this.currentBalance.toLocaleString();
+      el.classList.add('updating');
+      setTimeout(() => el.classList.remove('updating'), 500);
+    }
   }
 
   async loadEvents() {
@@ -723,10 +760,10 @@ class CS2ModernBettingGame {
     
     if (this.events.length === 0) {
       eventsList.innerHTML = `
-        <div class="empty-state">
+        <div class="cs2-empty-state">
           <div class="empty-state-icon">🏆</div>
-          <div class="empty-state-text">No upcoming matches</div>
-          <div class="empty-state-subtext">Check back later for new tournaments</div>
+          <p>No upcoming matches</p>
+          <span class="empty-state-hint">Check back later for new tournaments</span>
         </div>
       `;
       return;
@@ -745,10 +782,10 @@ class CS2ModernBettingGame {
 
     if (upcomingEvents.length === 0) {
       eventsList.innerHTML = `
-        <div class="empty-state">
+        <div class="cs2-empty-state">
           <div class="empty-state-icon">⏰</div>
-          <div class="empty-state-text">No live odds available</div>
-          <div class="empty-state-subtext">Use refresh button to check for updates</div>
+          <p>No live odds available</p>
+          <span class="empty-state-hint">Use the refresh button to check for updates</span>
         </div>
       `;
       return;
@@ -809,14 +846,34 @@ class CS2ModernBettingGame {
 
   renderTournamentSection(tournament, events) {
     const safeTournamentName = this.escapeHtml(tournament);
-    
+    const lowerName = tournament.toLowerCase();
+
+    // Determine tier
+    let tierLabel = '';
+    let tierClass = '';
+    if (lowerName.includes('s-tier') || lowerName.includes('major') || lowerName.includes('blast premier')) {
+      tierLabel = 'S'; tierClass = 'tier-s';
+    } else if (lowerName.includes('a-tier') || lowerName.includes('esl pro') || lowerName.includes('iem')) {
+      tierLabel = 'A'; tierClass = 'tier-a';
+    } else if (lowerName.includes('b-tier')) {
+      tierLabel = 'B'; tierClass = 'tier-b';
+    }
+
+    const sectionTierClass = tierClass ? `${tierClass}-section` : '';
+
     return `
-      <div class="cs2-tournament-header">
-        <div class="cs2-tournament-icon">🏆</div>
-        <div class="cs2-tournament-name">${safeTournamentName}</div>
-        <div class="cs2-tournament-count">${events.length}</div>
+      <div class="cs2-tournament-section ${sectionTierClass}">
+        <div class="cs2-tournament-header" onclick="this.parentElement.classList.toggle('collapsed')">
+          ${tierLabel ? `<div class="cs2-tier-badge ${tierClass}">${tierLabel}</div>` : '<div class="cs2-tournament-icon">&#127942;</div>'}
+          <div class="cs2-tournament-logo-area"></div>
+          <div class="cs2-tournament-name">${safeTournamentName}</div>
+          <div class="cs2-tournament-count">${events.length} ${events.length === 1 ? 'match' : 'matches'}</div>
+          <div class="cs2-tournament-chevron">&#9660;</div>
+        </div>
+        <div class="cs2-tournament-events">
+          ${events.map(event => this.renderEventCard(event)).join('')}
+        </div>
       </div>
-      ${events.map(event => this.renderEventCard(event)).join('')}
     `;
   }
 
@@ -824,65 +881,84 @@ class CS2ModernBettingGame {
     const startTime = new Date(event.commenceTime || event.startTime);
     const isLive = event.status === 'live';
     const canBet = event.status === 'scheduled' || event.status === 'live';
-    
-    const timeStr = startTime.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+
+    // Countdown timer
+    const now = new Date();
+    const diff = startTime - now;
+    let countdownStr = '';
+    if (diff > 0) {
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      if (days > 0) countdownStr = `${days}d ${hours}h`;
+      else if (hours > 0) countdownStr = `${hours}h ${mins}m`;
+      else countdownStr = `${mins}m`;
+    } else {
+      countdownStr = isLive ? 'LIVE' : 'Starting';
+    }
 
     const homeTeamName = event.homeTeam || event.participant1Name || 'Team 1';
     const awayTeamName = event.awayTeam || event.participant2Name || 'Team 2';
     const safeHomeTeam = this.escapeHtml(homeTeamName);
     const safeAwayTeam = this.escapeHtml(awayTeamName);
-    
+
     const team1Odds = this.getDisplayOdds(event.odds?.team1);
     const team2Odds = this.getDisplayOdds(event.odds?.team2);
-    
+
     const homeTeamLogo = event.team1Logo || this.getTeamLogo(homeTeamName);
     const awayTeamLogo = event.team2Logo || this.getTeamLogo(awayTeamName);
 
+    // Determine format badge (BO1, BO3, BO5)
+    const format = event.bestOf || event.format || '';
+    let formatBadge = '';
+    if (format) {
+      const boMatch = String(format).match(/(\d+)/);
+      if (boMatch) formatBadge = `BO${boMatch[1]}`;
+      else formatBadge = String(format).toUpperCase();
+    }
+
+    // Status badge
+    const statusClass = isLive ? 'live' : (event.status === 'scheduled' ? 'upcoming' : event.status);
+    const statusText = isLive ? 'LIVE' : (event.status === 'scheduled' ? 'Upcoming' : this.getStatusText(event.status));
+
     return `
-      <div class="cs2-event-card ${isLive ? 'live' : ''}" data-event-id="${event.id}">
-        <div class="event-match-header">
-          <div class="match-time-status">
-            <div class="match-time">${timeStr}</div>
-            ${isLive ? '<div class="match-live-badge">🔴 LIVE</div>' : ''}
-          </div>
-          <div class="match-status-badge ${event.status}">${this.getStatusText(event.status)}</div>
+      <div class="cs2-event-card ${isLive ? 'live' : (event.status === 'scheduled' ? 'upcoming' : '')}" data-event-id="${event.id}">
+        <div class="event-card-header">
+          <span class="match-time-countdown${isLive ? ' live' : ''}">${isLive ? '' : '<span class="countdown-icon">⏱</span>'}${countdownStr}</span>
+          ${formatBadge ? `<span class="match-format-badge">${formatBadge}</span>` : ''}
+          <span class="match-status-badge ${statusClass}">${statusText}</span>
         </div>
-        
-        <div class="event-match-content">
-          <div class="event-team-row">
-            <div class="team-logo-container">
-              <img src="${homeTeamLogo}" alt="${safeHomeTeam}" class="team-logo" 
-                   onerror="this.src='${this.getFallbackLogo(homeTeamName)}'">
-            </div>
-            <div class="team-name">${safeHomeTeam}</div>
-            <button class="odds-btn ${canBet ? '' : 'disabled'} ${team1Odds < team2Odds ? 'favorite' : ''}" 
-                    data-event-id="${event.id}" 
-                    data-selection="team1"
-                    ${!canBet ? 'disabled' : ''}
-                    title="Bet on ${safeHomeTeam}">
-              ${team1Odds.toFixed(2)}
-            </button>
+        <div class="event-card-separator"></div>
+        <div class="event-card-teams">
+          <div class="team-side team-home">
+            <img src="${homeTeamLogo}" alt="${safeHomeTeam}" class="team-logo-large"
+                 onerror="this.src='${this.getFallbackLogo(homeTeamName)}'">
+            <span class="team-name">${safeHomeTeam}</span>
           </div>
-          <div class="event-team-row">
-            <div class="team-logo-container">
-              <img src="${awayTeamLogo}" alt="${safeAwayTeam}" class="team-logo" 
-                   onerror="this.src='${this.getFallbackLogo(awayTeamName)}'">
-            </div>
-            <div class="team-name">${safeAwayTeam}</div>
-            <button class="odds-btn ${canBet ? '' : 'disabled'} ${team2Odds < team1Odds ? 'favorite' : ''}" 
-                    data-event-id="${event.id}" 
-                    data-selection="team2"
-                    ${!canBet ? 'disabled' : ''}
-                    title="Bet on ${safeAwayTeam}">
-              ${team2Odds.toFixed(2)}
-            </button>
+          <div class="vs-divider"><span>VS</span></div>
+          <div class="team-side team-away">
+            <img src="${awayTeamLogo}" alt="${safeAwayTeam}" class="team-logo-large"
+                 onerror="this.src='${this.getFallbackLogo(awayTeamName)}'">
+            <span class="team-name">${safeAwayTeam}</span>
           </div>
+        </div>
+        <div class="event-card-odds">
+          <button class="odds-pill ${canBet ? '' : 'disabled'} ${team1Odds < team2Odds ? 'favorite' : 'underdog'}"
+                  data-event-id="${event.id}"
+                  data-selection="team1"
+                  ${!canBet ? 'disabled' : ''}
+                  title="Bet on ${safeHomeTeam}">
+            <span class="odds-team-label">${safeHomeTeam}</span>
+            <span class="odds-value-display">${team1Odds.toFixed(2)}</span>
+          </button>
+          <button class="odds-pill ${canBet ? '' : 'disabled'} ${team2Odds < team1Odds ? 'favorite' : 'underdog'}"
+                  data-event-id="${event.id}"
+                  data-selection="team2"
+                  ${!canBet ? 'disabled' : ''}
+                  title="Bet on ${safeAwayTeam}">
+            <span class="odds-team-label">${safeAwayTeam}</span>
+            <span class="odds-value-display">${team2Odds.toFixed(2)}</span>
+          </button>
         </div>
       </div>
     `;
@@ -890,7 +966,7 @@ class CS2ModernBettingGame {
 
   attachEventCardListeners() {
     // Enhanced odds button interactions
-    document.querySelectorAll('.odds-btn:not(.disabled)').forEach(card => {
+    document.querySelectorAll('.odds-pill:not(.disabled)').forEach(card => {
       card.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -943,10 +1019,14 @@ class CS2ModernBettingGame {
   showBetSlipModal() {
     const modal = document.getElementById('cs2BetSlipModal');
     modal.classList.remove('hidden');
-    
+    // Trigger slide-in animation
+    requestAnimationFrame(() => {
+      modal.classList.add('open');
+    });
+
     // Prevent background scroll
     document.body.style.overflow = 'hidden';
-    
+
     // Focus management for accessibility
     setTimeout(() => {
       const closeBtn = document.getElementById('closeBetSlipBtn');
@@ -956,8 +1036,12 @@ class CS2ModernBettingGame {
 
   closeBetSlipModal() {
     const modal = document.getElementById('cs2BetSlipModal');
-    modal.classList.add('hidden');
-    
+    modal.classList.remove('open');
+    // Wait for slide-out animation to finish
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 300);
+
     // Restore background scroll
     document.body.style.overflow = '';
     
@@ -984,7 +1068,7 @@ class CS2ModernBettingGame {
     }
     
     // Remove odds selections
-    document.querySelectorAll('.odds-card.selected').forEach(card => {
+    document.querySelectorAll('.odds-pill.selected').forEach(card => {
       card.classList.remove('selected');
     });
   }
@@ -1183,11 +1267,15 @@ class CS2ModernBettingGame {
           <span class="payout-value">${this.betAmount} credits</span>
         </div>
         <div>
-          <span>Potential Payout:</span>
-          <span class="payout-value">${payout.toFixed(2)} credits</span>
+          <span>Odds:</span>
+          <span class="payout-value">${odds.toFixed(2)}x</span>
         </div>
         <div class="total-payout">
-          <span>Potential Profit:</span>
+          <span>Potential Payout:</span>
+          <span class="payout-value profit">+${payout.toFixed(2)} credits</span>
+        </div>
+        <div>
+          <span>Net Profit:</span>
           <span class="payout-value profit">+${profit.toFixed(2)} credits</span>
         </div>
       </div>
@@ -1206,6 +1294,7 @@ class CS2ModernBettingGame {
       if (data.success) {
         this.bets = (data.bets || []).map(b => b.bet ? b.bet : b);
         this.showBets('open'); // Show current tab
+        this.updateQuickStats();
       }
     } catch (error) {
       console.error('Error loading bets:', error);
@@ -1238,6 +1327,20 @@ class CS2ModernBettingGame {
     }
 
     betsContainer.innerHTML = filteredBets.map(bet => this.renderBetCard(bet)).join('');
+  }
+
+  updateQuickStats() {
+    const today = new Date().toDateString();
+    const todayBets = this.bets.filter(b => {
+      const betDate = new Date(b.placedAt || b.createdAt || 0).toDateString();
+      return betDate === today;
+    });
+    const wins = todayBets.filter(b => b.status === 'won').length;
+    const losses = todayBets.filter(b => b.status === 'lost').length;
+    const winsEl = document.getElementById('cs2QuickWins');
+    const lossesEl = document.getElementById('cs2QuickLosses');
+    if (winsEl) winsEl.textContent = `W: ${wins}`;
+    if (lossesEl) lossesEl.textContent = `L: ${losses}`;
   }
 
   renderBetCard(bet) {

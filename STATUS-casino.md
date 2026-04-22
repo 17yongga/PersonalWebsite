@@ -1,5 +1,5 @@
 # Casino — STATUS.md
-> Updated: 2026-03-21
+> Updated: 2026-04-11
 
 ## What's Live
 - **Frontend:** https://gary-yong.com/casino.html (S3/CloudFront)
@@ -32,7 +32,7 @@
 - Sync: Daily at 2 AM UTC + 2h settlement check
 - SSL cert valid until May 2026 (Let's Encrypt)
 
-## Current State (2026-03-15)
+## Current State (2026-04-11)
 - All games live and running
 - **Mobile UX improvements deployed (Mar 14)** — full pass across all 7 games + lobby
   - Lobby: 2-column game grid on mobile, compact header/cards
@@ -73,6 +73,10 @@
   - Data flow: syncCS2Events() → cs2Bo3ggClient directly → synthetic odds fallback (local ranking-based)
   - Settlement: cs2Bo3ggClient.fetchRecentResults() + cs2-free-result-sources.js (HLTV/Liquipedia)
   - No known bugs in production
+- **UI redesign audit (Apr 11)** — reviewed earlier proposal vs actual state:
+  - Already implemented: glassmorphism match cards, tier-specific gradient borders, tier badges, collapsible tournament sections, pill-shaped odds buttons, countdown timers, slide-in bet slip, sticky sidebar
+  - Remaining (backlog): live odds movement indicators, typography hierarchy, empty state illustrations, bet placement confetti animation, always-visible My Bets sidebar on desktop
+  - Gary confirmed no further changes needed — remaining items added to backlog
 
 ## Next Actions (Backlog)
 - [x] Revamp Roulette game — flat belt-style design (CSGOEmpire/Stake inspired), deployed Mar 10
@@ -82,6 +86,12 @@
 - [x] **Mobile UX improvements — full pass all 7 games + lobby, deployed Mar 14**
 - [ ] Gary to test mobile UX on phone (pending)
 - [x] **Payout realism audit — all 7 games reviewed, Pachinko multipliers fixed (Mar 15)**
+- [x] **UI redesign audit — most items already implemented, 5 minor items added to backlog (Apr 11)**
+- [ ] Live odds movement indicators (↑↓ arrows on CS2 betting)
+- [ ] Typography hierarchy improvements
+- [ ] Bet placement confetti/success animation
+- [ ] Improved empty states with illustrations
+- [ ] My Bets sidebar always visible on desktop
 
 ## Decisions
 - 2026-02-08: OddsPapi Key 1 exhausted — rotation from Key 2+

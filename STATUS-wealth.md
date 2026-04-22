@@ -1,5 +1,5 @@
 # Wealth Dashboard — STATUS.md
-> Updated: 2026-04-01
+> Updated: 2026-04-07
 
 ## What's Live
 - **EN URL:** https://gary-yong.com/wealth.html (password-gated)
@@ -30,29 +30,36 @@ Full Chinese translation available at wealth-zh.html.
 - All data sourced from `/Users/moltbot/clawd/memory/wealth-gary.md`
 - To update: edit `wealth-gary.md` with new numbers → run price refresh script → redeploy both wealth.html + wealth-zh.html
 
-## Current State (2026-04-01)
-- Both EN + ZH live and deployed ✅
-- Portfolio data refreshed from Apr 1, 2026 live market prices
-  - FX: USD/CAD 1.3909
-  - TFSA: $17,705 CAD (+10.78% all-time, approx)
-  - Crypto: $1,258 CAD (BTC @ ~$68,100 USD)
-  - Total NW: ~$43,666 CAD
-  - RRSP: $19,275 (not refreshed since Mar 13 — Gary to confirm on Wealthsimple)
-- Key movers Apr 1: GLD +7.0% (macro hedge thesis working), PLTR -19.6% (cut recommended)
-- Action items cleaned up — PLTR cut elevated to #1 urgent
+## Current State (2026-04-07)
+- Both EN + ZH dashboards updated locally with Gary's Apr 7 screenshots ✅
+- Latest synced numbers:
+  - Wealthsimple total: $23,601.04
+  - TFSA: $18,735.93 (+13.72% all-time)
+  - RRSP: $19,445.03
+  - Crypto: $1,432.00
+  - Chequing: $2,630.68
+  - Total personal NW: ~$42,244 CAD
+- Position changes captured:
+  - NVDA now ~11.4% of TFSA after significant increase
+  - MSFT now appears as a new 1-share position
+  - Cash buffer down to ~$2,125, meaning more capital got deployed
+  - MKT deteriorated further to -54% ($230 left)
+- Primary action item now: decide whether to cut MKT or treat it as a true lottery-ticket hold
 
 ## What's Local Only
-- Nothing pending — both files deployed
+- EN + ZH files updated locally from Apr 7 screenshots
+- Still needs deploy to S3 + CloudFront invalidation
 
 ## Next Actions (Gary)
-- [ ] Cut PLTR on Wealthsimple (0.1944 shares, -19.6%, $40 left) → redeploy to SPY or NVDA
-- [ ] Decide on MKT position (-36%, $320 remaining) — cut or keep as lottery ticket
-- [ ] Move emergency fund from CIBC (0%) → EQ Bank (~3.5%) — 10 min online setup
-- [ ] Verify RRSP current NAV on Wealthsimple → send Dr.Molt screenshot to update
+- [ ] Decide on MKT position (-54%, $230 remaining) — cut or keep as true lottery ticket
+- [ ] Move emergency fund from CIBC / idle cash setup into a real high-interest bucket (EQ or Wealthsimple Save)
+- [ ] Clean up PLTR on Wealthsimple (0.1944 shares, ~-$43 left) when convenient → redeploy to SPY/NVDA/QQQ
+- [ ] Clarify the purpose of the USD savings account once it goes live
 
 ## Next Actions (Dr.Molt)
-- [ ] Monthly portfolio refresh — next scheduled May 1
-- [ ] Update wealth-gary.md when Gary sends RRSP + portfolio update
+- [ ] Deploy updated wealth.html + wealth-zh.html
+- [ ] Monthly portfolio refresh — next scheduled May 1 unless Gary sends sooner
+- [ ] Keep historical trend line updated with each screenshot sync
 
 ## Backlog
 - [ ] Monthly/quarterly performance tracking (historical chart auto-populated over time)
@@ -61,14 +68,13 @@ Full Chinese translation available at wealth-zh.html.
 - [x] Savings rate calculator — **DONE** (interactive FI slider added Mar 23)
 - [x] Portfolio trend chart — **DONE** (time-series with range toggle added Mar 23)
 
-## Completed This Session (2026-04-01)
-- ✅ Chinese version (wealth-zh.html) — full translation of all UI, actions, watchlist, tables
-- ✅ EN ↔ 中文 toggle button added to both pages (header, top-right)
-- ✅ sessionStorage auto-unlock — enter password once, switch languages freely
-- ✅ All positions refreshed at live Apr 1 prices (Yahoo Finance)
-- ✅ PLTR elevated to #1 urgent action (-19.6%, worsening)
-- ✅ Stale to-dos removed (NVDA week 2-3 dry powder item, old TSLA/DASH items)
-- ✅ PM Dashboard kanban updated
+## Completed This Session (2026-04-07)
+- ✅ Synced wealth profile from Gary's latest screenshots
+- ✅ Refreshed RRSP / TFSA / crypto / chequing balances in memory/wealth-gary.md
+- ✅ Updated English dashboard with Apr 7 numbers and revised action priorities
+- ✅ Updated Chinese dashboard to match the latest portfolio state
+- ✅ Added Apr 7 point to the portfolio trend history
+- ✅ Status doc refreshed with latest state and next actions
 
 ## Decisions
 - 2026-03-06: Password-gated JS gate (unlisted URL approach)

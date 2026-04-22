@@ -55,16 +55,25 @@ class StrategyExecutor:
                 'slug': 'mh',  # For client_order_id prefix
                 'type': 'momentum_hunter',
                 'universe': ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'META', 'TSLA', 'AMZN', 'JPM', 'V', 'MA'],
-                'max_positions': 8,
-                'initial_capital': 20000
+                'max_positions': 6,
+                'initial_capital': 20000,
+                'min_trend_strength': 0.012,
+                'buy_rsi_min': 55,
+                'sell_rsi_floor': 45,
+                'min_macd_hist_pct': 0.0015
             },
             2: {
                 'name': 'Mean Reversion',
                 'slug': 'mr',  # For client_order_id prefix
                 'type': 'mean_reversion', 
                 'universe': ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'META', 'TSLA', 'AMZN', 'JPM', 'V', 'MA'],
-                'max_positions': 6,
-                'initial_capital': 20000
+                'max_positions': 4,
+                'initial_capital': 20000,
+                'buy_zscore_threshold': -2.35,
+                'buy_rsi_max': 32,
+                'exit_zscore_threshold': -0.25,
+                'profit_take_pct': 0.025,
+                'stop_loss_pct': 0.035
             },
             3: {
                 'name': 'Sector Rotator',
@@ -72,23 +81,35 @@ class StrategyExecutor:
                 'type': 'sector_rotator',
                 'universe': ['XLK', 'XLF', 'XLE', 'XLV', 'XLI', 'XLP', 'XLU', 'XLY', 'XLC', 'XLRE', 'XLB'],
                 'max_positions': 3,
-                'initial_capital': 20000
+                'initial_capital': 20000,
+                'min_momentum_pct': 1.0,
+                'top_n': 2,
+                'rebalance_buffer_pct': 0.75
             },
             4: {
                 'name': 'Value & Dividends',
                 'slug': 'vd',  # For client_order_id prefix
                 'type': 'value_dividends',
                 'universe': ['VZ', 'T', 'KO', 'PEP', 'PG', 'JNJ', 'XOM', 'CVX', 'ABBV', 'PFE', 'IBM', 'MMM'],
-                'max_positions': 10,
-                'initial_capital': 20000
+                'max_positions': 6,
+                'initial_capital': 20000,
+                'buy_rsi_max': 35,
+                'sell_rsi_min': 67,
+                'profit_take_pct': 0.08,
+                'stop_loss_pct': 0.06
             },
             5: {
                 'name': 'Volatility Breakout',
                 'slug': 'vb',  # For client_order_id prefix
                 'type': 'volatility_breakout',
                 'universe': ['TSLA', 'NVDA', 'AMD', 'COIN', 'MSTR', 'SQ', 'SHOP', 'ROKU', 'PLTR', 'SNAP'],
-                'max_positions': 6,
-                'initial_capital': 20000
+                'max_positions': 4,
+                'initial_capital': 20000,
+                'breakout_atr_multiple': 1.0,
+                'volume_multiple': 1.5,
+                'stop_atr_multiple': 0.8,
+                'max_hold_days': 3,
+                'profit_take_atr_multiple': 1.8
             }
         }
         
@@ -382,57 +403,74 @@ class StrategyExecutor:
     
     def momentum_hunter_signals(self, data: Dict[str, pd.DataFrame]) -> List[Dict]:
         """
-        Momentum Hunter Strategy Logic:
-        Buy: price > 20-day EMA AND RSI > 50 AND MACD histogram > 0
-        Sell: price < 20-day EMA OR RSI < 40
+        Refined momentum logic:
+        Buy only when trend, relative strength, and MACD expansion all align.
+        Sell faster when momentum fades instead of waiting for a full breakdown.
         """
         signals = []
+        cfg = next(s for s in self.strategies.values() if s['type'] == 'momentum_hunter')
         
         for symbol, df in data.items():
-            if len(df) < 50:  # Need enough data
+            if len(df) < 50:
                 continue
             
             try:
-                # Calculate indicators
                 df['ema20'] = ta.trend.EMAIndicator(df['close'], window=20).ema_indicator()
+                df['ema50'] = ta.trend.EMAIndicator(df['close'], window=50).ema_indicator()
                 df['rsi'] = ta.momentum.RSIIndicator(df['close'], window=14).rsi()
                 macd = ta.trend.MACD(df['close'])
                 df['macd_histogram'] = macd.macd_diff()
+                df['macd_hist_prev'] = df['macd_histogram'].shift(1)
                 
                 latest = df.iloc[-1]
                 price = latest['close']
                 ema20 = latest['ema20']
+                ema50 = latest['ema50']
                 rsi = latest['rsi']
                 macd_hist = latest['macd_histogram']
+                macd_hist_prev = latest['macd_hist_prev']
                 
-                # Buy signal
-                if (price > ema20 and rsi > 50 and macd_hist > 0 and 
-                    not pd.isna(ema20) and not pd.isna(rsi) and not pd.isna(macd_hist)):
-                    reason = f"Momentum buy: Price ${price:.2f} > EMA20 ${ema20:.2f}, RSI {rsi:.1f} > 50, MACD hist {macd_hist:.4f} > 0"
+                if any(pd.isna(v) for v in [ema20, ema50, rsi, macd_hist, macd_hist_prev]):
+                    continue
+                
+                trend_strength = (price / ema20) - 1
+                ema_stack = ema20 > ema50
+                macd_expanding = macd_hist > macd_hist_prev > 0
+                
+                if (
+                    price > ema20 > ema50 and
+                    ema_stack and
+                    rsi >= cfg['buy_rsi_min'] and
+                    trend_strength >= cfg['min_trend_strength'] and
+                    macd_hist >= cfg['min_macd_hist_pct'] * price and
+                    macd_expanding
+                ):
+                    reason = (
+                        f"Momentum buy: {symbol} trend confirmed, price ${price:.2f} above EMA20 ${ema20:.2f} and EMA50 ${ema50:.2f}, "
+                        f"RSI {rsi:.1f}, MACD histogram expanding"
+                    )
                     signals.append({
                         'symbol': symbol,
                         'action': 'buy',
                         'price': price,
                         'reason': reason,
-                        'confidence': min(1.0, (rsi - 50) / 30 + (price/ema20 - 1) * 5)
+                        'confidence': min(1.0, 0.45 + trend_strength * 10 + max(0, rsi - cfg['buy_rsi_min']) / 25)
                     })
-                
-                # Sell signal  
-                elif price < ema20 or rsi < 40:
-                    reason = f"Momentum sell: "
+                elif price < ema20 or rsi <= cfg['sell_rsi_floor'] or macd_hist < 0:
+                    reasons = []
                     if price < ema20:
-                        reason += f"Price ${price:.2f} < EMA20 ${ema20:.2f}"
-                    if rsi < 40:
-                        reason += f"RSI {rsi:.1f} < 40"
-                    
+                        reasons.append(f"price ${price:.2f} < EMA20 ${ema20:.2f}")
+                    if rsi <= cfg['sell_rsi_floor']:
+                        reasons.append(f"RSI {rsi:.1f} <= {cfg['sell_rsi_floor']}")
+                    if macd_hist < 0:
+                        reasons.append("MACD histogram turned negative")
                     signals.append({
                         'symbol': symbol,
                         'action': 'sell',
                         'price': price,
-                        'reason': reason,
-                        'confidence': 0.8
+                        'reason': f"Momentum sell: {'; '.join(reasons)}",
+                        'confidence': 0.82
                     })
-                    
             except Exception as e:
                 logger.warning(f"Error calculating momentum signals for {symbol}: {e}")
                 continue
@@ -441,24 +479,22 @@ class StrategyExecutor:
     
     def mean_reversion_signals(self, data: Dict[str, pd.DataFrame]) -> List[Dict]:
         """
-        Mean Reversion Strategy Logic:
-        Buy: price < lower Bollinger Band AND Z-score < -2
-        Sell: price >= 20-day SMA OR price >= upper Bollinger Band
+        Refined mean reversion logic:
+        Only buy real washouts, and exit earlier once the bounce materializes.
         """
         signals = []
+        cfg = next(s for s in self.strategies.values() if s['type'] == 'mean_reversion')
         
         for symbol, df in data.items():
             if len(df) < 30:
                 continue
             
             try:
-                # Calculate indicators
                 bb = ta.volatility.BollingerBands(df['close'], window=20, window_dev=2)
                 df['bb_lower'] = bb.bollinger_lband()
                 df['bb_upper'] = bb.bollinger_hband()
                 df['sma20'] = ta.trend.SMAIndicator(df['close'], window=20).sma_indicator()
-                
-                # Z-score calculation
+                df['rsi'] = ta.momentum.RSIIndicator(df['close'], window=14).rsi()
                 df['close_std'] = df['close'].rolling(window=20).std()
                 df['z_score'] = (df['close'] - df['sma20']) / df['close_std']
                 
@@ -468,35 +504,38 @@ class StrategyExecutor:
                 bb_upper = latest['bb_upper']
                 sma20 = latest['sma20']
                 z_score = latest['z_score']
+                rsi = latest['rsi']
                 
-                # Buy signal
-                if (price < bb_lower and z_score < -2 and 
-                    not pd.isna(bb_lower) and not pd.isna(z_score)):
-                    reason = f"Mean reversion buy: Price ${price:.2f} < BB Lower ${bb_lower:.2f}, Z-score {z_score:.2f} < -2"
+                if any(pd.isna(v) for v in [bb_lower, bb_upper, sma20, z_score, rsi]):
+                    continue
+                
+                if price < bb_lower and z_score <= cfg['buy_zscore_threshold'] and rsi <= cfg['buy_rsi_max']:
+                    reason = (
+                        f"Mean reversion buy: {symbol} washed out, price ${price:.2f} below lower band ${bb_lower:.2f}, "
+                        f"Z-score {z_score:.2f}, RSI {rsi:.1f}"
+                    )
                     signals.append({
                         'symbol': symbol,
-                        'action': 'buy', 
+                        'action': 'buy',
                         'price': price,
                         'reason': reason,
-                        'confidence': min(1.0, abs(z_score) / 3)
+                        'confidence': min(1.0, 0.5 + abs(z_score) / 5)
                     })
-                
-                # Sell signal
-                elif (price >= sma20 or price >= bb_upper) and not pd.isna(sma20) and not pd.isna(bb_upper):
-                    reason = f"Mean reversion sell: "
+                elif z_score >= cfg['exit_zscore_threshold'] or price >= sma20 or price >= bb_upper:
+                    reasons = []
+                    if z_score >= cfg['exit_zscore_threshold']:
+                        reasons.append(f"Z-score recovered to {z_score:.2f}")
                     if price >= sma20:
-                        reason += f"Price ${price:.2f} >= SMA20 ${sma20:.2f}"
+                        reasons.append(f"price ${price:.2f} >= SMA20 ${sma20:.2f}")
                     if price >= bb_upper:
-                        reason += f"Price ${price:.2f} >= BB Upper ${bb_upper:.2f}"
-                    
+                        reasons.append(f"price ${price:.2f} >= BB upper ${bb_upper:.2f}")
                     signals.append({
                         'symbol': symbol,
                         'action': 'sell',
                         'price': price,
-                        'reason': reason,
+                        'reason': f"Mean reversion sell: {'; '.join(reasons)}",
                         'confidence': 0.8
                     })
-                    
             except Exception as e:
                 logger.warning(f"Error calculating mean reversion signals for {symbol}: {e}")
                 continue
@@ -505,20 +544,18 @@ class StrategyExecutor:
     
     def sector_rotator_signals(self, data: Dict[str, pd.DataFrame]) -> List[Dict]:
         """
-        Sector Rotator Strategy Logic:
-        Every 20 trading days, rank sectors by 20-day momentum (rate of change)
-        Buy top 3 sectors, sell others
+        Refined sector rotation logic:
+        Concentrate only in the strongest 2 sectors and avoid weak/noisy leadership.
         """
         signals = []
+        cfg = next(s for s in self.strategies.values() if s['type'] == 'sector_rotator')
         
-        # Calculate 20-day momentum for each sector
         sector_momentum = {}
         for symbol, df in data.items():
             if len(df) < 25:
                 continue
             
             try:
-                # 20-day rate of change
                 current_price = df['close'].iloc[-1]
                 price_20_days_ago = df['close'].iloc[-21]
                 momentum = (current_price - price_20_days_ago) / price_20_days_ago * 100
@@ -533,81 +570,79 @@ class StrategyExecutor:
         if not sector_momentum:
             return signals
         
-        # Sort by momentum, get top 3
         sorted_sectors = sorted(sector_momentum.items(), key=lambda x: x[1]['momentum'], reverse=True)
-        top_3_sectors = [s[0] for s in sorted_sectors[:3]]
+        leaders = [s[0] for s in sorted_sectors[:cfg['top_n']] if s[1]['momentum'] >= cfg['min_momentum_pct']]
+        leader_cutoff = sorted_sectors[cfg['top_n'] - 1][1]['momentum'] if len(sorted_sectors) >= cfg['top_n'] else None
         
-        # Generate signals
         for symbol, data_point in sector_momentum.items():
             price = data_point['price']
             momentum = data_point['momentum']
             
-            if symbol in top_3_sectors:
-                reason = f"Sector rotation buy: {symbol} momentum {momentum:.2f}% (top 3)"
+            if symbol in leaders:
+                reason = f"Sector rotation buy: {symbol} leadership confirmed at {momentum:.2f}% 20-day momentum"
                 signals.append({
                     'symbol': symbol,
                     'action': 'buy',
                     'price': price,
                     'reason': reason,
-                    'confidence': 0.9
+                    'confidence': min(0.95, 0.55 + max(momentum, 0) / 15)
                 })
             else:
-                reason = f"Sector rotation sell: {symbol} momentum {momentum:.2f}% (not top 3)"
-                signals.append({
-                    'symbol': symbol,
-                    'action': 'sell',
-                    'price': price,
-                    'reason': reason,
-                    'confidence': 0.7
-                })
+                weak_vs_leaders = leader_cutoff is not None and momentum < (leader_cutoff - cfg['rebalance_buffer_pct'])
+                if momentum < cfg['min_momentum_pct'] or weak_vs_leaders:
+                    reason = f"Sector rotation sell: {symbol} momentum {momentum:.2f}% no longer strong enough"
+                    signals.append({
+                        'symbol': symbol,
+                        'action': 'sell',
+                        'price': price,
+                        'reason': reason,
+                        'confidence': 0.72
+                    })
         
         return signals
     
     def value_dividends_signals(self, data: Dict[str, pd.DataFrame]) -> List[Dict]:
         """
-        Value & Dividends Strategy Logic:
-        Buy: RSI < 40 (oversold value stocks)
-        Sell: RSI > 70 OR price up 10% from entry
+        Refined value logic:
+        Be pickier on entries and recycle capital earlier instead of waiting for huge moves.
         """
         signals = []
+        cfg = next(s for s in self.strategies.values() if s['type'] == 'value_dividends')
         
         for symbol, df in data.items():
             if len(df) < 20:
                 continue
             
             try:
-                # Calculate RSI
                 df['rsi'] = ta.momentum.RSIIndicator(df['close'], window=14).rsi()
+                df['sma20'] = ta.trend.SMAIndicator(df['close'], window=20).sma_indicator()
                 
                 latest = df.iloc[-1]
                 price = latest['close']
                 rsi = latest['rsi']
+                sma20 = latest['sma20']
                 
-                if pd.isna(rsi):
+                if pd.isna(rsi) or pd.isna(sma20):
                     continue
                 
-                # Buy signal
-                if rsi < 40:
-                    reason = f"Value buy: {symbol} RSI {rsi:.1f} < 40 (oversold dividend stock)"
+                if rsi <= cfg['buy_rsi_max'] and price <= sma20 * 0.99:
+                    reason = f"Value buy: {symbol} oversold with RSI {rsi:.1f} and price below 20-day mean"
                     signals.append({
                         'symbol': symbol,
                         'action': 'buy',
                         'price': price,
                         'reason': reason,
-                        'confidence': (40 - rsi) / 40
+                        'confidence': min(1.0, max(0.0, (cfg['buy_rsi_max'] - rsi) / 20 + 0.35))
                     })
-                
-                # Sell signal
-                elif rsi > 70:
-                    reason = f"Value sell: {symbol} RSI {rsi:.1f} > 70 (overbought)"
+                elif rsi >= cfg['sell_rsi_min']:
+                    reason = f"Value sell: {symbol} RSI {rsi:.1f} >= {cfg['sell_rsi_min']}"
                     signals.append({
                         'symbol': symbol,
                         'action': 'sell',
                         'price': price,
                         'reason': reason,
-                        'confidence': (rsi - 70) / 30
+                        'confidence': min(1.0, 0.6 + (rsi - cfg['sell_rsi_min']) / 20)
                     })
-                    
             except Exception as e:
                 logger.warning(f"Error calculating value signals for {symbol}: {e}")
                 continue
@@ -616,20 +651,20 @@ class StrategyExecutor:
     
     def volatility_breakout_signals(self, data: Dict[str, pd.DataFrame]) -> List[Dict]:
         """
-        Volatility Breakout Strategy Logic:
-        Buy: today's price > yesterday's high + 1.5x ATR(14) AND volume > 2x avg
-        Sell: price < entry - 1x ATR OR after 5 days max hold
+        Refined breakout logic:
+        Trigger sooner on valid expansion, but use tighter exits and fewer simultaneous names.
         """
         signals = []
+        cfg = next(s for s in self.strategies.values() if s['type'] == 'volatility_breakout')
         
         for symbol, df in data.items():
             if len(df) < 20:
                 continue
             
             try:
-                # Calculate ATR and average volume
                 df['atr'] = ta.volatility.AverageTrueRange(df['high'], df['low'], df['close'], window=14).average_true_range()
                 df['avg_volume'] = df['volume'].rolling(window=20).mean()
+                df['sma20'] = ta.trend.SMAIndicator(df['close'], window=20).sma_indicator()
                 
                 latest = df.iloc[-1]
                 previous = df.iloc[-2]
@@ -639,24 +674,26 @@ class StrategyExecutor:
                 atr = latest['atr']
                 volume = latest['volume']
                 avg_volume = latest['avg_volume']
+                sma20 = latest['sma20']
                 
-                if pd.isna(atr) or pd.isna(avg_volume):
+                if any(pd.isna(v) for v in [atr, avg_volume, sma20]):
                     continue
                 
-                breakout_threshold = yesterday_high + (1.5 * atr)
-                volume_threshold = 2 * avg_volume
+                breakout_threshold = yesterday_high + (cfg['breakout_atr_multiple'] * atr)
+                volume_threshold = cfg['volume_multiple'] * avg_volume
                 
-                # Buy signal
-                if price > breakout_threshold and volume > volume_threshold:
-                    reason = f"Volatility buy: {symbol} ${price:.2f} > breakout ${breakout_threshold:.2f}, volume {volume:,.0f} > {volume_threshold:,.0f}"
+                if price > breakout_threshold and volume > volume_threshold and price > sma20:
+                    reason = (
+                        f"Volatility buy: {symbol} cleared breakout ${breakout_threshold:.2f}, volume {volume:,.0f} > {volume_threshold:,.0f}, "
+                        f"trend above SMA20"
+                    )
                     signals.append({
                         'symbol': symbol,
                         'action': 'buy',
                         'price': price,
                         'reason': reason,
-                        'confidence': min(1.0, (price / breakout_threshold - 1) * 10)
+                        'confidence': min(1.0, 0.45 + (price / breakout_threshold - 1) * 12)
                     })
-                    
             except Exception as e:
                 logger.warning(f"Error calculating breakout signals for {symbol}: {e}")
                 continue
@@ -664,14 +701,15 @@ class StrategyExecutor:
         return signals
     
     def check_volatility_breakout_exits(self, strategy_id: int, positions: Dict[str, Dict]) -> List[Dict]:
-        """Check exit conditions for volatility breakout positions."""
+        """Check tighter exit conditions for volatility breakout positions."""
         signals = []
+        cfg = next(s for s in self.strategies.values() if s['type'] == 'volatility_breakout')
         
         if not positions:
             return signals
         
         symbols = list(positions.keys())
-        data = self.get_historical_data(symbols, days=10)  # Short lookback for exit signals
+        data = self.get_historical_data(symbols, days=30)
         
         for symbol in symbols:
             if symbol not in data:
@@ -679,45 +717,63 @@ class StrategyExecutor:
             
             try:
                 df = data[symbol]
-                if len(df) < 5:
+                if len(df) < 15:
                     continue
                 
-                # Calculate ATR for exit logic
                 df['atr'] = ta.volatility.AverageTrueRange(df['high'], df['low'], df['close'], window=14).average_true_range()
+                df['ema10'] = ta.trend.EMAIndicator(df['close'], window=10).ema_indicator()
                 
                 latest = df.iloc[-1]
                 price = latest['close']
                 atr = latest['atr']
+                ema10 = latest['ema10']
                 
-                if pd.isna(atr):
+                if pd.isna(atr) or pd.isna(ema10):
                     continue
                 
                 position = positions[symbol]
                 entry_price = position['avg_cost_basis']
-                
-                # Check exit conditions
-                days_held = (pd.Timestamp.now() - pd.Timestamp(position['updated_at'])).days
-                stop_loss_price = entry_price - atr
+                opened_at = position.get('last_buy_time') or position.get('updated_at')
+                days_held = (pd.Timestamp.now(tz='UTC') - pd.Timestamp(opened_at, tz='UTC')).days if opened_at else 0
+                stop_loss_price = entry_price - (cfg['stop_atr_multiple'] * atr)
+                profit_take_price = entry_price + (cfg['profit_take_atr_multiple'] * atr)
                 
                 if price < stop_loss_price:
-                    reason = f"Volatility exit: {symbol} ${price:.2f} < stop ${stop_loss_price:.2f} (entry - 1x ATR)"
+                    reason = f"Volatility exit: {symbol} ${price:.2f} < stop ${stop_loss_price:.2f}"
                     signals.append({
                         'symbol': symbol,
                         'action': 'sell',
                         'price': price,
                         'reason': reason,
-                        'confidence': 0.9
+                        'confidence': 0.92
                     })
-                elif days_held >= 5:
-                    reason = f"Volatility exit: {symbol} max hold period (5 days) reached"
+                elif price >= profit_take_price:
+                    reason = f"Volatility exit: {symbol} hit profit target ${profit_take_price:.2f}"
+                    signals.append({
+                        'symbol': symbol,
+                        'action': 'sell',
+                        'price': price,
+                        'reason': reason,
+                        'confidence': 0.86
+                    })
+                elif price < ema10:
+                    reason = f"Volatility exit: {symbol} lost short-term trend, price ${price:.2f} < EMA10 ${ema10:.2f}"
+                    signals.append({
+                        'symbol': symbol,
+                        'action': 'sell',
+                        'price': price,
+                        'reason': reason,
+                        'confidence': 0.8
+                    })
+                elif days_held >= cfg['max_hold_days']:
+                    reason = f"Volatility exit: {symbol} max hold period ({cfg['max_hold_days']} days) reached"
                     signals.append({
                         'symbol': symbol,
                         'action': 'sell', 
                         'price': price,
                         'reason': reason,
-                        'confidence': 0.8
+                        'confidence': 0.78
                     })
-                    
             except Exception as e:
                 logger.warning(f"Error checking volatility exit for {symbol}: {e}")
                 continue
@@ -727,6 +783,7 @@ class StrategyExecutor:
     def check_value_dividend_exits(self, strategy_id: int, positions: Dict[str, Dict]) -> List[Dict]:
         """Check exit conditions for value dividend positions."""
         signals = []
+        cfg = next(s for s in self.strategies.values() if s['type'] == 'value_dividends')
         
         if not positions:
             return signals
@@ -743,22 +800,40 @@ class StrategyExecutor:
                 entry_price = position['avg_cost_basis']
                 
                 df = data[symbol]
+                df['rsi'] = ta.momentum.RSIIndicator(df['close'], window=14).rsi()
                 latest = df.iloc[-1]
                 current_price = latest['close']
+                rsi = latest['rsi']
+                profit_pct = (current_price - entry_price) / entry_price
+                loss_pct = (current_price - entry_price) / entry_price
                 
-                # 10% profit target
-                profit_pct = (current_price - entry_price) / entry_price * 100
-                
-                if profit_pct >= 10:
-                    reason = f"Value exit: {symbol} up {profit_pct:.1f}% from entry (10% target reached)"
+                if profit_pct >= cfg['profit_take_pct']:
+                    reason = f"Value exit: {symbol} up {profit_pct * 100:.1f}% from entry"
                     signals.append({
                         'symbol': symbol,
                         'action': 'sell',
                         'price': current_price,
                         'reason': reason,
-                        'confidence': 0.8
+                        'confidence': 0.82
                     })
-                    
+                elif loss_pct <= -cfg['stop_loss_pct']:
+                    reason = f"Value exit: {symbol} down {abs(loss_pct) * 100:.1f}% from entry"
+                    signals.append({
+                        'symbol': symbol,
+                        'action': 'sell',
+                        'price': current_price,
+                        'reason': reason,
+                        'confidence': 0.88
+                    })
+                elif not pd.isna(rsi) and rsi >= cfg['sell_rsi_min']:
+                    reason = f"Value exit: {symbol} RSI {rsi:.1f} reached exit zone"
+                    signals.append({
+                        'symbol': symbol,
+                        'action': 'sell',
+                        'price': current_price,
+                        'reason': reason,
+                        'confidence': 0.76
+                    })
             except Exception as e:
                 logger.warning(f"Error checking value exit for {symbol}: {e}")
                 continue

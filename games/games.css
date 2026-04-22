@@ -712,26 +712,17 @@ html[data-theme="light"] .roulette-display {
 
 .roulette-display.spinning {
   border-color: var(--color-primary);
-  box-shadow: 
+  box-shadow:
     inset 0 0 30px rgba(0, 0, 0, 0.8),
     0 0 60px rgba(56, 189, 248, 0.6),
     0 0 100px rgba(56, 189, 248, 0.3);
-  animation: pulse-border 0.5s ease-in-out infinite;
+  will-change: opacity;
+  animation: pulse-border 0.8s ease-in-out infinite;
 }
 
 @keyframes pulse-border {
-  0%, 100% {
-    box-shadow: 
-      inset 0 0 30px rgba(0, 0, 0, 0.8),
-      0 0 60px rgba(56, 189, 248, 0.6),
-      0 0 100px rgba(56, 189, 248, 0.3);
-  }
-  50% {
-    box-shadow: 
-      inset 0 0 30px rgba(0, 0, 0, 0.8),
-      0 0 80px rgba(56, 189, 248, 0.8),
-      0 0 120px rgba(56, 189, 248, 0.5);
-  }
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.75; }
 }
 
 .roulette-display.reveal {
@@ -3223,11 +3214,6 @@ html[data-theme="light"] .odds-card .odds-value {
   animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
 .event-status-badge.finished {
   background: rgba(148, 163, 184, 0.2);
   color: #94a3b8;
@@ -4348,88 +4334,103 @@ html[data-theme="light"] .pach-group input[type="number"] { background:#fff; bor
 @media (max-width:768px) {
   .pachinko-layout { grid-template-columns:1fr; }
 }
-/* ========== DARK THEME CONSISTENCY IMPROVEMENTS ========== */
-/* Ensure all games use consistent dark theme colors */
-.game-title {
-  background: linear-gradient(135deg, #38bdf8, #22c55e);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+/* ========== NEON 777 — Cross-Game Consistency ========== */
+/* NOTE: .game-title gradient is set in the NEON 777 OVERRIDES block at the bottom */
 
 /* Consistent background colors for game sections */
-.betting-section, .game-area, .pach-group, .crash-bet-section, 
+.betting-section, .game-area, .pach-group, .crash-bet-section,
 .poker-modal-content, .bet-setup-section, .confirmation-modal .bet-setup-section {
-  background: rgba(15, 23, 42, 0.5) !important;
-  border: 1px solid rgba(148, 163, 184, 0.3) !important;
-  border-radius: 12px;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0;
 }
 
 /* Consistent text colors */
-.game-section h3, .game-section h4, 
+.game-section h3, .game-section h4,
 .betting-controls h3, .betting-controls h4,
 .poker-lobby h3, .crash-bet-section h3 {
-  color: #e2e8f0;
+  color: var(--cream);
+  font-family: var(--font-deco);
+  letter-spacing: .08em;
+  text-transform: uppercase;
   margin-bottom: 1rem;
 }
 
 /* Consistent muted text */
 .game-section p, .bet-info, .poker-table-info,
 .crash-bet-status, .feed-item {
-  color: #94a3b8;
+  color: var(--ink-muted);
 }
 
 /* Consistent input styling */
 input[type="number"], input[type="text"], input[type="password"] {
-  background: rgba(15, 23, 42, 0.8) !important;
-  border: 2px solid rgba(148, 163, 184, 0.5) !important;
-  color: #e2e8f0 !important;
-  border-radius: 8px;
+  background: var(--bg-2) !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--ink) !important;
+  border-radius: 0;
+  font-family: var(--font-mono);
 }
 
 input[type="number"]:focus, input[type="text"]:focus, input[type="password"]:focus {
-  border-color: #f59e0b !important;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 0 2px rgba(255,181,77,.2), 0 0 14px rgba(255,181,77,.2) !important;
+  outline: none;
 }
 
-/* Consistent button styling */
-.btn-primary, .quick-bet-btn, .color-bet-btn, 
+/* Consistent button styling — Neon 777 amber primary */
+.btn-primary, .quick-bet-btn, .color-bet-btn,
 .pqb, .prb.active, .pbb.active, .cqb {
-  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-  border: 2px solid #f59e0b !important;
-  color: #0a0e1a !important;
-  font-weight: 600;
+  background: var(--amber) !important;
+  border: none !important;
+  color: var(--bg) !important;
+  font-family: var(--font-deco);
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  box-shadow: 0 0 16px rgba(255,181,77,.4), 0 4px 0 rgba(0,0,0,.4);
 }
 
 .btn-primary:hover, .quick-bet-btn:hover, .color-bet-btn:hover {
-  background: linear-gradient(135deg, #d97706, #b45309) !important;
+  filter: brightness(1.1);
   transform: translateY(-2px);
 }
 
-/* Win/Loss colors consistency */
+.btn-primary:active, .quick-bet-btn:active, .color-bet-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 10px rgba(255,181,77,.3), 0 2px 0 rgba(0,0,0,.4);
+}
+
+/* Win/Loss colors — Neon 777 amber wins, neon-pink losses */
 .win, .profit, .bh-value.profit {
-  color: #22c55e !important;
+  color: var(--amber) !important;
+  text-shadow: 0 0 8px rgba(255,181,77,.4);
 }
 
 .loss, .bh-value.loss {
-  color: #ef4444 !important;
+  color: var(--neon-pink) !important;
+  text-shadow: 0 0 8px rgba(255,90,168,.4);
 }
 
 /* Credit amount styling consistency */
 .credit-amount, .credits-amount, .balance-amount {
-  color: #f59e0b !important;
+  color: var(--amber) !important;
+  font-family: var(--font-mono);
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Canvas game backgrounds */
+/* Canvas game backgrounds — Neon 777 plum */
 .pachinko-canvas-wrap, .crash-canvas-wrap {
-  background: #0a0e1a !important;
-  border: 2px solid rgba(148, 163, 184, 0.2) !important;
+  background: var(--bg) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
 }
 
 /* Modal overlays */
 .poker-modal-overlay, .confirmation-overlay, .bet-history-modal {
-  background: rgba(0, 0, 0, 0.8) !important;
+  background: rgba(10,3,8,.85) !important;
+  backdrop-filter: blur(12px);
 }
 
 /* ========== MOBILE TOUCH TARGET IMPROVEMENTS ========== */
@@ -5882,4 +5883,519 @@ html[data-theme="light"] .rl-player-row {
 .coin {
   box-shadow: 0 0 24px rgba(255,181,77,.3);
 }
+
+.coin-front {
+  background: radial-gradient(circle at 35% 30%, #fff0c5 0%, var(--bulb) 40%, var(--amber-hot) 90%) !important;
+  color: var(--bg) !important;
+  border: 6px solid var(--amber) !important;
+  text-shadow: 0 0 8px rgba(255,181,77,.5);
+}
+
+.coin-back {
+  background: radial-gradient(circle at 35% 30%, #d1a5ff 0%, var(--neon-violet) 40%, #6d28d9 90%) !important;
+  color: var(--cream) !important;
+  border: 6px solid var(--neon-violet) !important;
+  text-shadow: 0 0 8px rgba(176,100,255,.5);
+}
+
+/* ─── Roulette Wheel — Neon 777 palette ─── */
+.wheel-segment.red    { background: var(--neon-red) !important; }
+.wheel-segment.black  { background: #0a0308 !important; }
+.wheel-segment.green  { background: #2d8a5a !important; }
+
+/* Roulette rl-* modern belt */
+.rl-container .rl-pill.red,
+.rl-chip.red,
+.rl-bet-btn.red       { border-color: var(--neon-red) !important; color: var(--neon-red) !important; background: rgba(255,58,92,.1) !important; }
+.rl-container .rl-pill.black,
+.rl-chip.black,
+.rl-bet-btn.black     { border-color: var(--ink-muted) !important; color: var(--cream) !important; background: rgba(0,0,0,.4) !important; }
+.rl-container .rl-pill.green,
+.rl-chip.green,
+.rl-bet-btn.green     { border-color: var(--cream) !important; color: var(--cream) !important; background: rgba(255,233,181,.08) !important; }
+
+/* ─── Playing Cards ─── */
+.playing-card {
+  background: linear-gradient(180deg, #fff9ef, #f5e8c8) !important;
+  border: 1px solid var(--line-strong) !important;
+  border-radius: 3px !important;
+  font-family: var(--font-serif) !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,.4) !important;
+}
+
+.playing-card.red,
+.playing-card.red .card-center-suit,
+.playing-card.red .card-rank { color: var(--neon-red) !important; }
+
+.playing-card.black,
+.playing-card.black .card-center-suit,
+.playing-card.black .card-rank { color: #1a0308 !important; }
+
+/* My cards — amber accent */
+.playing-card.my-card {
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 12px rgba(255,181,77,.5), 0 2px 8px rgba(0,0,0,.3) !important;
+}
+
+/* Card back — Neon 777 violet/pink stripes */
+.playing-card.card-back {
+  background: repeating-linear-gradient(45deg, var(--neon-violet) 0 6px, var(--neon-pink) 6px 12px) !important;
+  border-color: var(--line-strong) !important;
+}
+
+.card-back-pattern {
+  border: 2px solid rgba(255,255,255,.18) !important;
+}
+
+/* ─── Poker Felt — Warm vintage ─── */
+.poker-felt {
+  background: radial-gradient(ellipse at 50% 50%, rgba(255,181,77,.06) 0%, #1a3520 35%, #0d2017 70%, #050f0a 100%) !important;
+  border: 10px solid #3d2b1f !important;
+  box-shadow:
+    0 0 0 3px var(--amber),
+    0 0 0 8px rgba(255,181,77,.15),
+    0 0 40px rgba(255,181,77,.1),
+    inset 0 0 60px rgba(0,0,0,.5),
+    0 20px 60px rgba(0,0,0,.5) !important;
+}
+
+.pot-display {
+  color: var(--amber) !important;
+  font-family: var(--font-deco) !important;
+  background: rgba(0,0,0,.55) !important;
+  border: 1px solid rgba(255,181,77,.3);
+  border-radius: 4px !important;
+  text-shadow: 0 0 6px rgba(255,181,77,.5);
+}
+
+.pot-value {
+  color: var(--cream) !important;
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Poker seats */
+.seat-panel {
+  background: rgba(10,3,8,.88) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  font-family: var(--font-mono);
+}
+
+.seat-name  { color: var(--cream) !important; font-family: var(--font-mono) !important; letter-spacing: .05em; }
+.seat-chips { color: var(--amber) !important; font-family: var(--font-mono) !important; font-variant-numeric: tabular-nums; }
+
+.poker-seat.occupied .seat-panel { border-color: rgba(255,181,77,.35) !important; }
+
+.poker-seat.is-me .seat-panel {
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 14px rgba(255,181,77,.4) !important;
+}
+
+.poker-seat.active-turn .seat-panel {
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 18px rgba(255,181,77,.6) !important;
+  animation: turnGlow 1.4s ease-in-out infinite;
+}
+
+.poker-seat.all-in .seat-panel {
+  border-color: var(--neon-violet) !important;
+  box-shadow: 0 0 14px rgba(176,100,255,.4) !important;
+}
+
+/* Poker seat badges */
+.badge-d  { background: var(--amber) !important; color: var(--bg) !important; font-family: var(--font-deco); }
+.badge-sb { background: rgba(255,181,77,.25) !important; color: var(--amber) !important; border: 1px solid rgba(255,181,77,.4) !important; font-family: var(--font-mono); }
+.badge-bb { background: rgba(255,58,92,.25) !important; color: var(--neon-red) !important; border: 1px solid rgba(255,58,92,.4) !important; font-family: var(--font-mono); }
+
+/* Chip bet near seat */
+.chip-bet {
+  background: linear-gradient(135deg, var(--bulb), var(--amber-hot)) !important;
+  color: var(--bg) !important;
+  font-family: var(--font-mono) !important;
+  font-weight: 700;
+  border-radius: 2px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,.45);
+}
+.chip-icon { background: var(--cream) !important; border: 2px solid var(--amber-hot) !important; }
+
+/* Hand result label — amber wins */
+.hand-label {
+  color: var(--amber) !important;
+  background: rgba(0,0,0,.8) !important;
+  border: 1px solid rgba(255,181,77,.3);
+  border-radius: 2px !important;
+  font-family: var(--font-mono);
+  text-shadow: 0 0 6px rgba(255,181,77,.5);
+}
+
+/* Poker actions panel */
+.poker-actions {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+}
+
+.pa-btn {
+  border-radius: 4px !important;
+  font-family: var(--font-deco);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.pa-fold {
+  background: rgba(255,58,92,.1) !important;
+  border-color: var(--neon-red) !important;
+  color: var(--neon-red) !important;
+  text-shadow: 0 0 6px rgba(255,58,92,.4);
+}
+.pa-fold:hover { background: rgba(255,58,92,.25) !important; }
+
+.pa-check {
+  background: rgba(255,243,228,.08) !important;
+  border-color: var(--line-strong) !important;
+  color: var(--ink-muted) !important;
+}
+.pa-check:hover { background: rgba(255,243,228,.15) !important; border-color: var(--amber) !important; color: var(--amber) !important; }
+
+.pa-call {
+  background: rgba(255,233,181,.1) !important;
+  border-color: var(--cream) !important;
+  color: var(--cream) !important;
+  text-shadow: 0 0 6px rgba(255,233,181,.4);
+}
+.pa-call:hover { background: rgba(255,233,181,.25) !important; }
+
+.pa-bet, .pa-raise {
+  background: rgba(255,181,77,.1) !important;
+  border-color: var(--amber) !important;
+  color: var(--amber) !important;
+  text-shadow: 0 0 6px rgba(255,181,77,.4);
+}
+.pa-bet:hover, .pa-raise:hover { background: rgba(255,181,77,.25) !important; }
+
+.pa-allin {
+  background: rgba(176,100,255,.1) !important;
+  border-color: var(--neon-violet) !important;
+  color: var(--neon-violet) !important;
+  text-shadow: 0 0 6px rgba(176,100,255,.4);
+}
+.pa-allin:hover { background: rgba(176,100,255,.25) !important; }
+
+/* Poker chat */
+.poker-chat-body { background: var(--surface) !important; border-color: var(--line) !important; border-radius: 0 !important; }
+.poker-chat-msg strong { color: var(--amber) !important; font-family: var(--font-mono); }
+.poker-chat-input-row input { background: var(--bg-2) !important; border: 1px solid var(--line) !important; color: var(--ink) !important; border-radius: 0 !important; }
+
+/* Bet control presets / inputs */
+.poker-bet-controls { background: rgba(0,0,0,.3) !important; border-radius: 0 !important; }
+.bet-ctrl-row input[type="number"] { border-radius: 0 !important; }
+.bp-btn {
+  background: rgba(255,181,77,.08) !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--cream) !important;
+  border-radius: 2px !important;
+  font-family: var(--font-mono);
+}
+.bp-btn:hover { border-color: var(--amber) !important; background: rgba(255,181,77,.18) !important; color: var(--amber) !important; }
+
+/* ─── Crash — multiplier, status, history ─── */
+.crash-canvas-wrap {
+  border: 1px solid var(--neon-pink) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 0 40px rgba(255,90,168,.15);
+}
+
+.crash-multiplier {
+  font-family: var(--font-display) !important;
+  color: var(--neon-pink) !important;
+  text-shadow: 0 0 20px var(--neon-pink), 0 0 40px rgba(255,90,168,.5) !important;
+}
+.crash-multiplier.running {
+  color: var(--neon-pink) !important;
+  text-shadow: 0 0 20px var(--neon-pink), 0 0 40px rgba(255,90,168,.5) !important;
+}
+.crash-multiplier.crashed {
+  color: var(--neon-red) !important;
+  text-shadow: 0 0 20px var(--neon-red), 0 0 40px rgba(255,58,92,.5) !important;
+}
+
+.crash-status.betting  { background: rgba(255,181,77,.18) !important; color: var(--amber) !important; border: 1px solid var(--amber); border-radius: 2px !important; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .12em; }
+.crash-status.crashed  { background: rgba(255,58,92,.2) !important; color: var(--neon-red) !important; border: 1px solid var(--neon-red); border-radius: 2px !important; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .12em; }
+
+.crash-hist-pill       { border-radius: 2px !important; font-family: var(--font-mono); }
+.crash-hist-pill.high  { background: rgba(255,181,77,.15) !important; color: var(--amber) !important; border: 1px solid rgba(255,181,77,.3) !important; }
+.crash-hist-pill.mid   { background: rgba(255,138,43,.15) !important; color: var(--amber-hot) !important; border: 1px solid rgba(255,138,43,.3) !important; }
+.crash-hist-pill.low   { background: rgba(255,58,92,.15) !important; color: var(--neon-red) !important; border: 1px solid rgba(255,58,92,.3) !important; }
+
+.crash-cashout-btn {
+  background: var(--amber) !important;
+  color: var(--bg) !important;
+  font-family: var(--font-deco) !important;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  border-radius: 4px !important;
+  box-shadow: 0 0 24px rgba(255,181,77,.5), 0 4px 0 rgba(0,0,0,.4) !important;
+}
+
+@keyframes cashoutPulseNeon {
+  0%, 100% { box-shadow: 0 0 24px rgba(255,181,77,.5), 0 4px 0 rgba(0,0,0,.4); }
+  50%      { box-shadow: 0 0 36px rgba(255,181,77,.8), 0 4px 0 rgba(0,0,0,.4); }
+}
+.crash-cashout-btn { animation: cashoutPulseNeon 1.2s ease-in-out infinite !important; }
+
+.crash-bet-section, .crash-feed-section { background: var(--surface) !important; border: 1px solid var(--line) !important; border-radius: 0 !important; }
+
+.crash-bet-status.win  { color: var(--amber) !important; }
+.crash-bet-status.loss { color: var(--neon-red) !important; }
+.crash-bet-status.ok   { color: var(--cream) !important; }
+.crash-bet-status.err  { color: var(--neon-red) !important; }
+
+.cqb {
+  background: rgba(255,181,77,.08) !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--cream) !important;
+  border-radius: 2px !important;
+  font-family: var(--font-mono);
+}
+.cqb:hover { border-color: var(--amber) !important; background: rgba(255,181,77,.22) !important; color: var(--amber) !important; }
+
+.feed-item { border-bottom: 1px solid var(--line) !important; font-family: var(--font-mono); color: var(--ink-muted); }
+.feed-mult { color: var(--amber) !important; font-family: var(--font-mono) !important; }
+.feed-win  { color: var(--amber) !important; text-shadow: 0 0 6px rgba(255,181,77,.4); }
+
+/* ─── Pachinko — violet palette ─── */
+.pachinko-canvas-wrap {
+  border: 1px solid var(--neon-violet) !important;
+  box-shadow: 0 0 40px rgba(176,100,255,.15);
+}
+
+.pach-group { background: var(--surface) !important; border: 1px solid var(--line) !important; border-radius: 0 !important; }
+
+.pqb {
+  background: rgba(176,100,255,.08) !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--cream) !important;
+  border-radius: 2px !important;
+  font-family: var(--font-mono);
+}
+.pqb:hover { border-color: var(--neon-violet) !important; background: rgba(176,100,255,.22) !important; color: var(--neon-violet) !important; }
+
+.prb, .pbb {
+  background: transparent !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--ink-muted) !important;
+  border-radius: 2px !important;
+  font-family: var(--font-mono);
+}
+.prb:hover, .pbb:hover { border-color: var(--neon-violet) !important; color: var(--neon-violet) !important; }
+.prb.active { background: var(--neon-violet) !important; color: var(--bg) !important; border-color: var(--neon-violet) !important; box-shadow: 0 0 16px rgba(176,100,255,.5) !important; }
+.pbb.active { background: var(--amber) !important; color: var(--bg) !important; border-color: var(--amber) !important; box-shadow: 0 0 16px rgba(255,181,77,.5) !important; }
+
+.pach-drop-btn {
+  background: var(--neon-violet) !important;
+  color: var(--bg) !important;
+  border: none !important;
+  font-family: var(--font-deco) !important;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  border-radius: 4px !important;
+  box-shadow: 0 0 20px rgba(176,100,255,.5), 0 4px 0 rgba(0,0,0,.4) !important;
+}
+.pach-drop-btn:hover {
+  background: #8a3aff !important;
+  filter: brightness(1.1);
+}
+
+.pach-results { background: var(--surface) !important; border: 1px solid var(--line) !important; border-radius: 0 !important; }
+.pach-result { border-radius: 0 !important; font-family: var(--font-mono) !important; }
+.pach-result.big-win { background: rgba(176,100,255,.15) !important; color: var(--neon-violet) !important; text-shadow: 0 0 6px rgba(176,100,255,.4); }
+.pach-result.win     { background: rgba(255,181,77,.1) !important; color: var(--amber) !important; text-shadow: 0 0 6px rgba(255,181,77,.4); }
+.pach-result.loss    { background: rgba(255,90,168,.1) !important; color: var(--neon-pink) !important; }
+
+/* ─── CS2 Betting — pink/amber ─── */
+.cs2-event-card { border-radius: 0 !important; border: 1px solid var(--line) !important; background: var(--surface) !important; transition: border-color .2s, box-shadow .2s; }
+.cs2-event-card:hover { border-color: var(--neon-pink) !important; box-shadow: 0 0 20px rgba(255,90,168,.15); }
+
+/* ─── Result displays (Blackjack win/lose/tie) ─── */
+.result-display.win {
+  border-color: var(--amber) !important;
+  color: var(--amber) !important;
+  background: rgba(255,181,77,.08) !important;
+  text-shadow: 0 0 10px rgba(255,181,77,.5);
+  font-family: var(--font-display);
+}
+.result-display.lose {
+  border-color: var(--neon-pink) !important;
+  color: var(--neon-pink) !important;
+  background: rgba(255,90,168,.08) !important;
+  text-shadow: 0 0 10px rgba(255,90,168,.5);
+  font-family: var(--font-display);
+}
+.result-display.tie {
+  border-color: var(--cream) !important;
+  color: var(--cream) !important;
+  background: rgba(255,233,181,.08) !important;
+  font-family: var(--font-display);
+}
+
+/* ─── Insurance section (Blackjack) ─── */
+.insurance-section,
+.insurance-prompt {
+  background: var(--surface) !important;
+  border: 1px solid var(--line-strong) !important;
+  border-radius: 0 !important;
+}
+
+/* ─── Coinflip specific ─── */
+.btn-heads, .heads-btn {
+  background: linear-gradient(135deg, var(--bulb), var(--amber-hot)) !important;
+  color: var(--bg) !important;
+  border: 2px solid var(--amber) !important;
+  font-family: var(--font-deco);
+  text-transform: uppercase;
+}
+
+.btn-heads:hover, .heads-btn:hover,
+.btn-heads.selected, .heads-btn.selected {
+  background: linear-gradient(135deg, var(--amber), var(--amber-hot)) !important;
+  border-color: var(--amber) !important;
+  color: var(--bg) !important;
+  box-shadow: 0 0 20px rgba(255,181,77,.6) !important;
+}
+
+.btn-tails, .tails-btn {
+  background: linear-gradient(135deg, #d1a5ff, var(--neon-violet)) !important;
+  color: var(--bg) !important;
+  border: 2px solid var(--neon-violet) !important;
+  font-family: var(--font-deco);
+  text-transform: uppercase;
+}
+
+.btn-tails:hover, .tails-btn:hover,
+.btn-tails.selected, .tails-btn.selected {
+  background: linear-gradient(135deg, var(--neon-violet), #8a3aff) !important;
+  border-color: var(--neon-violet) !important;
+  color: var(--cream) !important;
+  box-shadow: 0 0 20px rgba(176,100,255,.6) !important;
+}
+
+/* ─── Room / Multiplayer common ─── */
+.room-item,
+.confirmation-modal,
+.confirmation-section,
+.bet-setup-section {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+}
+
+/* Coinflip confirmation overlay + modal */
+.confirmation-overlay {
+  background: rgba(10,3,8,.85) !important;
+  backdrop-filter: blur(8px);
+}
+
+.confirmation-section,
+.bet-setup-section {
+  box-shadow: 0 0 40px rgba(255,181,77,.12), 0 20px 60px rgba(0,0,0,.6) !important;
+}
+
+/* Coinflip choice comparison display (confirmation modal) */
+.choice-display {
+  border-radius: 2px !important;
+  font-family: var(--font-deco) !important;
+  letter-spacing: .05em;
+}
+
+.choice-display.heads {
+  background: rgba(255,181,77,.12) !important;
+  border-color: var(--amber) !important;
+  color: var(--amber) !important;
+  text-shadow: 0 0 8px rgba(255,181,77,.5);
+}
+
+.choice-display.tails {
+  background: rgba(176,100,255,.12) !important;
+  border-color: var(--neon-violet) !important;
+  color: var(--neon-violet) !important;
+  text-shadow: 0 0 8px rgba(176,100,255,.5);
+}
+
+/* Coinflip result message (win/lose) */
+.result-message {
+  border-radius: 2px !important;
+  font-family: var(--font-display) !important;
+  letter-spacing: .02em;
+}
+
+.result-message.win {
+  background: rgba(255,181,77,.12) !important;
+  border: 2px solid var(--amber) !important;
+  color: var(--amber) !important;
+  text-shadow: 0 0 10px rgba(255,181,77,.5);
+}
+
+.result-message.lose {
+  background: rgba(255,90,168,.12) !important;
+  border: 2px solid var(--neon-pink) !important;
+  color: var(--neon-pink) !important;
+  text-shadow: 0 0 10px rgba(255,90,168,.5);
+}
+
+/* Connection status pill (coinflip multiplayer) */
+.connection-status {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  font-family: var(--font-mono);
+  color: var(--ink-muted);
+}
+
+/* ─── Roulette belt color buttons (rl-btn-*) ─── */
+.rl-btn-red {
+  background: linear-gradient(145deg, var(--neon-red), #cc1a48) !important;
+  border-color: rgba(255,58,92,.5) !important;
+}
+.rl-btn-black {
+  background: linear-gradient(145deg, var(--surface), var(--bg-2)) !important;
+  border-color: var(--line-strong) !important;
+}
+.rl-btn-green {
+  background: linear-gradient(145deg, var(--bulb), var(--amber-hot)) !important;
+  border-color: rgba(255,181,77,.5) !important;
+}
+
+.rl-btn-active {
+  box-shadow: 0 0 0 2px var(--amber), 0 6px 20px rgba(255,181,77,.35) !important;
+}
+
+.rl-cname { color: var(--cream) !important; text-shadow: 0 1px 2px rgba(0,0,0,.6); font-family: var(--font-deco); }
+.rl-codds { color: var(--cream) !important; font-family: var(--font-mono); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.rl-cnums { color: rgba(255,243,228,.65) !important; font-family: var(--font-mono); }
+
+/* Active bet display (rl) */
+.rl-active-bet {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 2px !important;
+  font-family: var(--font-mono);
+}
+
+/* ─── Leaderboard hand/status cleanup ─── */
+.game-result {
+  font-family: var(--font-display) !important;
+  letter-spacing: .03em;
+}
+
+/* Keep the roulette wheel number labels readable */
+.number-label {
+  color: var(--cream) !important;
+  text-shadow: 1px 1px 3px rgba(0,0,0,.9), 0 0 6px rgba(255,181,77,.3);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+/* Override the old .game-title gradient from line 4339 (which is below our override at 5715) */
+/* NOTE: .game-title styles handled in the NEON 777 OVERRIDES block above — kept for safety */
 

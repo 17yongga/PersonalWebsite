@@ -1363,7 +1363,7 @@
         /* ── Expense Modal ───────────────────────────────── */
         /* Scan receipt modal (same base as expense modal) */
         .scan-modal-overlay {
-            display: none;
+            display: flex;
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.75);
@@ -1373,8 +1373,11 @@
             justify-content: center;
             padding: 24px 16px;
             overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
         }
-        .scan-modal-overlay.open { display: flex; }
+        .scan-modal-overlay.open { opacity: 1; visibility: visible; }
         .scan-modal-box {
             background: #12122a;
             border: 1px solid var(--card-border);
@@ -1384,7 +1387,10 @@
             max-width: 600px;
             position: relative;
             box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+            transform: translateY(30px);
+            transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
         }
+        .scan-modal-overlay.open .scan-modal-box { transform: translateY(0); }
         /* Keep scan results within the modal flow */
         #scanResults.show { display: block; }
         /* Inside the scan modal, switch to 2-column grid so all columns fit */
@@ -1404,7 +1410,7 @@
         .scan-modal-header h3 { font-size: 18px; font-weight: 700; }
 
         .expense-modal-overlay {
-            display: none;
+            display: flex;
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.7);
@@ -1413,8 +1419,11 @@
             z-index: 9000;
             align-items: flex-end;
             justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
         }
-        .expense-modal-overlay.open { display: flex; }
+        .expense-modal-overlay.open { opacity: 1; visibility: visible; }
         @media (min-width: 600px) {
             .expense-modal-overlay {
                 align-items: center;
@@ -1494,7 +1503,10 @@
             position: relative;
             box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
             box-sizing: border-box;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
         }
+        .expense-modal-overlay.open .expense-modal { transform: translateY(0); }
         /* drag handle for bottom sheet feel */
         .expense-modal::before {
             content: '';
@@ -1508,7 +1520,9 @@
             .expense-modal {
                 border-radius: 20px;
                 padding: 28px 24px;
+                transform: translateY(30px);
             }
+            .expense-modal-overlay.open .expense-modal { transform: translateY(0); }
             .expense-modal::before { display: none; }
         }
         /* Ensure every input/select in the modal can't overflow */
@@ -2617,6 +2631,7 @@
                             </select>
                             <select class="filter-chip" id="typeFilter" onchange="filterTransactions();updateFilterBadge()">
                                 <option value="">🔀 All Types</option>
+                                <option value="mine">🙋 My Transactions</option>
                                 <option value="shared">👥 Shared</option>
                                 <option value="individual">👤 Individual</option>
                             </select>
@@ -5646,6 +5661,7 @@
                 if (personFilter && expense.whoPaid !== personFilter) return false;
                 if (typeFilter) {
                     const isShared = expense.isShared !== false;
+                    if (typeFilter === 'mine' && expense.whoPaid !== 'partner1' && !isShared) return false;
                     if (typeFilter === 'shared' && !isShared) return false;
                     if (typeFilter === 'individual' && isShared) return false;
                 }
@@ -5917,6 +5933,7 @@
             }
 
             document.getElementById('expenseModalOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
             setTimeout(() => {
                 document.getElementById('m-amount').focus();
                 initExpenseModalSwipe();
@@ -5978,6 +5995,7 @@
             const overlay = document.getElementById('expenseModalOverlay');
             const sheet   = document.getElementById('expenseModalBox');
             overlay.classList.remove('open');
+            document.body.style.overflow = '';
             // Reset swipe state so it can re-init on next open
             if (sheet) {
                 sheet.style.transform    = '';
@@ -5999,6 +6017,7 @@
         function openScanModal() {
             clearReceipt(); // reset to clean state
             document.getElementById('scanReceiptModal').classList.add('open');
+            document.body.style.overflow = 'hidden';
             // Register paste handler so users can paste screenshots/images directly
             if (_scanPasteHandler) document.removeEventListener('paste', _scanPasteHandler);
             _scanPasteHandler = function(e) {
@@ -6047,6 +6066,7 @@
         }
         function closeScanModal() {
             document.getElementById('scanReceiptModal').classList.remove('open');
+            document.body.style.overflow = '';
             if (_scanPasteHandler) {
                 document.removeEventListener('paste', _scanPasteHandler);
                 _scanPasteHandler = null;

@@ -358,18 +358,25 @@ class CrashGame {
     const W = c.width / (window.devicePixelRatio || 1);
     const H = c.height / (window.devicePixelRatio || 1);
 
+    // Neon 777 palette
+    const CRASH_BG = '#0a0308';
+    const GRID = 'rgba(255,181,77,.1)';
+    const TICK_TEXT = 'rgba(255,243,228,.42)';
+    const RUN_COLOR = '#ff5aa8';   // neon-pink
+    const CRASH_COLOR = '#ff3a5c'; // neon-red
+
     // Background
-    ctx.fillStyle = '#0a0e1a';
+    ctx.fillStyle = CRASH_BG;
     ctx.fillRect(0, 0, W, H);
 
     // Grid lines
-    ctx.strokeStyle = 'rgba(56,189,248,.08)';
+    ctx.strokeStyle = GRID;
     ctx.lineWidth = 1;
     for (let i = 1; i < 5; i++) {
       const y = H - (H * i / 5);
       ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(W, y); ctx.stroke();
-      ctx.fillStyle = 'rgba(148,163,184,.3)';
-      ctx.font = '11px sans-serif';
+      ctx.fillStyle = TICK_TEXT;
+      ctx.font = '11px "Space Mono", ui-monospace, monospace';
       ctx.fillText((1 + i * (Math.max(this.multiplier, 2) - 1) / 5).toFixed(1) + 'x', 2, y + 4);
     }
 
@@ -378,12 +385,13 @@ class CrashGame {
       const maxM = Math.max(this.multiplier, 2);
       const elapsed = (Date.now() - this.startTime) / 1000;
       const maxT = Math.max(elapsed, 5);
-      
+
+      const curveColor = this.phase === 'crashed' ? CRASH_COLOR : RUN_COLOR;
       ctx.beginPath();
-      ctx.strokeStyle = this.phase === 'crashed' ? '#ef4444' : '#22c55e';
+      ctx.strokeStyle = curveColor;
       ctx.lineWidth = 3;
-      ctx.shadowColor = this.phase === 'crashed' ? '#ef4444' : '#22c55e';
-      ctx.shadowBlur = 10;
+      ctx.shadowColor = curveColor;
+      ctx.shadowBlur = 12;
 
       const padL = 45, padB = 20;
       const graphW = W - padL - 10;
@@ -411,10 +419,10 @@ class CrashGame {
         const tipY = H - padB - ((this.multiplier - 1) / (maxM - 1)) * graphH;
         ctx.beginPath();
         ctx.arc(tipX, tipY, 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#22c55e';
+        ctx.fillStyle = RUN_COLOR;
         ctx.fill();
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#22c55e';
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = RUN_COLOR;
         ctx.fill();
         ctx.shadowBlur = 0;
       }
@@ -422,7 +430,7 @@ class CrashGame {
 
     // Betting phase overlay — just dim the canvas; HTML overlays handle the text
     if (this.phase === 'betting') {
-      ctx.fillStyle = 'rgba(10,14,26,.6)';
+      ctx.fillStyle = 'rgba(10,3,8,.65)';
       ctx.fillRect(0, 0, W, H);
     }
   }

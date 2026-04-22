@@ -67,39 +67,74 @@ class CS2BettingGame {
       console.log('[CS2 Betting] Setting up UI...');
       gameView.innerHTML = `
         <div class="cs2-betting-container">
-          <h2 class="game-title">🎮 CS2 Fantasy Betting</h2>
-          
+          <!-- Sticky Header Bar -->
+          <div class="cs2-header">
+            <div class="cs2-container">
+              <div class="cs2-header-content">
+                <h1 class="cs2-title">
+                  <span class="cs2-title-icon">🎮</span>
+                  <span>CS2 Betting</span>
+                </h1>
+                <div class="cs2-header-stats">
+                  <div class="cs2-header-balance">
+                    <span class="balance-label">Balance</span>
+                    <span id="cs2HeaderBalance" class="balance-value">${(this.casino.credits || 0).toLocaleString()}</span>
+                    <span class="balance-currency">credits</span>
+                  </div>
+                  <button id="refreshEventsBtn" class="cs2-refresh-btn">
+                    <span class="refresh-icon">↻</span> Refresh
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Disclaimer Banner -->
-          <div class="cs2-disclaimer">
-            <p>This is a fantasy betting experience using fake credits only. No real money is used or won.</p>
-          </div>
-
-          <div class="cs2-betting-layout">
-            <!-- Main Panel: Events/Matches List -->
-            <div class="cs2-events-panel">
-              <div class="events-panel-header">
-                <h3>Upcoming Matches</h3>
-                <button id="refreshEventsBtn" class="btn btn-secondary btn-small">🔄 Refresh</button>
-              </div>
-              <div id="cs2EventsList" class="cs2-events-list">
-                <p class="loading-text">Loading matches...</p>
-              </div>
-            </div>
-
-            <!-- Right Panel: My Bets -->
-            <div class="cs2-my-bets-panel">
-              <h3>My Bets</h3>
-              <div class="bets-tabs">
-                <button class="bet-tab active" data-tab="open">Open</button>
-                <button class="bet-tab" data-tab="settled">Settled</button>
-              </div>
-              <div id="cs2MyBets" class="cs2-my-bets">
-                <p class="no-bets">No bets placed yet</p>
-              </div>
+          <div class="cs2-container">
+            <div class="cs2-disclaimer">
+              Fantasy betting with fake credits only — no real money involved.
             </div>
           </div>
 
-          <!-- Bet Slip Modal (Popup) -->
+          <div class="cs2-container">
+            <div class="cs2-betting-layout">
+              <!-- Main Panel: Events/Matches List -->
+              <div class="cs2-events-panel">
+                <div class="events-panel-header">
+                  <h3>Upcoming Matches</h3>
+                  <div class="events-panel-meta">
+                    <span id="cs2MatchCount" class="match-count-badge">0 matches</span>
+                  </div>
+                </div>
+                <div id="cs2EventsList" class="cs2-events-list">
+                  <div class="cs2-loading-state">
+                    <div class="cs2-loading-spinner"></div>
+                    <p>Loading matches...</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Sidebar: My Bets (always visible on desktop) -->
+              <div class="cs2-sidebar-panel">
+                <div class="sidebar-panel-header">
+                  <h3>My Bets</h3>
+                </div>
+                <div class="bets-tabs">
+                  <button class="bet-tab active" data-tab="open">Open</button>
+                  <button class="bet-tab" data-tab="settled">Settled</button>
+                </div>
+                <div id="cs2MyBets" class="cs2-my-bets">
+                  <div class="cs2-empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <p>No bets placed yet</p>
+                    <span class="empty-state-hint">Select a match to get started</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bet Slip Modal (Slide-in Panel) -->
           <div id="cs2BetSlipModal" class="cs2-betslip-modal hidden">
             <div class="cs2-betslip-modal-overlay"></div>
             <div class="cs2-betslip-modal-content">
@@ -113,17 +148,18 @@ class CS2BettingGame {
               <div id="cs2BetControls" class="cs2-bet-controls hidden">
                 <div class="bet-input-group">
                   <label>Bet Amount (Credits):</label>
-                  <input type="number" id="cs2BetAmount" min="1" value="100" step="10">
+                  <input type="number" id="cs2BetAmount" min="1" value="100" step="10" class="bet-amount-input">
                   <div class="quick-bets">
                     <button type="button" class="quick-bet-btn" data-amount="50">50</button>
                     <button type="button" class="quick-bet-btn" data-amount="100">100</button>
                     <button type="button" class="quick-bet-btn" data-amount="250">250</button>
                     <button type="button" class="quick-bet-btn" data-amount="500">500</button>
+                    <button type="button" class="quick-bet-btn" data-amount="1000">1K</button>
                   </div>
                 </div>
                 <div id="cs2PotentialPayout" class="potential-payout"></div>
                 <div class="betslip-actions">
-                  <button id="placeBetBtn" type="button" class="btn btn-primary btn-large">Place Bet</button>
+                  <button id="placeBetBtn" type="button" class="btn btn-primary btn-large cs2-place-bet-btn">Place Bet</button>
                   <button id="cancelBetBtn" type="button" class="btn btn-secondary">Cancel</button>
                 </div>
               </div>
@@ -308,7 +344,11 @@ class CS2BettingGame {
   closeBetSlipModal() {
     const betSlipModal = document.getElementById('cs2BetSlipModal');
     if (betSlipModal) {
-      betSlipModal.classList.add('hidden');
+      betSlipModal.classList.remove('open');
+      // Wait for slide-out animation, then hide
+      setTimeout(() => {
+        betSlipModal.classList.add('hidden');
+      }, 300);
       // Reset selection
       this.selectedEvent = null;
       this.selectedOutcome = null;
@@ -368,13 +408,18 @@ class CS2BettingGame {
 
   async loadBalance() {
     // BALANCE DOUBLING FIX: Always trust the casino manager's balance.
-    // The casino manager already has the authoritative balance from login or
-    // session restore (restoreSessionAndConnect). Making a separate API call
-    // here creates a race condition with the socket playerData event, which
-    // can cause balance doubling (API fetch + socket event both write to credits).
-    // The casino manager is the single source of truth for balance.
     this.currentBalance = this.casino.credits || 0;
+    this.updateHeaderBalance();
     console.log(`[CS2 Balance] Using casino manager balance: ${this.currentBalance}`);
+  }
+
+  updateHeaderBalance() {
+    const el = document.getElementById('cs2HeaderBalance');
+    if (el) {
+      el.textContent = this.currentBalance.toLocaleString();
+      el.classList.add('updating');
+      setTimeout(() => el.classList.remove('updating'), 500);
+    }
   }
 
   async loadEvents() {
@@ -480,7 +525,7 @@ class CS2BettingGame {
     
     if (this.events.length === 0) {
       console.log('[CS2 Betting] No events to render, showing empty message');
-      eventsList.innerHTML = '<p class="no-events">No upcoming matches available. Check back later!</p>';
+      eventsList.innerHTML = '<div class="cs2-empty-state"><div class="empty-state-icon">🎮</div><p>No upcoming matches</p><span class="empty-state-hint">Check back later or hit refresh</span></div>';
       return;
     }
 
@@ -505,7 +550,7 @@ class CS2BettingGame {
     });
 
     if (upcomingEvents.length === 0) {
-      eventsList.innerHTML = '<p class="no-events">No upcoming matches available. Check back later!</p>';
+      eventsList.innerHTML = '<div class="cs2-empty-state"><div class="empty-state-icon">🎮</div><p>No upcoming matches</p><span class="empty-state-hint">Check back later or hit refresh</span></div>';
       return;
     }
 
@@ -534,182 +579,206 @@ class CS2BettingGame {
       });
     });
 
-    // Build HTML with tournament headers and grouped matches
+    // Escape HTML helper
+    const escapeHtml = (text) => {
+      if (!text) return '';
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return String(text).replace(/[&<>"']/g, m => map[m]);
+    };
+
+    // Get team logo helper
+    const getTeamLogo = (teamName) => {
+      if (!teamName) return null;
+      const normalizedName = teamName.toLowerCase().trim();
+      if (this.teamLogos && this.teamLogos.teams) {
+        const basePath = this.teamLogos.logoBasePath || '';
+        if (this.teamLogos.teams[normalizedName]) return basePath + this.teamLogos.teams[normalizedName];
+        const simplifiedName = normalizedName.replace(/\s*(esports?|gaming|team|club)$/i, '').trim();
+        if (this.teamLogos.teams[simplifiedName]) return basePath + this.teamLogos.teams[simplifiedName];
+        const withoutTeam = normalizedName.replace(/^team\s+/i, '').trim();
+        if (this.teamLogos.teams[withoutTeam]) return basePath + this.teamLogos.teams[withoutTeam];
+      }
+      return null;
+    };
+
+    // Get countdown text
+    const getCountdown = (startTime) => {
+      const now = new Date();
+      const diff = startTime - now;
+      if (diff <= 0) return null;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      if (days > 0) return `${days}d ${hours}h`;
+      if (hours > 0) return `${hours}h ${minutes}m`;
+      return `${minutes}m`;
+    };
+
+    // Determine tournament tier
+    const getTournamentTier = (name) => {
+      const n = (name || '').toLowerCase();
+      if (n.includes('major') || n.includes('blast premier') || n.includes('esl pro league') || n.includes('iem katowice') || n.includes('iem cologne') || n.includes('pgl')) return 's';
+      if (n.includes('esl') || n.includes('blast') || n.includes('iem') || n.includes('dreamhack masters') || n.includes('starseries')) return 'a';
+      return 'b';
+    };
+
+    // Sort tournaments by tier then alphabetically
+    const tierOrder = { s: 0, a: 1, b: 2 };
+    const sortedTournamentsWithTier = sortedTournaments.map(t => ({ name: t, tier: getTournamentTier(t) }));
+    sortedTournamentsWithTier.sort((a, b) => {
+      const tA = tierOrder[a.tier] !== undefined ? tierOrder[a.tier] : 3;
+      const tB = tierOrder[b.tier] !== undefined ? tierOrder[b.tier] : 3;
+      if (tA !== tB) return tA - tB;
+      return a.name.localeCompare(b.name);
+    });
+
+    // Update match count
+    const matchCountEl = document.getElementById('cs2MatchCount');
+    if (matchCountEl) matchCountEl.textContent = `${upcomingEvents.length} match${upcomingEvents.length !== 1 ? 'es' : ''}`;
+
+    // Build HTML with tournament sections
     let htmlContent = '';
-    
-    sortedTournaments.forEach(tournament => {
+
+    sortedTournamentsWithTier.forEach(({ name: tournament, tier }) => {
       const tournamentEvents = groupedEvents[tournament];
-      
-      // Render tournament header
-      const safeTournamentName = tournament.replace(/[&<>"']/g, m => {
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return map[m];
-      });
-      
+      const safeTournamentName = escapeHtml(tournament);
+      const tierLabel = tier.toUpperCase();
+
       htmlContent += `
-        <div class="tournament-header">
-          <span class="tournament-icon">🎮</span>
-          <span class="tournament-name">${safeTournamentName}</span>
-        </div>
+        <div class="cs2-tournament-section tier-${tier}-section">
+          <div class="cs2-tournament-header" data-tournament="${safeTournamentName}">
+            <div class="cs2-tier-badge tier-${tier}">${tierLabel}</div>
+            <div class="cs2-tournament-icon">🏆</div>
+            <span class="cs2-tournament-name">${safeTournamentName}</span>
+            <span class="cs2-tournament-count">${tournamentEvents.length}</span>
+            <span class="cs2-tournament-chevron">▼</span>
+          </div>
+          <div class="cs2-tournament-events">
       `;
-      
+
       // Render matches in this tournament
       tournamentEvents.forEach(event => {
         const startTime = new Date(event.commenceTime || event.startTime);
         const isLive = event.status === 'live';
         const isFinished = event.status === 'finished';
         const canBet = event.status === 'scheduled' || event.status === 'live';
-        
-        // Format time - full date and time format (e.g., 'Jan 13, 04:00 AM')
-        const timeStr = startTime.toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
+        const countdown = isLive ? null : getCountdown(startTime);
+        const matchFormat = event.bestOf ? `BO${event.bestOf}` : (event.format || '');
 
-        // Escape HTML in team names for safety
-        const escapeHtml = (text) => {
-          if (!text) return '';
-          const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-          };
-          return String(text).replace(/[&<>"']/g, m => map[m]);
-        };
-        
-        // Get team names from various possible fields
         const homeTeamName = event.homeTeam || event.participant1Name || event.team1 || event.teamHome || 'Team 1';
         const awayTeamName = event.awayTeam || event.participant2Name || event.team2 || event.teamAway || 'Team 2';
         const safeHomeTeam = escapeHtml(homeTeamName);
         const safeAwayTeam = escapeHtml(awayTeamName);
-        
-        // Get team logos - try to find actual logo, return null if not found (will use acronym)
-        const getTeamLogo = (teamName) => {
-          if (!teamName) return null;
-          
-          // Normalize team name for lookup (lowercase, trim)
-          const normalizedName = teamName.toLowerCase().trim();
-          
-          // Check if we have a logo for this team (case-insensitive lookup)
-          if (this.teamLogos && this.teamLogos.teams) {
-            const basePath = this.teamLogos.logoBasePath || '';
-            
-            // Direct lookup with normalized name
-            if (this.teamLogos.teams[normalizedName]) {
-              const logoFile = this.teamLogos.teams[normalizedName];
-              const logoUrl = basePath + logoFile;
-              return logoUrl;
-            }
-            
-            // Try without common suffixes (esports, gaming, etc.)
-            const simplifiedName = normalizedName
-              .replace(/\s*(esports?|gaming|team|club)$/i, '')
-              .trim();
-            if (this.teamLogos.teams[simplifiedName]) {
-              const logoFile = this.teamLogos.teams[simplifiedName];
-              const logoUrl = basePath + logoFile;
-              return logoUrl;
-            }
-            
-            // Try with "team" prefix removed
-            const withoutTeam = normalizedName.replace(/^team\s+/i, '').trim();
-            if (this.teamLogos.teams[withoutTeam]) {
-              const logoFile = this.teamLogos.teams[withoutTeam];
-              const logoUrl = basePath + logoFile;
-              return logoUrl;
-            }
-          }
-          
-          // Fallback to ui-avatars service
-          const encodedName = encodeURIComponent(teamName);
-          return `https://ui-avatars.com/api/?name=${encodedName}&size=64&background=1a1a2e&color=e94560&bold=true&format=svg`;
-        };
-        
-        const homeTeamLogo = getTeamLogo.call(this, homeTeamName);
-        const awayTeamLogo = getTeamLogo.call(this, awayTeamName);
+
+        const homeTeamLogo = getTeamLogo(homeTeamName);
+        const awayTeamLogo = getTeamLogo(awayTeamName);
         const homeTeamAcronym = this.getTeamAcronym(homeTeamName);
         const awayTeamAcronym = this.getTeamAcronym(awayTeamName);
-        
-        // Get display odds (default to 2.0 if unavailable)
+
         const team1Odds = getDisplayOdds(event.odds?.team1);
         const team2Odds = getDisplayOdds(event.odds?.team2);
-        
-        // Store default odds in event for selectOutcome to use
+
         if (!event.odds) event.odds = {};
         if (event.odds.team1 === null || event.odds.team1 === undefined) event.odds.team1 = 2.0;
         if (event.odds.team2 === null || event.odds.team2 === undefined) event.odds.team2 = 2.0;
 
+        // Determine favorite/underdog
+        const homeFav = team1Odds < team2Odds;
+        const homeClass = homeFav ? 'favorite' : 'underdog';
+        const awayClass = homeFav ? 'underdog' : 'favorite';
+
+        // Status badge
+        let statusBadge = '';
+        if (isLive) {
+          statusBadge = '<span class="match-status-badge live">LIVE</span>';
+        } else if (isFinished) {
+          statusBadge = '<span class="match-status-badge finished">Finished</span>';
+        } else if (countdown) {
+          statusBadge = `<span class="match-status-badge upcoming">In ${countdown}</span>`;
+        }
+
+        // Team logo HTML helper
+        const logoHtml = (logoUrl, safeName, acronym) => {
+          if (logoUrl) {
+            return `<img src="${logoUrl}" alt="${safeName}" class="team-logo-large"
+                      onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="team-acronym-circle" style="display:none;">${acronym}</div>`;
+          }
+          return `<div class="team-acronym-circle">${acronym}</div>`;
+        };
+
         htmlContent += `
           <div class="cs2-event-card ${isFinished ? 'finished' : ''} ${isLive ? 'live' : ''}" data-event-id="${event.id}">
-            <div class="event-match-header">
-              <div class="match-time-status">
-                <span class="match-time">${timeStr}</span>
-                ${isLive ? '<span class="match-live-badge">🔴 LIVE</span>' : ''}
+            <div class="event-card-header">
+              ${countdown ? `<span class="match-time-countdown">⏱ ${countdown}</span>` : ''}
+              ${isLive ? '<span class="match-time-countdown live">● LIVE</span>' : ''}
+              ${matchFormat ? `<span class="match-format-badge">${matchFormat}</span>` : ''}
+              ${statusBadge}
+            </div>
+            <div class="event-card-teams">
+              <div class="team-side">
+                <div class="team-logo-wrapper">
+                  ${logoHtml(homeTeamLogo, safeHomeTeam, homeTeamAcronym)}
+                </div>
+                <span class="team-name">${safeHomeTeam}</span>
+              </div>
+              <div class="vs-divider">VS</div>
+              <div class="team-side">
+                <div class="team-logo-wrapper">
+                  ${logoHtml(awayTeamLogo, safeAwayTeam, awayTeamAcronym)}
+                </div>
+                <span class="team-name">${safeAwayTeam}</span>
               </div>
             </div>
-            <div class="event-match-content">
-              <div class="event-teams-list">
-                <div class="teams-header">Teams</div>
-                <div class="event-team-row">
-                  <div class="team-logo-container">
-                    ${homeTeamLogo ? `<img src="${homeTeamLogo}" alt="${safeHomeTeam}" class="team-logo" 
-                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="team-acronym" style="display: none;">${homeTeamAcronym}</div>` : `<div class="team-acronym">${homeTeamAcronym}</div>`}
-                  </div>
-                  <span class="team-name">${safeHomeTeam}</span>
-                </div>
-                <div class="event-team-row">
-                  <div class="team-logo-container">
-                    ${awayTeamLogo ? `<img src="${awayTeamLogo}" alt="${safeAwayTeam}" class="team-logo" 
-                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="team-acronym" style="display: none;">${awayTeamAcronym}</div>` : `<div class="team-acronym">${awayTeamAcronym}</div>`}
-                  </div>
-                  <span class="team-name">${safeAwayTeam}</span>
-                </div>
-              </div>
-              <div class="event-odds-section">
-                <div class="odds-header">Winner</div>
-                <button class="odds-card ${canBet ? '' : 'disabled'}" 
-                        data-event-id="${event.id}" 
-                        data-selection="team1"
-                        ${!canBet ? 'disabled' : ''}
-                        aria-label="Bet on ${safeHomeTeam}"
-                        type="button">
-                  <div class="odds-team-name">${safeHomeTeam}</div>
-                  <div class="odds-value">${team1Odds.toFixed(2)}</div>
-                </button>
-                <button class="odds-card ${canBet ? '' : 'disabled'}" 
-                        data-event-id="${event.id}" 
-                        data-selection="team2"
-                        ${!canBet ? 'disabled' : ''}
-                        aria-label="Bet on ${safeAwayTeam}"
-                        type="button">
-                  <div class="odds-team-name">${safeAwayTeam}</div>
-                  <div class="odds-value">${team2Odds.toFixed(2)}</div>
-                </button>
-              </div>
+            <div class="event-card-odds">
+              <button class="odds-pill ${homeClass} ${canBet ? '' : 'disabled'}"
+                      data-event-id="${event.id}"
+                      data-selection="team1"
+                      ${!canBet ? 'disabled' : ''}
+                      aria-label="Bet on ${safeHomeTeam}"
+                      type="button">
+                ${team1Odds.toFixed(2)}
+              </button>
+              <button class="odds-pill ${awayClass} ${canBet ? '' : 'disabled'}"
+                      data-event-id="${event.id}"
+                      data-selection="team2"
+                      ${!canBet ? 'disabled' : ''}
+                      aria-label="Bet on ${safeAwayTeam}"
+                      type="button">
+                ${team2Odds.toFixed(2)}
+              </button>
             </div>
           </div>
         `;
       });
+
+      htmlContent += `
+          </div>
+        </div>
+      `;
     });
-    
+
     eventsList.innerHTML = htmlContent;
 
-    // Attach event listeners to odds cards (entire card is clickable)
-    eventsList.querySelectorAll('.odds-card:not(.disabled)').forEach(card => {
-      card.addEventListener('click', async (e) => {
+    // Tournament header collapse toggle
+    eventsList.querySelectorAll('.cs2-tournament-header').forEach(header => {
+      header.addEventListener('click', () => {
+        header.closest('.cs2-tournament-section').classList.toggle('collapsed');
+      });
+    });
+
+    // Attach event listeners to odds pills
+    eventsList.querySelectorAll('.odds-pill:not(.disabled)').forEach(pill => {
+      pill.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const eventId = card.dataset.eventId;
-        const selection = card.dataset.selection;
-        
-        // Fetch odds if not available (will use default 2x if unavailable)
+        const eventId = pill.dataset.eventId;
+        const selection = pill.dataset.selection;
+
+        // Remove selected from all pills, add to this one
+        eventsList.querySelectorAll('.odds-pill').forEach(p => p.classList.remove('selected'));
+        pill.classList.add('selected');
+
         await this.fetchEventOddsIfNeeded(eventId);
         this.selectOutcome(eventId, selection);
       });
@@ -780,9 +849,12 @@ class CS2BettingGame {
     this.selectedEvent = event;
     this.selectedOutcome = selection;
 
-    // Show bet slip modal
+    // Show bet slip modal with slide-in animation
     const betSlipModal = document.getElementById('cs2BetSlipModal');
     betSlipModal.classList.remove('hidden');
+    // Trigger reflow then add open class for animation
+    betSlipModal.offsetHeight;
+    betSlipModal.classList.add('open');
 
     // Update bet slip
     const betSlip = document.getElementById('cs2BetSlip');
@@ -941,10 +1013,10 @@ class CS2BettingGame {
       }
 
       if (data.success) {
-        // 🔧 FIX: Update balance correctly to prevent double deduction
+        // Update balance correctly to prevent double deduction
         this.currentBalance = data.newBalance;
-        // Sync with casino balance (use proper setCredits method for CS2 betting)
         this.casino.setCredits(this.currentBalance);
+        this.updateHeaderBalance();
         console.log(`[CS2 Betting] Balance updated after bet: ${this.currentBalance} credits`);
 
         // Reload bets (wrap in try-catch to prevent errors from causing navigation)
@@ -1033,7 +1105,7 @@ class CS2BettingGame {
       : this.bets.filter(b => b.status !== 'pending');
 
     if (filteredBets.length === 0) {
-      betsContainer.innerHTML = `<p class="no-bets">No ${tabType} bets yet</p>`;
+      betsContainer.innerHTML = `<div class="cs2-empty-state"><div class="empty-state-icon">${tabType === 'open' ? '📋' : '📊'}</div><p>No ${tabType} bets yet</p><span class="empty-state-hint">${tabType === 'open' ? 'Select a match to place your first bet' : 'Your settled bets will appear here'}</span></div>`;
       return;
     }
 
@@ -1072,22 +1144,22 @@ class CS2BettingGame {
             <span class="bet-status ${statusClass}">${statusText}</span>
           </div>
           <div class="bet-match">${eventName}</div>
-          <div class="bet-selection">Pick: <strong>${selectionName}</strong> @ <span style="color:#ff8a5c;font-weight:700;font-family:monospace">${betOdds.toFixed(2)}</span></div>
-          <div class="bet-details-compact" style="display:flex;flex-direction:column;margin-top:8px;background:rgba(30,40,54,0.8);border-radius:10px;overflow:hidden">
-            <div style="display:flex;justify-content:space-between;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.03)">
-              <span style="font-size:0.75rem;color:#9ca3af">Stake</span>
-              <span style="font-size:0.8rem;font-weight:600;font-family:monospace">${betAmount.toLocaleString()} cr</span>
+          <div class="bet-selection">Pick: <strong>${selectionName}</strong> @ <span style="color:var(--amber);font-weight:700;font-family:var(--font-mono)">${betOdds.toFixed(2)}</span></div>
+          <div class="bet-details-compact" style="display:flex;flex-direction:column;margin-top:8px;background:var(--bg-2);border:1px solid var(--line);overflow:hidden">
+            <div style="display:flex;justify-content:space-between;padding:6px 12px;border-bottom:1px solid var(--line)">
+              <span style="font-size:0.75rem;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.1em">Stake</span>
+              <span style="font-size:0.8rem;font-weight:600;font-family:var(--font-mono);color:var(--cream)">${betAmount.toLocaleString()} cr</span>
             </div>
-            <div style="display:flex;justify-content:space-between;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.03)">
-              <span style="font-size:0.75rem;color:#9ca3af">To Win</span>
-              <span style="font-size:0.8rem;font-weight:600;font-family:monospace;color:#00c853">+${profit.toFixed(0)} cr</span>
+            <div style="display:flex;justify-content:space-between;padding:6px 12px;border-bottom:1px solid var(--line)">
+              <span style="font-size:0.75rem;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.1em">To Win</span>
+              <span style="font-size:0.8rem;font-weight:600;font-family:var(--font-mono);color:var(--amber)">+${profit.toFixed(0)} cr</span>
             </div>
-            <div style="display:flex;justify-content:space-between;padding:6px 12px;background:rgba(255,107,53,0.06)">
-              <span style="font-size:0.75rem;color:#9ca3af">Payout</span>
-              <span style="font-size:0.8rem;font-weight:700;font-family:monospace;color:#ff8a5c">${potentialPayout.toFixed(0)} cr</span>
+            <div style="display:flex;justify-content:space-between;padding:6px 12px;background:rgba(255,181,77,.06)">
+              <span style="font-size:0.75rem;color:var(--ink-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.1em">Payout</span>
+              <span style="font-size:0.8rem;font-weight:700;font-family:var(--font-mono);color:var(--amber)">${potentialPayout.toFixed(0)} cr</span>
             </div>
           </div>
-          ${placedDate ? `<div style="margin-top:4px;font-size:0.7rem;color:#6b7280;text-align:right">Placed: ${placedDate}</div>` : ''}
+          ${placedDate ? `<div style="margin-top:4px;font-size:0.7rem;color:var(--ink-dim);text-align:right;font-family:var(--font-mono)">Placed: ${placedDate}</div>` : ''}
           ${bet.settledAt ? `<div class="bet-settled">Settled: ${new Date(bet.settledAt).toLocaleString()}</div>` : ''}
         </div>
       `;

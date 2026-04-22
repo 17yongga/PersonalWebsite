@@ -354,30 +354,34 @@ class PachinkoGame {
     const ctx = this.ctx, W = this.W, H = this.H;
     if (!ctx) return;
 
+    // Neon 777 palette — plum/warm-vintage
     // Background
-    ctx.fillStyle = '#0a0e1a';
+    ctx.fillStyle = '#0a0308';
     ctx.fillRect(0, 0, W, H);
 
-    // Subtle bg pattern
-    ctx.fillStyle = 'rgba(56,189,248,.02)';
+    // Subtle bg pattern (warm amber dots)
+    ctx.fillStyle = 'rgba(255,181,77,.03)';
     for (let i = 0; i < W; i += 30) {
       for (let j = 0; j < H; j += 30) {
         ctx.fillRect(i, j, 1, 1);
       }
     }
 
-    // Draw pegs
+    // Draw pegs (cream bulbs — match marquee aesthetic)
     for (const peg of this.pegs) {
       const glow = Math.max(0, peg.glow);
       ctx.beginPath();
       ctx.arc(peg.x, peg.y, peg.r, 0, Math.PI * 2);
       if (glow > 0) {
-        ctx.fillStyle = `rgba(251,191,36,${0.4 + glow * 0.6})`;
-        ctx.shadowColor = '#fbbf24';
-        ctx.shadowBlur = 10 * glow;
+        // Hit bulb — intensify amber glow
+        ctx.fillStyle = `rgba(255,217,138,${0.5 + glow * 0.5})`;
+        ctx.shadowColor = '#ffd98a';
+        ctx.shadowBlur = 14 * glow;
       } else {
-        ctx.fillStyle = 'rgba(148,163,184,.5)';
-        ctx.shadowBlur = 0;
+        // Resting cream pegs with subtle amber halo
+        ctx.fillStyle = 'rgba(255,233,181,.55)';
+        ctx.shadowColor = 'rgba(255,181,77,.3)';
+        ctx.shadowBlur = 3;
       }
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -389,13 +393,13 @@ class PachinkoGame {
       const m = slot.multiplier;
       const glow = Math.max(0, slot.glow);
 
-      // Slot color based on multiplier
+      // Neon 777 slot colors by multiplier
       let color;
-      if (m >= 10) color = { r: 168, g: 85, b: 247 };      // purple
-      else if (m >= 5) color = { r: 239, g: 68, b: 68 };    // red
-      else if (m >= 2) color = { r: 245, g: 158, b: 11 };   // orange
-      else if (m >= 1) color = { r: 34, g: 197, b: 94 };    // green
-      else color = { r: 100, g: 116, b: 139 };               // gray
+      if (m >= 10) color = { r: 176, g: 100, b: 255 };       // violet (jackpot)
+      else if (m >= 5) color = { r: 255, g: 58, b: 92 };     // neon-red
+      else if (m >= 2) color = { r: 255, g: 90, b: 168 };    // neon-pink
+      else if (m >= 1) color = { r: 255, g: 181, b: 77 };    // amber
+      else color = { r: 120, g: 100, b: 110 };                // muted plum
 
       const alpha = 0.3 + glow * 0.5;
       ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${alpha})`;
@@ -415,8 +419,8 @@ class PachinkoGame {
       const label = m >= 1000 ? (m/1000) + 'k' : m + 'x';
       const maxFontSize = Math.min(slot.w * 0.45, slot.h * 0.25);
       const fontSize = Math.max(7, Math.min(maxFontSize, this.W * 0.02));
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${fontSize}px sans-serif`;
+      ctx.fillStyle = '#fff3e4';
+      ctx.font = `bold ${fontSize}px "Space Mono", ui-monospace, monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(label, slot.x + slot.w / 2, slot.y + slot.h / 2);
