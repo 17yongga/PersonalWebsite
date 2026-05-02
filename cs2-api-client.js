@@ -23,17 +23,10 @@ const ODDSPAPI_BASE_URL = process.env.ODDSPAPI_BASE_URL || 'https://api.oddspapi
 const ODDSPAPI_LANGUAGE = process.env.ODDSPAPI_LANGUAGE || 'en';
 const ODDSPAPI_ODDS_FORMAT = process.env.ODDSPAPI_ODDS_FORMAT || 'decimal'; // decimal, fractional, american
 
-// API Key configuration with working keys prioritized (Updated 3:07 PM EST)
-// Verified working keys moved to front, exhausted keys at end
-const ODDSPAPI_API_KEYS = [
-  '9003763c-674b-4b96-be80-fb8d08ff99db', // ✅ WORKING (59 sports available)
-  'ba42222d-487b-4c70-a53e-7d50c212559f', // ✅ WORKING (59 sports available) 
-  '8afcb165-1989-42f1-8739-da129bb40337', // ✅ WORKING (59 sports available)
-  '4d4fde92-a84b-433f-a815-462b3d6aca20', // ✅ WORKING (59 sports available)
-  process.env.ODDSPAPI_API_KEY || '492c4517-843e-49d5-96dd-8eed82567c5b', // ❌ Rate limited
-  '0ddeae0a-1e13-4285-9e35-b5b590190fa8', // ❌ Rate limited
-  '2fc3c182-766b-4992-9729-f439efdac2ba'  // ❌ Rate limited
-];
+const ODDSPAPI_API_KEYS = (process.env.ODDSPAPI_API_KEYS || process.env.ODDSPAPI_API_KEY || '')
+  .split(',')
+  .map(key => key.trim())
+  .filter(Boolean);
 
 // Current active API key index
 let currentApiKeyIndex = 0;
@@ -172,24 +165,30 @@ async function makeRequest(endpoint, params = {}, purpose = 'API call', retryKey
     const responseTime = Date.now() - startTime;
     const errorMessage = error.message || 'Unknown error';
     
-    // Check if this is an authentication error (401, 403) and we have more keys to try
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+    // Check if this is an auth error (401, 403) or rate limit (429) and we have more keys to try
+    const retryableStatuses = [401, 403, 429];
+    if (error.response && retryableStatuses.includes(error.response.status)) {
       const nextKeyIndex = keyIndex + 1;
       
       if (nextKeyIndex < ODDSPAPI_API_KEYS.length) {
-        console.warn(`[OddsPapi] ⚠ API key ${keyIndex + 1} failed (${error.response.status}). Trying fallback key ${nextKeyIndex + 1}...`);
+        const reason = error.response.status === 429 ? 'rate limited' : `auth failed (${error.response.status})`;
+        console.warn(`[OddsPapi] ⚠ API key ${keyIndex + 1} ${reason}. Rotating to key ${nextKeyIndex + 1}/${ODDSPAPI_API_KEYS.length}...`);
+        
+        // Persist the rotation so future calls start with the new key
+        currentApiKeyIndex = nextKeyIndex;
         
         // Try with next API key (recursive call will automatically try all remaining keys)
         return await makeRequest(endpoint, params, purpose, nextKeyIndex);
       } else {
         // All keys exhausted
-        console.error(`[OddsPapi] ❌ All ${ODDSPAPI_API_KEYS.length} API keys have been tried and failed.`);
+        console.error(`[OddsPapi] ❌ All ${ODDSPAPI_API_KEYS.length} API keys exhausted (last error: ${error.response.status}).`);
       }
     }
     
     // Log failed API call (only log once at the end, not for each failed key attempt)
-    // Skip logging if we're in the middle of trying fallback keys (keyIndex > currentApiKeyIndex)
-    if (keyIndex === currentApiKeyIndex || (error.response && error.response.status !== 401 && error.response.status !== 403)) {
+    // Skip logging if we're in the middle of trying fallback keys
+    const isRetryableError = error.response && retryableStatuses.includes(error.response.status);
+    if (keyIndex === currentApiKeyIndex || !isRetryableError) {
       logApiCall(endpoint, purpose, params, 'error', errorMessage, responseTime);
     }
     
@@ -208,7 +207,9 @@ async function makeRequest(endpoint, params = {}, purpose = 'API call', retryKey
           console.error(`[OddsPapi]   - Or set ODDSPAPI_API_KEY environment variable`);
         }
       } else if (error.response.status === 429) {
-        console.warn('[OddsPapi] Rate limit exceeded. Please wait before making more requests.');
+        if (keyIndex >= ODDSPAPI_API_KEYS.length - 1) {
+          console.warn('[OddsPapi] All API keys rate limited. Please wait before making more requests.');
+        }
       }
     } else if (error.request) {
       console.error('[OddsPapi] No response received. Check network connection.');

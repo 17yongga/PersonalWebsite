@@ -366,9 +366,107 @@ async function fetchRecentResults(options = {}) {
   }
 }
 
+
+/**
+ * Fetch a specific match result by bo3.gg match ID
+ * @param {number|string} matchId - bo3.gg match ID (numeric, without bo3gg_ prefix)
+ * @returns {Promise<Object|null>} Match result or null
+ */
+async function fetchMatchResultById(matchId) {
+  const numericId = String(matchId).replace(/^bo3gg_/, '');
+  
+  try {
+    console.log(`[bo3.gg] Fetching result for match ${numericId}...`);
+    
+    const data = await rateLimitedRequest('/matches', {
+      'filter[matches.id][eq]': numericId,
+      'page[limit]': 1
+    });
+    
+    if (!data?.results?.[0]) {
+      console.log(`[bo3.gg] Match ${numericId} not found`);
+      return null;
+    }
+    
+    const match = data.results[0];
+    
+    if (match.status !== 'finished' || !match.winner_team_id) {
+      console.log(`[bo3.gg] Match ${numericId} not finished yet (status: ${match.status})`);
+      return null;
+    }
+    
+    const teamIds = [match.team1_id, match.team2_id].filter(Boolean);
+    if (teamIds.length > 0) await fetchTeamsBatch(teamIds);
+    const details = await resolveMatchDetails(match);
+    
+    let winner = null;
+    if (match.winner_team_id === match.team1_id) winner = 'team1';
+    else if (match.winner_team_id === match.team2_id) winner = 'team2';
+    
+    console.log(`[bo3.gg] Match ${numericId} result: ${details.team1Name} ${match.team1_score}-${match.team2_score} ${details.team2Name}, winner: ${winner === 'team1' ? details.team1Name : details.team2Name}`);
+    
+    return {
+      id: `bo3gg_${match.id}`,
+      team1: details.team1Name,
+      team2: details.team2Name,
+      winner,
+      winnerName: winner === 'team1' ? details.team1Name : (winner === 'team2' ? details.team2Name : null),
+      score: `${match.team1_score}-${match.team2_score}`,
+      team1Score: match.team1_score,
+      team2Score: match.team2_score,
+      startDate: match.start_date,
+      endDate: match.end_date,
+      status: 'finished',
+      source: 'bo3gg',
+      confidence: 0.95
+    };
+  } catch (error) {
+    console.error(`[bo3.gg] Error fetching match ${numericId}:`, error.message);
+    return null;
+  }
+}
+
+/**
+ * Find match result by team names (searches recent finished matches)
+ * @param {string} team1 - First team name
+ * @param {string} team2 - Second team name  
+ * @returns {Promise<Object|null>} Match result or null
+ */
+async function findMatchResultByTeams(team1, team2) {
+  try {
+    console.log(`[bo3.gg] Searching for result: ${team1} vs ${team2}...`);
+    
+    const results = await fetchRecentResults({ limit: 50 });
+    
+    const normalize = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const t1 = normalize(team1);
+    const t2 = normalize(team2);
+    
+    const match = results.find(r => {
+      const rt1 = normalize(r.team1);
+      const rt2 = normalize(r.team2);
+      return (rt1.includes(t1) || t1.includes(rt1)) && (rt2.includes(t2) || t2.includes(rt2)) ||
+             (rt1.includes(t2) || t2.includes(rt1)) && (rt2.includes(t1) || t1.includes(rt2));
+    });
+    
+    if (match) {
+      console.log(`[bo3.gg] Found result: ${match.team1} ${match.score} ${match.team2}, winner: ${match.winnerName}`);
+    } else {
+      console.log(`[bo3.gg] No result found for ${team1} vs ${team2}`);
+    }
+    
+    return match || null;
+  } catch (error) {
+    console.error(`[bo3.gg] Error searching for match:`, error.message);
+    return null;
+  }
+}
+
 module.exports = {
   fetchUpcomingMatches,
   fetchRecentResults,
+  fetchMatchResultById,
+  findMatchResultByTeams,
   fetchTeamDetails,
   fetchTeamsBatch,
   parseTeamNamesFromSlug

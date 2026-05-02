@@ -1,86 +1,176 @@
 Page Title: Gary Yong – Projects
-Description: Selected projects by Gary Yong showcasing practical experience and problem solving.​
+Description: Selected projects by Gary Yong showcasing practical experience and problem solving.
 
 Section: Projects
 Title: Projects
 
 Summary: Highlight your best work aligned with your target roles.
 
+Project: Capco Consulting – Enterprise Transformation Track Record
+Tech stack: Visio, JIRA, Confluence, Agile/Scrum delivery frameworks.
+Context: Implementation Consultant at Capco, Sept 2021 – Present, Toronto, ON.
+
+Delivered 6 consulting engagements at tier-1 financial institutions across Canada and globally, covering digital transformation, process automation, and large-scale system migrations.
+
+Key business impact highlights:
+- Led 30+ workshops at a leading Canadian bank to map current-state system architecture for a front-to-back digital transformation
+- Analyzed 15 reconciliation processes and proposed automation solutions projected to save over 5,000 hours annually at a tier-1 Canadian commercial bank
+- Managed cutover runbooks across 13 workstreams for a major bank merger, running 3 live rehearsals to strengthen business readiness
+- Reviewed 3,000+ defect records and built JIRA dashboards to streamline release defect reporting at a Canadian wealth management firm
+- Led requirements for a CCaaS migration, delivering 10+ future-state user journeys for contact center transformation
+- Created detailed Visio process flows and facilitated vendor workshops for a wealth management platform transformation, refining 10+ customer and account maintenance flows
+
+Domain expertise: banking (retail, commercial, wealth), digital transformation, reconciliation automation, CCaaS/contact center, middle office digitization.
+
+Tags: consulting, business analysis, digital transformation, banking, process mapping, workshop facilitation, JIRA, Confluence, stakeholder management.
+
 Project: Ask Gary – Personal AI Career Chatbot
 Tech stack: FastAPI, Python, OpenAI, Vanilla JavaScript, AWS EC2, AWS S3.
 
-Built a retrieval‑augmented AI chatbot, Ask Gary, that answers career questions using information from resume, LinkedIn, hobbies, and projects.​
+Built a retrieval‑augmented AI chatbot, Ask Gary, that answers career questions using information from resume, LinkedIn, hobbies, and projects.
 
-Uses a FastAPI backend with vector search and OpenAI models.​
+Uses a FastAPI backend with vector search and OpenAI models.
 
-Integrated as a dedicated page on a personal website with a lightweight JavaScript frontend.​
+Integrated as a dedicated page on a personal website with a lightweight JavaScript frontend deployed on AWS S3.
 
-Deployed on AWS (EC2 for backend, S3 for static site) with logging, evaluation, and troubleshooting workflows.​
+Deployed on AWS (EC2 for backend, S3 for static site) with session memory, conversation history, user profiling, analytics dashboard, logging, and evaluation workflows.
 
-Tags: AI chatbot, retrieval‑augmented generation (RAG), Python, OpenAI API, AWS EC2, AWS S3.
+Successfully demoed to interviewers at Deloitte's Innovation Centre of Excellence — received strong positive reception.
+
+Tags: AI chatbot, retrieval‑augmented generation (RAG), Python, OpenAI API, FastAPI, AWS EC2, AWS S3, conversational AI.
+
+Project: Mini Games Platform
+Tech stack: Node.js, Express, Socket.io, Vanilla JavaScript, AWS EC2, nginx.
+Live URL: https://api.gary-yong.com/play/
+
+Built a multiplayer real‑time mini games platform featuring 7 browser games: Emoji Match, Math Blitz, Reaction Race, Simon Says, Tap Frenzy, Trivia Blitz, and Word Scramble.
+
+Architected a plugin system where each game is an independent server and client module, auto‑loaded at runtime — making it easy to add new games without touching core infrastructure.
+
+Implemented room codes, shareable links, AI bots with 3 difficulty levels, and player reconnection with grace periods. No login required.
+
+Deployed on AWS EC2 with PM2 process management and nginx reverse proxy.
+
+Tags: multiplayer games, Node.js, Socket.io, real-time, AWS EC2, plugin architecture.
+
+Project: Flowt – Household Budget Platform (formerly FinSync)
+Tech stack: Node.js, Express, SQLite, Vanilla JavaScript, AWS EC2, AWS S3. Phase 2: React Native, Expo, PostgreSQL, RevenueCat.
+Live URL: https://gary-yong.com/budget.html
+
+Built a full‑stack household budgeting platform for shared expense tracking, household finances, and spending analytics.
+
+Key features include:
+- AI receipt scanning: upload or paste a receipt image; Llama 4 Scout vision model extracts line items, amounts, and dates automatically
+- Canonical category system: 50+ alias mappings with 3-pass resolution to prevent duplicate categories across manual entry and AI scan
+- Shared vs individual expense tracking with split calculation and balance reconciliation (overpayment-aware)
+- Smart search by name, amount, date, category, or person
+- Server-side change history with color-coded activity log
+- Chart.js spending visualizations (monthly trends, category breakdown)
+- Mobile-optimized: bottom nav bar, touch-friendly dropdowns, numeric keypad for amounts
+
+Phase 2 (in planning): React Native + Expo iOS/Android app with biometric auth, offline hard block, RevenueCat membership paywall (14-day free trial), push notifications, and App Store/Play Store submission.
+
+App name finalized as Flowt — brand narrative, taglines, and App Store copy complete.
+
+Tags: budgeting, fintech, AI receipt scanning, React Native, Expo, Node.js, SQLite, AWS, full-stack, mobile app.
+
+Project: CS2 Casino – Esports Betting Platform
+Tech stack: Node.js, Express, Socket.io, AWS EC2, AWS S3, Python (odds scraping).
+Live URL: https://gary-yong.com/casino.html
+
+Built a real‑money CS2 esports betting platform featuring 7 casino games: Blackjack, Coinflip, Crash, CS2 Match Betting, Pachinko, Poker, and Roulette.
+
+Integrated live match data and odds from bo3.gg (real-time scraping) with an OddsPapi API supplement for CS2 professional matches.
+
+Architected backend to handle real-time game state, bet management, and multi-source odds reconciliation with automatic failover.
+
+Deployed on AWS EC2 with PM2 and nginx; frontend hosted on S3 with CloudFront CDN.
+
+Tags: esports, betting platform, Node.js, Socket.io, real-time, AWS, CS2, bo3.gg.
+
+Project: Algorithmic Trading Dashboard (PaperTrade)
+Tech stack: Python, Node.js, Alpaca API, AWS EC2, AWS S3.
+Live URL: https://api.gary-yong.com/trading
+
+Built a full-stack algorithmic trading platform with a Python quantitative engine connected to the Alpaca paper trading API. The platform supports both manual trading and fully automated strategy execution.
+
+Implemented 5 algorithmic trading strategies:
+- Momentum/Trend Following: RSI, MACD, EMA crossover signals
+- Mean Reversion: Bollinger Bands, Z-score deviation
+- Volatility Breakout: ATR-based stop-loss and max-hold exits
+- Value & Dividends: RSI-based confidence scoring
+- Sentiment Analysis: news-driven signal generation
+
+Phase 2 additions include a Backtesting Panel with equity curve vs SPY benchmark, underwater drawdown chart, monthly returns heatmap, and key metrics (Sharpe, Sortino, Calmar, win rate, profit factor, VaR). Also shipped a Risk Dashboard with drawdown curves, Sharpe ratio cards per strategy, position concentration heatmap, and daily loss limit progress bars.
+
+Risk controls: maximum 20% per position, 80% max invested, stop losses, daily loss limits.
+
+All dashboard pages are publicly accessible — no login required.
+
+Tags: algorithmic trading, Python, Alpaca API, quant finance, backtesting, risk management, Node.js, AWS, Sharpe ratio, momentum trading.
 
 Project: Lunar – Crypto Portfolio Builder
-Context: 4th year design (capstone) project.​
+Context: 4th year design (capstone) project.
 
-Led a team of five as project manager and UI/UX designer to deliver a deployed crypto portfolio management web platform.​
+Led a team of five as project manager and UI/UX designer to deliver a deployed crypto portfolio management web platform.
 
-Managed seven stakeholders through three design revisions, seven feedback sessions, and bi‑weekly retrospectives.​
+Managed seven stakeholders through three design revisions, seven feedback sessions, and bi‑weekly retrospectives.
 
-Conducted needs analysis via user surveys and interviews, and designed end‑to‑end user journeys.​
+Conducted needs analysis via user surveys and interviews, and designed end‑to‑end user journeys.
 
-Assets: live demo, proposal deck, and project report linked from the project card.​
+Assets: live demo, proposal deck, and project report linked from the project card.
 
 Tags: capstone project, product management, team leadership, user research, crypto.
 
 Project: Personal Website & Portfolio Platform
-Tech stack: HTML, CSS, JavaScript, responsive design, AWS S3, Route 53.​
+Tech stack: HTML, CSS, JavaScript, responsive design, AWS S3, Route 53.
 
-Designed and built a multi‑page personal website with sections for projects, experience, skills, blog, and contact.​
+Designed and built a multi‑page personal website with sections for projects, experience, skills, blog, and contact.
 
-Implemented dark/light theme, scroll‑reveal animations, and mobile navigation drawer for an app‑like experience.​
+Implemented dark/light theme, scroll‑reveal animations, and mobile navigation drawer for an app‑like experience.
 
-Deployed on AWS S3 with a custom domain and HTTPS; content is structured so new projects and posts are easy to add.​
+Deployed on AWS S3 with a custom domain and HTTPS; content is structured so new projects and posts are easy to add.
 
 Tags: portfolio website, responsive UI, dark/light mode, CSS animations, front‑end architecture, AWS S3.
 
 Project: Rideshare Service Platform
-Built a ridesharing app for students to find safe, low‑cost rides with potential cost savings up to 600 percent.​
+Built a ridesharing app for students to find safe, low‑cost rides with potential cost savings up to 600 percent.
 
-Interviewed drivers and riders to define system requirements and the minimum viable product.​
+Interviewed drivers and riders to define system requirements and the minimum viable product.
 
-Identified cost, safety, and efficiency issues in existing rideshare solutions through market research.​
+Identified cost, safety, and efficiency issues in existing rideshare solutions through market research.
 
 Tags: project management, market analysis, user research, product ideation.
 
 Project: Pallet Tracking Automation Project
-Organization context: Loblaw Companies Limited; tech: JavaScript, Bluetooth Low Energy, IoT.​
+Organization context: Loblaw Companies Limited; tech: JavaScript, Bluetooth Low Energy, IoT.
 
-Built an automatic data delivery application in JavaScript that connects to Bluetooth LE beacons and IoT gateways.​
+Built an automatic data delivery application in JavaScript that connects to Bluetooth LE beacons and IoT gateways.
 
-Improved pallet tracking by removing manual data entry and reducing human error via an automated IoT tracking system.​
+Improved pallet tracking by removing manual data entry and reducing human error via an automated IoT tracking system.
 
-Performed on‑site tests and presented results to logistics leadership, earning approval for further integration.​
+Performed on‑site tests and presented results to logistics leadership, earning approval for further integration.
 
 Tags: IoT, Bluetooth LE, JavaScript, automation, logistics.
 
 Project: Product Authentication Blockchain Platform
-Context: Accenture Liquid Studio; timeframe Sept 2019 – Dec 2019; tech: blockchain, AWS.​
+Context: Accenture Liquid Studio; timeframe Sept 2019 – Dec 2019; tech: blockchain, AWS.
 
-Worked on a blockchain‑based platform that authenticated products and communicated project milestones in clear, business‑oriented language for senior leaders.​
+Worked on a blockchain‑based platform that authenticated products and communicated project milestones in clear, business‑oriented language for senior leaders.
 
-Operated within a 12‑week Agile Scrum roadmap with user testing and continuous integration pipelines on AWS.​
+Operated within a 12‑week Agile Scrum roadmap with user testing and continuous integration pipelines on AWS.
 
-Delivered a client‑ready product with documentation used by senior consultants and industry leaders across multiple regions.​
+Delivered a client‑ready product with documentation used by senior consultants and industry leaders across multiple regions.
 
 Tags: blockchain, AWS, Agile/Scrum, product delivery, consulting.
 
 Project: ERP Process Automation Tool
-Context: internship project, July 2017 – Aug 2017; tech: Excel VBA, process automation.​
+Context: internship project, July 2017 – Aug 2017; tech: Excel VBA, process automation.
 
-Analyzed transaction processing workflows using process analysis and time studies to find major inefficiencies.​
+Analyzed transaction processing workflows using process analysis and time studies to find major inefficiencies.
 
-Built an Excel VBA automation tool that reduced weekly transaction processing from about 4 hours to roughly 15 minutes.​
+Built an Excel VBA automation tool that reduced weekly transaction processing from about 4 hours to roughly 15 minutes.
 
-Designed a user‑centric UI with validation rules and iterated using feedback to improve reliability and ease of use.​
+Designed a user‑centric UI with validation rules and iterated using feedback to improve reliability and ease of use.
 
 Tags: process automation, Excel VBA, operations, UI/UX.

@@ -6,13 +6,29 @@ Summary: A blend of consulting, product, and technical skills for AI and digital
 Technical
 JavaScript, TypeScript, HTML, CSS
 
-Python for scripting and data analysis
+Node.js, Express.js, Socket.io for real-time and REST API backends
 
-SQL for querying and reporting
+Python for scripting, data analysis, FastAPI, and quantitative trading engines
 
-AWS (EC2, S3, Cognito, IAM)
+SQL and SQLite for relational databases
+
+AWS (EC2, S3, CloudFront, Cognito, IAM, Route 53) — production deployments at scale
 
 APIs, web integrations, and IoT (BLE beacons, gateways)
+
+PM2 process management, nginx reverse proxy, systemd service management
+
+RAG (Retrieval-Augmented Generation) and vector search with OpenAI embeddings
+
+Real-time multiplayer architecture via WebSockets and Socket.io
+
+Astro, Tailwind CSS, GSAP for modern static site development
+
+React Native for mobile UI (Accenture internship)
+
+AI integrations: OpenAI API (chat, embeddings, vision), Groq, ElevenLabs
+
+Algorithmic trading: Alpaca API, quantitative strategy design, risk management
 
 Product & Delivery
 Requirements gathering and user journey design
@@ -25,6 +41,8 @@ Cutover planning and runbook design for large programs
 
 Experiment design and A/B or causal impact analysis
 
+Full-stack product delivery from ideation to production deployment
+
 Consulting & Domain
 Contact center and CCaaS transformations
 
@@ -35,3 +53,4 @@ Digital transformation across front, middle, and back office
 Reconciliation automation and operations optimization
 
 Cross‑functional communication with technical and business teams
+

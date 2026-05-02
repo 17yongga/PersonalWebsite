@@ -90,6 +90,9 @@ const INITIAL_CREDITS = 10000;
 // User data file path
 const USERS_FILE = path.join(__dirname, "casino-users.json");
 
+// Bet history file path
+const BET_HISTORY_FILE = path.join(__dirname, "data", "bet-history.json");
+
 // Player data: { socketId: { username, credits, roomId, userId } }
 const players = {};
 
@@ -121,6 +124,57 @@ let users = {};
 let usersLoadedPromise = loadUsers().then(data => {
   users = data;
   console.log(`Loaded ${Object.keys(users).length} users from file`);
+  
+  // Migrate existing users to include new stats and achievements structure
+  let migrationNeeded = false;
+  for (const [userId, userData] of Object.entries(users)) {
+    if (!userData.stats) {
+      migrationNeeded = true;
+      userData.stats = {
+        totalWagered: 0,
+        totalWon: 0,
+        gamesPlayed: 0,
+        gamesWon: 0,
+        biggestWin: 0,
+        currentStreak: 0,
+        bestStreak: 0,
+        gameStats: {
+          blackjack: { played: 0, won: 0, bestStreak: 0 },
+          roulette: { played: 0, won: 0, hitNumber7: 0 },
+          coinflip: { played: 0, won: 0 },
+          crash: { played: 0, won: 0, bestMultiplier: 0 },
+          poker: { played: 0, won: 0, royalFlushes: 0, biggestPot: 0 },
+          cs2betting: { played: 0, won: 0 },
+          pachinko: { played: 0, won: 0 }
+        }
+      };
+    }
+    
+    if (!userData.achievements) {
+      migrationNeeded = true;
+      userData.achievements = [];
+    }
+    
+    if (!userData.weeklyStats) {
+      migrationNeeded = true;
+      userData.weeklyStats = {
+        startDate: new Date().toISOString(),
+        totalWagered: 0,
+        totalWon: 0,
+        gamesPlayed: 0
+      };
+    }
+  }
+  
+  if (migrationNeeded) {
+    console.log('Migrating users to include stats and achievements...');
+    saveUsers(users).then(() => {
+      console.log('User migration completed successfully');
+    }).catch(err => {
+      console.error('Error saving migrated users:', err);
+    });
+  }
+  
   return data;
 }).catch(err => {
   console.error("Error loading users:", err);
@@ -151,6 +205,186 @@ async function saveUserBalance(userId, credits) {
     users[userId].lastPlayed = new Date().toISOString();
     await saveUsers(users);
   }
+}
+
+// ========== BET HISTORY ==========
+let betHistory = {}; // { username: [ { game, bet, result, payout, multiplier, timestamp }, ... ] }
+
+async function loadBetHistory() {
+  try {
+    const dataDir = path.join(__dirname, "data");
+    await fs.mkdir(dataDir, { recursive: true }).catch(() => {});
+    const data = await fs.readFile(BET_HISTORY_FILE, "utf8");
+    betHistory = JSON.parse(data);
+    console.log(`Loaded bet history: ${Object.keys(betHistory).length} users`);
+  } catch (error) {
+    if (error.code === "ENOENT") betHistory = {};
+    else console.error("Error loading bet history:", error);
+  }
+}
+
+async function saveBetHistory() {
+  try {
+    const dataDir = path.join(__dirname, "data");
+    await fs.mkdir(dataDir, { recursive: true }).catch(() => {});
+    const tempFile = BET_HISTORY_FILE + '.tmp';
+    await fs.writeFile(tempFile, JSON.stringify(betHistory, null, 2), "utf8");
+    await fs.rename(tempFile, BET_HISTORY_FILE);
+  } catch (error) {
+    console.error("Error saving bet history:", error);
+  }
+}
+
+function addBetRecord(username, record) {
+  if (!betHistory[username]) betHistory[username] = [];
+  betHistory[username].unshift({
+    ...record,
+    timestamp: new Date().toISOString()
+  });
+  // Keep last 200 bets per user
+  if (betHistory[username].length > 200) betHistory[username] = betHistory[username].slice(0, 200);
+  saveBetHistory().catch(err => console.error("Error saving bet history:", err));
+}
+
+loadBetHistory().catch(err => console.error("Error loading bet history:", err));
+
+// ========== ACHIEVEMENT SYSTEM ==========
+const ACHIEVEMENTS = {
+  'first_timer': { id: 'first_timer', name: 'First Timer', icon: '🎰', description: 'Play your first game' },
+  'high_roller': { id: 'high_roller', name: 'High Roller', icon: '💰', description: 'Wager 10,000+ credits in a single bet' },
+  'hot_streak': { id: 'hot_streak', name: 'Hot Streak', icon: '🔥', description: 'Win 5 games in a row' },
+  'diamond_hands': { id: 'diamond_hands', name: 'Diamond Hands', icon: '💎', description: 'Survive past 10x in Crash' },
+  'royal_flush': { id: 'royal_flush', name: 'Royal Flush', icon: '🃏', description: 'Get a Royal Flush in Poker' },
+  'card_sharp': { id: 'card_sharp', name: 'Card Sharp', icon: '♠️', description: 'Win 10 Blackjack hands' },
+  'lucky_seven': { id: 'lucky_seven', name: 'Lucky 7', icon: '🎯', description: 'Hit number 7 in Roulette' },
+  'to_the_moon': { id: 'to_the_moon', name: 'To the Moon', icon: '📈', description: 'Cash out at 50x+ in Crash' },
+  'degenerate': { id: 'degenerate', name: 'Degenerate', icon: '💀', description: 'Play 100 total games' },
+  'casino_king': { id: 'casino_king', name: 'Casino King', icon: '👑', description: 'Reach 100,000 credits' }
+};
+
+function checkAchievements(userId, gameType, betAmount, won, result = {}) {
+  if (!users[userId]) return [];
+  
+  const user = users[userId];
+  const newAchievements = [];
+  const stats = user.stats;
+  
+  // Check each achievement
+  if (!user.achievements.includes('first_timer') && stats.gamesPlayed >= 1) {
+    newAchievements.push('first_timer');
+  }
+  
+  if (!user.achievements.includes('high_roller') && betAmount >= 10000) {
+    newAchievements.push('high_roller');
+  }
+  
+  if (!user.achievements.includes('hot_streak') && stats.currentStreak >= 5) {
+    newAchievements.push('hot_streak');
+  }
+  
+  if (!user.achievements.includes('diamond_hands') && gameType === 'crash' && result.multiplier > 10) {
+    newAchievements.push('diamond_hands');
+  }
+  
+  if (!user.achievements.includes('royal_flush') && gameType === 'poker' && result.hand === 'Royal Flush') {
+    newAchievements.push('royal_flush');
+  }
+  
+  if (!user.achievements.includes('card_sharp') && stats.gameStats.blackjack.won >= 10) {
+    newAchievements.push('card_sharp');
+  }
+  
+  if (!user.achievements.includes('lucky_seven') && gameType === 'roulette' && result.number === 7) {
+    newAchievements.push('lucky_seven');
+  }
+  
+  if (!user.achievements.includes('to_the_moon') && gameType === 'crash' && result.multiplier >= 50) {
+    newAchievements.push('to_the_moon');
+  }
+  
+  if (!user.achievements.includes('degenerate') && stats.gamesPlayed >= 100) {
+    newAchievements.push('degenerate');
+  }
+  
+  if (!user.achievements.includes('casino_king') && user.credits >= 100000) {
+    newAchievements.push('casino_king');
+  }
+  
+  // Add new achievements to user
+  user.achievements.push(...newAchievements);
+  
+  return newAchievements;
+}
+
+function updateUserStats(userId, gameType, betAmount, won, payout = 0, result = {}) {
+  if (!users[userId]) return;
+  
+  const user = users[userId];
+  const stats = user.stats;
+  const netProfit = payout - betAmount;
+  
+  // Update general stats
+  stats.totalWagered += betAmount;
+  stats.totalWon += payout;
+  stats.gamesPlayed++;
+  
+  if (won) {
+    stats.gamesWon++;
+    stats.currentStreak++;
+    if (stats.currentStreak > stats.bestStreak) {
+      stats.bestStreak = stats.currentStreak;
+    }
+    if (netProfit > stats.biggestWin) {
+      stats.biggestWin = netProfit;
+    }
+  } else {
+    stats.currentStreak = 0;
+  }
+  
+  // Update weekly stats (reset if week has passed)
+  const weekStart = new Date(user.weeklyStats.startDate);
+  const now = new Date();
+  const daysSinceStart = (now - weekStart) / (1000 * 60 * 60 * 24);
+  
+  if (daysSinceStart > 7) {
+    user.weeklyStats = {
+      startDate: now.toISOString(),
+      totalWagered: betAmount,
+      totalWon: payout,
+      gamesPlayed: 1
+    };
+  } else {
+    user.weeklyStats.totalWagered += betAmount;
+    user.weeklyStats.totalWon += payout;
+    user.weeklyStats.gamesPlayed++;
+  }
+  
+  // Update game-specific stats
+  const gameStats = stats.gameStats[gameType] || { played: 0, won: 0 };
+  gameStats.played++;
+  if (won) gameStats.won++;
+  
+  // Game-specific stat updates
+  if (gameType === 'roulette' && result.number === 7) {
+    gameStats.hitNumber7 = (gameStats.hitNumber7 || 0) + 1;
+  }
+  if (gameType === 'crash' && result.multiplier > (gameStats.bestMultiplier || 0)) {
+    gameStats.bestMultiplier = result.multiplier;
+  }
+  if (gameType === 'poker' && result.hand === 'Royal Flush') {
+    gameStats.royalFlushes = (gameStats.royalFlushes || 0) + 1;
+  }
+  if (gameType === 'poker' && result.potSize && result.potSize > (gameStats.biggestPot || 0)) {
+    gameStats.biggestPot = result.potSize;
+  }
+  if (gameType === 'blackjack' && won) {
+    stats.gameStats.blackjack.bestStreak = Math.max(
+      stats.gameStats.blackjack.bestStreak || 0,
+      stats.currentStreak
+    );
+  }
+  
+  stats.gameStats[gameType] = gameStats;
 }
 
 // CS2 CREDIT BALANCE FIX - Helper functions for syncing real-time and persistent credit state
@@ -213,6 +447,145 @@ let rouletteState = {
 // Room data: { roomId: { creatorId, betAmount, creatorChoice, players: [socketId1, socketId2], confirmed: false, gameState: 'waiting'|'confirmed'|'flipping'|'finished', coinResult: null, botId: string } }
 const coinflipRooms = {};
 let coinflipRoomCounter = 1;
+
+// ========== CRASH GAME STATE ==========
+let crashState = {
+  phase: 'waiting', // waiting, betting, running, crashed
+  multiplier: 1.00,
+  crashPoint: null,
+  bets: {}, // { socketId: { username, amount, cashedOut, cashoutMultiplier } }
+  history: [], // last 30 crash points
+  startTime: null,
+  bettingTimer: null,
+  gameTimer: null,
+  tickInterval: null
+};
+
+function generateCrashPoint() {
+  // House edge ~1%. Formula: max(1.0, floor(100 * 0.99 / (1 - r)) / 100)
+  const r = Math.random();
+  if (r >= 0.99) return 1.00; // instant crash 1% of the time
+  return Math.max(1.00, Math.floor(100 * 0.99 / (1 - r)) / 100);
+}
+
+function startCrashBetting() {
+  crashState.phase = 'betting';
+  crashState.multiplier = 1.00;
+  crashState.crashPoint = null;
+  crashState.bets = {};
+  crashState.startTime = null;
+
+  io.emit('crashBettingStart', { timeLeft: 10 });
+
+  let timeLeft = 10;
+  if (crashState.bettingTimer) clearInterval(crashState.bettingTimer);
+  crashState.bettingTimer = setInterval(() => {
+    timeLeft -= 1;
+    io.emit('crashBettingTick', { timeLeft });
+    if (timeLeft <= 0) {
+      clearInterval(crashState.bettingTimer);
+      crashState.bettingTimer = null;
+      startCrashRound();
+    }
+  }, 1000);
+}
+
+function startCrashRound() {
+  crashState.phase = 'running';
+  crashState.multiplier = 1.00;
+  crashState.crashPoint = generateCrashPoint();
+  crashState.startTime = Date.now();
+
+  console.log(`[Crash] Round starting, crash point: ${crashState.crashPoint}x`);
+
+  io.emit('crashState', {
+    phase: 'running',
+    multiplier: 1.00,
+    history: crashState.history,
+    startTime: crashState.startTime,
+    bets: {}
+  });
+
+  // Tick every 50ms
+  if (crashState.tickInterval) clearInterval(crashState.tickInterval);
+  crashState.tickInterval = setInterval(() => {
+    const elapsed = (Date.now() - crashState.startTime) / 1000;
+    crashState.multiplier = Math.max(1.00, parseFloat((Math.exp(0.06 * elapsed)).toFixed(2)));
+
+    // Check auto-cashouts
+    for (const [sid, bet] of Object.entries(crashState.bets)) {
+      if (!bet.cashedOut && bet.autoCashout > 0 && crashState.multiplier >= bet.autoCashout) {
+        processCrashCashout(sid);
+      }
+    }
+
+    if (crashState.multiplier >= crashState.crashPoint) {
+      // CRASH!
+      clearInterval(crashState.tickInterval);
+      crashState.tickInterval = null;
+      crashState.phase = 'crashed';
+      crashState.multiplier = crashState.crashPoint;
+
+      crashState.history.unshift({ crashPoint: crashState.crashPoint, time: new Date().toISOString() });
+      if (crashState.history.length > 30) crashState.history.pop();
+
+      console.log(`[Crash] Crashed at ${crashState.crashPoint}x`);
+
+      io.emit('crashResult', {
+        crashPoint: crashState.crashPoint,
+        history: crashState.history
+      });
+
+      // Next round after 5 seconds
+      if (crashState.gameTimer) clearTimeout(crashState.gameTimer);
+      crashState.gameTimer = setTimeout(() => startCrashBetting(), 5000);
+    } else {
+      io.emit('crashTick', { multiplier: crashState.multiplier });
+    }
+  }, 50);
+}
+
+function processCrashCashout(socketId) {
+  const bet = crashState.bets[socketId];
+  if (!bet || bet.cashedOut) return;
+  
+  bet.cashedOut = true;
+  bet.cashoutMultiplier = crashState.multiplier;
+  const winnings = Math.floor(bet.amount * crashState.multiplier);
+
+  // Credit the player
+  if (players[socketId]) {
+    players[socketId].credits += winnings;
+    const userId = players[socketId].userId;
+    if (userId) {
+      saveUserBalance(userId, players[socketId].credits).catch(err => {
+        console.error("[Crash] Error saving balance:", err);
+      });
+    }
+    io.to(socketId).emit("playerData", {
+      username: players[socketId].username,
+      credits: players[socketId].credits
+    });
+  }
+
+  io.emit('crashCashedOut', {
+    socketId,
+    username: bet.username,
+    multiplier: crashState.multiplier,
+    amount: bet.amount,
+    winnings
+  });
+
+  console.log(`[Crash] ${bet.username} cashed out at ${crashState.multiplier}x, won ${winnings}`);
+}
+
+// Start crash game loop
+setTimeout(() => startCrashBetting(), 5000);
+
+// ========== POKER STATE ==========
+const pokerEngine = require('./poker-engine');
+const pokerTables = {}; // { tableId: PokerTableState }
+let pokerTableCounter = 1;
 
 // ========== CS2 BETTING STATE ==========
 // CS2 betting data file path - moved to data/ subdirectory to reduce Live Server file watching
@@ -763,7 +1136,9 @@ function spinRoulette() {
     // Calculate winnings for each player
     Object.keys(rouletteState.currentBets).forEach(socketId => {
       const bet = rouletteState.currentBets[socketId];
-      if (bet.color === winningColor) {
+      const won = bet.color === winningColor;
+      
+      if (won) {
         // Different payout multipliers based on color
         let multiplier = 2; // Default for red/black
         if (winningColor === 'green') {
@@ -772,13 +1147,33 @@ function spinRoulette() {
         const winnings = bet.amount * multiplier;
         if (players[socketId]) {
           players[socketId].credits += winnings;
-          // Save balance to file
+          
+          // Save balance and update stats
           const userId = players[socketId].userId;
           if (userId) {
             saveUserBalance(userId, players[socketId].credits).catch(err => {
               console.error("Error saving balance:", err);
             });
+            
+            // Update stats and check achievements (winner)
+            updateUserStats(userId, 'roulette', bet.amount, true, winnings, { number: winningNumber, color: winningColor });
+            const newAchievements = checkAchievements(userId, 'roulette', bet.amount, true, { number: winningNumber, color: winningColor });
+            
+            // Emit achievement notifications
+            if (newAchievements.length > 0) {
+              io.to(socketId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+            }
+            
+            // Add bet record
+            addBetRecord(players[socketId].username, {
+              game: 'roulette',
+              bet: bet.amount,
+              result: `Won: ${winningNumber} ${winningColor}`,
+              payout: winnings,
+              multiplier: multiplier
+            });
           }
+          
           results[socketId] = {
             won: true,
             winnings: winnings,
@@ -789,6 +1184,27 @@ function spinRoulette() {
       } else {
         // Lost
         if (players[socketId]) {
+          const userId = players[socketId].userId;
+          if (userId) {
+            // Update stats and check achievements (loser)
+            updateUserStats(userId, 'roulette', bet.amount, false, 0, { number: winningNumber, color: winningColor });
+            const newAchievements = checkAchievements(userId, 'roulette', bet.amount, false, { number: winningNumber, color: winningColor });
+            
+            // Emit achievement notifications
+            if (newAchievements.length > 0) {
+              io.to(socketId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+            }
+            
+            // Add bet record
+            addBetRecord(players[socketId].username, {
+              game: 'roulette',
+              bet: bet.amount,
+              result: `Lost: ${winningNumber} ${winningColor}`,
+              payout: 0,
+              multiplier: 0
+            });
+          }
+          
           results[socketId] = {
             won: false,
             winnings: 0,
@@ -886,7 +1302,34 @@ app.post("/api/register", async (req, res) => {
       password: hashedPassword,
       credits: INITIAL_CREDITS,
       createdAt: new Date().toISOString(),
-      lastPlayed: new Date().toISOString()
+      lastPlayed: new Date().toISOString(),
+      // Lifetime stats for leaderboard
+      stats: {
+        totalWagered: 0,
+        totalWon: 0,
+        gamesPlayed: 0,
+        gamesWon: 0,
+        biggestWin: 0,
+        currentStreak: 0,
+        bestStreak: 0,
+        gameStats: {
+          blackjack: { played: 0, won: 0, bestStreak: 0 },
+          roulette: { played: 0, won: 0, hitNumber7: 0 },
+          coinflip: { played: 0, won: 0 },
+          crash: { played: 0, won: 0, bestMultiplier: 0 },
+          poker: { played: 0, won: 0, royalFlushes: 0, biggestPot: 0 },
+          cs2betting: { played: 0, won: 0 },
+          pachinko: { played: 0, won: 0 }
+        }
+      },
+      // Achievement system
+      achievements: [],
+      weeklyStats: {
+        startDate: new Date().toISOString(),
+        totalWagered: 0,
+        totalWon: 0,
+        gamesPlayed: 0
+      }
     };
 
     await saveUsers(users);
@@ -1306,11 +1749,50 @@ io.on("connection", (socket) => {
       const winnings = room.betAmount * 2;
       players[creatorId].credits += winnings;
       
-      // Save creator balance
+      // Save creator balance and update stats
       const creatorUserId = players[creatorId].userId;
       if (creatorUserId && users[creatorUserId]) {
         saveUserBalance(creatorUserId, players[creatorId].credits).catch(err => {
           console.error("Error saving balance:", err);
+        });
+        
+        // Update stats and check achievements for creator (winner)
+        updateUserStats(creatorUserId, 'coinflip', room.betAmount, true, winnings, { result: coinResult });
+        const newAchievements = checkAchievements(creatorUserId, 'coinflip', room.betAmount, true, { result: coinResult });
+        
+        // Emit achievement notifications to creator
+        if (newAchievements.length > 0) {
+          io.to(creatorId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+        }
+        
+        // Add bet record for creator
+        addBetRecord(players[creatorId].username, {
+          game: 'coinflip',
+          bet: room.betAmount,
+          result: `Won: ${coinResult}`,
+          payout: winnings,
+          multiplier: 2.0
+        });
+      }
+      
+      // Update stats for joiner (loser)
+      const joinerUserId = players[joinerId].userId;
+      if (joinerUserId && users[joinerUserId]) {
+        updateUserStats(joinerUserId, 'coinflip', room.betAmount, false, 0, { result: coinResult });
+        const newAchievements = checkAchievements(joinerUserId, 'coinflip', room.betAmount, false, { result: coinResult });
+        
+        // Emit achievement notifications to joiner
+        if (newAchievements.length > 0) {
+          io.to(joinerId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+        }
+        
+        // Add bet record for joiner
+        addBetRecord(players[joinerId].username, {
+          game: 'coinflip',
+          bet: room.betAmount,
+          result: `Lost: ${coinResult}`,
+          payout: 0,
+          multiplier: 0
         });
       }
       
@@ -1331,11 +1813,50 @@ io.on("connection", (socket) => {
       const winnings = room.betAmount * 2;
       players[joinerId].credits += winnings;
       
-      // Save joiner balance
+      // Save joiner balance and update stats
       const joinerUserId = players[joinerId].userId;
       if (joinerUserId && users[joinerUserId]) {
         saveUserBalance(joinerUserId, players[joinerId].credits).catch(err => {
           console.error("Error saving balance:", err);
+        });
+        
+        // Update stats and check achievements for joiner (winner)
+        updateUserStats(joinerUserId, 'coinflip', room.betAmount, true, winnings, { result: coinResult });
+        const newAchievements = checkAchievements(joinerUserId, 'coinflip', room.betAmount, true, { result: coinResult });
+        
+        // Emit achievement notifications to joiner
+        if (newAchievements.length > 0) {
+          io.to(joinerId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+        }
+        
+        // Add bet record for joiner
+        addBetRecord(players[joinerId].username, {
+          game: 'coinflip',
+          bet: room.betAmount,
+          result: `Won: ${coinResult}`,
+          payout: winnings,
+          multiplier: 2.0
+        });
+      }
+      
+      // Update stats for creator (loser)
+      const creatorUserId = players[creatorId].userId;
+      if (creatorUserId && users[creatorUserId]) {
+        updateUserStats(creatorUserId, 'coinflip', room.betAmount, false, 0, { result: coinResult });
+        const newAchievements = checkAchievements(creatorUserId, 'coinflip', room.betAmount, false, { result: coinResult });
+        
+        // Emit achievement notifications to creator
+        if (newAchievements.length > 0) {
+          io.to(creatorId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+        }
+        
+        // Add bet record for creator
+        addBetRecord(players[creatorId].username, {
+          game: 'coinflip',
+          bet: room.betAmount,
+          result: `Lost: ${coinResult}`,
+          payout: 0,
+          multiplier: 0
         });
       }
       
@@ -1501,6 +2022,24 @@ io.on("connection", (socket) => {
           saveUserBalance(creatorUserId, players[creatorId].credits).catch(err => {
             console.error("Error saving balance:", err);
           });
+          
+          // Update stats and check achievements for creator (winner)
+          updateUserStats(creatorUserId, 'coinflip', room.betAmount, true, winnings, { result: coinResult });
+          const newAchievements = checkAchievements(creatorUserId, 'coinflip', room.betAmount, true, { result: coinResult });
+          
+          // Emit achievement notifications to creator
+          if (newAchievements.length > 0) {
+            io.to(creatorId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+          }
+          
+          // Add bet record for creator
+          addBetRecord(players[creatorId].username, {
+            game: 'coinflip',
+            bet: room.betAmount,
+            result: `Won vs Bot: ${coinResult}`,
+            payout: winnings,
+            multiplier: 2.0
+          });
         }
         
         results[creatorId] = {
@@ -1516,7 +2055,28 @@ io.on("connection", (socket) => {
           bet: { color: botChoice, amount: room.betAmount }
         };
       } else {
-        // Bot wins - creator loses their bet (bot doesn't receive credits, it's just a virtual opponent)
+        // Bot wins - creator loses their bet
+        const creatorUserId = players[creatorId].userId;
+        if (creatorUserId && users[creatorUserId]) {
+          // Update stats and check achievements for creator (loser)
+          updateUserStats(creatorUserId, 'coinflip', room.betAmount, false, 0, { result: coinResult });
+          const newAchievements = checkAchievements(creatorUserId, 'coinflip', room.betAmount, false, { result: coinResult });
+          
+          // Emit achievement notifications to creator
+          if (newAchievements.length > 0) {
+            io.to(creatorId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+          }
+          
+          // Add bet record for creator
+          addBetRecord(players[creatorId].username, {
+            game: 'coinflip',
+            bet: room.betAmount,
+            result: `Lost vs Bot: ${coinResult}`,
+            payout: 0,
+            multiplier: 0
+          });
+        }
+        
         results[creatorId] = {
           won: false,
           winnings: 0,
@@ -1558,6 +2118,477 @@ io.on("connection", (socket) => {
 
     emitAvailableCoinflipRooms();
   });
+
+  // ========== POKER SOCKET HANDLERS ==========
+
+  socket.on("joinPokerLobby", () => {
+    socket.emit("pokerTablesUpdate", getPokerTablesListForLobby());
+  });
+
+  socket.on("createPokerTable", ({ tableName, smallBlind, bigBlind, minBuyIn, maxBuyIn, isPrivate }) => {
+    if (!players[socket.id]) {
+      socket.emit("error", "Please join the casino first");
+      return;
+    }
+
+    const sb = parseInt(smallBlind) || 10;
+    const bb = parseInt(bigBlind) || sb * 2;
+    const minBI = parseInt(minBuyIn) || bb * 20;
+    const maxBI = parseInt(maxBuyIn) || bb * 100;
+
+    if (bb !== sb * 2) {
+      socket.emit("error", "Big blind must be exactly 2x the small blind");
+      return;
+    }
+
+    const tableId = `poker_${pokerTableCounter++}`;
+    pokerTables[tableId] = {
+      tableId,
+      tableName: (tableName || 'Poker Table').slice(0, 30),
+      smallBlind: sb,
+      bigBlind: bb,
+      minBuyIn: minBI,
+      maxBuyIn: maxBI,
+      maxPlayers: 6,
+      isPrivate: !!isPrivate,
+      seats: [null, null, null, null, null, null], // 6 seats
+      players: [], // { socketId, username, seat, chips, isActive, isSittingOut }
+      gameState: 'waiting', // waiting, dealing, betting, showdown
+      currentHand: null,
+      dealerPosition: 0,
+      handNumber: 0,
+      createdAt: Date.now(),
+      createdBy: socket.id
+    };
+
+    console.log(`[Poker] Table ${tableId} created by ${players[socket.id].username}: ${tableName} (${sb}/${bb})`);
+    socket.emit("pokerTableCreated", { tableId });
+    io.emit("pokerTablesUpdate", getPokerTablesListForLobby());
+  });
+
+  socket.on("joinPokerTable", ({ tableId, buyIn, seat }) => {
+    if (!players[socket.id]) {
+      socket.emit("error", "Please join the casino first");
+      return;
+    }
+
+    const table = pokerTables[tableId];
+    if (!table) {
+      socket.emit("error", "Table not found");
+      return;
+    }
+
+    // Check if already at this table
+    if (table.players.find(p => p.socketId === socket.id)) {
+      // Already seated, just send state
+      socket.join(tableId);
+      socket.emit("pokerTableState", getPokerTableStateForClient(tableId, socket.id));
+      return;
+    }
+
+    const buyInAmount = parseInt(buyIn);
+    if (isNaN(buyInAmount) || buyInAmount < table.minBuyIn || buyInAmount > table.maxBuyIn) {
+      socket.emit("error", `Buy-in must be between ${table.minBuyIn} and ${table.maxBuyIn}`);
+      return;
+    }
+
+    if (players[socket.id].credits < buyInAmount) {
+      socket.emit("error", "Insufficient credits for buy-in");
+      return;
+    }
+
+    // Find seat
+    let seatIndex = seat !== null && seat !== undefined ? parseInt(seat) : -1;
+    if (seatIndex < 0 || seatIndex >= 6 || table.seats[seatIndex] !== null) {
+      // Auto-assign seat
+      seatIndex = table.seats.findIndex(s => s === null);
+    }
+
+    if (seatIndex === -1) {
+      socket.emit("error", "Table is full");
+      return;
+    }
+
+    // Deduct buy-in from casino credits
+    players[socket.id].credits -= buyInAmount;
+    const userId = players[socket.id].userId;
+    if (userId) {
+      saveUserBalance(userId, players[socket.id].credits).catch(err => {
+        console.error("[Poker] Error saving balance:", err);
+      });
+    }
+    socket.emit("playerData", {
+      username: players[socket.id].username,
+      credits: players[socket.id].credits
+    });
+
+    const playerEntry = {
+      socketId: socket.id,
+      username: players[socket.id].username,
+      seat: seatIndex,
+      chips: buyInAmount,
+      isActive: true,
+      isSittingOut: false
+    };
+
+    table.seats[seatIndex] = playerEntry;
+    table.players.push(playerEntry);
+
+    socket.join(tableId);
+    console.log(`[Poker] ${players[socket.id].username} joined ${tableId} seat ${seatIndex} with ${buyInAmount} chips`);
+
+    // Broadcast state to all at table
+    broadcastPokerTableState(tableId);
+    io.emit("pokerTablesUpdate", getPokerTablesListForLobby());
+  });
+
+  socket.on("leavePokerTable", ({ tableId }) => {
+    handlePokerPlayerLeave(socket.id, tableId);
+  });
+
+  socket.on("startPokerHand", ({ tableId }) => {
+    if (!players[socket.id]) return;
+    const table = pokerTables[tableId];
+    if (!table) return;
+
+    if (table.gameState !== 'waiting') {
+      socket.emit("error", "A hand is already in progress");
+      return;
+    }
+
+    const activePlayers = table.players.filter(p => p.isActive && !p.isSittingOut && p.chips > 0);
+    if (activePlayers.length < 2) {
+      socket.emit("error", "Need at least 2 players to start");
+      return;
+    }
+
+    startPokerHand(tableId);
+  });
+
+  socket.on("pokerAction", ({ tableId, action, amount }) => {
+    if (!players[socket.id]) return;
+    const table = pokerTables[tableId];
+    if (!table || !table.currentHand) return;
+
+    const hand = table.currentHand;
+    const playerIndex = hand.players.findIndex(p => p.socketId === socket.id);
+    if (playerIndex === -1) return;
+
+    if (hand.currentPlayerIndex !== playerIndex) {
+      socket.emit("error", "It's not your turn");
+      return;
+    }
+
+    processPokerAction(tableId, playerIndex, action, parseInt(amount) || 0);
+  });
+
+  socket.on("pokerChat", ({ tableId, message }) => {
+    if (!players[socket.id] || !tableId || !message) return;
+    const table = pokerTables[tableId];
+    if (!table) return;
+
+    const msg = message.trim().slice(0, 200);
+    if (!msg) return;
+
+    io.to(tableId).emit("pokerChatMessage", {
+      username: players[socket.id].username,
+      message: msg,
+      timestamp: Date.now()
+    });
+  });
+
+  // ========== END POKER SOCKET HANDLERS ==========
+
+  // ========== CRASH SOCKET HANDLERS ==========
+
+  // ========== BALANCE SYNC (client-side games: blackjack, pachinko) ==========
+  socket.on("syncBalance", async ({ credits }) => {
+    if (!players[socket.id]) return;
+    const creditAmount = Math.max(0, credits);
+    players[socket.id].credits = creditAmount;
+    const userId = players[socket.id].userId;
+    if (userId) {
+      // Use balance lock to prevent joinCasino from reading stale data mid-sync
+      await runWithUserBalanceLock(userId, async () => {
+        await saveUserBalance(userId, creditAmount);
+      });
+    }
+  });
+
+  // ========== GAME RESULT (for client-side games stats tracking) ==========
+  socket.on("gameResult", ({ gameType, betAmount, won, payout, result = {} }) => {
+    if (!players[socket.id]) return;
+    
+    const userId = players[socket.id].userId;
+    if (!userId || !users[userId]) return;
+
+    try {
+      // Update stats and check achievements
+      updateUserStats(userId, gameType, betAmount, won, payout, result);
+      const newAchievements = checkAchievements(userId, gameType, betAmount, won, result);
+      
+      // Emit achievement notifications
+      if (newAchievements.length > 0) {
+        socket.emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+      }
+    } catch (error) {
+      console.error(`Error tracking stats for ${gameType}:`, error);
+    }
+  });
+
+  // ========== BET HISTORY ==========
+  socket.on("recordBet", ({ game, bet, result, payout, multiplier, details }) => {
+    if (!players[socket.id]) return;
+    const username = players[socket.id].username;
+    addBetRecord(username, { game, bet: bet || 0, result, payout: payout || 0, multiplier: multiplier || null, details: details || null });
+  });
+
+  socket.on("getBetHistory", ({ limit }, callback) => {
+    if (!players[socket.id]) {
+      if (callback) callback([]);
+      return;
+    }
+    const username = players[socket.id].username;
+    const history = (betHistory[username] || []).slice(0, limit || 50);
+    if (callback) callback(history);
+  });
+
+  // Leaderboard socket events
+  socket.on("getLeaderboard", ({ type = 'allTime' }, callback) => {
+    if (!callback) return;
+    
+    try {
+      const leaderboard = [];
+      
+      for (const [userId, userData] of Object.entries(users)) {
+        if (!userData.stats) continue;
+        
+        let stats = userData.stats;
+        
+        // For weekly leaderboard, use weekly stats
+        if (type === 'thisWeek') {
+          stats = userData.weeklyStats;
+        }
+        
+        const netPL = stats.totalWon - stats.totalWagered;
+        
+        leaderboard.push({
+          username: userData.username,
+          netPL,
+          totalWagered: stats.totalWagered,
+          totalWon: stats.totalWon,
+          gamesPlayed: stats.gamesPlayed,
+          biggestWin: userData.stats.biggestWin,
+          winRate: stats.gamesPlayed > 0 ? ((userData.stats.gamesWon / stats.gamesPlayed) * 100).toFixed(1) : 0
+        });
+      }
+      
+      // Sort by net P/L descending
+      leaderboard.sort((a, b) => b.netPL - a.netPL);
+      
+      callback(leaderboard.slice(0, 20)); // Top 20
+    } catch (error) {
+      console.error('Error generating leaderboard:', error);
+      callback([]);
+    }
+  });
+
+  socket.on("getGameLeaderboard", ({ game }, callback) => {
+    if (!callback) return;
+    
+    try {
+      const leaderboard = [];
+      
+      for (const [userId, userData] of Object.entries(users)) {
+        if (!userData.stats?.gameStats?.[game]) continue;
+        
+        const gameStats = userData.stats.gameStats[game];
+        const generalStats = userData.stats;
+        
+        let score = 0;
+        let metric = 'Games Won';
+        
+        // Different scoring for different games
+        switch (game) {
+          case 'blackjack':
+            score = gameStats.bestStreak || 0;
+            metric = 'Best Streak';
+            break;
+          case 'crash':
+            score = gameStats.bestMultiplier || 0;
+            metric = 'Best Multiplier';
+            break;
+          case 'poker':
+            score = gameStats.biggestPot || 0;
+            metric = 'Biggest Pot';
+            break;
+          default:
+            score = gameStats.won;
+            metric = 'Games Won';
+        }
+        
+        leaderboard.push({
+          username: userData.username,
+          score,
+          metric,
+          played: gameStats.played,
+          won: gameStats.won,
+          winRate: gameStats.played > 0 ? ((gameStats.won / gameStats.played) * 100).toFixed(1) : 0
+        });
+      }
+      
+      // Sort by score descending
+      leaderboard.sort((a, b) => b.score - a.score);
+      
+      callback(leaderboard.slice(0, 20)); // Top 20
+    } catch (error) {
+      console.error('Error generating game leaderboard:', error);
+      callback([]);
+    }
+  });
+
+  // Achievement socket events
+  socket.on("getAchievements", (callback) => {
+    if (!players[socket.id]) {
+      if (callback) callback({ achievements: [], available: [] });
+      return;
+    }
+    
+    const userId = players[socket.id].userId;
+    if (!users[userId]) {
+      if (callback) callback({ achievements: [], available: [] });
+      return;
+    }
+    
+    const userAchievements = users[userId].achievements || [];
+    const available = Object.keys(ACHIEVEMENTS).map(id => ({
+      ...ACHIEVEMENTS[id],
+      earned: userAchievements.includes(id)
+    }));
+    
+    if (callback) {
+      callback({
+        achievements: userAchievements,
+        available
+      });
+    }
+  });
+
+  // Stats socket events
+  socket.on("getUserStats", (callback) => {
+    if (!players[socket.id]) {
+      if (callback) callback(null);
+      return;
+    }
+    
+    const userId = players[socket.id].userId;
+    if (!users[userId] || !users[userId].stats) {
+      if (callback) callback(null);
+      return;
+    }
+    
+    const userData = users[userId];
+    const stats = userData.stats;
+    const netPL = stats.totalWon - stats.totalWagered;
+    
+    // Find user rank
+    let rank = 1;
+    for (const [otherUserId, otherUserData] of Object.entries(users)) {
+      if (otherUserId === userId) continue;
+      if (!otherUserData.stats) continue;
+      
+      const otherNetPL = otherUserData.stats.totalWon - otherUserData.stats.totalWagered;
+      if (otherNetPL > netPL) rank++;
+    }
+    
+    // Calculate favorite game
+    let favoriteGame = 'None';
+    let mostPlayed = 0;
+    for (const [game, gameStats] of Object.entries(stats.gameStats)) {
+      if (gameStats.played > mostPlayed) {
+        mostPlayed = gameStats.played;
+        favoriteGame = game.charAt(0).toUpperCase() + game.slice(1);
+      }
+    }
+    
+    if (callback) {
+      callback({
+        totalGames: stats.gamesPlayed,
+        winRate: stats.gamesPlayed > 0 ? ((stats.gamesWon / stats.gamesPlayed) * 100).toFixed(1) : 0,
+        netPL,
+        rank,
+        favoriteGame,
+        biggestWin: stats.biggestWin,
+        currentStreak: stats.currentStreak,
+        bestStreak: stats.bestStreak,
+        gameBreakdown: stats.gameStats,
+        weeklyStats: userData.weeklyStats
+      });
+    }
+  });
+
+  socket.on("joinCrash", () => {
+    // Send current crash state
+    socket.emit("crashState", {
+      phase: crashState.phase,
+      multiplier: crashState.multiplier,
+      history: crashState.history,
+      startTime: crashState.startTime,
+      bettingTimeLeft: 0,
+      bets: crashState.bets
+    });
+  });
+
+  socket.on("placeCrashBet", ({ amount, autoCashout }) => {
+    if (!players[socket.id]) {
+      socket.emit("crashBetPlaced", { success: false, error: "Not logged in" });
+      return;
+    }
+    if (crashState.phase !== 'betting') {
+      socket.emit("crashBetPlaced", { success: false, error: "Betting is closed" });
+      return;
+    }
+    if (crashState.bets[socket.id]) {
+      socket.emit("crashBetPlaced", { success: false, error: "Already placed a bet" });
+      return;
+    }
+    if (!amount || amount <= 0 || amount > players[socket.id].credits) {
+      socket.emit("crashBetPlaced", { success: false, error: "Invalid bet amount" });
+      return;
+    }
+
+    // Deduct credits
+    players[socket.id].credits -= amount;
+    const userId = players[socket.id].userId;
+    if (userId) {
+      saveUserBalance(userId, players[socket.id].credits).catch(err => {
+        console.error("[Crash] Error saving balance after bet:", err);
+      });
+    }
+
+    crashState.bets[socket.id] = {
+      username: players[socket.id].username,
+      amount,
+      autoCashout: autoCashout || 0,
+      cashedOut: false,
+      cashoutMultiplier: null
+    };
+
+    socket.emit("crashBetPlaced", { success: true, amount });
+    socket.emit("playerData", {
+      username: players[socket.id].username,
+      credits: players[socket.id].credits
+    });
+
+    console.log(`[Crash] ${players[socket.id].username} bet ${amount} (auto-cashout: ${autoCashout || 'off'})`);
+  });
+
+  socket.on("crashCashOut", () => {
+    if (crashState.phase !== 'running') return;
+    processCrashCashout(socket.id);
+  });
+
+  // ========== END CRASH SOCKET HANDLERS ==========
 
   socket.on("disconnect", async () => {
     console.log(`Player disconnected: ${socket.id}`);
@@ -1606,6 +2637,14 @@ io.on("connection", (socket) => {
       }
     }
     
+    // Handle poker table cleanup on disconnect
+    for (const tableId of Object.keys(pokerTables)) {
+      const table = pokerTables[tableId];
+      if (table.players.find(p => p.socketId === socket.id)) {
+        handlePokerPlayerLeave(socket.id, tableId);
+      }
+    }
+
     // Remove player's bet if they disconnect
     if (rouletteState.currentBets[socket.id]) {
       delete rouletteState.currentBets[socket.id];
@@ -1821,10 +2860,45 @@ app.get("/api/cs2/bets", async (req, res) => {
         return bet;
       });
     
+    // Compute summary stats
+    const player = players[userId];
+    const currentBalance = player ? player.credits : 0;
+    let totalWagered = 0;
+    let totalWon = 0;
+    let wins = 0;
+    let settled = 0;
+
+    // Convert bets to transaction-style items for the history
+    const transactions = userBets.map(bet => {
+      totalWagered += bet.amount || 0;
+      if (bet.status === 'won') {
+        const payout = Math.round((bet.amount || 0) * (bet.odds || 1));
+        totalWon += payout;
+        wins++;
+        settled++;
+        return { type: 'bet_won', amount: payout, description: `Won: ${bet.selectionName || bet.selection}`, timestamp: bet.settledAt || bet.placedAt, bet };
+      } else if (bet.status === 'lost') {
+        settled++;
+        return { type: 'bet_lost', amount: -(bet.amount || 0), description: `Lost: ${bet.selectionName || bet.selection}`, timestamp: bet.settledAt || bet.placedAt, bet };
+      } else if (bet.status === 'void') {
+        return { type: 'bet_void', amount: 0, description: `Void: ${bet.selectionName || bet.selection}`, timestamp: bet.settledAt || bet.placedAt, bet };
+      } else {
+        return { type: 'bet_placed', amount: -(bet.amount || 0), description: `Pending: ${bet.selectionName || bet.selection}`, timestamp: bet.placedAt, bet };
+      }
+    });
+
+    const netProfit = totalWon - totalWagered;
+    const winRate = settled > 0 ? Math.round((wins / settled) * 100) : 0;
+
     res.json({
       success: true,
-      bets: userBets,
-      count: userBets.length
+      bets: transactions,
+      count: transactions.length,
+      currentBalance,
+      totalWagered,
+      totalWon,
+      netProfit,
+      winRate
     });
   } catch (error) {
     console.error("Error fetching CS2 bets:", error);
@@ -2540,6 +3614,27 @@ async function settleCS2Bets() {
             // CS2 BALANCE FIX - sync payout to both users and players objects
             const newCredits = user.credits + payout;
             await syncUserCredits(bet.userId, newCredits);
+            
+            // Track stats and achievements
+            updateUserStats(bet.userId, 'cs2betting', bet.amount, true, payout, { 
+              selection: bet.selection,
+              odds: bet.odds,
+              eventName: bet.eventName,
+              teams: bet.teams
+            });
+            const newAchievements = checkAchievements(bet.userId, 'cs2betting', bet.amount, true, { 
+              selection: bet.selection,
+              odds: bet.odds,
+              payout: payout
+            });
+            
+            // Emit achievement notifications (if player is online)
+            if (newAchievements.length > 0) {
+              const playerSocketId = Object.keys(players).find(sid => players[sid].userId === bet.userId);
+              if (playerSocketId) {
+                io.to(playerSocketId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+              }
+            }
           }
           
           wonCount++;
@@ -2547,6 +3642,27 @@ async function settleCS2Bets() {
           // Bet lost
           bet.status = 'lost';
           bet.result = 'loss';
+          
+          // Track stats for losing bet too
+          updateUserStats(bet.userId, 'cs2betting', bet.amount, false, 0, { 
+            selection: bet.selection,
+            odds: bet.odds,
+            eventName: bet.eventName,
+            teams: bet.teams
+          });
+          const newAchievements = checkAchievements(bet.userId, 'cs2betting', bet.amount, false, { 
+            selection: bet.selection,
+            odds: bet.odds
+          });
+          
+          // Emit achievement notifications (if player is online)
+          if (newAchievements.length > 0) {
+            const playerSocketId = Object.keys(players).find(sid => players[sid].userId === bet.userId);
+            if (playerSocketId) {
+              io.to(playerSocketId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+            }
+          }
+          
           lostCount++;
         }
         
@@ -3184,6 +4300,759 @@ if (cs2ApiClient) {
 }
 
 // ========== END CS2 BETTING SCHEDULED TASKS ==========
+
+// ========== POKER HELPER FUNCTIONS ==========
+
+function getPokerTablesListForLobby() {
+  return Object.values(pokerTables)
+    .filter(t => !t.isPrivate)
+    .map(t => ({
+      tableId: t.tableId,
+      tableName: t.tableName,
+      smallBlind: t.smallBlind,
+      bigBlind: t.bigBlind,
+      minBuyIn: t.minBuyIn,
+      maxBuyIn: t.maxBuyIn,
+      playerCount: t.players.filter(p => p.isActive).length,
+      maxPlayers: t.maxPlayers,
+      gameState: t.gameState
+    }));
+}
+
+function getPokerTableStateForClient(tableId, viewerSocketId) {
+  const table = pokerTables[tableId];
+  if (!table) return null;
+
+  const hand = table.currentHand;
+  let clientHand = null;
+
+  if (hand) {
+    clientHand = {
+      pot: hand.pot,
+      communityCards: hand.communityCards,
+      currentBet: hand.currentBet,
+      dealerPosition: hand.dealerPosition,
+      smallBlindPosition: hand.smallBlindPosition,
+      bigBlindPosition: hand.bigBlindPosition,
+      currentPlayerIndex: hand.currentPlayerIndex,
+      phase: hand.phase,
+      pots: hand.pots || [],
+      winners: hand.winners || null,
+      players: hand.players.map((p, idx) => {
+        const isViewer = p.socketId === viewerSocketId;
+        const isShowdown = table.gameState === 'showdown';
+        return {
+          socketId: p.socketId,
+          username: p.username,
+          seat: p.seat,
+          chips: p.chips,
+          isFolded: p.isFolded,
+          isAllIn: p.isAllIn,
+          betAmount: p.betThisRound || 0,
+          totalBetThisRound: p.totalBetThisRound || 0,
+          cards: (isViewer || isShowdown) ? p.cards : (p.isFolded ? [] : ['??', '??']),
+          handResult: isShowdown ? p.handResult : null
+        };
+      })
+    };
+  }
+
+  return {
+    tableId: table.tableId,
+    tableName: table.tableName,
+    smallBlind: table.smallBlind,
+    bigBlind: table.bigBlind,
+    gameState: table.gameState,
+    seats: table.seats.map(s => s ? {
+      username: s.username,
+      chips: s.chips,
+      isActive: s.isActive,
+      betAmount: hand ? (hand.players.find(p => p.seat === s.seat)?.betThisRound || 0) : 0
+    } : null),
+    players: table.players.filter(p => p.isActive).map(p => ({
+      socketId: p.socketId,
+      username: p.username,
+      seat: p.seat,
+      chips: p.chips,
+      isActive: p.isActive
+    })),
+    currentHand: clientHand
+  };
+}
+
+function broadcastPokerTableState(tableId) {
+  const table = pokerTables[tableId];
+  if (!table) return;
+
+  for (const p of table.players) {
+    if (p.isActive) {
+      const state = getPokerTableStateForClient(tableId, p.socketId);
+      io.to(p.socketId).emit("pokerTableState", state);
+    }
+  }
+}
+
+function handlePokerPlayerLeave(socketId, tableId) {
+  const table = pokerTables[tableId];
+  if (!table) return;
+
+  const playerIndex = table.players.findIndex(p => p.socketId === socketId);
+  if (playerIndex === -1) return;
+
+  const player = table.players[playerIndex];
+  
+  // Return remaining chips to casino credits
+  if (player.chips > 0 && players[socketId]) {
+    players[socketId].credits += player.chips;
+    const userId = players[socketId].userId;
+    if (userId) {
+      saveUserBalance(userId, players[socketId].credits).catch(err => {
+        console.error("[Poker] Error saving balance on leave:", err);
+      });
+    }
+    io.to(socketId).emit("playerData", {
+      username: players[socketId].username,
+      credits: players[socketId].credits
+    });
+    console.log(`[Poker] ${player.username} left ${tableId}, returned ${player.chips} chips`);
+  }
+
+  // Remove from seat
+  const seatIdx = player.seat;
+  if (seatIdx >= 0 && seatIdx < 6) {
+    table.seats[seatIdx] = null;
+  }
+
+  // If hand in progress, fold them
+  if (table.currentHand) {
+    const handPlayer = table.currentHand.players.find(p => p.socketId === socketId);
+    if (handPlayer && !handPlayer.isFolded) {
+      handPlayer.isFolded = true;
+      // If it was their turn, advance
+      if (table.currentHand.currentPlayerIndex !== undefined) {
+        const idx = table.currentHand.players.indexOf(handPlayer);
+        if (idx === table.currentHand.currentPlayerIndex) {
+          clearPokerActionTimer(tableId);
+          advancePokerAction(tableId);
+        }
+      }
+    }
+  }
+
+  // Remove from players array
+  table.players.splice(playerIndex, 1);
+  player.isActive = false;
+
+  // Leave socket room
+  const socketObj = io.sockets.sockets.get(socketId);
+  if (socketObj) socketObj.leave(tableId);
+
+  // Clean up empty table
+  if (table.players.filter(p => p.isActive).length === 0) {
+    // Clear any timers
+    clearPokerActionTimer(tableId);
+    if (table.nextHandTimer) clearTimeout(table.nextHandTimer);
+    delete pokerTables[tableId];
+    console.log(`[Poker] Table ${tableId} removed (empty)`);
+  } else {
+    broadcastPokerTableState(tableId);
+  }
+
+  io.emit("pokerTablesUpdate", getPokerTablesListForLobby());
+}
+
+function startPokerHand(tableId) {
+  const table = pokerTables[tableId];
+  if (!table) return;
+
+  const activePlayers = table.players.filter(p => p.isActive && !p.isSittingOut && p.chips > 0);
+  if (activePlayers.length < 2) return;
+
+  // Sort by seat position
+  activePlayers.sort((a, b) => a.seat - b.seat);
+
+  table.handNumber++;
+  table.gameState = 'dealing';
+
+  // Move dealer button
+  if (table.handNumber === 1) {
+    table.dealerPosition = 0;
+  } else {
+    table.dealerPosition = (table.dealerPosition + 1) % activePlayers.length;
+  }
+
+  // Determine blind positions
+  let sbPos, bbPos;
+  if (activePlayers.length === 2) {
+    // Heads-up: dealer is SB, other is BB
+    sbPos = table.dealerPosition;
+    bbPos = (table.dealerPosition + 1) % activePlayers.length;
+  } else {
+    sbPos = (table.dealerPosition + 1) % activePlayers.length;
+    bbPos = (table.dealerPosition + 2) % activePlayers.length;
+  }
+
+  // Create and shuffle deck
+  const deck = pokerEngine.shuffleDeck(pokerEngine.createDeck());
+  let deckIndex = 0;
+
+  // Build hand players
+  const handPlayers = activePlayers.map(p => ({
+    socketId: p.socketId,
+    username: p.username,
+    seat: p.seat,
+    chips: p.chips,
+    cards: [],
+    isFolded: false,
+    isAllIn: false,
+    betThisRound: 0,
+    totalBetThisRound: 0,
+    totalBetThisHand: 0,
+    hasActed: false,
+    handResult: null
+  }));
+
+  // Post blinds
+  const sbPlayer = handPlayers[sbPos];
+  const bbPlayer = handPlayers[bbPos];
+
+  const sbAmount = Math.min(table.smallBlind, sbPlayer.chips);
+  sbPlayer.chips -= sbAmount;
+  sbPlayer.betThisRound = sbAmount;
+  sbPlayer.totalBetThisRound = sbAmount;
+  sbPlayer.totalBetThisHand = sbAmount;
+  if (sbPlayer.chips === 0) sbPlayer.isAllIn = true;
+
+  // Update the seat reference too
+  const sbSeatPlayer = table.players.find(p => p.socketId === sbPlayer.socketId);
+  if (sbSeatPlayer) sbSeatPlayer.chips = sbPlayer.chips;
+
+  const bbAmount = Math.min(table.bigBlind, bbPlayer.chips);
+  bbPlayer.chips -= bbAmount;
+  bbPlayer.betThisRound = bbAmount;
+  bbPlayer.totalBetThisRound = bbAmount;
+  bbPlayer.totalBetThisHand = bbAmount;
+  if (bbPlayer.chips === 0) bbPlayer.isAllIn = true;
+
+  const bbSeatPlayer = table.players.find(p => p.socketId === bbPlayer.socketId);
+  if (bbSeatPlayer) bbSeatPlayer.chips = bbPlayer.chips;
+
+  // Deal hole cards
+  for (let round = 0; round < 2; round++) {
+    for (const hp of handPlayers) {
+      hp.cards.push(deck[deckIndex++]);
+    }
+  }
+
+  const pot = sbAmount + bbAmount;
+
+  table.currentHand = {
+    deck,
+    deckIndex,
+    players: handPlayers,
+    communityCards: [],
+    pot,
+    currentBet: bbAmount,
+    lastRaiseAmount: bbAmount,
+    dealerPosition: table.dealerPosition,
+    smallBlindPosition: sbPos,
+    bigBlindPosition: bbPos,
+    currentPlayerIndex: null,
+    phase: 'preflop',
+    pots: [],
+    winners: null,
+    actionTimer: null
+  };
+
+  // Determine first to act preflop (left of BB)
+  const firstToAct = (bbPos + 1) % handPlayers.length;
+  table.currentHand.currentPlayerIndex = firstToAct;
+
+  table.gameState = 'betting';
+
+  console.log(`[Poker] Hand #${table.handNumber} started at ${tableId}: ${handPlayers.length} players, blinds ${sbAmount}/${bbAmount}`);
+
+  broadcastPokerTableState(tableId);
+  startPokerActionTimer(tableId);
+}
+
+function processPokerAction(tableId, playerIndex, action, amount) {
+  const table = pokerTables[tableId];
+  if (!table || !table.currentHand) return;
+
+  const hand = table.currentHand;
+  const player = hand.players[playerIndex];
+  if (!player || player.isFolded || player.isAllIn) return;
+
+  clearPokerActionTimer(tableId);
+
+  const toCall = hand.currentBet - player.totalBetThisRound;
+
+  switch (action) {
+    case 'fold':
+      player.isFolded = true;
+      console.log(`[Poker] ${player.username} folds at ${tableId}`);
+      break;
+
+    case 'check':
+      if (toCall > 0) {
+        io.to(player.socketId).emit("error", "Cannot check, there's a bet to call");
+        startPokerActionTimer(tableId);
+        return;
+      }
+      player.hasActed = true;
+      console.log(`[Poker] ${player.username} checks at ${tableId}`);
+      break;
+
+    case 'call': {
+      const callAmount = Math.min(toCall, player.chips);
+      player.chips -= callAmount;
+      player.betThisRound += callAmount;
+      player.totalBetThisRound += callAmount;
+      player.totalBetThisHand += callAmount;
+      hand.pot += callAmount;
+      if (player.chips === 0) player.isAllIn = true;
+      player.hasActed = true;
+
+      // Update seat
+      const seatP = table.players.find(p => p.socketId === player.socketId);
+      if (seatP) seatP.chips = player.chips;
+
+      console.log(`[Poker] ${player.username} calls ${callAmount} at ${tableId}`);
+      break;
+    }
+
+    case 'bet': {
+      if (hand.currentBet > 0) {
+        io.to(player.socketId).emit("error", "Cannot bet, there's already a bet. Use raise.");
+        startPokerActionTimer(tableId);
+        return;
+      }
+      let betAmount = amount;
+      if (betAmount < table.bigBlind) betAmount = table.bigBlind;
+      if (betAmount >= player.chips) {
+        // All-in
+        betAmount = player.chips;
+      }
+      player.chips -= betAmount;
+      player.betThisRound += betAmount;
+      player.totalBetThisRound += betAmount;
+      player.totalBetThisHand += betAmount;
+      hand.pot += betAmount;
+      hand.currentBet = player.totalBetThisRound;
+      hand.lastRaiseAmount = betAmount;
+      if (player.chips === 0) player.isAllIn = true;
+      player.hasActed = true;
+
+      // Reset hasActed for others (they need to respond to the bet)
+      for (const p of hand.players) {
+        if (p !== player && !p.isFolded && !p.isAllIn) {
+          p.hasActed = false;
+        }
+      }
+
+      const seatP = table.players.find(p => p.socketId === player.socketId);
+      if (seatP) seatP.chips = player.chips;
+
+      console.log(`[Poker] ${player.username} bets ${betAmount} at ${tableId}`);
+      break;
+    }
+
+    case 'raise': {
+      if (hand.currentBet === 0) {
+        // Treat as bet
+        return processPokerAction(tableId, playerIndex, 'bet', amount);
+      }
+      const minRaise = hand.currentBet + hand.lastRaiseAmount;
+      let raiseTotal = amount; // This is the total bet amount (not the raise increment)
+      
+      // Ensure it's at least the minimum raise or all-in
+      if (raiseTotal < minRaise && raiseTotal < player.chips + player.totalBetThisRound) {
+        raiseTotal = minRaise;
+      }
+      
+      const additionalChips = raiseTotal - player.totalBetThisRound;
+      if (additionalChips >= player.chips) {
+        // All-in
+        const allInAmount = player.chips;
+        player.chips = 0;
+        player.betThisRound += allInAmount;
+        player.totalBetThisRound += allInAmount;
+        player.totalBetThisHand += allInAmount;
+        hand.pot += allInAmount;
+        if (player.totalBetThisRound > hand.currentBet) {
+          hand.lastRaiseAmount = player.totalBetThisRound - hand.currentBet;
+          hand.currentBet = player.totalBetThisRound;
+        }
+        player.isAllIn = true;
+      } else {
+        player.chips -= additionalChips;
+        player.betThisRound += additionalChips;
+        player.totalBetThisRound += additionalChips;
+        player.totalBetThisHand += additionalChips;
+        hand.pot += additionalChips;
+        hand.lastRaiseAmount = player.totalBetThisRound - hand.currentBet;
+        hand.currentBet = player.totalBetThisRound;
+      }
+
+      player.hasActed = true;
+
+      // Reset hasActed for others
+      for (const p of hand.players) {
+        if (p !== player && !p.isFolded && !p.isAllIn) {
+          p.hasActed = false;
+        }
+      }
+
+      const seatP = table.players.find(p => p.socketId === player.socketId);
+      if (seatP) seatP.chips = player.chips;
+
+      console.log(`[Poker] ${player.username} raises to ${player.totalBetThisRound} at ${tableId}`);
+      break;
+    }
+
+    case 'allin': {
+      const allInAmount = player.chips;
+      if (allInAmount === 0) return;
+
+      player.chips = 0;
+      player.betThisRound += allInAmount;
+      player.totalBetThisRound += allInAmount;
+      player.totalBetThisHand += allInAmount;
+      hand.pot += allInAmount;
+
+      if (player.totalBetThisRound > hand.currentBet) {
+        hand.lastRaiseAmount = Math.max(hand.lastRaiseAmount, player.totalBetThisRound - hand.currentBet);
+        hand.currentBet = player.totalBetThisRound;
+        // Reset hasActed for others
+        for (const p of hand.players) {
+          if (p !== player && !p.isFolded && !p.isAllIn) {
+            p.hasActed = false;
+          }
+        }
+      }
+
+      player.isAllIn = true;
+      player.hasActed = true;
+
+      const seatP = table.players.find(p => p.socketId === player.socketId);
+      if (seatP) seatP.chips = player.chips;
+
+      console.log(`[Poker] ${player.username} goes all-in for ${allInAmount} at ${tableId}`);
+      break;
+    }
+
+    default:
+      io.to(player.socketId).emit("error", "Invalid action");
+      startPokerActionTimer(tableId);
+      return;
+  }
+
+  advancePokerAction(tableId);
+}
+
+function advancePokerAction(tableId) {
+  const table = pokerTables[tableId];
+  if (!table || !table.currentHand) return;
+
+  const hand = table.currentHand;
+  const activePlayers = hand.players.filter(p => !p.isFolded);
+
+  // Check if only one player remaining (everyone else folded)
+  if (activePlayers.length === 1) {
+    // Winner by fold
+    resolvePokerHand(tableId);
+    return;
+  }
+
+  // Check if betting round is complete
+  const playersWhoCanAct = hand.players.filter(p => !p.isFolded && !p.isAllIn);
+  const allActed = playersWhoCanAct.every(p => p.hasActed && p.totalBetThisRound >= hand.currentBet);
+
+  if (allActed || playersWhoCanAct.length === 0) {
+    // Betting round complete, advance to next phase
+    advancePokerPhase(tableId);
+    return;
+  }
+
+  // Find next player to act
+  let nextIdx = (hand.currentPlayerIndex + 1) % hand.players.length;
+  let attempts = 0;
+  while (attempts < hand.players.length) {
+    const nextPlayer = hand.players[nextIdx];
+    if (!nextPlayer.isFolded && !nextPlayer.isAllIn && 
+        (!nextPlayer.hasActed || nextPlayer.totalBetThisRound < hand.currentBet)) {
+      hand.currentPlayerIndex = nextIdx;
+      broadcastPokerTableState(tableId);
+      startPokerActionTimer(tableId);
+      return;
+    }
+    nextIdx = (nextIdx + 1) % hand.players.length;
+    attempts++;
+  }
+
+  // If we get here, no one can act — advance phase
+  advancePokerPhase(tableId);
+}
+
+function advancePokerPhase(tableId) {
+  const table = pokerTables[tableId];
+  if (!table || !table.currentHand) return;
+
+  const hand = table.currentHand;
+
+  // Reset betting for new round
+  for (const p of hand.players) {
+    p.betThisRound = 0;
+    p.totalBetThisRound = 0;
+    p.hasActed = false;
+  }
+  hand.currentBet = 0;
+  hand.lastRaiseAmount = table.bigBlind;
+
+  const activePlayers = hand.players.filter(p => !p.isFolded);
+  const playersWhoCanAct = activePlayers.filter(p => !p.isAllIn);
+
+  // If only one or fewer players can act, deal remaining community cards and go to showdown
+  if (playersWhoCanAct.length <= 1 && activePlayers.length > 1) {
+    // Deal remaining community cards
+    while (hand.communityCards.length < 5) {
+      if (hand.communityCards.length === 0) {
+        // Deal flop
+        hand.deckIndex++; // burn
+        hand.communityCards.push(hand.deck[hand.deckIndex++]);
+        hand.communityCards.push(hand.deck[hand.deckIndex++]);
+        hand.communityCards.push(hand.deck[hand.deckIndex++]);
+      } else {
+        // Deal turn or river
+        hand.deckIndex++; // burn
+        hand.communityCards.push(hand.deck[hand.deckIndex++]);
+      }
+    }
+    hand.phase = 'showdown';
+    resolvePokerHand(tableId);
+    return;
+  }
+
+  switch (hand.phase) {
+    case 'preflop':
+      // Deal flop (burn + 3)
+      hand.deckIndex++; // burn
+      hand.communityCards.push(hand.deck[hand.deckIndex++]);
+      hand.communityCards.push(hand.deck[hand.deckIndex++]);
+      hand.communityCards.push(hand.deck[hand.deckIndex++]);
+      hand.phase = 'flop';
+      break;
+
+    case 'flop':
+      // Deal turn (burn + 1)
+      hand.deckIndex++; // burn
+      hand.communityCards.push(hand.deck[hand.deckIndex++]);
+      hand.phase = 'turn';
+      break;
+
+    case 'turn':
+      // Deal river (burn + 1)
+      hand.deckIndex++; // burn
+      hand.communityCards.push(hand.deck[hand.deckIndex++]);
+      hand.phase = 'river';
+      break;
+
+    case 'river':
+      // Showdown
+      hand.phase = 'showdown';
+      resolvePokerHand(tableId);
+      return;
+  }
+
+  // Set first to act (left of dealer)
+  let firstToAct = (hand.dealerPosition + 1) % hand.players.length;
+  let attempts = 0;
+  while (attempts < hand.players.length) {
+    const p = hand.players[firstToAct];
+    if (!p.isFolded && !p.isAllIn) {
+      hand.currentPlayerIndex = firstToAct;
+      break;
+    }
+    firstToAct = (firstToAct + 1) % hand.players.length;
+    attempts++;
+  }
+
+  broadcastPokerTableState(tableId);
+  startPokerActionTimer(tableId);
+}
+
+function resolvePokerHand(tableId) {
+  const table = pokerTables[tableId];
+  if (!table || !table.currentHand) return;
+
+  const hand = table.currentHand;
+  hand.currentPlayerIndex = undefined;
+  clearPokerActionTimer(tableId);
+
+  const activePlayers = hand.players.filter(p => !p.isFolded);
+
+  if (activePlayers.length === 1) {
+    // Winner by fold — award entire pot
+    const winner = activePlayers[0];
+    winner.chips += hand.pot;
+    hand.winners = [{ username: winner.username, amount: hand.pot, handName: 'Everyone folded', seat: winner.seat }];
+
+    // Update seat
+    const seatP = table.players.find(p => p.socketId === winner.socketId);
+    if (seatP) seatP.chips = winner.chips;
+
+    console.log(`[Poker] ${winner.username} wins ${hand.pot} (everyone folded) at ${tableId}`);
+  } else {
+    // Evaluate hands
+    for (const p of activePlayers) {
+      const allCards = [...p.cards, ...hand.communityCards];
+      p.handResult = pokerEngine.evaluateHand(allCards);
+    }
+
+    // Calculate side pots
+    const contributions = hand.players.map(p => ({
+      playerId: p.socketId,
+      totalBet: p.totalBetThisHand,
+      folded: p.isFolded
+    }));
+
+    const pots = pokerEngine.calculateSidePots(contributions);
+    hand.pots = pots;
+
+    const winners = [];
+
+    for (const pot of pots) {
+      // Find eligible players with best hand
+      const eligibleActive = activePlayers.filter(p => pot.eligiblePlayerIds.includes(p.socketId));
+      if (eligibleActive.length === 0) continue;
+
+      // Sort by hand strength (best first)
+      eligibleActive.sort((a, b) => pokerEngine.compareHands(b.handResult, a.handResult));
+
+      // Find all winners (could be a tie)
+      const bestHand = eligibleActive[0].handResult;
+      const potWinners = eligibleActive.filter(p => pokerEngine.compareHands(p.handResult, bestHand) === 0);
+
+      const share = Math.floor(pot.amount / potWinners.length);
+      const remainder = pot.amount - share * potWinners.length;
+
+      potWinners.forEach((w, idx) => {
+        const winAmount = share + (idx === 0 ? remainder : 0);
+        w.chips += winAmount;
+
+        // Update seat
+        const seatP = table.players.find(p => p.socketId === w.socketId);
+        if (seatP) seatP.chips = w.chips;
+
+        winners.push({
+          username: w.username,
+          amount: winAmount,
+          handName: w.handResult.name,
+          seat: w.seat
+        });
+      });
+    }
+
+    hand.winners = winners;
+    console.log(`[Poker] Hand resolved at ${tableId}:`, winners.map(w => `${w.username} wins ${w.amount} (${w.handName})`).join(', '));
+  }
+
+  table.gameState = 'showdown';
+  
+  // Track stats and achievements for all players
+  for (const p of hand.players) {
+    const player = players[p.socketId];
+    if (!player || !player.userId) continue;
+    
+    const won = hand.winners.some(w => w.username === p.username);
+    const wonAmount = hand.winners.filter(w => w.username === p.username).reduce((sum, w) => sum + w.amount, 0);
+    const betAmount = p.totalBetThisHand || 0;
+    
+    if (betAmount > 0) {
+      // Only track stats if player actually bet something
+      const resultData = {
+        hand: p.handResult ? p.handResult.name : 'Unknown',
+        potSize: hand.pot,
+        players: hand.players.length,
+        totalBet: betAmount
+      };
+      
+      updateUserStats(player.userId, 'poker', betAmount, won, wonAmount, resultData);
+      const newAchievements = checkAchievements(player.userId, 'poker', betAmount, won, resultData);
+      
+      // Emit achievement notifications
+      if (newAchievements.length > 0) {
+        io.to(p.socketId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+      }
+    }
+  }
+  
+  broadcastPokerTableState(tableId);
+
+  // Save balances
+  for (const p of hand.players) {
+    const seatP = table.players.find(tp => tp.socketId === p.socketId);
+    if (seatP) seatP.chips = p.chips;
+    
+    // Sync credits back (we'll do this when they leave, not every hand)
+  }
+
+  // Schedule next hand
+  table.nextHandTimer = setTimeout(() => {
+    // Remove players with 0 chips
+    for (let i = table.players.length - 1; i >= 0; i--) {
+      const p = table.players[i];
+      if (p.chips <= 0 && p.isActive) {
+        console.log(`[Poker] ${p.username} eliminated (0 chips) at ${tableId}`);
+        // Return 0 chips, essentially just clean up
+        handlePokerPlayerLeave(p.socketId, tableId);
+      }
+    }
+
+    table.currentHand = null;
+    table.gameState = 'waiting';
+
+    const activePlayers = table.players.filter(p => p.isActive && p.chips > 0);
+    if (activePlayers.length >= 2) {
+      startPokerHand(tableId);
+    } else {
+      broadcastPokerTableState(tableId);
+    }
+  }, 5000); // 5 second delay between hands
+}
+
+function startPokerActionTimer(tableId) {
+  const table = pokerTables[tableId];
+  if (!table || !table.currentHand) return;
+
+  clearPokerActionTimer(tableId);
+
+  table.currentHand.actionTimer = setTimeout(() => {
+    // Auto-fold on timeout
+    const hand = table.currentHand;
+    if (!hand || hand.currentPlayerIndex === undefined) return;
+
+    const player = hand.players[hand.currentPlayerIndex];
+    if (!player || player.isFolded || player.isAllIn) return;
+
+    console.log(`[Poker] ${player.username} timed out, auto-folding at ${tableId}`);
+    player.isFolded = true;
+    advancePokerAction(tableId);
+  }, 30000); // 30 seconds
+}
+
+function clearPokerActionTimer(tableId) {
+  const table = pokerTables[tableId];
+  if (!table || !table.currentHand) return;
+
+  if (table.currentHand.actionTimer) {
+    clearTimeout(table.currentHand.actionTimer);
+    table.currentHand.actionTimer = null;
+  }
+}
+
+// ========== END POKER HELPER FUNCTIONS ==========
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {

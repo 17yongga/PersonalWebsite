@@ -991,7 +991,7 @@ class CS2ModernBettingGame {
       const data = await response.json();
 
       if (data.success) {
-        this.bets = data.bets || [];
+        this.bets = (data.bets || []).map(b => b.bet ? b.bet : b);
         this.showBets('open'); // Show current tab
       }
     } catch (error) {
