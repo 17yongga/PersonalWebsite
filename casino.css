@@ -162,12 +162,23 @@ a { color: inherit; }
    ═══════════════════════════════════════ */
 #signInScreen {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: clamp(16px, 5vw, 40px);
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body:has(#signInScreen:not(.hidden)) {
+  padding-bottom: 0;
+}
+
+body:has(#signInScreen:not(.hidden)) .neon-bottom-nav,
+body:has(#signInScreen:not(.hidden)) .neon-ticker {
+  display: none !important;
 }
 
 #signInScreen .casino-container {
@@ -247,6 +258,7 @@ a { color: inherit; }
 .casino-welcome {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .casino-title { display: none; }
@@ -291,12 +303,19 @@ a { color: inherit; }
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
 }
 
 .signin-form {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
+}
+
+.auth-form form {
+  margin: 0;
+  min-width: 0;
 }
 
 .signin-form input {
@@ -1514,6 +1533,7 @@ a { color: inherit; }
   #signInScreen .casino-container {
     grid-template-columns: 1fr;
     max-width: 480px;
+    overflow: hidden;
   }
 
   .neon-brand-panel {
@@ -1525,6 +1545,10 @@ a { color: inherit; }
 
   .neon-brand-title { font-size: 48px; }
   .neon-brand-tagline { font-size: 18px; }
+
+  .neon-form-panel {
+    padding: 32px;
+  }
 
   .neon-hero { grid-template-columns: 1fr; gap: 32px; padding: 32px max(24px, 4vw); }
   .hero-line-amber, .hero-line-pink { font-size: 56px; }
@@ -1542,6 +1566,80 @@ a { color: inherit; }
 }
 
 @media (max-width: 640px) {
+  #signInScreen {
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  #signInScreen .casino-container {
+    max-width: 100%;
+  }
+
+  .neon-brand-panel {
+    padding: 26px 28px 24px;
+  }
+
+  .neon-brand-title {
+    font-size: clamp(42px, 14vw, 56px);
+    line-height: .88;
+    margin-top: 12px;
+    text-shadow: 0 0 2px rgba(255,181,77,.85), 0 0 8px rgba(255,181,77,.28);
+    filter: none;
+    animation: none;
+  }
+
+  .neon-brand-tagline {
+    margin-top: 24px;
+    max-width: none;
+    font-size: 20px;
+    line-height: 1.28;
+  }
+
+  .neon-brand-stats {
+    gap: 22px;
+    justify-content: space-between;
+    margin-top: 34px;
+  }
+
+  .neon-brand-stat {
+    min-width: 0;
+  }
+
+  .neon-brand-stat-value {
+    font-size: 24px;
+  }
+
+  .neon-brand-stat-label {
+    font-size: 9px;
+    letter-spacing: .14em;
+  }
+
+  .neon-form-panel {
+    padding: 28px;
+  }
+
+  .auth-tabs {
+    margin-bottom: 26px;
+  }
+
+  .auth-tab {
+    min-width: 0;
+    font-size: 12px;
+    letter-spacing: .14em;
+  }
+
+  .signin-form input {
+    width: 100%;
+    max-width: 100%;
+    padding: 14px 16px;
+    background: rgba(29,10,27,.72);
+    border: 1px solid var(--line-strong);
+  }
+
+  .btn-primary {
+    min-height: 48px;
+  }
+
   .games-grid { grid-template-columns: 1fr; }
   .game-card.featured { grid-column: span 1; aspect-ratio: 1.72 / 1; }
   .game-card { aspect-ratio: 1.72 / 1; }
@@ -1577,6 +1675,22 @@ a { color: inherit; }
   .neon-hero-ctas { flex-direction: column; }
   .btn-hero-outline, .btn-hero-filled { text-align: center; }
   .hero-line-amber, .hero-line-pink { font-size: 40px; }
+}
+
+@media (max-width: 380px) {
+  .neon-brand-panel,
+  .neon-form-panel {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .neon-brand-stats {
+    gap: 16px;
+  }
+
+  .neon-brand-stat-value {
+    font-size: 21px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

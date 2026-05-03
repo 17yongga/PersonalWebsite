@@ -1,5 +1,5 @@
 # Casino — STATUS.md
-> Updated: 2026-04-11
+> Updated: 2026-05-03
 
 ## What's Live
 - **Frontend:** https://gary-yong.com/casino.html (S3/CloudFront)
@@ -77,6 +77,11 @@
   - Already implemented: glassmorphism match cards, tier-specific gradient borders, tier badges, collapsible tournament sections, pill-shaped odds buttons, countdown timers, slide-in bet slip, sticky sidebar
   - Remaining (backlog): live odds movement indicators, typography hierarchy, empty state illustrations, bet placement confetti animation, always-visible My Bets sidebar on desktop
   - Gary confirmed no further changes needed — remaining items added to backlog
+- **Mobile login screen fix (May 3)** — deployed casino.css/casino.html cache-bust
+  - Reduced title glow on mobile so NEON 777 remains readable
+  - Prevented auth card/input horizontal bleed on narrow screens
+  - Hid bottom nav/ticker while login screen is visible
+  - Verified locally at 390px viewport: document width equals viewport width, no overflow
 
 ## Next Actions (Backlog)
 - [x] Revamp Roulette game — flat belt-style design (CSGOEmpire/Stake inspired), deployed Mar 10
