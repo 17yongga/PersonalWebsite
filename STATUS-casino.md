@@ -32,7 +32,7 @@
 - Sync: Daily at 2 AM UTC + 2h settlement check
 - SSL cert valid until May 2026 (Let's Encrypt)
 
-## Current State (2026-04-11)
+## Current State (2026-05-03)
 - All games live and running
 - **Mobile UX improvements deployed (Mar 14)** — full pass across all 7 games + lobby
   - Lobby: 2-column game grid on mobile, compact header/cards
@@ -82,6 +82,12 @@
   - Prevented auth card/input horizontal bleed on narrow screens
   - Hid bottom nav/ticker while login screen is visible
   - Verified locally at 390px viewport: document width equals viewport width, no overflow
+- **Mobile platform formatting polish (May 3)** — deployed casino.css/games.css/casino.html cache-bust
+  - Audited lobby + all 7 game screens at 390px and 375px mobile widths
+  - Tightened mobile header spacing so logo, balance, +Credits, and menu fit cleanly
+  - Fixed lobby hero/stat-card right-edge clipping on 375px screens
+  - Fixed roulette betting/info panels and controls bleeding past viewport
+  - Verification: all audited screens report zero horizontal overflow and no off-viewport flagged elements
 
 ## Next Actions (Backlog)
 - [x] Revamp Roulette game — flat belt-style design (CSGOEmpire/Stake inspired), deployed Mar 10

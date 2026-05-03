@@ -7012,6 +7012,62 @@ html[data-theme="light"] .rl-player-row {
     width: 100%;
     overflow-x: auto;
   }
+
+  /* Mobile visual polish: keep the modern roulette panel inside narrow viewports. */
+  .rl-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 10px 0 calc(92px + env(safe-area-inset-bottom)) !important;
+    overflow: hidden;
+  }
+
+  .rl-belt-section,
+  .rl-status-row,
+  .rl-main-grid,
+  .rl-bet-panel,
+  .rl-info-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+  }
+
+  .rl-bet-panel,
+  .rl-info-panel {
+    padding: 16px !important;
+  }
+
+  .rl-amount-row {
+    display: grid !important;
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+    gap: 8px !important;
+  }
+
+  .rl-adj-btn,
+  .rl-quick-btn,
+  .rl-clear-btn {
+    min-height: 44px;
+  }
+
+  .rl-quick-row {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .rl-color-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .rl-active-bet {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .rl-clear-btn {
+    width: 100%;
+  }
 }
 
 @media (max-width: 430px) {
@@ -7026,4 +7082,3 @@ html[data-theme="light"] .rl-player-row {
 
 /* Override the old .game-title gradient from line 4339 (which is below our override at 5715) */
 /* NOTE: .game-title styles handled in the NEON 777 OVERRIDES block above — kept for safety */
-
