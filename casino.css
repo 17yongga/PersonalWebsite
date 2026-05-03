@@ -1769,27 +1769,55 @@ body:has(#signInScreen:not(.hidden)) .neon-ticker {
   }
 
   .games-grid { grid-template-columns: 1fr; }
-  .game-card.featured { grid-column: span 1; aspect-ratio: 1.72 / 1; }
-  .game-card { aspect-ratio: 1.72 / 1; }
+  .game-card.featured { grid-column: span 1; }
+  .game-card,
+  .game-card.featured {
+    aspect-ratio: auto;
+    min-height: 236px;
+    padding: 14px 18px 68px;
+  }
+  .game-card-tags {
+    position: static;
+    top: auto;
+    left: auto;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0 0 10px;
+    max-width: 100%;
+  }
+  .game-tag {
+    padding: 3px 7px;
+    font-size: 8px;
+    line-height: 1.1;
+    letter-spacing: .08em;
+  }
   .game-card-text,
   .featured .game-card-text {
-    left: 18px;
-    right: 18px;
-    bottom: 58px;
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
     gap: 5px;
+    max-width: 100%;
   }
-  .featured .game-card-title { font-size: 31px; }
-  .game-card-title { font-size: 31px; }
-  .lobby-games .game-card h3.game-card-title { font-size: 31px !important; }
-  .lobby-games .game-card.featured h3.game-card-title { font-size: 31px !important; }
+  .featured .game-card-title,
+  .game-card-title { font-size: clamp(26px, 8.2vw, 31px); }
+  .lobby-games .game-card h3.game-card-title,
+  .lobby-games .game-card.featured h3.game-card-title {
+    font-size: clamp(26px, 8.2vw, 31px) !important;
+    line-height: .94 !important;
+    overflow: visible;
+  }
   .game-card-desc,
   .featured .game-card-desc {
     font-size: 12px;
     line-height: 1.35;
-    max-width: 86%;
+    max-width: 100%;
   }
   .game-card-footer {
-    padding: 12px 18px;
+    left: 18px;
+    right: 18px;
+    padding: 0 0 14px;
     align-items: center;
   }
   .game-card-stats { gap: 12px; }
