@@ -74,6 +74,18 @@ const players = {};
 // Socket to user mapping: { socketId: userId }
 const socketToUser = {};
 
+function parsePositiveInteger(value) {
+  const num = Number(value);
+  if (!Number.isSafeInteger(num) || num < 1) return null;
+  return num;
+}
+
+function parseNonNegativeNumber(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num) || num < 0) return 0;
+  return num;
+}
+
 // Load users from file
 async function loadUsers() {
   try {
@@ -1441,8 +1453,8 @@ io.on("connection", (socket) => {
       return;
     }
 
-    const betAmount = parseInt(amount);
-    if (isNaN(betAmount) || betAmount <= 0) {
+    const betAmount = parsePositiveInteger(amount);
+    if (betAmount === null) {
       socket.emit("error", "Invalid bet amount");
       return;
     }
@@ -1565,8 +1577,8 @@ io.on("connection", (socket) => {
       return;
     }
 
-    const betAmountNum = parseInt(betAmount);
-    if (isNaN(betAmountNum) || betAmountNum <= 0) {
+    const betAmountNum = parsePositiveInteger(betAmount);
+    if (betAmountNum === null) {
       socket.emit("error", "Invalid bet amount");
       return;
     }
@@ -2103,13 +2115,18 @@ io.on("connection", (socket) => {
       return;
     }
 
-    const sb = parseInt(smallBlind) || 10;
-    const bb = parseInt(bigBlind) || sb * 2;
-    const minBI = parseInt(minBuyIn) || bb * 20;
-    const maxBI = parseInt(maxBuyIn) || bb * 100;
+    const sb = parsePositiveInteger(smallBlind) || 10;
+    const bb = parsePositiveInteger(bigBlind) || sb * 2;
+    const minBI = parsePositiveInteger(minBuyIn) || bb * 20;
+    const maxBI = parsePositiveInteger(maxBuyIn) || bb * 100;
 
     if (bb !== sb * 2) {
       socket.emit("error", "Big blind must be exactly 2x the small blind");
+      return;
+    }
+
+    if (minBI < bb * 20 || maxBI < minBI) {
+      socket.emit("error", "Invalid buy-in range");
       return;
     }
 
@@ -2158,8 +2175,8 @@ io.on("connection", (socket) => {
       return;
     }
 
-    const buyInAmount = parseInt(buyIn);
-    if (isNaN(buyInAmount) || buyInAmount < table.minBuyIn || buyInAmount > table.maxBuyIn) {
+    const buyInAmount = parsePositiveInteger(buyIn);
+    if (buyInAmount === null || buyInAmount < table.minBuyIn || buyInAmount > table.maxBuyIn) {
       socket.emit("error", `Buy-in must be between ${table.minBuyIn} and ${table.maxBuyIn}`);
       return;
     }
@@ -2170,7 +2187,8 @@ io.on("connection", (socket) => {
     }
 
     // Find seat
-    let seatIndex = seat !== null && seat !== undefined ? parseInt(seat) : -1;
+    let seatIndex = seat !== null && seat !== undefined ? Number(seat) : -1;
+    if (!Number.isSafeInteger(seatIndex)) seatIndex = -1;
     if (seatIndex < 0 || seatIndex >= 6 || table.seats[seatIndex] !== null) {
       // Auto-assign seat
       seatIndex = table.seats.findIndex(s => s === null);
@@ -2251,7 +2269,13 @@ io.on("connection", (socket) => {
       return;
     }
 
-    processPokerAction(tableId, playerIndex, action, parseInt(amount) || 0);
+    const actionAmount = amount === undefined || amount === null ? 0 : Number(amount);
+    if (!Number.isSafeInteger(actionAmount) || actionAmount < 0) {
+      socket.emit("error", "Invalid action amount");
+      return;
+    }
+
+    processPokerAction(tableId, playerIndex, action, actionAmount);
   });
 
   socket.on("pokerChat", ({ tableId, message }) => {
@@ -2294,10 +2318,14 @@ io.on("connection", (socket) => {
     const userId = players[socket.id].userId;
     if (!userId || !users[userId]) return;
 
+    if (typeof gameType !== 'string' || !users[userId].stats?.gameStats?.[gameType]) return;
+    if (!Number.isSafeInteger(Number(betAmount)) || Number(betAmount) < 1) return;
+    if (!Number.isFinite(Number(payout)) || Number(payout) < 0) return;
+
     try {
       // Update stats and check achievements
-      updateUserStats(userId, gameType, betAmount, won, payout, result);
-      const newAchievements = checkAchievements(userId, gameType, betAmount, won, result);
+      updateUserStats(userId, gameType, Number(betAmount), !!won, Number(payout), result);
+      const newAchievements = checkAchievements(userId, gameType, Number(betAmount), !!won, result);
       
       // Emit achievement notifications
       if (newAchievements.length > 0) {
@@ -2311,8 +2339,11 @@ io.on("connection", (socket) => {
   // ========== BET HISTORY ==========
   socket.on("recordBet", ({ game, bet, result, payout, multiplier, details }) => {
     if (!players[socket.id]) return;
+    const betAmount = Number(bet) || 0;
+    const payoutAmount = Number(payout) || 0;
+    if (betAmount < 0 || payoutAmount < 0) return;
     const username = players[socket.id].username;
-    addBetRecord(username, { game, bet: bet || 0, result, payout: payout || 0, multiplier: multiplier || null, details: details || null });
+    addBetRecord(username, { game, bet: betAmount, result, payout: payoutAmount, multiplier: multiplier || null, details: details || null });
   });
 
   socket.on("getBetHistory", ({ limit }, callback) => {
@@ -2524,13 +2555,15 @@ io.on("connection", (socket) => {
       socket.emit("crashBetPlaced", { success: false, error: "Already placed a bet" });
       return;
     }
-    if (!amount || amount <= 0 || amount > players[socket.id].credits) {
+    const betAmount = parsePositiveInteger(amount);
+    const safeAutoCashout = parseNonNegativeNumber(autoCashout);
+    if (betAmount === null || betAmount > players[socket.id].credits) {
       socket.emit("crashBetPlaced", { success: false, error: "Invalid bet amount" });
       return;
     }
 
     // Deduct credits
-    players[socket.id].credits -= amount;
+    players[socket.id].credits -= betAmount;
     const userId = players[socket.id].userId;
     if (userId) {
       saveUserBalance(userId, players[socket.id].credits).catch(err => {
@@ -2540,19 +2573,19 @@ io.on("connection", (socket) => {
 
     crashState.bets[socket.id] = {
       username: players[socket.id].username,
-      amount,
-      autoCashout: autoCashout || 0,
+      amount: betAmount,
+      autoCashout: safeAutoCashout,
       cashedOut: false,
       cashoutMultiplier: null
     };
 
-    socket.emit("crashBetPlaced", { success: true, amount });
+    socket.emit("crashBetPlaced", { success: true, amount: betAmount });
     socket.emit("playerData", {
       username: players[socket.id].username,
       credits: players[socket.id].credits
     });
 
-    console.log(`[Crash] ${players[socket.id].username} bet ${amount} (auto-cashout: ${autoCashout || 'off'})`);
+    console.log(`[Crash] ${players[socket.id].username} bet ${betAmount} (auto-cashout: ${safeAutoCashout || 'off'})`);
   });
 
   socket.on("crashCashOut", () => {
@@ -2913,10 +2946,10 @@ app.post("/api/cs2/bets", async (req, res) => {
       });
     }
     
-    if (typeof amount !== 'number' || amount < 1) {
+    if (!Number.isSafeInteger(amount) || amount < 1) {
       return res.status(400).json({ 
         success: false, 
-        error: "Invalid bet amount. Must be a number >= 1" 
+        error: "Invalid bet amount. Must be a whole number >= 1"
       });
     }
     

@@ -257,18 +257,6 @@ class RouletteGame {
 
           const pid = this.socket.id;
           if (results[pid]) {
-            const bet = results[pid].bet;
-            if (bet) {
-              const payout = results[pid].won ? results[pid].winnings : 0;
-              const mult = bet.color === 'green' ? 14 : 2;
-              this.casino.recordBet(
-                'roulette', bet.amount,
-                results[pid].won ? 'Win' : 'Loss',
-                payout,
-                results[pid].won ? mult : 0,
-                `${bet.color} → ${winningColor}`
-              );
-            }
             this.currentBet = null;
             this.updateCurrentBetDisplay();
           }

@@ -19,17 +19,14 @@ class PachinkoGame {
     this.init();
   }
 
-  // Multiplier maps - balanced for proper house edge
-  // 17 slots for 16 rows. Calibrated for realistic ball physics (~Gaussian sigma=3).
-  // House edge: low ~7%, medium ~7%, high ~8%
-  // Multipliers calibrated to match industry-standard Plinko (Stake/BC.Game style).
-  // Low:    ~99% RTP — stable, most slots near 1x, big corners for excitement
-  // Medium: ~97% RTP — more variance, lower center, higher peaks
-  // High:   ~99% RTP — jackpot mode, extreme corners, small non-zero center (no 0x traps)
+  // Multiplier maps - balanced by binomial slot probability.
+  // Approx RTP: low 94.7%, medium 94.3%, high 94.3%.
+  // Risk changes variance: low is steady, high is rare-jackpot heavy.
+  // 17 slots for 16 rows. Calibrated for the in-game physics distribution.
   static MULTIPLIERS = {
-    low:    [16,   9,  2,   1.4, 1.4, 1.2, 1.1, 1,   0.5, 1,   1.1, 1.2, 1.4, 1.4, 2,   9,   16  ],
-    medium: [170,  24, 8,   2,   0.7, 0.7, 0.6, 0.4, 0.2, 0.4, 0.6, 0.7, 0.7, 2,   8,   24,  170 ],
-    high:   [1000, 130, 26, 9,   4,   2,   0.2, 0.2, 0.2, 0.2, 0.2, 2,   4,   9,   26,  130, 1000]
+    low:    [5,   2.5, 1.6, 1.3, 1.15, 1.05, 0.95, 0.9,  0.85, 0.9,  0.95, 1.05, 1.15, 1.3, 1.6, 2.5, 5],
+    medium: [50,  18,  6,   3,   1.8,  1.2,  0.9,  0.75, 0.6,  0.75, 0.9,  1.2,  1.8,  3,   6,   18,  50],
+    high:   [220, 55,  18,  7,   2.6,  1.25, 0.78, 0.48, 0.28, 0.48, 0.78, 1.25, 2.6,  7,   18,  55,  220]
   };
 
   init() {
@@ -185,7 +182,11 @@ class PachinkoGame {
   }
 
   dropBalls() {
-    const bet = parseInt(document.getElementById('pachBet').value) || 100;
+    const bet = Number(document.getElementById('pachBet').value);
+    if (!Number.isSafeInteger(bet) || bet < 1) {
+      alert('Enter a valid bet amount.');
+      return;
+    }
     const totalCost = bet * this.ballCount;
     if (this.casino.credits < totalCost) {
       alert('Not enough credits!');
@@ -231,9 +232,10 @@ class PachinkoGame {
   }
 
   update() {
-    const gravity = this.H * 0.0004;
-    const friction = 0.98;
-    const bounce = 0.65;
+    const gravity = this.H * 0.000075;
+    const friction = 0.988;
+    const bounce = 0.5;
+    const maxVy = this.H * 0.0058;
 
     for (const ball of this.balls) {
       if (!ball.active) continue;
@@ -245,8 +247,8 @@ class PachinkoGame {
       if (Math.abs(ball.y - ball.lastY) < 0.3) {
         ball.stuckFrames++;
         if (ball.stuckFrames > 30) {
-          ball.vy += gravity * 5;
-          ball.vx += (Math.random() - 0.5) * 3;
+          ball.vy += gravity * 2;
+          ball.vx += (Math.random() - 0.5) * 1.1;
           ball.stuckFrames = 0;
         }
       } else {
@@ -255,6 +257,7 @@ class PachinkoGame {
       ball.lastY = ball.y;
       ball.x += ball.vx;
       ball.y += ball.vy;
+      if (ball.vy > maxVy) ball.vy = maxVy;
 
       // Trail
       ball.trail.push({x: ball.x, y: ball.y});
@@ -280,10 +283,10 @@ class PachinkoGame {
           ball.vx -= 2 * dot * nx;
           ball.vy -= 2 * dot * ny;
           // Dampen + random nudge
-          ball.vx = ball.vx * bounce + (Math.random() - 0.5) * 1.5;
+          ball.vx = ball.vx * bounce + (Math.random() - 0.5) * 0.8;
           ball.vy = ball.vy * bounce;
           // Ensure downward movement
-          if (ball.vy < 0.5) ball.vy = 0.5;
+          if (ball.vy < 0.18) ball.vy = 0.18;
           peg.glow = 1;
         }
       }
@@ -291,52 +294,15 @@ class PachinkoGame {
       // Check slot landing
       for (const slot of this.slots) {
         if (ball.y >= slot.y && ball.x >= slot.x && ball.x <= slot.x + slot.w) {
-          ball.active = false;
-          ball.landedSlot = slot;
-          slot.glow = 1;
-          const winnings = Math.floor(ball.bet * slot.multiplier);
-          const won = winnings >= ball.bet;
-          this.casino.updateCredits(winnings);
-          this.casino.recordBet('pachinko', ball.bet, won ? 'Win' : 'Loss', winnings, slot.multiplier);
-          
-          // Send stats tracking
-          if (this.casino.socket) {
-            this.casino.socket.emit('gameResult', {
-              gameType: 'pachinko',
-              betAmount: ball.bet,
-              won: won,
-              payout: winnings,
-              result: {
-                multiplier: slot.multiplier,
-                slotType: slot.label || 'Unknown'
-              }
-            });
-          }
-          
-          this.results.unshift({ multiplier: slot.multiplier, winnings, bet: ball.bet });
-          if (this.results.length > 20) this.results.pop();
-          this.renderResults();
+          this.resolveBall(ball, slot, slot.label || 'slot');
           break;
         }
       }
 
-      // Fell off bottom or outside canvas — award max multiplier
+      // If physics carries the ball outside the canvas, settle it against the
+      // nearest slot instead of treating escape as a jackpot.
       if (ball.y > this.H + 20 || ball.x < -20 || ball.x > this.W + 20) {
-        ball.active = false;
-        const mults = PachinkoGame.MULTIPLIERS[this.risk];
-        const maxMult = Math.max(...mults);
-        const winnings = Math.floor(ball.bet * maxMult);
-        this.casino.updateCredits(winnings);
-        this.casino.recordBet('pachinko', ball.bet, 'Win', winnings, maxMult);
-        if (this.casino.socket) {
-          this.casino.socket.emit('gameResult', {
-            gameType: 'pachinko', betAmount: ball.bet, won: true, payout: winnings,
-            result: { multiplier: maxMult, slotType: 'edge-bonus' }
-          });
-        }
-        this.results.unshift({ multiplier: maxMult, winnings, bet: ball.bet });
-        if (this.results.length > 20) this.results.pop();
-        this.renderResults();
+        this.resolveBall(ball, this.getNearestSlot(ball.x), 'edge-settle');
       }
     }
 
@@ -348,6 +314,43 @@ class PachinkoGame {
     if (this.balls.length > 30) {
       this.balls = this.balls.filter(b => b.active || b.trail.length > 0);
     }
+  }
+
+  getNearestSlot(x) {
+    return this.slots.reduce((nearest, slot) => {
+      const slotCenter = slot.x + slot.w / 2;
+      const nearestCenter = nearest.x + nearest.w / 2;
+      return Math.abs(slotCenter - x) < Math.abs(nearestCenter - x) ? slot : nearest;
+    }, this.slots[0]);
+  }
+
+  resolveBall(ball, slot, slotType) {
+    if (!slot) return;
+    ball.active = false;
+    ball.landedSlot = slot;
+    slot.glow = 1;
+
+    const winnings = Math.floor(ball.bet * slot.multiplier);
+    const won = winnings >= ball.bet;
+    this.casino.updateCredits(winnings);
+    this.casino.recordBet('pachinko', ball.bet, won ? 'Win' : 'Loss', winnings, slot.multiplier);
+
+    if (this.casino.socket) {
+      this.casino.socket.emit('gameResult', {
+        gameType: 'pachinko',
+        betAmount: ball.bet,
+        won,
+        payout: winnings,
+        result: {
+          multiplier: slot.multiplier,
+          slotType
+        }
+      });
+    }
+
+    this.results.unshift({ multiplier: slot.multiplier, winnings, bet: ball.bet });
+    if (this.results.length > 20) this.results.pop();
+    this.renderResults();
   }
 
   drawFrame() {

@@ -72,8 +72,8 @@ class CS2BettingGame {
             <div class="cs2-container">
               <div class="cs2-header-content">
                 <h1 class="cs2-title">
-                  <span class="cs2-title-icon">🎮</span>
-                  <span>CS2 Betting</span>
+                  <span class="cs2-title-mark" aria-hidden="true"></span>
+                  <span>CS2 Fantasy Betting</span>
                 </h1>
                 <div class="cs2-header-stats">
                   <div class="cs2-header-balance">

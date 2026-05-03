@@ -56,6 +56,7 @@ class CasinoManager {
     document.getElementById('achievementsBtn')?.addEventListener('click', () => this.showAchievements());
     document.getElementById('statsBtn')?.addEventListener('click', () => this.showStats());
     document.getElementById('backToLobbyBtn')?.addEventListener('click', () => this.backToLobby());
+    document.querySelector('.btn-add-credits')?.addEventListener('click', () => this.doFreeSpin());
 
     // Mobile menu toggle
     const menuToggleBtn = document.getElementById('mobileMenuToggle');
@@ -78,7 +79,8 @@ class CasinoManager {
       { id: 'leaderboardBtnMobile', action: () => this.showLeaderboard() },
       { id: 'achievementsBtnMobile', action: () => this.showAchievements() },
       { id: 'statsBtnMobile', action: () => this.showStats() },
-      { id: 'betHistoryBtnMobile', action: () => this.showBetHistory() }
+      { id: 'betHistoryBtnMobile', action: () => this.showBetHistory() },
+      { id: 'logoutBtnMobile', action: () => this.logout() }
     ];
     
     mobileMenuActions.forEach(({ id, action }) => {
@@ -143,8 +145,34 @@ class CasinoManager {
         }
       });
     });
+
+    document.querySelectorAll('.neon-bottom-nav-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const action = btn.dataset.navAction;
+        this.setBottomNavActive(action);
+        if (action === 'floor') {
+          this.backToLobby();
+          document.getElementById('gameSelection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (action === 'live') {
+          this.backToLobby();
+          document.querySelector('.filter-tab[data-filter="live"]')?.click();
+          document.querySelector('.lobby-section-header')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (action === 'bets') {
+          this.showBetHistory();
+        } else if (action === 'me') {
+          this.showStats();
+        }
+      });
+    });
     
     console.log(`[Casino] Attached ${document.querySelectorAll('.play-btn').length} play button listeners`);
+  }
+
+  setBottomNavActive(action) {
+    document.querySelectorAll('.neon-bottom-nav-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.navAction === action);
+    });
   }
 
   showLoginForm() {
@@ -575,6 +603,7 @@ class CasinoManager {
     }
 
     this.currentGame = gameName;
+    this.setBottomNavActive(null);
     // Persist last game so "Continue last game" on the hero can resume it.
     try { localStorage.setItem('neon777.lastGame', gameName); } catch (e) { /* ignore storage errors */ }
     
@@ -713,6 +742,7 @@ class CasinoManager {
     document.getElementById('gameContainer').classList.add('hidden');
     document.getElementById('gameSelection').classList.remove('hidden');
     this.currentGame = null;
+    this.setBottomNavActive('floor');
 
     if (window.currentGameInstance) {
       window.currentGameInstance.destroy?.();

@@ -8,6 +8,9 @@ class CoinflipGame {
     this.isCreator = false;
     this.gameFinished = false;
     this.createChoice = null;
+    this.flipAnimationMs = 4600;
+    this.isFlipAnimating = false;
+    this.flipResultTimer = null;
     this.init();
   }
 
@@ -15,7 +18,7 @@ class CoinflipGame {
     const gameView = document.getElementById('coinflipGame');
     gameView.innerHTML = `
       <div class="coinflip-casino-container">
-        <h2 class="game-title">🪙 Coinflip</h2>
+        <h2 class="game-title"><span class="game-title-mark" aria-hidden="true"></span><span>Coinflip</span></h2>
         
         <div id="connectionStatus" class="connection-status hidden" style="margin-top: 15px; font-size: 0.9rem; color: var(--text-secondary); text-align: center;">
           <span id="statusIndicator">●</span> Connecting...
@@ -276,10 +279,7 @@ class CoinflipGame {
       this.showCoinFlipResult(coinResult, results, choices);
       const playerId = this.socket.id;
       if (results[playerId]) {
-        const won = results[playerId].won;
-        const payout = won ? results[playerId].winnings : 0;
-        this.casino.recordBet('coinflip', betAmount, won ? 'Win' : 'Loss', payout, 2, `${coinResult}`);
-        // Don't manually set credits - server sends playerData event with correct balance
+        // Server records bet history and sends playerData with the authoritative balance.
       }
     });
 
@@ -745,11 +745,20 @@ class CoinflipGame {
   }
 
   showCoinFlipResult(result, results, choices) {
+    if (this.isFlipAnimating) return;
+    this.isFlipAnimating = true;
+
     document.getElementById('confirmationSection').classList.add('hidden');
     document.getElementById('gameStatus').classList.add('hidden');
 
     const coin = document.getElementById('coin');
+    if (!coin) {
+      this.isFlipAnimating = false;
+      return;
+    }
+    if (this.flipResultTimer) clearTimeout(this.flipResultTimer);
     coin.classList.remove('flipping-heads', 'flipping-tails', 'show-heads', 'show-tails');
+    void coin.offsetWidth;
     
     if (result === 'Heads') {
       coin.classList.add('flipping-heads');
@@ -757,7 +766,7 @@ class CoinflipGame {
       coin.classList.add('flipping-tails');
     }
 
-    setTimeout(() => {
+    this.flipResultTimer = setTimeout(() => {
       coin.classList.remove('flipping-heads', 'flipping-tails');
       if (result === 'Heads') {
         coin.classList.add('show-heads');
@@ -778,10 +787,17 @@ class CoinflipGame {
       }
 
       document.getElementById('resultsSection').classList.remove('hidden');
-    }, 2000);
+      this.isFlipAnimating = false;
+      this.flipResultTimer = null;
+    }, this.flipAnimationMs);
   }
 
   resetGameUI() {
+    this.isFlipAnimating = false;
+    if (this.flipResultTimer) {
+      clearTimeout(this.flipResultTimer);
+      this.flipResultTimer = null;
+    }
     const coin = document.getElementById('coin');
     if (coin) {
       coin.classList.remove('flipping-heads', 'flipping-tails', 'show-heads', 'show-tails');

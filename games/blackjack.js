@@ -22,53 +22,66 @@ class BlackjackGame {
     const gameView = document.getElementById('blackjackGame');
     gameView.innerHTML = `
       <div class="blackjack-container">
-        <h2 class="game-title">🃏 Blackjack</h2>
+        <h2 class="game-title"><span class="game-title-mark" aria-hidden="true"></span><span>Blackjack</span></h2>
         
-        <div class="betting-section">
-          <label>Place Your Bet:</label>
-          <div class="bet-input-group">
-            <input type="number" id="blackjackBet" min="1" max="${this.casino.credits}" value="100" step="10">
-            <div class="quick-bets">
-              <button class="quick-bet-btn" data-amount="50">50</button>
-              <button class="quick-bet-btn" data-amount="100">100</button>
-              <button class="quick-bet-btn" data-amount="250">250</button>
-              <button class="quick-bet-btn" data-amount="500">500</button>
-            </div>
-          </div>
-          <button id="placeBetBtn" class="btn btn-primary">Place Bet</button>
-        </div>
-
-        <div id="gameArea" class="game-area hidden">
-          <div class="dealer-section">
-            <h3>Dealer</h3>
-            <div class="score-display">Score: <span id="dealerScore">0</span></div>
-            <div id="dealerCards" class="cards-container"></div>
-          </div>
-
-          <div class="result-display" id="resultDisplay"></div>
-
-          <div class="player-section">
-            <h3>You</h3>
-            <div class="score-display">Score: <span id="playerScore">0</span></div>
-            <div id="playerCards" class="cards-container"></div>
-          </div>
-
-          <div id="insuranceSection" class="insurance-section hidden">
-            <div class="insurance-prompt">
-              <p>Dealer shows an Ace! Would you like insurance?</p>
-              <p class="insurance-info">Insurance costs half your bet. If dealer has blackjack, you win 2:1 on insurance.</p>
-              <div class="insurance-buttons">
-                <button id="takeInsuranceBtn" class="btn btn-primary">Take Insurance</button>
-                <button id="declineInsuranceBtn" class="btn btn-secondary">No Insurance</button>
+        <div class="blackjack-table-shell">
+          <div class="betting-section">
+            <label>Place Your Bet:</label>
+            <div class="bet-input-group">
+              <input type="number" id="blackjackBet" min="1" max="${this.casino.credits}" value="100" step="10">
+              <div class="quick-bets">
+                <button class="quick-bet-btn" data-amount="50">50</button>
+                <button class="quick-bet-btn" data-amount="100">100</button>
+                <button class="quick-bet-btn" data-amount="250">250</button>
+                <button class="quick-bet-btn" data-amount="500">500</button>
               </div>
             </div>
+            <button id="placeBetBtn" class="btn btn-primary">Place Bet</button>
           </div>
 
-          <div class="game-controls">
-            <button id="hitBtn" class="btn btn-primary">Hit</button>
-            <button id="standBtn" class="btn btn-secondary">Stand</button>
-            <button id="doubleDownBtn" class="btn btn-secondary hidden">Double Down</button>
-            <button id="newGameBtn" class="btn btn-secondary">New Game</button>
+          <div id="blackjackPreview" class="blackjack-predeal-table">
+            <div class="blackjack-preview-row">
+              <span class="blackjack-preview-label">Dealer</span>
+              <div class="blackjack-card-slots"><span></span><span></span></div>
+            </div>
+            <div class="blackjack-preview-row">
+              <span class="blackjack-preview-label">You</span>
+              <div class="blackjack-card-slots"><span></span><span></span></div>
+            </div>
+          </div>
+
+          <div id="gameArea" class="game-area hidden">
+            <div class="dealer-section">
+              <h3>Dealer</h3>
+              <div class="score-display">Score: <span id="dealerScore">0</span></div>
+              <div id="dealerCards" class="cards-container"></div>
+            </div>
+
+            <div class="result-display" id="resultDisplay"></div>
+
+            <div class="player-section">
+              <h3>You</h3>
+              <div class="score-display">Score: <span id="playerScore">0</span></div>
+              <div id="playerCards" class="cards-container"></div>
+            </div>
+
+            <div id="insuranceSection" class="insurance-section hidden">
+              <div class="insurance-prompt">
+                <p>Dealer shows an Ace! Would you like insurance?</p>
+                <p class="insurance-info">Insurance costs half your bet. If dealer has blackjack, you win 2:1 on insurance.</p>
+                <div class="insurance-buttons">
+                  <button id="takeInsuranceBtn" class="btn btn-primary">Take Insurance</button>
+                  <button id="declineInsuranceBtn" class="btn btn-secondary">No Insurance</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="game-controls">
+              <button id="hitBtn" class="btn btn-primary">Hit</button>
+              <button id="standBtn" class="btn btn-secondary">Stand</button>
+              <button id="doubleDownBtn" class="btn btn-secondary hidden">Double Down</button>
+              <button id="newGameBtn" class="btn btn-secondary">New Game</button>
+            </div>
           </div>
         </div>
       </div>
@@ -118,7 +131,8 @@ class BlackjackGame {
   }
 
   async startGame() {
-    document.querySelector('.betting-section').classList.add('hidden');
+    document.querySelector('.blackjack-container .betting-section')?.classList.add('is-locked');
+    document.getElementById('blackjackPreview')?.classList.add('hidden');
     document.getElementById('gameArea').classList.remove('hidden');
 
     this.createDeck();
@@ -708,7 +722,8 @@ class BlackjackGame {
     this.insuranceOffered = false;
     this.lastHideFirstStates = {};
     this.initialHandSize = 2; // Reset initial hand size
-    document.querySelector('.betting-section').classList.remove('hidden');
+    document.querySelector('.blackjack-container .betting-section')?.classList.remove('is-locked');
+    document.getElementById('blackjackPreview')?.classList.remove('hidden');
     document.getElementById('gameArea').classList.add('hidden');
     document.getElementById('insuranceSection').classList.add('hidden');
     const resultDisplay = document.getElementById('resultDisplay');

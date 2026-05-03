@@ -363,3 +363,216 @@
 /* Score/stat text that was hardcoded cyan/green in CS2 legacy */
 .cs2-wallet-label,
 .cs2-stat-label { color: var(--ink-dim) !important; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .14em; }
+
+/* ========== NEON 777 CS2 FULL-SURFACE REDESIGN ========== */
+.cs2-betting-container {
+  width: min(100%, 1080px) !important;
+  max-width: 1080px !important;
+  margin: 0 auto !important;
+  padding: 18px !important;
+  background:
+    linear-gradient(180deg, rgba(255,181,77,.055), rgba(255,90,168,.028)),
+    var(--bg-2) !important;
+  border: 1px solid rgba(255,181,77,.32) !important;
+  border-top: 3px solid var(--amber) !important;
+  border-radius: 0 !important;
+  box-shadow:
+    0 0 0 1px rgba(255,181,77,.08),
+    0 0 36px rgba(255,181,77,.12),
+    0 24px 70px rgba(0,0,0,.42) !important;
+  overflow: visible !important;
+}
+
+.cs2-betting-container::before {
+  display: none !important;
+}
+
+.cs2-container {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 0 !important;
+}
+
+.cs2-header {
+  position: relative !important;
+  background: rgba(10,3,8,.58) !important;
+  border: 1px solid rgba(255,181,77,.24) !important;
+  border-radius: 0 !important;
+  padding: 16px !important;
+  margin: 0 0 14px !important;
+  box-shadow: inset 0 0 20px rgba(255,181,77,.035) !important;
+}
+
+.cs2-header-content {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 16px !important;
+  align-items: center !important;
+}
+
+.cs2-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 !important;
+  color: var(--amber) !important;
+  font-size: clamp(22px, 2.8vw, 34px) !important;
+  line-height: 1.05 !important;
+  text-shadow: 0 0 1px rgba(255,181,77,.55), 0 0 8px rgba(255,181,77,.26) !important;
+}
+
+.cs2-title-icon {
+  display: none !important;
+}
+
+.cs2-title-mark {
+  width: .78em;
+  height: .78em;
+  display: inline-block;
+  background:
+    repeating-linear-gradient(90deg,
+      currentColor 0 2px,
+      transparent 2px 5px);
+  box-shadow: 0 0 10px rgba(255,181,77,.36);
+}
+
+.cs2-header-stats {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cs2-header-balance,
+.cs2-refresh-btn,
+.match-count-badge,
+.bets-tabs,
+.bet-tab,
+.cs2-disclaimer {
+  border-radius: 0 !important;
+}
+
+.cs2-header-balance {
+  background: rgba(255,181,77,.06) !important;
+  border: 1px solid rgba(255,181,77,.32) !important;
+  box-shadow: 0 0 16px rgba(255,181,77,.1) !important;
+  min-height: 44px;
+}
+
+.balance-label,
+.balance-currency,
+.events-panel-meta,
+.empty-state-hint {
+  color: rgba(255,243,228,.5) !important;
+  font-family: var(--font-mono) !important;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+
+.balance-value {
+  color: var(--neon-pink) !important;
+  font-family: var(--font-mono) !important;
+  text-shadow: 0 0 8px rgba(255,90,168,.35);
+}
+
+.cs2-disclaimer {
+  margin: 0 0 16px !important;
+  padding: 14px 16px !important;
+}
+
+.cs2-betting-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, .8fr) !important;
+  gap: 18px !important;
+  margin: 0 !important;
+}
+
+.cs2-events-panel,
+.cs2-sidebar-panel,
+.cs2-event-card,
+.cs2-betslip-modal-content,
+.tournament-section,
+.tournament-header,
+.match-card,
+.cs2-my-bets {
+  background:
+    linear-gradient(180deg, rgba(255,181,77,.045), rgba(255,90,168,.018)),
+    rgba(10,3,8,.58) !important;
+  border: 1px solid rgba(255,181,77,.24) !important;
+  border-radius: 0 !important;
+  box-shadow: inset 0 0 20px rgba(255,181,77,.035) !important;
+}
+
+.events-panel-header,
+.sidebar-panel-header,
+.betslip-modal-header {
+  border-bottom: 1px solid rgba(255,181,77,.22) !important;
+  background: linear-gradient(180deg, rgba(255,181,77,.06), transparent) !important;
+}
+
+.events-panel-header h3,
+.sidebar-panel-header h3,
+.betslip-modal-header h3 {
+  color: var(--cream) !important;
+  text-shadow: 0 0 6px rgba(255,181,77,.24);
+}
+
+.tournament-header,
+.cs2-event-card {
+  margin-bottom: 12px !important;
+}
+
+.team-logo,
+.team-logo-placeholder,
+.team-logo-img {
+  border-radius: 0 !important;
+}
+
+.team-logo,
+.team-logo-placeholder {
+  background: rgba(255,181,77,.06) !important;
+  border: 1px solid rgba(255,181,77,.24) !important;
+}
+
+.team-name {
+  color: var(--cream) !important;
+}
+
+.odds-container {
+  gap: 12px !important;
+}
+
+.odds-pill {
+  border-radius: 0 !important;
+  min-height: 64px;
+}
+
+.cs2-betslip-modal-content {
+  border-top: 3px solid var(--amber) !important;
+}
+
+@media (max-width: 900px) {
+  .cs2-betting-container {
+    padding: 12px !important;
+  }
+
+  .cs2-header-content,
+  .cs2-betting-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .cs2-header-stats {
+    justify-content: stretch !important;
+  }
+
+  .cs2-header-balance,
+  .cs2-refresh-btn {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .cs2-title {
+    font-size: 22px !important;
+  }
+}
