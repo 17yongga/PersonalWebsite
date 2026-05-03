@@ -1639,6 +1639,23 @@ body:has(#signInScreen:not(.hidden)) .neon-ticker {
   .neon-hero {
     padding: 28px 16px 36px;
     gap: 28px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .neon-hero-left,
+  .neon-hero-right,
+  .neon-hero-headline,
+  .neon-hero-ctas,
+  .hero-stats-grid,
+  .hero-stat-item,
+  .hero-xp-label {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .neon-hero-sub,
@@ -1647,10 +1664,34 @@ body:has(#signInScreen:not(.hidden)) .neon-ticker {
   .hero-stats-panel {
     width: 100%;
     max-width: 100%;
+    box-sizing: border-box;
   }
 
   .hero-stats-panel {
-    padding: 22px;
+    padding: 20px;
+    overflow: hidden;
+  }
+
+  .hero-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .hero-stat-label,
+  .hero-xp-label {
+    letter-spacing: .13em;
+  }
+
+  .hero-stat-value {
+    font-size: clamp(20px, 7vw, 28px);
+    line-height: 1.05;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  #heroBalance {
+    font-size: clamp(20px, 7vw, 28px);
+    white-space: nowrap;
   }
 
   #signInScreen {
@@ -1762,6 +1803,94 @@ body:has(#signInScreen:not(.hidden)) .neon-ticker {
   .neon-hero-ctas { flex-direction: column; }
   .btn-hero-outline, .btn-hero-filled { text-align: center; }
   .hero-line-amber, .hero-line-pink { font-size: 40px; }
+}
+
+/* Real phone browsers include URL/nav chrome; tall modals must start at the top,
+   not be vertically centered off-screen. */
+@media (max-width: 640px) {
+  .bet-history-modal,
+  .leaderboard-modal,
+  .achievements-modal,
+  .stats-modal,
+  .how-to-play-modal {
+    align-items: flex-start;
+    justify-content: flex-start;
+    overflow-y: auto;
+    padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bet-history-content,
+  .leaderboard-content,
+  .achievements-content,
+  .stats-content,
+  .how-to-play-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100dvh - 16px);
+    margin: 0;
+  }
+
+  .bet-history-header,
+  .leaderboard-header,
+  .achievements-header,
+  .stats-header,
+  .how-to-play-header,
+  .bh-header-wrap {
+    padding: 16px 18px 14px;
+  }
+
+  .bet-history-header h2,
+  .leaderboard-header h2,
+  .achievements-header h2,
+  .stats-header h2,
+  .how-to-play-header h2 {
+    font-size: 16px;
+  }
+
+  .leaderboard-tabs {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .leaderboard-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 6px;
+    font-size: 10px;
+    line-height: 1.15;
+  }
+
+  .leaderboard-list,
+  .bet-history-list,
+  .achievements-list,
+  .stats-body,
+  .how-to-play-body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .lb-row {
+    gap: 10px;
+  }
+
+  .lb-player {
+    min-width: 0;
+  }
+
+  .lb-username,
+  .lb-stats,
+  .lb-biggest,
+  .lb-metric {
+    overflow-wrap: anywhere;
+  }
+
+  .lb-profits,
+  .lb-score {
+    min-width: 92px;
+    max-width: 42%;
+    overflow-wrap: anywhere;
+  }
 }
 
 @media (max-width: 380px) {
@@ -2441,6 +2570,33 @@ body:has(#signInScreen:not(.hidden)) .neon-ticker {
   .bet-history-summary { grid-template-columns: repeat(2,1fr); }
   .stats-overview { grid-template-columns: repeat(2,1fr); }
   .achievements-grid { grid-template-columns: 1fr; }
+}
+
+/* Must live after the base modal rules: real mobile browsers can crop centered
+   modal panels behind URL bars. Pin overlays to the top and let them scroll. */
+@media (max-width: 640px) {
+  .bet-history-modal,
+  .leaderboard-modal,
+  .achievements-modal,
+  .stats-modal,
+  .how-to-play-modal {
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    overflow-y: auto !important;
+    padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)) !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bet-history-content,
+  .leaderboard-content,
+  .achievements-content,
+  .stats-content,
+  .how-to-play-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: calc(100dvh - 16px) !important;
+    margin: 0 !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

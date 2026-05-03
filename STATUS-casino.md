@@ -85,9 +85,11 @@
 - **Mobile platform formatting polish (May 3)** — deployed casino.css/games.css/casino.html cache-bust
   - Audited lobby + all 7 game screens at 390px and 375px mobile widths
   - Tightened mobile header spacing so logo, balance, +Credits, and menu fit cleanly
-  - Fixed lobby hero/stat-card right-edge clipping on 375px screens
+  - Fixed lobby hero/stat-card right-edge clipping on 375px screens and real-phone browser chrome heights
+  - Fixed overlay modals being vertically centered/cut off on mobile; overlays now start at top and scroll
   - Fixed roulette betting/info panels and controls bleeding past viewport
-  - Verification: all audited screens report zero horizontal overflow and no off-viewport flagged elements
+  - Compact blackjack mobile table: active hand hides locked bet strip, shorter card zones, smaller cards, sticky action buttons visible above bottom nav
+  - Verification: local mobile checks report zero horizontal overflow on lobby/blackjack/modal scenarios
 
 ## Next Actions (Backlog)
 - [x] Revamp Roulette game — flat belt-style design (CSGOEmpire/Stake inspired), deployed Mar 10

@@ -7068,6 +7068,97 @@ html[data-theme="light"] .rl-player-row {
   .rl-clear-btn {
     width: 100%;
   }
+
+  /* Blackjack mobile table: keep active hands and action buttons visible without
+     forcing a long scroll. Hide the locked bet strip during a hand and compact
+     the card zones/buttons aggressively on real phones. */
+  .blackjack-container {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .blackjack-container .game-title {
+    margin-bottom: 10px !important;
+    padding: 10px 12px 9px !important;
+    font-size: clamp(20px, 6vw, 26px) !important;
+  }
+
+  .blackjack-container .blackjack-table-shell {
+    width: 100% !important;
+  }
+
+  .blackjack-container .betting-section {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    padding: 14px !important;
+  }
+
+  .blackjack-container .betting-section.is-locked {
+    display: none !important;
+  }
+
+  .blackjack-container .game-area {
+    gap: 8px !important;
+    padding: 10px !important;
+    border-top: 0 !important;
+  }
+
+  .blackjack-container .dealer-section,
+  .blackjack-container .player-section {
+    min-height: 142px !important;
+    padding: 9px 8px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .blackjack-container .dealer-section h3,
+  .blackjack-container .player-section h3 {
+    font-size: 14px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .blackjack-container .score-display {
+    font-size: 11px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .blackjack-container .cards-container {
+    min-height: 92px !important;
+    gap: 6px !important;
+    overflow-x: visible !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .blackjack-container .card {
+    width: clamp(54px, 15.5vw, 66px) !important;
+    height: clamp(76px, 21.7vw, 92px) !important;
+    min-width: clamp(54px, 15.5vw, 66px) !important;
+    min-height: clamp(76px, 21.7vw, 92px) !important;
+    border-radius: 6px !important;
+  }
+
+  .blackjack-container .result-display {
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  .blackjack-container .game-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 8px !important;
+    position: sticky;
+    bottom: calc(66px + env(safe-area-inset-bottom));
+    z-index: 4;
+    backdrop-filter: blur(10px);
+  }
+
+  .blackjack-container .game-controls .btn {
+    min-height: 42px !important;
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+  }
 }
 
 @media (max-width: 430px) {
