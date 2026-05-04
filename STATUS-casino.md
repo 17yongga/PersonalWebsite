@@ -90,6 +90,10 @@
   - Fixed roulette betting/info panels and controls bleeding past viewport
   - Compact blackjack mobile table: active hand hides locked bet strip, shorter card zones, smaller cards, sticky action buttons visible above bottom nav
   - Verification: local mobile checks report zero horizontal overflow on lobby/blackjack/modal scenarios
+- **Mobile Blackjack + lobby card polish (May 3)** — deployed casino.css/games.css/blackjack.js/casino.html cache-bust
+  - Fixed remaining mobile lobby card title/tag overlap for long titles like Pachinko, Texas Hold'em, and CS2 Betting
+  - Blackjack insurance state is now compact: shorter copy, smaller active card zones, two-column insurance actions, and normal Hit/Stand controls hidden while insurance is pending
+  - Verification: Chrome mobile emulation at 393px shows zero horizontal overflow, no lobby tag/title overlap, and Blackjack insurance table fits above bottom nav in a constrained 730px viewport
 
 ## Next Actions (Backlog)
 - [x] Revamp Roulette game — flat belt-style design (CSGOEmpire/Stake inspired), deployed Mar 10
