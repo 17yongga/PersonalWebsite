@@ -3031,3 +3031,53 @@ body:has(#signInScreen:not(.hidden)) .neon-ticker {
   animation: slideUp .2s cubic-bezier(.22,1,.36,1) both;
   transition: opacity .4s, transform .4s;
 }
+
+/* May 2026 mobile lobby card fit pass: keep badges/title/description in normal flow
+   so long neon titles never sit underneath the tag row. */
+@media (max-width: 640px) {
+  .lobby-games .game-card,
+  .lobby-games .game-card.featured {
+    min-height: 236px !important;
+    padding: 14px 18px 70px !important;
+    overflow: hidden !important;
+  }
+
+  .lobby-games .game-card .game-card-tags {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    z-index: 6 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+    margin: 0 0 12px !important;
+    max-width: 100% !important;
+  }
+
+  .lobby-games .game-card .game-card-text,
+  .lobby-games .game-card.featured .game-card-text {
+    position: relative !important;
+    inset: auto !important;
+    z-index: 2 !important;
+    display: block !important;
+    max-width: 100% !important;
+  }
+
+  .lobby-games .game-card h3.game-card-title,
+  .lobby-games .game-card.featured h3.game-card-title {
+    display: block !important;
+    font-size: clamp(24px, 7.4vw, 30px) !important;
+    line-height: .96 !important;
+    margin: 0 0 8px !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+  }
+
+  .lobby-games .game-card[data-game="cs2betting"] h3.game-card-title,
+  .lobby-games .game-card[data-game="pachinko"] h3.game-card-title {
+    font-size: clamp(22px, 6.7vw, 28px) !important;
+  }
+}

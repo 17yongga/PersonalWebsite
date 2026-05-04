@@ -67,8 +67,8 @@ class BlackjackGame {
 
             <div id="insuranceSection" class="insurance-section hidden">
               <div class="insurance-prompt">
-                <p>Dealer shows an Ace! Would you like insurance?</p>
-                <p class="insurance-info">Insurance costs half your bet. If dealer has blackjack, you win 2:1 on insurance.</p>
+                <p class="insurance-title">Dealer shows an Ace — take insurance?</p>
+                <p class="insurance-info">Costs half your bet. Pays 2:1 if dealer has blackjack.</p>
                 <div class="insurance-buttons">
                   <button id="takeInsuranceBtn" class="btn btn-primary">Take Insurance</button>
                   <button id="declineInsuranceBtn" class="btn btn-secondary">No Insurance</button>
@@ -291,6 +291,7 @@ class BlackjackGame {
   }
 
   showInsuranceOption() {
+    document.querySelector('.blackjack-container')?.classList.add('insurance-active');
     document.getElementById('insuranceSection').classList.remove('hidden');
     document.getElementById('hitBtn').disabled = true;
     document.getElementById('standBtn').disabled = true;
@@ -310,6 +311,7 @@ class BlackjackGame {
     this.hasTakenInsurance = true;
     this.casino.updateCredits(-this.insuranceBet);
     document.getElementById('insuranceSection').classList.add('hidden');
+    document.querySelector('.blackjack-container')?.classList.remove('insurance-active');
     
     // Check if dealer has blackjack
     const dealerScoreInfo = this.calculateScoreWithAces(this.dealerHand, true);
@@ -341,6 +343,7 @@ class BlackjackGame {
     this.hasTakenInsurance = false;
     this.insuranceBet = 0;
     document.getElementById('insuranceSection').classList.add('hidden');
+    document.querySelector('.blackjack-container')?.classList.remove('insurance-active');
     
     // Check if dealer has blackjack (even without insurance)
     const dealerScoreInfo = this.calculateScoreWithAces(this.dealerHand, true);
@@ -726,6 +729,7 @@ class BlackjackGame {
     document.getElementById('blackjackPreview')?.classList.remove('hidden');
     document.getElementById('gameArea').classList.add('hidden');
     document.getElementById('insuranceSection').classList.add('hidden');
+    document.querySelector('.blackjack-container')?.classList.remove('insurance-active');
     const resultDisplay = document.getElementById('resultDisplay');
     if (resultDisplay) {
       resultDisplay.textContent = '';
