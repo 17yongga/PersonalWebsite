@@ -448,10 +448,11 @@ body:has(#signInScreen:not(.hidden)) .neon-ticker {
 .casino-header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 9400;
   padding: 0 clamp(16px, 3vw, 48px);
   background: rgba(10,3,8,.96);
   border-bottom: 1px solid var(--line);
+  overflow: visible;
 }
 
 .casino-header-content {
@@ -641,7 +642,7 @@ body:has(#signInScreen:not(.hidden)) .neon-ticker {
   flex-direction: column;
   gap: 4px;
   backdrop-filter: blur(12px);
-  z-index: 200;
+  z-index: 9500;
   width: min(240px, calc(100vw - 32px));
   box-shadow: 0 12px 32px rgba(0,0,0,.45);
 }
@@ -1757,6 +1758,24 @@ body:has(#signInScreen:not(.hidden)) .neon-ticker {
     width: 48px;
     height: 48px;
     min-width: 48px;
+  }
+
+  .mobile-actions-dropdown {
+    position: fixed;
+    top: calc(64px + env(safe-area-inset-top));
+    right: 12px;
+    width: min(250px, calc(100vw - 24px));
+    max-height: calc(100dvh - 80px);
+    overflow-y: auto;
+    z-index: 9600;
+    border-top: 3px solid var(--amber);
+    background:
+      linear-gradient(180deg, rgba(255,181,77,.08), rgba(255,90,168,.035)),
+      rgba(10,3,8,.98);
+    box-shadow:
+      0 0 0 1px rgba(255,181,77,.08),
+      0 18px 42px rgba(0,0,0,.62),
+      0 0 28px rgba(255,181,77,.18);
   }
 
   .game-container {
