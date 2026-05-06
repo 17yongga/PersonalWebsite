@@ -75,9 +75,9 @@ class CS2ModernBettingGame {
                   <span>💳</span>
                   History
                 </button>
-                <div class="cs2-header-quick-stats">
-                  <span class="cs2-quick-stat wins" id="cs2QuickWins">W: 0</span>
-                  <span class="cs2-quick-stat losses" id="cs2QuickLosses">L: 0</span>
+                <div class="cs2-header-quick-stats" aria-label="Today's bet record">
+                  <span class="cs2-quick-stat wins" id="cs2QuickWins" data-label="Wins">0</span>
+                  <span class="cs2-quick-stat losses" id="cs2QuickLosses" data-label="Losses">0</span>
                 </div>
               </div>
             </div>
@@ -112,10 +112,16 @@ class CS2ModernBettingGame {
             </div>
 
             <!-- Sidebar Panel -->
-            <div class="cs2-sidebar-panel">
+            <button id="cs2MyBetsToggle" class="cs2-my-bets-toggle" type="button" aria-controls="cs2MyBetsPanel" aria-expanded="false">
+              <span>My Bets</span>
+              <strong id="cs2MyBetsCount">0</strong>
+            </button>
+            <div id="cs2MyBetsOverlay" class="cs2-my-bets-overlay" hidden></div>
+            <div class="cs2-sidebar-panel" id="cs2MyBetsPanel">
               <!-- My Bets Section -->
               <div class="cs2-my-bets-panel">
                 <div class="my-bets-header">
+                  <button id="cs2MyBetsClose" class="cs2-my-bets-close" type="button" aria-label="Close My Bets">&times;</button>
                   <h3>📋 My Bets</h3>
                 </div>
                 <div class="bets-tabs">
@@ -302,8 +308,31 @@ class CS2ModernBettingGame {
       });
     });
 
+    const myBetsToggle = document.getElementById('cs2MyBetsToggle');
+    const myBetsClose = document.getElementById('cs2MyBetsClose');
+    const myBetsOverlay = document.getElementById('cs2MyBetsOverlay');
+    if (myBetsToggle) myBetsToggle.addEventListener('click', () => this.toggleMyBetsPanel(true));
+    if (myBetsClose) myBetsClose.addEventListener('click', () => this.toggleMyBetsPanel(false));
+    if (myBetsOverlay) myBetsOverlay.addEventListener('click', () => this.toggleMyBetsPanel(false));
+
     // Modal controls
     this.attachModalListeners();
+  }
+
+  toggleMyBetsPanel(forceOpen) {
+    const panel = document.getElementById('cs2MyBetsPanel');
+    const overlay = document.getElementById('cs2MyBetsOverlay');
+    const toggle = document.getElementById('cs2MyBetsToggle');
+    if (!panel) return;
+
+    const nextOpen = typeof forceOpen === 'boolean' ? forceOpen : !panel.classList.contains('is-open');
+    panel.classList.toggle('is-open', nextOpen);
+    document.body.classList.toggle('cs2-my-bets-open', nextOpen);
+    if (overlay) {
+      overlay.hidden = !nextOpen;
+      overlay.classList.toggle('is-open', nextOpen);
+    }
+    if (toggle) toggle.setAttribute('aria-expanded', String(nextOpen));
   }
 
   attachModernInteractions() {
@@ -766,6 +795,7 @@ class CS2ModernBettingGame {
           <span class="empty-state-hint">Check back later for new tournaments</span>
         </div>
       `;
+      this.updateMyBetsCount();
       return;
     }
 
@@ -1295,6 +1325,7 @@ class CS2ModernBettingGame {
         this.bets = (data.bets || []).map(b => b.bet ? b.bet : b);
         this.showBets('open'); // Show current tab
         this.updateQuickStats();
+        this.updateMyBetsCount();
       }
     } catch (error) {
       console.error('Error loading bets:', error);
@@ -1327,6 +1358,15 @@ class CS2ModernBettingGame {
     }
 
     betsContainer.innerHTML = filteredBets.map(bet => this.renderBetCard(bet)).join('');
+    this.updateMyBetsCount();
+  }
+
+  updateMyBetsCount() {
+    const countEl = document.getElementById('cs2MyBetsCount');
+    if (!countEl) return;
+    const openCount = this.bets.filter(b => b.status === 'pending').length;
+    countEl.textContent = String(openCount);
+    countEl.classList.toggle('has-bets', openCount > 0);
   }
 
   updateQuickStats() {
@@ -1339,8 +1379,8 @@ class CS2ModernBettingGame {
     const losses = todayBets.filter(b => b.status === 'lost').length;
     const winsEl = document.getElementById('cs2QuickWins');
     const lossesEl = document.getElementById('cs2QuickLosses');
-    if (winsEl) winsEl.textContent = `W: ${wins}`;
-    if (lossesEl) lossesEl.textContent = `L: ${losses}`;
+    if (winsEl) winsEl.textContent = String(wins);
+    if (lossesEl) lossesEl.textContent = String(losses);
   }
 
   renderBetCard(bet) {

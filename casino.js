@@ -166,6 +166,8 @@ class CasinoManager {
       });
     });
     
+    this.setupFloorChat();
+
     console.log(`[Casino] Attached ${document.querySelectorAll('.play-btn').length} play button listeners`);
   }
 
@@ -412,6 +414,7 @@ class CasinoManager {
         
         this.credits = socketCredits;
         this.updateCreditsDisplay();
+        this.refreshHeroStats();
       });
 
       this.socket.on('error', (error) => {
@@ -504,6 +507,8 @@ class CasinoManager {
     // Update display
     document.getElementById('playerNameDisplay').textContent = this.username;
     this.updateCreditsDisplay();
+    this.syncDailySpinWidget();
+    this.refreshHeroStats();
   }
 
   setBetPlacementInProgress(inProgress) {
@@ -547,10 +552,53 @@ class CasinoManager {
     if (creditsEl) {
       creditsEl.textContent = this.formatCredits(this.credits);
     }
+    this.updateHeroStats();
   }
 
   formatCredits(amount) {
     return amount.toLocaleString();
+  }
+
+  refreshHeroStats() {
+    this.updateHeroStats();
+    if (!this.socket || !this.socket.connected) return;
+
+    const now = Date.now();
+    if (this._lastHeroStatsRequestAt && now - this._lastHeroStatsRequestAt < 4000) return;
+    this._lastHeroStatsRequestAt = now;
+
+    this.socket.emit('getUserStats', (stats) => {
+      this.updateHeroStats(stats);
+    });
+  }
+
+  updateHeroStats(stats = null) {
+    const balanceEl = document.getElementById('heroBalance');
+    const levelEl = document.getElementById('heroLevel');
+    const winRateEl = document.getElementById('heroWinRate');
+    const streakEl = document.getElementById('heroStreak');
+    const xpTextEl = document.getElementById('heroXpText');
+    const xpFillEl = document.getElementById('heroXpFill');
+
+    if (balanceEl) balanceEl.textContent = `$${this.formatCredits(this.credits || 0)}`;
+
+    const totalGames = Number(stats?.totalGames || 0);
+    const winRate = Number(stats?.winRate || 0);
+    const totalWagered = Number(stats?.weeklyStats?.totalWagered || 0);
+    const netPL = Number(stats?.netPL || 0);
+    const xp = Math.max(0, Math.round(totalGames * 75 + totalWagered / 20 + Math.max(0, netPL) / 10));
+    const level = Math.max(1, Math.floor(xp / 1000) + 1);
+    const levelNames = ['NEWCOMER', 'REGULAR', 'SHARPSHOOTER', 'HIGH ROLLER', 'NEON LEGEND'];
+    const levelName = levelNames[Math.min(level - 1, levelNames.length - 1)];
+    const xpIntoLevel = xp % 1000;
+
+    if (levelEl) levelEl.textContent = `${level} ${levelName}`;
+    if (winRateEl) winRateEl.textContent = totalGames > 0 ? `${winRate.toFixed(1).replace('.0', '')}%` : '--%';
+
+    const spinState = this.getDailySpinState?.();
+    if (streakEl) streakEl.textContent = String(spinState?.streak || 0);
+    if (xpTextEl) xpTextEl.textContent = `${xpIntoLevel} / 1000`;
+    if (xpFillEl) xpFillEl.style.width = `${Math.min(100, (xpIntoLevel / 1000) * 100)}%`;
   }
 
   updateCredits(amount) {
@@ -752,7 +800,7 @@ class CasinoManager {
 
   // ========== NEON 777 — DAILY SPIN ==========
   // Free daily-pull wheel. Awards credits, persists streak in localStorage.
-  doFreeSpin() {
+  doFreeSpinLegacy() {
     const SPIN_KEY = 'neon777.lastSpin';
     const STREAK_KEY = 'neon777.spinStreak';
     const now = Date.now();
@@ -763,14 +811,14 @@ class CasinoManager {
     // Gate: 1 spin per 20h window (so a "daily" feels forgiving)
     if (last && hoursSince < 20) {
       const hoursLeft = Math.ceil(20 - hoursSince);
-      this._showSpinModal({ locked: true, hoursLeft });
+      this._showSpinModalLegacy({ locked: true, hoursLeft });
       return;
     }
 
-    this._showSpinModal({ locked: false });
+    this._showSpinModalLegacy({ locked: false });
   }
 
-  _showSpinModal({ locked, hoursLeft }) {
+  _showSpinModalLegacy({ locked, hoursLeft }) {
     const existing = document.getElementById('spinModalOverlay');
     if (existing) existing.remove();
 
@@ -808,7 +856,7 @@ class CasinoManager {
               <div class="spin-wheel-pointer"></div>
               <div class="spin-wheel" id="spinWheel" style="background:conic-gradient(${gradient});">
                 ${prizes.map((p, i) => `
-                  <div class="spin-wheel-label" style="transform:translateX(-50%) rotate(${(i + 0.5) * seg}deg) translateY(0);">${p.label}</div>
+                  <div class="spin-wheel-label" style="--spin-angle:${(i + 0.5) * seg}deg;--spin-label-tilt:${-((i + 0.5) * seg)}deg;">${p.label}</div>
                 `).join('')}
               </div>
               <div class="spin-wheel-hub">777</div>
@@ -876,6 +924,196 @@ class CasinoManager {
         pullBtn.textContent = 'COME BACK TOMORROW';
         // Leave the button disabled after a successful spin
       }, 3300);
+    });
+  }
+
+  // ========== NEON 777 - DAILY SPIN REFINEMENT ==========
+  getDailySpinPrizes() {
+    return [
+      { label: '+50', name: 'Table Tip', tier: 'common', color: '#fff3e4', credits: 50, weight: 24 },
+      { label: '+100', name: 'Lucky Pull', tier: 'common', color: '#ffb54d', credits: 100, weight: 28 },
+      { label: '+150', name: 'Hot Streak', tier: 'common', color: '#fff3e4', credits: 150, weight: 18 },
+      { label: '+250', name: 'Neon Bonus', tier: 'rare', color: '#ff8a2b', credits: 250, weight: 14 },
+      { label: '+500', name: 'Pink Flash', tier: 'rare', color: '#ff5aa8', credits: 500, weight: 9 },
+      { label: '+777', name: 'Triple Seven', tier: 'epic', color: '#b064ff', credits: 777, weight: 5 },
+      { label: '+1K', name: 'High Roller', tier: 'epic', color: '#00e0b8', credits: 1000, weight: 2 },
+      { label: 'JACKPOT', name: 'Jackpot', tier: 'legendary', color: '#ff3a5c', credits: 2500, weight: 1 }
+    ];
+  }
+
+  getDailySpinState() {
+    const SPIN_KEY = 'neon777.lastSpin';
+    const STREAK_KEY = 'neon777.spinStreak';
+    const WINDOW_MS = 20 * 60 * 60 * 1000;
+    const last = parseInt(localStorage.getItem(SPIN_KEY) || '0', 10);
+    const rawStreak = parseInt(localStorage.getItem(STREAK_KEY) || '0', 10);
+    const streak = Number.isFinite(rawStreak) ? rawStreak : 0;
+    const nextAt = last ? last + WINDOW_MS : 0;
+    const remainingMs = Math.max(0, nextAt - Date.now());
+
+    return {
+      last,
+      streak,
+      nextAt,
+      remainingMs,
+      ready: !last || remainingMs <= 0
+    };
+  }
+
+  formatSpinTime(ms) {
+    if (!ms || ms <= 0) return 'Ready now';
+    const totalMinutes = Math.ceil(ms / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (!hours) return `${minutes}m`;
+    if (!minutes) return `${hours}h`;
+    return `${hours}h ${minutes}m`;
+  }
+
+  syncDailySpinWidget() {
+    const state = this.getDailySpinState();
+    const fill = document.querySelector('.freepull-streak-fill');
+    const streakLabel = document.querySelector('.freepull-streak-label');
+    const nextLabel = document.getElementById('freepullNextLabel');
+    const button = document.getElementById('dailySpinBtn');
+
+    if (fill) fill.style.width = `${Math.min(100, (state.streak / 7) * 100)}%`;
+    if (streakLabel) streakLabel.textContent = `Streak: ${state.streak} day${state.streak === 1 ? '' : 's'}`;
+    if (nextLabel) nextLabel.textContent = state.ready ? 'Ready now' : `Next pull: ${this.formatSpinTime(state.remainingMs)}`;
+    if (button) {
+      button.textContent = state.ready ? 'SPIN THE WHEEL' : 'VIEW TIMER';
+      button.classList.toggle('is-locked', !state.ready);
+    }
+
+    this.updateHeroStats();
+    return state;
+  }
+
+  pickDailySpinPrize(prizes) {
+    const totalWeight = prizes.reduce((sum, prize) => sum + prize.weight, 0);
+    let cursor = Math.random() * totalWeight;
+    for (let i = 0; i < prizes.length; i += 1) {
+      cursor -= prizes[i].weight;
+      if (cursor <= 0) return { prize: prizes[i], index: i };
+    }
+    return { prize: prizes[0], index: 0 };
+  }
+
+  doFreeSpin() {
+    const state = this.syncDailySpinWidget();
+    this._showSpinModal({ locked: !state.ready, state });
+  }
+
+  _showSpinModal({ locked, state }) {
+    const existing = document.getElementById('spinModalOverlay');
+    if (existing) existing.remove();
+
+    const prizes = this.getDailySpinPrizes();
+    const seg = 360 / prizes.length;
+    const gradient = prizes.map((p, i) => `${p.color} ${i * seg}deg ${(i + 1) * seg}deg`).join(',');
+    const totalWeight = prizes.reduce((sum, prize) => sum + prize.weight, 0);
+    const countdown = this.formatSpinTime(state?.remainingMs || 0);
+    const lockProgress = state?.last ? Math.min(100, Math.max(0, 100 - ((state.remainingMs || 0) / (20 * 60 * 60 * 1000)) * 100)) : 0;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'spinModalOverlay';
+    overlay.className = 'spin-modal-overlay';
+    overlay.innerHTML = `
+      <div class="spin-modal-content" role="dialog" aria-labelledby="spinModalTitle">
+        <div class="spin-modal-header">
+          <div>
+            <div class="spin-modal-kicker">${locked ? 'COOLDOWN' : 'FREE PULL'}</div>
+            <h2 id="spinModalTitle" class="spin-modal-title">DAILY SPIN</h2>
+          </div>
+          <button class="spin-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="spin-modal-body">
+          ${locked ? `
+            <div class="spin-locked">
+              <div class="spin-locked-icon">777</div>
+              <div class="spin-locked-heading">Next Pull In ${countdown}</div>
+              <div class="spin-locked-sub">Streak: <b>${state?.streak || 0} day${state?.streak === 1 ? '' : 's'}</b></div>
+              <div class="spin-lock-meter"><span style="width:${lockProgress}%"></span></div>
+              <button class="spin-close-btn spin-pull-btn" type="button">BACK TO FLOOR</button>
+            </div>
+          ` : `
+            <div class="spin-meta-row">
+              <span>Streak ${state?.streak || 0}</span>
+              <span>20h reset</span>
+            </div>
+            <div class="spin-wheel-wrap">
+              <div class="spin-wheel-pointer"></div>
+              <div class="spin-wheel" id="spinWheel" style="background:conic-gradient(${gradient});">
+                ${prizes.map((p, i) => `
+                  <div class="spin-wheel-label" style="--spin-angle:${(i + 0.5) * seg}deg;--spin-label-tilt:${-((i + 0.5) * seg)}deg;">${p.label}</div>
+                `).join('')}
+              </div>
+              <div class="spin-wheel-hub">777</div>
+            </div>
+            <div class="spin-prize-strip">
+              ${prizes.map((p) => `
+                <div class="spin-prize-pill spin-tier-${p.tier}">
+                  <span>${p.label}</span>
+                  <small>${Math.round((p.weight / totalWeight) * 100)}%</small>
+                </div>
+              `).join('')}
+            </div>
+            <div class="spin-prize-result" id="spinPrizeResult"></div>
+            <button class="spin-pull-btn" id="spinPullBtn">PULL THE LEVER</button>
+          `}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close = () => overlay.remove();
+    overlay.querySelector('.spin-modal-close')?.addEventListener('click', close);
+    overlay.querySelector('.spin-close-btn')?.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+    if (locked) return;
+
+    const pullBtn = overlay.querySelector('#spinPullBtn');
+    const wheel = overlay.querySelector('#spinWheel');
+    const resultEl = overlay.querySelector('#spinPrizeResult');
+    let spinning = false;
+
+    pullBtn.addEventListener('click', () => {
+      if (spinning) return;
+      spinning = true;
+      pullBtn.disabled = true;
+      pullBtn.textContent = 'SPINNING...';
+      resultEl.innerHTML = '<span class="spin-result-sub">The bulbs are choosing...</span>';
+
+      const { prize, index: idx } = this.pickDailySpinPrize(prizes);
+      const baseTurns = 7;
+      const targetDeg = 360 - (idx * seg + seg / 2);
+      const finalDeg = baseTurns * 360 + targetDeg;
+      wheel.style.transition = 'transform 4s cubic-bezier(.13,.78,.14,1)';
+      wheel.style.transform = `rotate(${finalDeg}deg)`;
+
+      setTimeout(() => {
+        if (typeof this.updateCredits === 'function') {
+          this.updateCredits(prize.credits);
+        } else {
+          this.credits = (this.credits || 0) + prize.credits;
+          this.updateCreditsDisplay?.();
+        }
+
+        const SPIN_KEY = 'neon777.lastSpin';
+        const STREAK_KEY = 'neon777.spinStreak';
+        const prevSpin = parseInt(localStorage.getItem(SPIN_KEY) || '0', 10);
+        const DAY_MS = 24 * 60 * 60 * 1000;
+        const within48h = prevSpin && (Date.now() - prevSpin) < (2 * DAY_MS);
+        const currentStreak = parseInt(localStorage.getItem(STREAK_KEY) || '0', 10);
+        const newStreak = within48h ? (Number.isFinite(currentStreak) ? currentStreak + 1 : 1) : 1;
+        localStorage.setItem(SPIN_KEY, String(Date.now()));
+        localStorage.setItem(STREAK_KEY, String(newStreak));
+
+        this.syncDailySpinWidget();
+        resultEl.innerHTML = `<span class="spin-result-prize" style="color:${prize.color};text-shadow:0 0 14px ${prize.color};">${prize.label}</span><span class="spin-result-name">${prize.name}</span><span class="spin-result-sub">Added to your balance - ${prize.credits.toLocaleString()} credits</span>`;
+        pullBtn.textContent = 'COME BACK TOMORROW';
+      }, 4200);
     });
   }
 
@@ -1946,6 +2184,84 @@ class CasinoManager {
     // Remove any legacy backdrop
     const backdrop = document.querySelector('.mobile-dropdown-backdrop');
     if (backdrop) backdrop.remove();
+  }
+
+  setupFloorChat() {
+    const chat = document.getElementById('sidebarChat');
+    const form = document.getElementById('sidebarChatForm');
+    const input = document.getElementById('sidebarChatInput');
+    if (!chat || !form || !input) return;
+
+    this.renderFloorChat();
+
+    if (form.dataset.bound === 'true') return;
+    form.dataset.bound = 'true';
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
+      this.sendFloorChatMessage(message);
+      input.value = '';
+    });
+  }
+
+  getDefaultFloorChatMessages() {
+    return [
+      { user: 'neon_nova', text: 'just hit 8.2x on crash', ts: 0 },
+      { user: 'ace_spades', text: 'natural blackjack two hands in a row wtf', ts: 0 },
+      { user: 'phantom_bet', text: 'roulette is rigged, red 6 times straight', ts: 0 },
+      { user: 'lucky7s', text: 'lmao the house always wins', ts: 0 },
+      { user: 'cherrybomb', text: "Texas hold'em room 3 has a whale, come watch", ts: 0 }
+    ];
+  }
+
+  getStoredFloorChatMessages() {
+    try {
+      const raw = localStorage.getItem('neon777.floorChat');
+      const messages = raw ? JSON.parse(raw) : [];
+      return Array.isArray(messages) ? messages.filter(m => m && m.user && m.text) : [];
+    } catch (error) {
+      console.warn('[Casino] Could not read floor chat:', error);
+      return [];
+    }
+  }
+
+  renderFloorChat() {
+    const chat = document.getElementById('sidebarChat');
+    if (!chat) return;
+    const messages = [...this.getDefaultFloorChatMessages(), ...this.getStoredFloorChatMessages()].slice(-50);
+    chat.innerHTML = messages.map(message => `
+      <div class="chat-msg">
+        <span class="chat-user">${this.escapeHtml(message.user)}</span>
+        <span class="chat-text">${this.escapeHtml(message.text)}</span>
+      </div>
+    `).join('');
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  sendFloorChatMessage(text) {
+    const username = (this.username || sessionStorage.getItem('casinoUsername') || 'guest').trim();
+    const message = {
+      user: username.slice(0, 18),
+      text: text.slice(0, 120),
+      ts: Date.now()
+    };
+    const messages = [...this.getStoredFloorChatMessages(), message].slice(-45);
+    try {
+      localStorage.setItem('neon777.floorChat', JSON.stringify(messages));
+    } catch (error) {
+      console.warn('[Casino] Could not save floor chat:', error);
+    }
+    this.renderFloorChat();
+  }
+
+  escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 }
 

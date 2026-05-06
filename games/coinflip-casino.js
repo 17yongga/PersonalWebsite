@@ -759,6 +759,7 @@ class CoinflipGame {
     if (this.flipResultTimer) clearTimeout(this.flipResultTimer);
     coin.classList.remove('flipping-heads', 'flipping-tails', 'show-heads', 'show-tails');
     void coin.offsetWidth;
+    this.playCoinFlipSound(result);
     
     if (result === 'Heads') {
       coin.classList.add('flipping-heads');
@@ -790,6 +791,59 @@ class CoinflipGame {
       this.isFlipAnimating = false;
       this.flipResultTimer = null;
     }, this.flipAnimationMs);
+  }
+
+  getAudioContext() {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+    if (!this.audioContext) this.audioContext = new AudioContextClass();
+    if (this.audioContext.state === 'suspended') {
+      this.audioContext.resume().catch(() => {});
+    }
+    return this.audioContext;
+  }
+
+  playCoinFlipSound(result) {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime + 0.03;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.16, now + 0.05);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + this.flipAnimationMs / 1000 + 0.25);
+    master.connect(ctx.destination);
+
+    const tickCount = 18;
+    const interval = (this.flipAnimationMs / 1000) / tickCount;
+    for (let i = 0; i < tickCount; i++) {
+      const t = now + i * interval;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = i % 2 ? 'triangle' : 'square';
+      osc.frequency.setValueAtTime(680 + i * 18, t);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.075, t + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(t);
+      osc.stop(t + 0.07);
+    }
+
+    const landAt = now + this.flipAnimationMs / 1000;
+    const landing = ctx.createOscillator();
+    const landingGain = ctx.createGain();
+    landing.type = 'sine';
+    landing.frequency.setValueAtTime(result === 'Heads' ? 880 : 740, landAt);
+    landing.frequency.exponentialRampToValueAtTime(result === 'Heads' ? 520 : 460, landAt + 0.28);
+    landingGain.gain.setValueAtTime(0.0001, landAt);
+    landingGain.gain.exponentialRampToValueAtTime(0.18, landAt + 0.02);
+    landingGain.gain.exponentialRampToValueAtTime(0.0001, landAt + 0.38);
+    landing.connect(landingGain);
+    landingGain.connect(master);
+    landing.start(landAt);
+    landing.stop(landAt + 0.4);
   }
 
   resetGameUI() {

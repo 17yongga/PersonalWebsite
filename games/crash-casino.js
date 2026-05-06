@@ -372,12 +372,16 @@ class CrashGame {
     // Grid lines
     ctx.strokeStyle = GRID;
     ctx.lineWidth = 1;
+    const isCompact = W < 360;
+    const labelX = isCompact ? 8 : 2;
+    const gridStartX = isCompact ? 50 : 40;
     for (let i = 1; i < 5; i++) {
       const y = H - (H * i / 5);
-      ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(W, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(gridStartX, y); ctx.lineTo(W - 8, y); ctx.stroke();
       ctx.fillStyle = TICK_TEXT;
-      ctx.font = '11px "Space Mono", ui-monospace, monospace';
-      ctx.fillText((1 + i * (Math.max(this.multiplier, 2) - 1) / 5).toFixed(1) + 'x', 2, y + 4);
+      ctx.font = `${isCompact ? 9 : 11}px "Space Mono", ui-monospace, monospace`;
+      ctx.textAlign = 'left';
+      ctx.fillText((1 + i * (Math.max(this.multiplier, 2) - 1) / 5).toFixed(1) + 'x', labelX, y + 4);
     }
 
     // Draw curve
@@ -393,7 +397,7 @@ class CrashGame {
       ctx.shadowColor = curveColor;
       ctx.shadowBlur = 12;
 
-      const padL = 45, padB = 20;
+      const padL = isCompact ? 52 : 45, padB = 20;
       const graphW = W - padL - 10;
       const graphH = H - padB - 10;
 

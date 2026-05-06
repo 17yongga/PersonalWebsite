@@ -7310,3 +7310,1125 @@ html[data-theme="light"] .rl-player-row {
     padding: 5px 6px !important;
   }
 }
+
+/* Targeted mobile repair pass for the May review notes. */
+@media (max-width: 760px) {
+  .blackjack-container .game-area {
+    display: grid !important;
+    grid-template-rows: auto auto auto auto !important;
+    gap: 8px !important;
+    overflow: visible !important;
+  }
+
+  .blackjack-container .dealer-section,
+  .blackjack-container .player-section {
+    min-height: 212px !important;
+    padding-bottom: 12px !important;
+    overflow: visible !important;
+  }
+
+  .blackjack-container .cards-container {
+    min-height: 84px !important;
+    align-items: flex-start !important;
+  }
+
+  .blackjack-container .game-controls {
+    position: relative !important;
+    z-index: 1 !important;
+    transform: none !important;
+    margin-top: 0 !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    background: rgba(10, 3, 8, .78) !important;
+    backdrop-filter: blur(10px);
+  }
+
+  .blackjack-container .game-controls:has(#doubleDownBtn:not(.hidden)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .blackjack-container .game-controls .btn {
+    min-width: 0 !important;
+    min-height: 42px !important;
+    white-space: normal !important;
+    line-height: 1.1 !important;
+  }
+
+  .coinflip-casino-container .players-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-areas:
+      "coin coin"
+      "player-one player-two" !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .coinflip-casino-container #player1Card,
+  .coinflip-casino-container #player2Card {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 168px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+  }
+
+  .coinflip-casino-container .player-card-header {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 3px !important;
+    align-items: start !important;
+  }
+
+  .coinflip-casino-container .player-card-name,
+  .coinflip-casino-container .player-card-bet,
+  .coinflip-casino-container .player-name {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .coinflip-casino-container .player-card-bet {
+    justify-self: start !important;
+    font-size: clamp(13px, 4.2vw, 16px) !important;
+  }
+
+  .coinflip-casino-container .player-card-choice {
+    min-height: 78px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 10px !important;
+  }
+
+  .pach-results {
+    max-height: 118px !important;
+    overflow-y: auto !important;
+    grid-column: 1 / -1 !important;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (max-width: 430px) {
+  .coinflip-casino-container .players-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    padding-inline: 10px !important;
+  }
+
+  .coinflip-casino-container #player1Card,
+  .coinflip-casino-container #player2Card {
+    min-height: 146px !important;
+    padding: 10px !important;
+  }
+
+  .coinflip-casino-container .player-card-name {
+    font-size: clamp(13px, 4.6vw, 17px) !important;
+  }
+
+  .coinflip-casino-container .player-card-choice {
+    min-height: 64px !important;
+    font-size: clamp(18px, 6vw, 24px) !important;
+  }
+}
+
+/* Absolute final control sizing pass. Keep equal-purpose mobile buttons equal. */
+.blackjack-container .game-controls {
+  align-items: stretch !important;
+  grid-auto-rows: 46px !important;
+}
+
+.blackjack-container .game-controls .btn {
+  width: 100% !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+  margin: 0 !important;
+  padding: 0 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  border-width: 1px !important;
+  line-height: 1.05 !important;
+  text-align: center !important;
+  white-space: normal !important;
+  overflow: hidden !important;
+}
+
+.blackjack-container .game-controls .btn-primary {
+  border: 1px solid var(--amber) !important;
+}
+
+@media (max-width: 430px) {
+  .blackjack-container .game-controls {
+    gap: 7px !important;
+    grid-auto-rows: 44px !important;
+  }
+
+  .blackjack-container .game-controls .btn {
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    margin: 0 !important;
+    padding: 0 8px !important;
+    font-size: clamp(10px, 3.25vw, 12px) !important;
+    letter-spacing: .08em !important;
+  }
+}
+
+/* Final mobile crash pass: show history without letting it crowd the graph. */
+@media (max-width: 640px) {
+  .crash-history {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 7px !important;
+    margin: 0 0 8px !important;
+    border: 1px solid rgba(255,181,77,.18) !important;
+    background: rgba(10,3,8,.55) !important;
+  }
+
+  .crash-history > *,
+  .crash-hist-pill,
+  .crash-history-item {
+    flex: 0 0 auto !important;
+    min-width: 48px !important;
+    text-align: center !important;
+  }
+}
+
+.blackjack-container:not(.hand-active) .game-controls {
+  display: none !important;
+}
+
+/* Unified Blackjack table: wager, cards, and actions stay on one screen. */
+.blackjack-container .blackjack-table-shell {
+  width: min(100%, 1040px) !important;
+}
+
+.blackjack-container .blackjack-main-screen {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 320px) !important;
+  grid-template-areas:
+    "dealer wager"
+    "player wager"
+    "result controls"
+    "insurance insurance" !important;
+  gap: 12px !important;
+  padding: 14px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.blackjack-container .dealer-section { grid-area: dealer; }
+.blackjack-container .player-section { grid-area: player; }
+.blackjack-container .blackjack-wager-panel { grid-area: wager; }
+.blackjack-container .result-display { grid-area: result; }
+.blackjack-container .insurance-section { grid-area: insurance; }
+.blackjack-container .game-controls { grid-area: controls; }
+
+.blackjack-container .dealer-section,
+.blackjack-container .player-section {
+  min-height: 164px !important;
+  display: grid !important;
+  align-content: center !important;
+}
+
+.blackjack-container .blackjack-wager-panel {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 14px !important;
+  align-self: stretch !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  align-content: start !important;
+  gap: 12px !important;
+  border: 1px solid rgba(255,181,77,.3) !important;
+  border-top: 3px solid var(--amber) !important;
+  background:
+    linear-gradient(180deg, rgba(255,181,77,.08), rgba(255,90,168,.025)),
+    rgba(10,3,8,.58) !important;
+}
+
+.blackjack-container .blackjack-wager-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.blackjack-container .blackjack-bet-status {
+  display: grid;
+  gap: 3px;
+  text-align: right;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.blackjack-container .blackjack-bet-status span {
+  color: var(--ink-dim);
+  font-size: 9px;
+  letter-spacing: .12em;
+}
+
+.blackjack-container .blackjack-bet-status strong {
+  color: var(--amber);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.blackjack-container .blackjack-wager-panel .bet-input-group {
+  grid-template-columns: 1fr !important;
+}
+
+.blackjack-container .blackjack-wager-panel .quick-bets {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-auto-rows: 44px !important;
+}
+
+.blackjack-container .blackjack-wager-panel .quick-bet-btn,
+.blackjack-container .blackjack-wager-panel #placeBetBtn {
+  height: 44px !important;
+  min-height: 44px !important;
+  margin: 0 !important;
+}
+
+.blackjack-container .blackjack-wager-panel.is-locked {
+  opacity: .72 !important;
+  pointer-events: none !important;
+  filter: saturate(.75) !important;
+}
+
+.blackjack-container .blackjack-wager-panel.is-locked .quick-bets {
+  display: grid !important;
+}
+
+.blackjack-container .blackjack-wager-panel.is-locked #placeBetBtn {
+  display: flex !important;
+}
+
+.blackjack-container .result-display {
+  min-height: 50px !important;
+  margin: 0 !important;
+  padding: 10px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  border: 1px solid rgba(255,181,77,.24) !important;
+  background: rgba(10,3,8,.58) !important;
+  font-size: clamp(13px, 2vw, 18px) !important;
+  line-height: 1.2 !important;
+}
+
+.blackjack-container .game-controls {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-self: stretch !important;
+}
+
+.blackjack-container .game-controls .btn:disabled {
+  opacity: .45 !important;
+  cursor: not-allowed !important;
+}
+
+.blackjack-container:not(.hand-active) .dealer-section,
+.blackjack-container:not(.hand-active) .player-section {
+  background:
+    repeating-linear-gradient(90deg, rgba(255,181,77,.045) 0 2px, transparent 2px 8px),
+    rgba(10,3,8,.58) !important;
+}
+
+@media (max-width: 760px) {
+  .blackjack-container .blackjack-main-screen {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "dealer"
+      "player"
+      "wager"
+      "insurance"
+      "controls"
+      "result" !important;
+    gap: 8px !important;
+    padding: 8px !important;
+  }
+
+  .blackjack-container .dealer-section,
+  .blackjack-container .player-section {
+    min-height: 112px !important;
+    padding: 9px !important;
+  }
+
+  .blackjack-container .dealer-section h3,
+  .blackjack-container .player-section h3 {
+    margin-bottom: 3px !important;
+    font-size: 13px !important;
+  }
+
+  .blackjack-container .score-display {
+    margin-bottom: 6px !important;
+    font-size: 10px !important;
+  }
+
+  .blackjack-container .cards-container {
+    min-height: 62px !important;
+    gap: 5px !important;
+  }
+
+  .blackjack-container .card {
+    width: clamp(41px, 13vw, 50px) !important;
+    height: clamp(58px, 18vw, 70px) !important;
+    min-width: clamp(41px, 13vw, 50px) !important;
+    min-height: clamp(58px, 18vw, 70px) !important;
+  }
+
+  .blackjack-container .blackjack-wager-panel {
+    padding: 9px !important;
+    gap: 8px !important;
+  }
+
+  .blackjack-container .blackjack-wager-heading {
+    align-items: center !important;
+  }
+
+  .blackjack-container .blackjack-wager-panel .bet-input-group {
+    grid-template-columns: minmax(86px, .7fr) minmax(0, 1.3fr) !important;
+    gap: 7px !important;
+  }
+
+  .blackjack-container .blackjack-wager-panel .quick-bets {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    grid-auto-rows: 38px !important;
+    gap: 5px !important;
+  }
+
+  .blackjack-container .blackjack-wager-panel .quick-bet-btn,
+  .blackjack-container .blackjack-wager-panel #placeBetBtn,
+  .blackjack-container .blackjack-wager-panel #blackjackBet {
+    height: 38px !important;
+    min-height: 38px !important;
+    font-size: 11px !important;
+  }
+
+  .blackjack-container .blackjack-wager-panel #placeBetBtn {
+    grid-column: 1 / -1 !important;
+  }
+
+  .blackjack-container:not(.hand-active) .blackjack-main-screen {
+    grid-template-areas:
+      "dealer"
+      "player"
+      "wager"
+      "result" !important;
+  }
+
+  .blackjack-container .game-controls {
+    padding: 7px !important;
+  }
+
+  .blackjack-container .result-display {
+    min-height: 38px !important;
+    padding: 7px 8px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .blackjack-container .blackjack-wager-panel .bet-input-group {
+    grid-template-columns: 1fr !important;
+  }
+
+  .blackjack-container .dealer-section,
+  .blackjack-container .player-section {
+    min-height: 104px !important;
+  }
+}
+
+/* Crash canvas labels/status: keep the status out of the multiplier. */
+.crash-canvas-wrap {
+  overflow: hidden !important;
+}
+
+.crash-status {
+  top: 12px !important;
+  bottom: auto !important;
+  left: 50% !important;
+  max-width: calc(100% - 28px) !important;
+  transform: translateX(-50%) !important;
+  z-index: 4 !important;
+  white-space: normal !important;
+  text-align: center !important;
+  line-height: 1.15 !important;
+  pointer-events: none !important;
+}
+
+.crash-multiplier {
+  z-index: 3 !important;
+  max-width: calc(100% - 34px) !important;
+  text-align: center !important;
+}
+
+@media (max-width: 640px) {
+  .crash-multiplier {
+    top: 58% !important;
+    font-size: clamp(30px, 12vw, 44px) !important;
+  }
+
+  .crash-status {
+    top: 9px !important;
+    padding: 5px 8px !important;
+    font-size: clamp(10px, 3vw, 12px) !important;
+    letter-spacing: .05em !important;
+  }
+
+  .crash-history {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 7px !important;
+    margin: 0 0 8px !important;
+    border: 1px solid rgba(255,181,77,.18) !important;
+    background: rgba(10,3,8,.55) !important;
+    scrollbar-width: thin;
+  }
+
+  .crash-history > *,
+  .crash-hist-pill,
+  .crash-history-item {
+    flex: 0 0 auto !important;
+    min-width: 48px !important;
+    text-align: center !important;
+  }
+}
+
+#rlBetGreen {
+  border-color: rgba(16,185,129,.95) !important;
+  color: #d1fae5 !important;
+  background:
+    linear-gradient(180deg, rgba(52,211,153,.95), rgba(6,95,70,.92)) !important;
+  box-shadow: inset 0 0 24px rgba(20,184,166,.25), 0 0 16px rgba(16,185,129,.25) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,.42), 0 0 8px rgba(16,185,129,.55) !important;
+}
+
+#rlBetGreen.rl-btn-active,
+#rlBetGreen:hover {
+  border-color: #6ee7b7 !important;
+  box-shadow: inset 0 0 28px rgba(16,185,129,.35), 0 0 22px rgba(16,185,129,.42) !important;
+}
+
+/* Pachinko mobile readability: reserve a stable, unclipped multiplier lane. */
+@media (max-width: 640px) {
+  .pachinko-canvas-wrap {
+    max-height: 390px !important;
+  }
+
+  .pachinko-canvas-wrap canvas {
+    height: 390px !important;
+    max-height: 390px !important;
+  }
+
+  .pach-results {
+    margin-top: 0 !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .pachinko-controls .pach-group:nth-child(2) {
+    grid-column: 1 / -1 !important;
+  }
+
+  .pachinko-controls .pach-group:nth-child(2) .pach-risk-btns {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .pachinko-controls .pach-group:nth-child(2) .prb {
+    min-width: 0 !important;
+    font-size: 11px !important;
+  }
+}
+
+/* Final mobile control normalization: same control group, same visual footprint. */
+#gameContainer button,
+.game-view button {
+  box-sizing: border-box;
+}
+
+.blackjack-container .game-controls {
+  align-items: stretch !important;
+  grid-auto-rows: 46px !important;
+}
+
+.blackjack-container .game-controls .btn {
+  width: 100% !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+  padding: 0 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-width: 1px !important;
+  line-height: 1.05 !important;
+  text-align: center !important;
+  white-space: normal !important;
+  overflow: hidden !important;
+}
+
+.blackjack-container .game-controls .btn-primary {
+  border: 1px solid var(--amber) !important;
+}
+
+.crash-quick-bets .cqb,
+.pach-quick .pqb,
+.pach-risk-btns .prb,
+.pach-ball-btns .pbb,
+.rl-quick-row .rl-quick-btn,
+.coinflip-casino-container .btn,
+.coinflip-casino-container button {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (max-width: 430px) {
+  .blackjack-container .game-controls {
+    gap: 7px !important;
+    grid-auto-rows: 44px !important;
+  }
+
+  .blackjack-container .game-controls .btn {
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    padding: 0 8px !important;
+    font-size: clamp(10px, 3.25vw, 12px) !important;
+    letter-spacing: .08em !important;
+  }
+
+  .crash-quick-bets .cqb,
+  .pach-quick .pqb,
+  .pach-risk-btns .prb,
+  .pach-ball-btns .pbb,
+  .rl-quick-row .rl-quick-btn {
+    min-height: 38px;
+    padding-inline: 6px;
+  }
+}
+
+/* May 2026 mobile UX pass: prioritize the live action surface and keep primary
+   controls inside a single phone viewport wherever the game rules allow it. */
+@media (max-width: 640px) {
+  #gameContainer .game-title,
+  .blackjack-container .game-title,
+  .coinflip-casino-container .game-title,
+  .crash-container .game-title,
+  .pachinko-container .game-title {
+    min-height: 0 !important;
+    margin: 0 0 10px !important;
+    padding: 9px 10px 8px !important;
+    font-size: clamp(20px, 6vw, 24px) !important;
+    line-height: 1.05 !important;
+  }
+
+  .blackjack-container .blackjack-predeal-table {
+    display: none !important;
+  }
+
+  .blackjack-container .betting-section {
+    gap: 9px !important;
+    padding: 12px !important;
+  }
+
+  .blackjack-container .betting-section label {
+    font-size: 11px !important;
+  }
+
+  .blackjack-container .bet-input-group {
+    gap: 8px !important;
+  }
+
+  .blackjack-container #blackjackBet {
+    min-height: 48px !important;
+    padding: 8px 10px !important;
+    font-size: 20px !important;
+  }
+
+  .blackjack-container .quick-bets {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .blackjack-container .quick-bet-btn {
+    min-height: 44px !important;
+    padding: 6px 4px !important;
+  }
+
+  .blackjack-container #placeBetBtn {
+    min-height: 48px !important;
+  }
+
+  .blackjack-container .game-area {
+    gap: 6px !important;
+    padding: 8px !important;
+  }
+
+  .blackjack-container .dealer-section,
+  .blackjack-container .player-section {
+    min-height: 108px !important;
+  }
+
+  .blackjack-container .cards-container {
+    min-height: 70px !important;
+  }
+
+  .blackjack-container .card {
+    width: clamp(43px, 12.8vw, 52px) !important;
+    height: clamp(60px, 18vw, 74px) !important;
+    min-width: clamp(43px, 12.8vw, 52px) !important;
+    min-height: clamp(60px, 18vw, 74px) !important;
+  }
+
+  .blackjack-container .game-controls {
+    position: static !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    padding: 6px !important;
+  }
+
+  .rl-container {
+    padding-top: 0 !important;
+  }
+
+  .rl-belt-wrapper {
+    height: 56px !important;
+  }
+
+  .rl-chip {
+    width: 58px !important;
+    height: 56px !important;
+    font-size: 18px !important;
+  }
+
+  .rl-status-row {
+    min-height: 50px !important;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+
+  .rl-main-grid {
+    gap: 8px !important;
+  }
+
+  .rl-bet-panel {
+    order: 1 !important;
+    padding: 12px !important;
+  }
+
+  .rl-info-panel {
+    order: 2 !important;
+    padding: 10px 12px !important;
+  }
+
+  .rl-panel-title {
+    margin-bottom: 8px !important;
+    font-size: 11px !important;
+  }
+
+  .rl-amount-row {
+    grid-template-columns: 42px minmax(0, 1fr) 42px !important;
+  }
+
+  .rl-amount-input,
+  .rl-adj-btn,
+  .rl-quick-btn {
+    min-height: 40px !important;
+  }
+
+  .rl-color-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .rl-color-btn {
+    min-height: 58px !important;
+    padding: 8px 4px !important;
+  }
+
+  .rl-cnums {
+    display: none !important;
+  }
+
+  .rl-history-strip {
+    max-height: 78px !important;
+    overflow: hidden !important;
+  }
+
+  .pachinko-container {
+    padding: 0 !important;
+  }
+
+  .pachinko-layout {
+    gap: 10px !important;
+  }
+
+  .pachinko-controls {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+  }
+
+  .pachinko-controls .pach-group {
+    padding: 10px !important;
+  }
+
+  .pachinko-controls .pach-group:first-child,
+  .pachinko-controls > .pachinko-canvas-wrap,
+  .pach-drop-btn,
+  .pach-results {
+    grid-column: 1 / -1;
+  }
+
+  .pach-group label {
+    margin-bottom: 6px !important;
+    font-size: 10px !important;
+  }
+
+  .pach-group input[type="number"] {
+    min-height: 42px !important;
+    padding: 7px 10px !important;
+  }
+
+  .pach-quick {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .pach-risk-btns,
+  .pach-ball-btns {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .pqb,
+  .prb,
+  .pbb {
+    min-height: 40px !important;
+    padding: 6px 4px !important;
+    font-size: 10px !important;
+    letter-spacing: .02em !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .pach-drop-btn {
+    min-height: 46px !important;
+  }
+
+  .pachinko-canvas-wrap {
+    max-height: 360px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+  }
+
+  .pachinko-canvas-wrap canvas {
+    width: 100% !important;
+    height: 360px !important;
+    max-height: 360px !important;
+    object-fit: fill;
+  }
+
+  .pach-results {
+    max-height: 118px !important;
+    overflow-y: auto !important;
+    grid-column: 1 / -1 !important;
+    overscroll-behavior: contain;
+  }
+
+  .crash-container {
+    padding: 0 !important;
+  }
+
+  .crash-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .crash-main {
+    order: -1 !important;
+  }
+
+  .crash-sidebar {
+    order: 0 !important;
+    gap: 10px !important;
+  }
+
+  .crash-canvas-wrap {
+    aspect-ratio: 16 / 6.6 !important;
+    margin-bottom: 8px !important;
+  }
+
+  .crash-multiplier {
+    max-width: calc(100% - 28px) !important;
+    padding: 0 10px !important;
+    text-align: center !important;
+    white-space: normal !important;
+    line-height: 1.08 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .crash-multiplier.betting-label {
+    font-size: clamp(13px, 5.2vw, 22px) !important;
+    letter-spacing: .06em !important;
+  }
+
+  .crash-history {
+    display: none !important;
+  }
+
+  .crash-bet-section {
+    padding: 12px !important;
+  }
+
+  .crash-bet-section h3,
+  .crash-feed-section h3 {
+    margin-bottom: 8px !important;
+    font-size: 16px !important;
+  }
+
+  .crash-bet-group {
+    margin-bottom: 6px !important;
+  }
+
+  .crash-bet-group label {
+    margin-bottom: 4px !important;
+    font-size: 12px !important;
+  }
+
+  .crash-bet-group input {
+    min-height: 38px !important;
+    padding: 6px 9px !important;
+  }
+
+  .crash-quick-bets {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px !important;
+  }
+
+  .cqb {
+    min-height: 38px !important;
+    padding: 5px 4px !important;
+  }
+
+  .crash-bet-section .btn,
+  .crash-bet-section .btn-full,
+  .crash-cashout-btn {
+    min-height: 40px !important;
+  }
+
+  .crash-feed-section {
+    display: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .blackjack-container .game-area {
+    display: grid !important;
+    grid-template-rows: auto auto auto auto !important;
+    gap: 8px !important;
+    overflow: visible !important;
+  }
+
+  .blackjack-container .dealer-section,
+  .blackjack-container .player-section {
+    min-height: 212px !important;
+    padding-bottom: 12px !important;
+    overflow: visible !important;
+  }
+
+  .blackjack-container .cards-container {
+    min-height: 84px !important;
+    align-items: flex-start !important;
+  }
+
+  .blackjack-container .game-controls {
+    position: relative !important;
+    z-index: 1 !important;
+    transform: none !important;
+    margin-top: 0 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    background: rgba(10, 3, 8, .78) !important;
+    backdrop-filter: blur(10px);
+  }
+
+  .blackjack-container .game-controls .btn {
+    min-width: 0 !important;
+    min-height: 42px !important;
+    white-space: normal !important;
+    line-height: 1.1 !important;
+  }
+
+  .coinflip-casino-container .players-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-areas:
+      "coin coin"
+      "player-one player-two" !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .coinflip-casino-container #player1Card,
+  .coinflip-casino-container #player2Card {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 168px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+  }
+
+  .coinflip-casino-container .player-card-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .coinflip-casino-container .player-name {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .coinflip-casino-container .player-card-choice {
+    min-height: 78px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 10px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .coinflip-casino-container .players-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    padding-inline: 10px !important;
+  }
+
+  .coinflip-casino-container #player1Card,
+  .coinflip-casino-container #player2Card {
+    min-height: 146px !important;
+    padding: 12px !important;
+  }
+
+  .coinflip-casino-container .player-card-choice {
+    min-height: 64px !important;
+    font-size: clamp(18px, 6vw, 24px) !important;
+  }
+}
+
+/* Absolute final control sizing pass. Keep equal-purpose mobile buttons equal. */
+.blackjack-container .game-controls {
+  align-items: stretch !important;
+  grid-auto-rows: 46px !important;
+}
+
+.blackjack-container .game-controls .btn {
+  width: 100% !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+  margin: 0 !important;
+  padding: 0 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  border-width: 1px !important;
+  line-height: 1.05 !important;
+  text-align: center !important;
+  white-space: normal !important;
+  overflow: hidden !important;
+}
+
+.blackjack-container .game-controls .btn-primary {
+  border: 1px solid var(--amber) !important;
+}
+
+@media (max-width: 430px) {
+  .blackjack-container .game-controls {
+    gap: 7px !important;
+    grid-auto-rows: 44px !important;
+  }
+
+  .blackjack-container .game-controls .btn {
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    margin: 0 !important;
+    padding: 0 8px !important;
+    font-size: clamp(10px, 3.25vw, 12px) !important;
+    letter-spacing: .08em !important;
+  }
+}
+
+/* End-of-file review overrides for the latest mobile layout pass. */
+.blackjack-container:not(.hand-active) .game-controls {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .blackjack-container:not(.hand-active) .blackjack-main-screen {
+    grid-template-areas:
+      "dealer"
+      "player"
+      "wager"
+      "result" !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .crash-history {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 7px !important;
+    margin: 0 0 8px !important;
+    border: 1px solid rgba(255,181,77,.18) !important;
+    background: rgba(10,3,8,.55) !important;
+  }
+
+  .crash-history > *,
+  .crash-hist-pill,
+  .crash-history-item {
+    flex: 0 0 auto !important;
+    min-width: 48px !important;
+    text-align: center !important;
+  }
+}
+
+#rlBetGreen {
+  border-color: rgba(16,185,129,.95) !important;
+  color: #d1fae5 !important;
+  background:
+    linear-gradient(180deg, rgba(52,211,153,.95), rgba(6,95,70,.92)) !important;
+  box-shadow: inset 0 0 24px rgba(20,184,166,.25), 0 0 16px rgba(16,185,129,.25) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,.42), 0 0 8px rgba(16,185,129,.55) !important;
+}
+
+#rlBetGreen.rl-btn-active,
+#rlBetGreen:hover {
+  border-color: #6ee7b7 !important;
+  box-shadow: inset 0 0 28px rgba(16,185,129,.35), 0 0 22px rgba(16,185,129,.42) !important;
+}

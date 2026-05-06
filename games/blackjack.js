@@ -25,32 +25,7 @@ class BlackjackGame {
         <h2 class="game-title"><span class="game-title-mark" aria-hidden="true"></span><span>Blackjack</span></h2>
         
         <div class="blackjack-table-shell">
-          <div class="betting-section">
-            <label>Place Your Bet:</label>
-            <div class="bet-input-group">
-              <input type="number" id="blackjackBet" min="1" max="${this.casino.credits}" value="100" step="10">
-              <div class="quick-bets">
-                <button class="quick-bet-btn" data-amount="50">50</button>
-                <button class="quick-bet-btn" data-amount="100">100</button>
-                <button class="quick-bet-btn" data-amount="250">250</button>
-                <button class="quick-bet-btn" data-amount="500">500</button>
-              </div>
-            </div>
-            <button id="placeBetBtn" class="btn btn-primary">Place Bet</button>
-          </div>
-
-          <div id="blackjackPreview" class="blackjack-predeal-table">
-            <div class="blackjack-preview-row">
-              <span class="blackjack-preview-label">Dealer</span>
-              <div class="blackjack-card-slots"><span></span><span></span></div>
-            </div>
-            <div class="blackjack-preview-row">
-              <span class="blackjack-preview-label">You</span>
-              <div class="blackjack-card-slots"><span></span><span></span></div>
-            </div>
-          </div>
-
-          <div id="gameArea" class="game-area hidden">
+          <div id="gameArea" class="game-area blackjack-main-screen">
             <div class="dealer-section">
               <h3>Dealer</h3>
               <div class="score-display">Score: <span id="dealerScore">0</span></div>
@@ -63,6 +38,26 @@ class BlackjackGame {
               <h3>You</h3>
               <div class="score-display">Score: <span id="playerScore">0</span></div>
               <div id="playerCards" class="cards-container"></div>
+            </div>
+
+            <div class="betting-section blackjack-wager-panel">
+              <div class="blackjack-wager-heading">
+                <label for="blackjackBet">Wager</label>
+                <div class="blackjack-bet-status">
+                  <span>Current Bet</span>
+                  <strong id="blackjackCurrentBet">Ready</strong>
+                </div>
+              </div>
+              <div class="bet-input-group">
+                <input type="number" id="blackjackBet" min="1" max="${this.casino.credits}" value="100" step="10">
+                <div class="quick-bets">
+                  <button class="quick-bet-btn" data-amount="50">50</button>
+                  <button class="quick-bet-btn" data-amount="100">100</button>
+                  <button class="quick-bet-btn" data-amount="250">250</button>
+                  <button class="quick-bet-btn" data-amount="500">500</button>
+                </div>
+              </div>
+              <button id="placeBetBtn" class="btn btn-primary">Deal Hand</button>
             </div>
 
             <div id="insuranceSection" class="insurance-section hidden">
@@ -88,6 +83,7 @@ class BlackjackGame {
     `;
 
     this.attachEventListeners();
+    this.resetGame();
   }
 
   attachEventListeners() {
@@ -127,13 +123,18 @@ class BlackjackGame {
 
     this.currentBet = amount;
     this.casino.updateCredits(-amount);
+    document.querySelector('.blackjack-container')?.classList.add('hand-active');
+    const currentBetEl = document.getElementById('blackjackCurrentBet');
+    if (currentBetEl) currentBetEl.textContent = amount.toLocaleString();
     this.startGame();
   }
 
   async startGame() {
     document.querySelector('.blackjack-container .betting-section')?.classList.add('is-locked');
-    document.getElementById('blackjackPreview')?.classList.add('hidden');
     document.getElementById('gameArea').classList.remove('hidden');
+    document.getElementById('placeBetBtn').disabled = true;
+    document.getElementById('blackjackBet').disabled = true;
+    document.getElementById('newGameBtn').disabled = false;
 
     this.createDeck();
     this.shuffleDeck();
@@ -144,6 +145,11 @@ class BlackjackGame {
     // Clear card containers
     document.getElementById('playerCards').innerHTML = '';
     document.getElementById('dealerCards').innerHTML = '';
+    const resultDisplay = document.getElementById('resultDisplay');
+    if (resultDisplay) {
+      resultDisplay.textContent = '';
+      resultDisplay.className = 'result-display';
+    }
     this.lastHideFirstStates = {}; // Reset states for new game
 
     // Deal initial cards with animation delay
@@ -386,12 +392,13 @@ class BlackjackGame {
     }
     
     // Enable/disable hit and stand
-    document.getElementById('hitBtn').disabled = this.gameOver || this.hasDoubledDown;
-    document.getElementById('standBtn').disabled = this.gameOver || this.hasDoubledDown;
+    const noActiveHand = !this.currentBet || this.playerHand.length === 0;
+    document.getElementById('hitBtn').disabled = noActiveHand || this.gameOver || this.hasDoubledDown;
+    document.getElementById('standBtn').disabled = noActiveHand || this.gameOver || this.hasDoubledDown;
   }
 
   async hit() {
-    if (this.gameOver || this.hasDoubledDown) return;
+    if (!this.currentBet || this.gameOver || this.hasDoubledDown) return;
 
     this.dealCard(this.playerHand);
     await this.delay(400); // Wait for card animation
@@ -418,7 +425,7 @@ class BlackjackGame {
   }
 
   async doubleDown() {
-    if (this.gameOver || this.hasDoubledDown || this.playerHand.length !== 2) return;
+    if (!this.currentBet || this.gameOver || this.hasDoubledDown || this.playerHand.length !== 2) return;
     
     // Check if player has enough credits
     if (this.currentBet > this.casino.credits) {
@@ -429,6 +436,8 @@ class BlackjackGame {
     // Double the bet
     this.casino.updateCredits(-this.currentBet);
     this.currentBet *= 2;
+    const currentBetEl = document.getElementById('blackjackCurrentBet');
+    if (currentBetEl) currentBetEl.textContent = this.currentBet.toLocaleString();
     this.hasDoubledDown = true;
     
     // Deal one card
@@ -453,7 +462,7 @@ class BlackjackGame {
   }
 
   async stand() {
-    if (this.gameOver) return;
+    if (!this.currentBet || this.gameOver) return;
 
     // Player stands - now it's dealer's turn
     // Reveal dealer's first card by setting gameOver to true
@@ -548,6 +557,7 @@ class BlackjackGame {
     document.getElementById('hitBtn').disabled = true;
     document.getElementById('standBtn').disabled = true;
     document.getElementById('doubleDownBtn').classList.add('hidden');
+    document.getElementById('newGameBtn').disabled = false;
   }
 
   updateDisplay() {
@@ -725,19 +735,30 @@ class BlackjackGame {
     this.insuranceOffered = false;
     this.lastHideFirstStates = {};
     this.initialHandSize = 2; // Reset initial hand size
+    this.playerHand = [];
+    this.dealerHand = [];
     document.querySelector('.blackjack-container .betting-section')?.classList.remove('is-locked');
-    document.getElementById('blackjackPreview')?.classList.remove('hidden');
-    document.getElementById('gameArea').classList.add('hidden');
+    document.querySelector('.blackjack-container')?.classList.remove('hand-active');
+    document.getElementById('gameArea').classList.remove('hidden');
     document.getElementById('insuranceSection').classList.add('hidden');
     document.querySelector('.blackjack-container')?.classList.remove('insurance-active');
+    document.getElementById('blackjackBet').disabled = false;
+    document.getElementById('placeBetBtn').disabled = false;
+    const currentBetEl = document.getElementById('blackjackCurrentBet');
+    if (currentBetEl) currentBetEl.textContent = 'Ready';
+    document.getElementById('playerCards').innerHTML = '';
+    document.getElementById('dealerCards').innerHTML = '';
+    document.getElementById('playerScore').textContent = '0';
+    document.getElementById('dealerScore').textContent = '0';
     const resultDisplay = document.getElementById('resultDisplay');
     if (resultDisplay) {
-      resultDisplay.textContent = '';
+      resultDisplay.textContent = 'Set a wager and deal when ready.';
       resultDisplay.className = 'result-display'; // Reset className to remove win/lose/tie classes
     }
-    document.getElementById('hitBtn').disabled = false;
-    document.getElementById('standBtn').disabled = false;
+    document.getElementById('hitBtn').disabled = true;
+    document.getElementById('standBtn').disabled = true;
     document.getElementById('doubleDownBtn').classList.add('hidden');
+    document.getElementById('newGameBtn').disabled = true;
   }
 
   destroy() {

@@ -1,0 +1,151 @@
+{
+  "generatedAt": "2026-05-06T00:42:03.091Z",
+  "source": "Current casino.html frontend served from local static preview with mocked marketing demo API/socket data",
+  "screenshotCount": 18,
+  "screenshots": [
+    {
+      "file": "screenshots/desktop/01-desktop-login-welcome.png",
+      "title": "Desktop login and welcome bonus",
+      "viewport": "desktop",
+      "dimensions": "1440x1000",
+      "purpose": "First impression, brand panel, login entry point",
+      "bytes": 181050
+    },
+    {
+      "file": "screenshots/desktop/02-desktop-register-account-creation.png",
+      "title": "Desktop register form",
+      "viewport": "desktop",
+      "dimensions": "1440x1000",
+      "purpose": "Account creation, welcome credit framing",
+      "bytes": 185011
+    },
+    {
+      "file": "screenshots/desktop/03-desktop-lobby-hero-balance.png",
+      "title": "Desktop lobby hero and player balance",
+      "viewport": "desktop",
+      "dimensions": "1440x1000",
+      "purpose": "Main floor hero, game promise, account state",
+      "bytes": 427950
+    },
+    {
+      "file": "screenshots/desktop/04-desktop-lobby-game-grid-sidebar.png",
+      "title": "Desktop game grid and social sidebar",
+      "viewport": "desktop",
+      "dimensions": "1440x1000",
+      "purpose": "Game catalog, filters, live floor context",
+      "bytes": 208128
+    },
+    {
+      "file": "screenshots/desktop/05-desktop-leaderboard-modal.png",
+      "title": "Desktop leaderboard modal",
+      "viewport": "desktop",
+      "dimensions": "1440x1000",
+      "purpose": "Retention, competition, ranked-player proof point",
+      "bytes": 185654
+    },
+    {
+      "file": "screenshots/desktop/06-desktop-blackjack-table.png",
+      "title": "Desktop blackjack table in play",
+      "viewport": "desktop",
+      "dimensions": "1440x1000",
+      "purpose": "Card game interface and betting controls",
+      "bytes": 183305
+    },
+    {
+      "file": "screenshots/desktop/07-desktop-roulette-live-wheel.png",
+      "title": "Desktop roulette wheel and betting panel",
+      "viewport": "desktop",
+      "dimensions": "1440x1000",
+      "purpose": "Live-game energy, wheel, round state, wager panel",
+      "bytes": 210238
+    },
+    {
+      "file": "screenshots/desktop/08-desktop-crash-multiplier.png",
+      "title": "Desktop crash multiplier",
+      "viewport": "desktop",
+      "dimensions": "1440x1000",
+      "purpose": "Fast-action multiplier game and live feed",
+      "bytes": 197021
+    },
+    {
+      "file": "screenshots/desktop/09-desktop-cs2-match-betting.png",
+      "title": "Desktop CS2 match betting board",
+      "viewport": "desktop",
+      "dimensions": "1440x1000",
+      "purpose": "Esports betting market, odds cards, tournament grouping",
+      "bytes": 276686
+    },
+    {
+      "file": "screenshots/desktop/10-desktop-cs2-betslip.png",
+      "title": "Desktop CS2 bet slip",
+      "viewport": "desktop",
+      "dimensions": "1440x1000",
+      "purpose": "Bet confirmation, stake entry, potential payout",
+      "bytes": 311937
+    },
+    {
+      "file": "screenshots/mobile/11-mobile-login-welcome.png",
+      "title": "Mobile login welcome screen",
+      "viewport": "mobile",
+      "dimensions": "390x844",
+      "purpose": "Mobile first impression and compact auth",
+      "bytes": 172734
+    },
+    {
+      "file": "screenshots/mobile/12-mobile-lobby-hero.png",
+      "title": "Mobile lobby hero",
+      "viewport": "mobile",
+      "dimensions": "390x844",
+      "purpose": "Responsive hero, player balance, bottom navigation",
+      "bytes": 645525
+    },
+    {
+      "file": "screenshots/mobile/13-mobile-game-grid-bottom-nav.png",
+      "title": "Mobile game grid and bottom nav",
+      "viewport": "mobile",
+      "dimensions": "390x844",
+      "purpose": "Scrollable mobile catalog and persistent navigation",
+      "bytes": 176644
+    },
+    {
+      "file": "screenshots/mobile/14-mobile-account-menu.png",
+      "title": "Mobile account menu",
+      "viewport": "mobile",
+      "dimensions": "390x844",
+      "purpose": "Mobile account actions and retention surfaces",
+      "bytes": 534088
+    },
+    {
+      "file": "screenshots/mobile/15-mobile-bet-history.png",
+      "title": "Mobile bet history modal",
+      "viewport": "mobile",
+      "dimensions": "390x844",
+      "purpose": "Player activity, wager summary, proof of platform depth",
+      "bytes": 308330
+    },
+    {
+      "file": "screenshots/mobile/16-mobile-pachinko-game.png",
+      "title": "Mobile pachinko board",
+      "viewport": "mobile",
+      "dimensions": "390x844",
+      "purpose": "Mobile game layout, risk controls, animated board",
+      "bytes": 259568
+    },
+    {
+      "file": "screenshots/mobile/17-mobile-poker-lobby.png",
+      "title": "Mobile poker lobby",
+      "viewport": "mobile",
+      "dimensions": "390x844",
+      "purpose": "Multiplayer table discovery and buy-in framing",
+      "bytes": 231682
+    },
+    {
+      "file": "screenshots/tablet/18-tablet-player-stats.png",
+      "title": "Tablet player stats modal",
+      "viewport": "tablet",
+      "dimensions": "820x1180",
+      "purpose": "Mid-size analytics, player performance, retention hooks",
+      "bytes": 108029
+    }
+  ]
+}

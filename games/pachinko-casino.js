@@ -66,8 +66,8 @@ class PachinkoGame {
               </div>
             </div>
             <button id="pachDropBtn" class="btn btn-primary btn-full pach-drop-btn">🔮 Drop!</button>
-            <div id="pachResults" class="pach-results"></div>
           </div>
+          <div id="pachResults" class="pach-results"></div>
         </div>
       </div>
     `;
@@ -79,8 +79,8 @@ class PachinkoGame {
       const controls = gv.querySelector('.pachinko-controls');
       const results = gv.querySelector('#pachResults');
       if (layout && canvasWrap && controls && results) {
-        // Move canvas after controls (after DROP button, before results)
-        controls.insertBefore(canvasWrap, results);
+        layout.insertBefore(controls, canvasWrap);
+        layout.appendChild(results);
       }
     }
 
@@ -418,15 +418,39 @@ class PachinkoGame {
       ctx.lineWidth = 1;
       ctx.strokeRect(slot.x + 1, slot.y, slot.w - 2, slot.h);
 
-      // Multiplier text — fit to slot width
+      // Multiplier text: horizontal on roomy boards, rotated on narrow mobile
+      // slots so the label remains readable instead of bleeding across cells.
       const label = m >= 1000 ? (m/1000) + 'k' : m + 'x';
-      const maxFontSize = Math.min(slot.w * 0.45, slot.h * 0.25);
-      const fontSize = Math.max(7, Math.min(maxFontSize, this.W * 0.02));
-      ctx.fillStyle = '#fff3e4';
+      const narrowSlot = slot.w < 24;
+      let fontSize = narrowSlot
+        ? Math.min(9, Math.max(7, slot.w * 0.55), slot.h * 0.2)
+        : Math.min(11, slot.h * 0.26, slot.w * 0.34);
       ctx.font = `bold ${fontSize}px "Space Mono", ui-monospace, monospace`;
+      while (!narrowSlot && fontSize > 6 && ctx.measureText(label).width > slot.w - 6) {
+        fontSize -= 0.5;
+        ctx.font = `bold ${fontSize}px "Space Mono", ui-monospace, monospace`;
+      }
+      ctx.fillStyle = '#fff3e4';
+      ctx.shadowColor = 'rgba(10,3,8,.85)';
+      ctx.shadowBlur = 5;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(label, slot.x + slot.w / 2, slot.y + slot.h / 2);
+      if (narrowSlot) {
+        ctx.save();
+        ctx.translate(slot.x + slot.w / 2, slot.y + slot.h / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.strokeStyle = 'rgba(10,3,8,.85)';
+        ctx.lineWidth = 3;
+        ctx.strokeText(label, 0, 0);
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      } else {
+        ctx.strokeStyle = 'rgba(10,3,8,.85)';
+        ctx.lineWidth = 3;
+        ctx.strokeText(label, slot.x + slot.w / 2, slot.y + slot.h / 2);
+        ctx.fillText(label, slot.x + slot.w / 2, slot.y + slot.h / 2);
+      }
+      ctx.shadowBlur = 0;
       ctx.textAlign = 'start';
       ctx.textBaseline = 'alphabetic';
     }
