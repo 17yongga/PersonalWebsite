@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gary Yong - Portfolio Redesign Draft</title>
+    <meta
+      name="description"
+      content="A redesigned one-page portfolio for Gary Yong, focused on consulting, technology delivery, and product work."
+    />
+    <link rel="icon" type="image/png" href="img/logo-light.png" />
+    <link rel="stylesheet" href="portfolio-redesign.css?v=audience-3" />
+  </head>
+  <body>
+    <header class="site-top">
+      <a class="brand" href="#top" aria-label="Back to top">
+        <img src="img/logo-light.png" alt="" />
+        <span>Gary Yong</span>
+      </a>
+      <button class="menu-button" type="button" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span>
+        <span></span>
+      </button>
+      <nav class="main-nav" aria-label="Portfolio sections">
+        <a href="#consulting">Consulting</a>
+        <a href="#experience">Experience</a>
+        <a href="#projects">Projects</a>
+        <a href="#skills">Skills</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero-section">
+        <div class="hero-copy reveal">
+          <p class="eyebrow">Technology Consultant - Toronto, Canada</p>
+          <h1>I help teams turn complex business problems into practical technology systems.</h1>
+          <p class="hero-lede">
+            For recruiters, consulting teams, and startup builders, here is a quick view of
+            the transformation work, product judgment, and technical builds I can bring to a team.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="ask-gary.html">Ask Gary</a>
+            <a class="button" href="#consulting">See consulting work</a>
+            <a class="button" href="Gary_Resume.pdf">Resume</a>
+          </div>
+        </div>
+
+        <aside class="hero-panel ask-panel reveal" aria-label="Ask Gary portfolio assistant">
+          <div class="panel-topline ask-topline">
+            <span class="assistant-mark">AI</span>
+            <span>Ask Gary is live on this portfolio</span>
+          </div>
+          <h2>Evaluating fit? Ask the portfolio assistant.</h2>
+          <p>
+            Ask Gary surfaces quick answers about Capco engagements, project details,
+            technical skills, resume evidence, and career fit.
+          </p>
+          <div class="chat-preview" aria-hidden="true">
+            <div class="chat-row visitor">What consulting experience is most relevant?</div>
+            <div class="chat-row assistant">
+              Gary has worked across CCaaS migration, digital transformation, merger cutover,
+              reconciliation automation, and wealth platform modernization.
+            </div>
+          </div>
+          <div class="assistant-actions">
+            <a class="button primary" href="ask-gary.html">Launch Ask Gary</a>
+          </div>
+          <div class="role-list prompt-list" aria-label="Suggested Ask Gary prompts">
+            <span>"Summarize Gary's Capco experience."</span>
+            <span>"Which projects show technical depth?"</span>
+            <span>"What roles is Gary a fit for?"</span>
+          </div>
+        </aside>
+      </section>
+
+      <section class="evidence-band" aria-label="Evidence highlights">
+        <article class="reveal">
+          <strong>6</strong>
+          <span>Banking transformation engagements across digital, cutover, automation, and wealth work.</span>
+        </article>
+        <article class="reveal">
+          <strong>5</strong>
+          <span>Industry domains across banking, wealth, CPG, retail operations, and emerging technology.</span>
+        </article>
+        <article class="reveal">
+          <strong>7</strong>
+          <span>Project proofs spanning AI, finance, dashboards, automation, IoT, blockchain, and real-time web.</span>
+        </article>
+      </section>
+
+      <section id="consulting" class="section consulting-section">
+        <div class="section-intro reveal">
+          <p class="eyebrow">Consulting anchor</p>
+          <h2>Capco work across banking transformation.</h2>
+          <p>
+            I support transformation teams by turning stakeholder input into requirements,
+            process flows, runbooks, readiness plans, dashboards, and implementation handoff
+            materials.
+          </p>
+        </div>
+
+        <div class="engagement-browser reveal">
+          <div class="engagement-tabs" role="tablist" aria-label="Capco engagements">
+            <button
+              class="engagement-tab is-active"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              data-title="CCaaS Migration"
+              data-context="Business Systems Analyst - Tier-1 Global Bank"
+              data-impact="Led requirements gathering and current-state analysis for a cloud contact center migration."
+              data-details="Identified legacy contact center pain points|Defined business needs and technical specifications|Created 10+ future-state user journeys"
+              data-tags="CCaaS|Current-state analysis|User journeys"
+            >
+              <span>01</span>
+              <strong>CCaaS Migration</strong>
+            </button>
+            <button
+              class="engagement-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-title="Digital Transformation"
+              data-context="Business Analyst - Leading Canadian Bank"
+              data-impact="Mapped front, middle, and back-office capabilities to support future-state system architecture."
+              data-details="Led 30+ SME workshops|Documented architecture capabilities and limitations|Worked with business and technical stakeholders"
+              data-tags="Architecture|Capability analysis|Workshops"
+            >
+              <span>02</span>
+              <strong>Digital Transformation</strong>
+            </button>
+            <button
+              class="engagement-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-title="Major Bank Merger"
+              data-context="Cutover Team - Tier-1 Global Bank"
+              data-impact="Built readiness across 13 workstreams through runbooks, customer-impact scenarios, and rehearsals."
+              data-details="Gathered runbook requirements across 13 workstreams|Mapped customer-impact edge cases|Ran three live rehearsals"
+              data-tags="Cutover|Runbooks|Risk readiness"
+            >
+              <span>03</span>
+              <strong>Major Bank Merger</strong>
+            </button>
+            <button
+              class="engagement-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-title="Reconciliation Automation"
+              data-context="Business Analyst - Commercial Banking"
+              data-impact="Analyzed 15 reconciliation processes and proposed automations projected to save 5k+ hours annually."
+              data-details="Mapped reconciliation bottlenecks|Produced process diagrams|Compiled implementation requirements"
+              data-tags="Automation|Process mapping|Requirements"
+            >
+              <span>04</span>
+              <strong>Reconciliation Automation</strong>
+            </button>
+            <button
+              class="engagement-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-title="Middle Office Digitization"
+              data-context="Business Systems Analyst - Wealth Management"
+              data-impact="Improved release defect review across five teams using analysis, dashboards, and client-facing reporting."
+              data-details="Reviewed 3k+ defect records|Prepared client-facing risk presentations|Built JIRA dashboards and Confluence documentation"
+              data-tags="Wealth|JIRA|Defect reporting"
+            >
+              <span>05</span>
+              <strong>Middle Office Digitization</strong>
+            </button>
+            <button
+              class="engagement-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-title="Wealth Platform Transformation"
+              data-context="E2E Process Analyst - Tier-1 Global Bank"
+              data-impact="Defined future-state process flows and requirement gaps for customer and account maintenance."
+              data-details="Built detailed Visio process flows|Led client and vendor review sessions|Refined 10+ process flows"
+              data-tags="Process flows|Vendor alignment|Wealth"
+            >
+              <span>06</span>
+              <strong>Wealth Platform</strong>
+            </button>
+          </div>
+
+          <article class="engagement-panel" role="tabpanel" aria-live="polite">
+            <div>
+              <p class="eyebrow panel-context">Business Systems Analyst - Tier-1 Global Bank</p>
+              <h3>CCaaS Migration</h3>
+              <p class="panel-impact">
+                Led requirements gathering and current-state analysis for a cloud contact center migration.
+              </p>
+            </div>
+            <ul class="panel-details">
+              <li>Identified legacy contact center pain points</li>
+              <li>Defined business needs and technical specifications</li>
+              <li>Created 10+ future-state user journeys</li>
+            </ul>
+            <div class="panel-tags">
+              <span>CCaaS</span>
+              <span>Current-state analysis</span>
+              <span>User journeys</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="experience" class="section experience-section">
+        <div class="section-intro reveal">
+          <p class="eyebrow">Experience trajectory</p>
+          <h2>A trajectory across consulting, product, growth, and systems.</h2>
+          <p>
+            Each role added a different layer to how I work: enterprise delivery at Capco,
+            growth strategy at PepsiCo, product delivery at Electro Source, emerging tech at
+            Accenture, and automation in operations.
+          </p>
+        </div>
+
+        <div class="experience-grid">
+          <article class="experience-card reveal">
+            <img src="img/logo_capco.png" alt="Capco logo" />
+            <div>
+              <span>2021 - Present</span>
+              <h3>Capco</h3>
+              <p>Technology consulting across banking transformation, requirements, cutover, process design, and automation.</p>
+            </div>
+            <strong>Enterprise transformation</strong>
+          </article>
+          <article class="experience-card reveal">
+            <img src="img/logo_pepsi.png" alt="PepsiCo logo" />
+            <div>
+              <span>2021</span>
+              <h3>PepsiCo Foods Canada</h3>
+              <p>Coordinated 10+ stakeholders and tied UI and campaign work to 30% and 20% sales lift outcomes.</p>
+            </div>
+            <strong>Growth strategy</strong>
+          </article>
+          <article class="experience-card reveal">
+            <img src="img/logo_electrosource.png" alt="Electro Source logo" />
+            <div>
+              <span>2020</span>
+              <h3>Electro Source</h3>
+              <p>Owned MVP delivery for a remote collaboration product through demos, roadmapping, and four two-week sprints.</p>
+            </div>
+            <strong>Product delivery</strong>
+          </article>
+          <article class="experience-card reveal">
+            <img src="img/accenture_logo.png" alt="Accenture logo" />
+            <div>
+              <span>2019</span>
+              <h3>Accenture</h3>
+              <p>Built product authentication concepts using Hyperledger Fabric, React Native, AWS Cognito, and AWS IAM.</p>
+            </div>
+            <strong>Emerging technology</strong>
+          </article>
+          <article class="experience-card reveal">
+            <img src="img/lcl_logo.png" alt="Loblaw Companies Limited logo" />
+            <div>
+              <span>2019</span>
+              <h3>Loblaw</h3>
+              <p>Investigated recurring million-dollar pallet tracking losses and delivered an on-site tested IoT prototype.</p>
+            </div>
+            <strong>Operations innovation</strong>
+          </article>
+          <article class="experience-card reveal">
+            <img src="img/pl_logo.png" alt="PureLiving China logo" />
+            <div>
+              <span>2018</span>
+              <h3>PureLiving China</h3>
+              <p>Built a VBA automation tool that improved transaction processing efficiency by roughly 1600%.</p>
+            </div>
+            <strong>Automation proof</strong>
+          </article>
+        </div>
+      </section>
+
+      <section id="projects" class="section projects-section">
+        <div class="section-intro reveal">
+          <p class="eyebrow">Selected projects</p>
+          <h2>Projects grouped by what they demonstrate.</h2>
+          <p>
+            The strongest projects should not compete equally. The top row shows current
+            product and technical depth; the archive shows earlier operations, blockchain,
+            automation, and product strategy work.
+          </p>
+        </div>
+
+        <div class="featured-projects">
+          <article class="feature-project reveal">
+            <img src="img/ask-gary-1.png" alt="Ask Gary chat interface" />
+            <div>
+              <span>AI career assistant</span>
+              <h3>Ask Gary</h3>
+              <p>
+                Retrieval-augmented AI chatbot that answers career questions from resume,
+                LinkedIn, hobbies, and projects.
+              </p>
+              <ul>
+                <li>FastAPI, Python, OpenAI, vector search, Vanilla JS.</li>
+                <li>Deployed with EC2 backend and S3 static site.</li>
+              </ul>
+              <a href="ask-gary.html">Open project</a>
+            </div>
+          </article>
+          <article class="feature-project reveal">
+            <img src="img/budget-screenshot.jpg" alt="FinSync Budget dashboard" />
+            <div>
+              <span>Personal finance manager</span>
+              <h3>FinSync Budget</h3>
+              <p>
+                Finance app for expense categorization, budget planning, transaction import,
+                and visual spending analytics.
+              </p>
+              <ul>
+                <li>Python, Flask, SQLite, Chart.js.</li>
+                <li>Responsive product surface with real dashboard UI.</li>
+              </ul>
+              <a href="budget/index.html">Open product</a>
+            </div>
+          </article>
+          <article class="feature-project reveal">
+            <img src="img/lunarRefPic.png" alt="Lunar crypto portfolio builder interface" />
+            <div>
+              <span>Capstone product</span>
+              <h3>Lunar</h3>
+              <p>
+                Deployed crypto portfolio management platform led as project manager and
+                UI/UX designer.
+              </p>
+              <ul>
+                <li>Team of five, seven stakeholders, three design revisions.</li>
+                <li>User surveys, interviews, journeys, and retros.</li>
+              </ul>
+              <a href="Lunar_Proposal_Deck.pdf">View deck</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="project-archive reveal">
+          <article>
+            <img src="img/pallettracking.png" alt="Pallet tracking automation dashboard" />
+            <div>
+              <span>Operations automation</span>
+              <h3>Pallet Tracking</h3>
+              <p>IoT/BLE prototype addressing a recurring million-dollar logistics loss.</p>
+            </div>
+          </article>
+          <article>
+            <img src="img/luxeSamplePic.jpg" alt="Product authentication blockchain interface" />
+            <div>
+              <span>Blockchain product</span>
+              <h3>Product Authentication</h3>
+              <p>Hyperledger Fabric and AWS authentication concept from Accenture Liquid Studio.</p>
+            </div>
+          </article>
+          <article>
+            <img src="img/ERP_Automation.png" alt="ERP process automation tool interface" />
+            <div>
+              <span>Process automation</span>
+              <h3>ERP Automation</h3>
+              <p>Excel VBA tool reducing weekly transaction processing from 4 hours to about 15 minutes.</p>
+            </div>
+          </article>
+          <article>
+            <img src="img/casino-screenshot.jpg" alt="Mini games interface" />
+            <div>
+              <span>Real-time web app</span>
+              <h3>Mini Games</h3>
+              <p>Mobile-first multiplayer party game platform using Node.js and Socket.io.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="skills" class="section skills-section">
+        <div class="capability-header">
+          <div class="section-intro reveal">
+            <p class="eyebrow">Capability map</p>
+            <h2>Where I fit on a transformation team.</h2>
+            <p>
+              My strongest value is bridging business context and technical execution:
+              I can help clarify the problem, shape the delivery path, and build enough
+              proof to make the work real.
+            </p>
+          </div>
+          <aside class="capability-fit reveal">
+            <span>Best fit</span>
+            <strong>Technology consulting, business systems analysis, product delivery, automation</strong>
+          </aside>
+        </div>
+
+        <div class="capability-flow reveal" aria-label="Gary's capability flow">
+          <div>
+            <span>01</span>
+            <strong>Understand the system</strong>
+            <p>Stakeholders, domain context, process gaps, requirements, and current-state analysis.</p>
+          </div>
+          <div>
+            <span>02</span>
+            <strong>Shape the delivery path</strong>
+            <p>User journeys, runbooks, roadmaps, workshops, readiness planning, and stakeholder alignment.</p>
+          </div>
+          <div>
+            <span>03</span>
+            <strong>Build useful proof</strong>
+            <p>Dashboards, automation tools, AI assistants, finance apps, APIs, and web prototypes.</p>
+          </div>
+        </div>
+
+        <div class="capability-matrix">
+          <article class="skill-card capability-card reveal">
+            <div class="capability-icon" aria-hidden="true">
+              <span></span>
+              <span></span>
+            </div>
+            <div>
+              <span class="capability-index">01</span>
+              <h3>Consulting and domain</h3>
+              <p>CCaaS transformation, banking and finance, wealth management, retail banking, commercial banking, reconciliation automation.</p>
+            </div>
+          </article>
+          <article class="skill-card capability-card reveal">
+            <div class="capability-icon" aria-hidden="true">
+              <span></span>
+              <span></span>
+            </div>
+            <div>
+              <span class="capability-index">02</span>
+              <h3>Product and delivery</h3>
+              <p>Requirements gathering, process mapping, user journeys, Agile/Scrum, workshop facilitation, stakeholder management, cutover planning.</p>
+            </div>
+          </article>
+          <article class="skill-card capability-card reveal">
+            <div class="capability-icon" aria-hidden="true">
+              <span></span>
+              <span></span>
+            </div>
+            <div>
+              <span class="capability-index">03</span>
+              <h3>Technical build</h3>
+              <p>JavaScript, TypeScript, HTML/CSS, Python, SQL, REST APIs, AWS EC2, AWS S3, AWS Cognito, IoT/BLE.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="proof-line reveal" aria-label="Capability proof points">
+          <span>Proof points</span>
+          <strong>Ask Gary</strong>
+          <strong>FinSync Budget</strong>
+          <strong>Lunar</strong>
+          <strong>ERP Automation</strong>
+        </div>
+      </section>
+
+      <section id="contact" class="section contact-section">
+        <div class="contact-card reveal">
+          <p class="eyebrow">Let's connect</p>
+          <h2>Are you looking for talent with this set of capabilities?</h2>
+          <p>
+            If consulting delivery, product thinking, and technical build experience are
+            useful for your team, reach out to me.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="mailto:yonggary329@gmail.com">Email Gary</a>
+            <a class="button" href="Gary_Resume.pdf">Download resume</a>
+            <a class="button" href="ask-gary.html">Ask Gary</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      document.documentElement.classList.add("js");
+
+      const menuButton = document.querySelector(".menu-button");
+      const nav = document.querySelector(".main-nav");
+      const revealItems = document.querySelectorAll(".reveal");
+      const engagementTabs = [...document.querySelectorAll(".engagement-tab")];
+      const engagementPanel = document.querySelector(".engagement-panel");
+
+      menuButton.addEventListener("click", () => {
+        const open = document.body.classList.toggle("nav-open");
+        menuButton.setAttribute("aria-expanded", String(open));
+      });
+
+      nav.addEventListener("click", (event) => {
+        if (event.target.closest("a")) {
+          document.body.classList.remove("nav-open");
+          menuButton.setAttribute("aria-expanded", "false");
+        }
+      });
+
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+          }
+        });
+      }, { threshold: 0.14 });
+
+      revealItems.forEach((item) => revealObserver.observe(item));
+
+      function renderTags(container, values) {
+        container.innerHTML = "";
+        values.forEach((value) => {
+          const tag = document.createElement("span");
+          tag.textContent = value;
+          container.appendChild(tag);
+        });
+      }
+
+      function renderDetails(container, values) {
+        container.innerHTML = "";
+        values.forEach((value) => {
+          const item = document.createElement("li");
+          item.textContent = value;
+          container.appendChild(item);
+        });
+      }
+
+      engagementTabs.forEach((button) => {
+        button.addEventListener("click", () => {
+          engagementTabs.forEach((tab) => {
+            const active = tab === button;
+            tab.classList.toggle("is-active", active);
+            tab.setAttribute("aria-selected", String(active));
+          });
+          engagementPanel.querySelector(".panel-context").textContent = button.dataset.context;
+          engagementPanel.querySelector("h3").textContent = button.dataset.title;
+          engagementPanel.querySelector(".panel-impact").textContent = button.dataset.impact;
+          renderDetails(engagementPanel.querySelector(".panel-details"), button.dataset.details.split("|"));
+          renderTags(engagementPanel.querySelector(".panel-tags"), button.dataset.tags.split("|"));
+        });
+      });
+    </script>
+  </body>
+</html>
