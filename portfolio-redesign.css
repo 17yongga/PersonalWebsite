@@ -707,6 +707,50 @@ p {
   width: 100%;
 }
 
+.flowt-project {
+  background:
+    linear-gradient(180deg, rgba(235, 244, 255, 0.72), #fff 42%),
+    #fff;
+}
+
+.flowt-gallery {
+  align-items: end;
+  aspect-ratio: 1.45;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    radial-gradient(circle at 24% 20%, rgba(255, 255, 255, 0.22), transparent 28%),
+    linear-gradient(135deg, #1d72ef 0%, #4fc9d7 100%);
+  background-size: 42px 42px, auto, auto;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1.08fr 0.96fr 0.96fr;
+  overflow: hidden;
+  padding: 22px 20px 0;
+}
+
+.flowt-gallery .flowt-shot {
+  aspect-ratio: auto;
+  background: transparent;
+  border: 3px solid rgba(15, 23, 42, 0.78);
+  border-bottom: 0;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.28);
+  height: 92%;
+  min-width: 0;
+  object-fit: cover;
+  object-position: top center;
+  width: 100%;
+}
+
+.flowt-gallery .flowt-shot.primary {
+  height: 110%;
+}
+
+.flowt-gallery .flowt-shot:nth-child(3) {
+  height: 84%;
+  opacity: 0.96;
+}
+
 .feature-project > div {
   display: grid;
   gap: 14px;
