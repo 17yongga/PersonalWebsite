@@ -30,31 +30,31 @@ Full Chinese translation available at wealth-zh.html.
 - All data sourced from `/Users/moltbot/clawd/memory/wealth-gary.md`
 - To update: edit `wealth-gary.md` with new numbers → run price refresh script → redeploy both wealth.html + wealth-zh.html
 
-## Current State (2026-05-10 / RRSP data as of Apr 29)
-- Both EN + ZH dashboards updated with Gary's Apr 29 RRSP screenshot ✅
+## Current State (2026-05-10 / data from May 8 screenshots)
+- Both EN + ZH dashboards updated with Gary's May 8 Wealthsimple screenshots ✅
 - Latest synced numbers:
-  - TFSA: $20,988.51 (+2.25% today; still Apr 24 snapshot)
+  - TFSA: $23,017.21 (+$5,344.90 / +30.24% all-time; $1,780.63 available to trade)
   - RRSP: $21,406.74 (growth $4,831.11; contributions $16,575.63)
-  - Crypto: $1,651.39 (still Apr 24 snapshot)
-  - Chequing: $2,830.68 (still Apr 24 snapshot)
-  - Total personal NW dashboard estimate: ~$46,279 CAD (+$1,659 since Apr 22; +$1,179 from RRSP refresh)
-- Key changes since Apr 22:
-  - AMD: TRIMMED 5.961 → 3.961 shares (sold 2, locked +181% profit)
-  - SPY: 8.2685 → 9.2685 shares (bought 1 with AMD proceeds)
-  - SPY now 45% of TFSA (was 41%) — core strengthened
-  - BKSY: deteriorated from +4% to -9.1%
-  - SPY auto-buy confirmed already at $500 bi-weekly ($1,000/mo = Option A target)
+  - Crypto: $1,843.38 (+$87.28 / +4.97% past year; $15.40 available to trade)
+  - Chequing: $3,033.51 (1.25%; May interest $0.93)
+  - Total personal NW dashboard estimate: ~$49,301 CAD (+$4,681 since Apr 22; +$3,022 since Apr 29 RRSP-only refresh)
+- Key changes since Apr 24/29:
+  - TFSA: +$2,028.70 since Apr 24 snapshot
+  - Crypto: +$191.99 since Apr 24 snapshot
+  - Chequing: +$202.83 since Apr 24 snapshot
+  - SPY: 9.2685 → 9.7726 shares; QQQ: 0.68 → 1 share
+  - AMD gain now +269.10%; BKSY recovered to +1.48%; BIRD worsened to -69.12%
 
 ## What's Local Only
-- None — Apr 29 RRSP refresh deployed to EN + ZH dashboards
+- None — May 8 full Wealthsimple refresh deployed to EN + ZH dashboards
 
 ## Next Actions (Gary)
-- [ ] Sell BIRD ($11) and PLTR ($39) — dead weight, redeploy to SPY
-- [ ] BKSY: monitor closely, now -9.1%
-- [ ] Move emergency fund to EQ Bank (~3.5% HISA)
+- [ ] Sell BIRD (~$8) and PLTR (~$36) — dead weight, redeploy to SPY or clear clutter
+- [ ] Keep BKSY on watch, but urgency reduced after recovery to +1.48%
+- [ ] Keep building emergency fund toward $9K; current chequing $3,033.51 at 1.25%
 
 ## Next Actions (Dr.Molt)
-- [ ] Full May portfolio refresh when Gary sends TFSA/crypto/cash screenshots
+- [ ] Next monthly portfolio refresh when Gary sends June screenshots or if market moves materially
 - [ ] Keep historical trend line + annotations updated with each screenshot sync
 
 ## Backlog
@@ -65,10 +65,11 @@ Full Chinese translation available at wealth-zh.html.
 - [x] Portfolio trend chart — **DONE** (time-series with range toggle added Mar 23)
 
 ## Completed This Session (2026-05-10)
-- ✅ RRSP refreshed from screenshot: $21,406.74 balance, $4,831.11 growth, $16,575.63 total contributions
-- ✅ EN + ZH dashboards updated: header, RRSP tile, goal progress, change log, trend point/annotation
-- ✅ wealth-gary.md updated with RRSP contribution breakdown
-- ✅ Dashboard net worth estimate updated to ~$46,279 using Apr 24 NW + RRSP delta
+- ✅ Full Wealthsimple refresh from May 8 screenshots: TFSA, crypto, chequing, Invest, holdings, and RRSP fund details
+- ✅ EN + ZH dashboards updated: header, account tiles, TFSA holdings, action items, goal progress, change log, trend point/annotation
+- ✅ wealth-gary.md updated with current account balances, holdings, crypto, chequing yield, and action items
+- ✅ Dashboard net worth estimate updated to ~$49,301 personal NW (excludes $1,604.39 joint Vacation portfolio)
+- ✅ Earlier same session: RRSP refreshed from screenshot: $21,406.74 balance, $4,831.11 growth, $16,575.63 total contributions
 
 ## Completed Previous Session (2026-04-24)
 - ✅ AMD trim + SPY buy reflected in both EN + ZH dashboards
