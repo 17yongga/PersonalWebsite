@@ -1,5 +1,5 @@
 # Wealth Dashboard — STATUS.md
-> Updated: 2026-04-07
+> Updated: 2026-05-10
 
 ## What's Live
 - **EN URL:** https://gary-yong.com/wealth.html (password-gated)
@@ -30,51 +30,55 @@ Full Chinese translation available at wealth-zh.html.
 - All data sourced from `/Users/moltbot/clawd/memory/wealth-gary.md`
 - To update: edit `wealth-gary.md` with new numbers → run price refresh script → redeploy both wealth.html + wealth-zh.html
 
-## Current State (2026-04-07)
-- Both EN + ZH dashboards updated locally with Gary's Apr 7 screenshots ✅
+## Current State (2026-05-10 / RRSP data as of Apr 29)
+- Both EN + ZH dashboards updated with Gary's Apr 29 RRSP screenshot ✅
 - Latest synced numbers:
-  - Wealthsimple total: $23,601.04
-  - TFSA: $18,735.93 (+13.72% all-time)
-  - RRSP: $19,445.03
-  - Crypto: $1,432.00
-  - Chequing: $2,630.68
-  - Total personal NW: ~$42,244 CAD
-- Position changes captured:
-  - NVDA now ~11.4% of TFSA after significant increase
-  - MSFT now appears as a new 1-share position
-  - Cash buffer down to ~$2,125, meaning more capital got deployed
-  - MKT deteriorated further to -54% ($230 left)
-- Primary action item now: decide whether to cut MKT or treat it as a true lottery-ticket hold
+  - TFSA: $20,988.51 (+2.25% today; still Apr 24 snapshot)
+  - RRSP: $21,406.74 (growth $4,831.11; contributions $16,575.63)
+  - Crypto: $1,651.39 (still Apr 24 snapshot)
+  - Chequing: $2,830.68 (still Apr 24 snapshot)
+  - Total personal NW dashboard estimate: ~$46,279 CAD (+$1,659 since Apr 22; +$1,179 from RRSP refresh)
+- Key changes since Apr 22:
+  - AMD: TRIMMED 5.961 → 3.961 shares (sold 2, locked +181% profit)
+  - SPY: 8.2685 → 9.2685 shares (bought 1 with AMD proceeds)
+  - SPY now 45% of TFSA (was 41%) — core strengthened
+  - BKSY: deteriorated from +4% to -9.1%
+  - SPY auto-buy confirmed already at $500 bi-weekly ($1,000/mo = Option A target)
 
 ## What's Local Only
-- EN + ZH files updated locally from Apr 7 screenshots
-- Still needs deploy to S3 + CloudFront invalidation
+- None — Apr 29 RRSP refresh deployed to EN + ZH dashboards
 
 ## Next Actions (Gary)
-- [ ] Decide on MKT position (-54%, $230 remaining) — cut or keep as true lottery ticket
-- [ ] Move emergency fund from CIBC / idle cash setup into a real high-interest bucket (EQ or Wealthsimple Save)
-- [ ] Clean up PLTR on Wealthsimple (0.1944 shares, ~-$43 left) when convenient → redeploy to SPY/NVDA/QQQ
-- [ ] Clarify the purpose of the USD savings account once it goes live
+- [ ] Sell BIRD ($11) and PLTR ($39) — dead weight, redeploy to SPY
+- [ ] BKSY: monitor closely, now -9.1%
+- [ ] Move emergency fund to EQ Bank (~3.5% HISA)
 
 ## Next Actions (Dr.Molt)
-- [ ] Deploy updated wealth.html + wealth-zh.html
-- [ ] Monthly portfolio refresh — next scheduled May 1 unless Gary sends sooner
-- [ ] Keep historical trend line updated with each screenshot sync
+- [ ] Full May portfolio refresh when Gary sends TFSA/crypto/cash screenshots
+- [ ] Keep historical trend line + annotations updated with each screenshot sync
 
 ## Backlog
 - [ ] Monthly/quarterly performance tracking (historical chart auto-populated over time)
-- [ ] RRSP NAV refresh once Gary confirms
+- [x] RRSP NAV refresh from Apr 29 Wealthsimple screenshot — **DONE May 10**
 - [x] ~~Automated data syncing via unofficial API~~ — **REJECTED** (security concern, 2026-03-15)
 - [x] Savings rate calculator — **DONE** (interactive FI slider added Mar 23)
 - [x] Portfolio trend chart — **DONE** (time-series with range toggle added Mar 23)
 
-## Completed This Session (2026-04-07)
-- ✅ Synced wealth profile from Gary's latest screenshots
-- ✅ Refreshed RRSP / TFSA / crypto / chequing balances in memory/wealth-gary.md
-- ✅ Updated English dashboard with Apr 7 numbers and revised action priorities
-- ✅ Updated Chinese dashboard to match the latest portfolio state
-- ✅ Added Apr 7 point to the portfolio trend history
-- ✅ Status doc refreshed with latest state and next actions
+## Completed This Session (2026-05-10)
+- ✅ RRSP refreshed from screenshot: $21,406.74 balance, $4,831.11 growth, $16,575.63 total contributions
+- ✅ EN + ZH dashboards updated: header, RRSP tile, goal progress, change log, trend point/annotation
+- ✅ wealth-gary.md updated with RRSP contribution breakdown
+- ✅ Dashboard net worth estimate updated to ~$46,279 using Apr 24 NW + RRSP delta
+
+## Completed Previous Session (2026-04-24)
+- ✅ AMD trim + SPY buy reflected in both EN + ZH dashboards
+- ✅ Holdings table reordered (SPY #1 at 45%)
+- ✅ Action items updated: AMD trim + SPY buy marked done
+- ✅ Changes section updated to show Apr 22 → Apr 24 delta
+- ✅ Trend chart + annotations updated with new data point
+- ✅ Goal progress: 23.5% → 23.7%
+- ✅ wealth-gary.md updated with current portfolio + confirmed auto-buy amounts
+- ✅ BKSY status changed from "Spec/NEW" to "Watch" (deteriorating)
 
 ## Decisions
 - 2026-03-06: Password-gated JS gate (unlisted URL approach)

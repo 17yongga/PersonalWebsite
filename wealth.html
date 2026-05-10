@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wealth Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
     :root{
@@ -76,6 +77,7 @@
     .b-warn{background:var(--red-dim);color:var(--red);}
     .b-info{background:var(--blue-dim);color:var(--blue);}
     .b-hold{background:var(--yellow-dim);color:var(--yellow);}
+    .b-new{background:rgba(188,140,255,.15);color:#bc8cff;}
 
     /* Allocation bar */
     .alloc-bar{display:flex;height:6px;border-radius:20px;overflow:hidden;margin-bottom:10px;}
@@ -92,6 +94,7 @@
     .act-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
     .act-dot.urgent{background:var(--red);}
     .act-dot.normal{background:var(--yellow);}
+    .act-dot.done{background:var(--green);}
     .act-body{font-size:.78rem;line-height:1.4;}
     .act-body strong{font-weight:600;}
     .act-body .detail{color:var(--muted);font-size:.7rem;}
@@ -101,6 +104,14 @@
     .cf-row:last-child{border-bottom:none;}
     .cf-label{color:var(--muted);}
     .cf-val{font-weight:600;}
+
+    /* Change log */
+    .change{padding:6px 0;border-bottom:1px solid rgba(48,54,61,.3);font-size:.75rem;line-height:1.4;}
+    .change:last-child{border-bottom:none;}
+    .change-date{color:var(--muted);font-size:.65rem;font-weight:600;}
+    .change-up{color:var(--green);}
+    .change-down{color:var(--red);}
+    .change-neutral{color:var(--blue);}
 
     .footer{text-align:center;padding:12px 0 6px;color:var(--muted);font-size:.6rem;}
 
@@ -132,21 +143,21 @@
       <div class="h-left">
         <div>
           <h1>Wealth Dashboard</h1>
-          <span class="date">Apr 7, 2026</span>
+          <span class="date">Apr 29, 2026</span>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="h-nw">
-          <div class="big">$42,244</div>
-          <div class="sub">Net Worth</div>
+          <div class="big">$46,279</div>
+          <div class="sub">Net Worth <span style="color:var(--green);font-weight:700;">+$1,179 RRSP</span></div>
         </div>
         <a href="/wealth-zh.html" class="lang-btn">中文</a>
       </div>
     </div>
     <div class="goal-strip">
       <span class="label">Age 30 · $190K</span>
-      <div class="prog-wrap"><div class="prog-fill" style="width:22.2%"></div></div>
-      <span class="pct">22.2%</span>
+      <div class="prog-wrap"><div class="prog-fill" style="width:24.4%"></div></div>
+      <span class="pct">24.4%</span>
     </div>
   </header>
 
@@ -156,23 +167,23 @@
     <div class="accounts">
       <div class="acct">
         <div class="name">TFSA</div>
-        <div class="val" style="color:var(--green)">$18,736</div>
-        <div class="note pos">+13.72%</div>
+        <div class="val" style="color:var(--green)">$20,989</div>
+        <div class="note pos">+2.25% today</div>
       </div>
       <div class="acct">
         <div class="name">RRSP</div>
-        <div class="val">$19,445</div>
-        <div class="note" style="color:var(--muted)">LifePath 2065</div>
+        <div class="val">$21,407</div>
+        <div class="note pos">+$4,831 growth</div>
       </div>
       <div class="acct">
         <div class="name">Crypto</div>
-        <div class="val">$1,432</div>
-        <div class="note neg">BTC -19%</div>
+        <div class="val">$1,651</div>
+        <div class="note neg">BTC -11.5%</div>
       </div>
       <div class="acct">
         <div class="name">Cash</div>
-        <div class="val">$2,631</div>
-        <div class="note" style="color:var(--yellow)">E-fund: $3K/$9K</div>
+        <div class="val">$2,831</div>
+        <div class="note" style="color:var(--yellow)">E-fund: $2.8K/$9K</div>
       </div>
     </div>
 
@@ -180,35 +191,36 @@
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
         <div class="card-t" style="margin:0">TFSA Holdings</div>
-        <span style="font-size:.65rem;color:var(--muted)">Cash buffer: $2,125</span>
+        <span style="font-size:.65rem;color:var(--muted)">Cash buffer: $2,044</span>
       </div>
       <div class="alloc-bar">
-        <div class="alloc-seg" style="width:40%;background:#3fb950;" title="SPY 40%"></div>
-        <div class="alloc-seg" style="width:11%;background:#58a6ff;" title="NVDA 11%"></div>
+        <div class="alloc-seg" style="width:45%;background:#3fb950;" title="SPY 45%"></div>
+        <div class="alloc-seg" style="width:12%;background:#58a6ff;" title="NVDA 12%"></div>
         <div class="alloc-seg" style="width:10%;background:#bc8cff;" title="AMD 10%"></div>
         <div class="alloc-seg" style="width:10%;background:#f0883e;" title="TSLA 10%"></div>
-        <div class="alloc-seg" style="width:5%;background:#d29922;" title="GLD 5%"></div>
+        <div class="alloc-seg" style="width:4%;background:#d29922;" title="GLD 4%"></div>
         <div class="alloc-seg" style="width:4%;background:#39d353;" title="ICLN 4%"></div>
         <div class="alloc-seg" style="width:3%;background:#8b949e;" title="QQQ 3%"></div>
         <div class="alloc-seg" style="width:3%;background:#6cb6ff;" title="MSFT 3%"></div>
+        <div class="alloc-seg" style="width:2%;background:#e3b341;" title="BKSY 2%"></div>
         <div class="alloc-seg" style="width:2%;background:#db61a2;" title="ARKK 2%"></div>
-        <div class="alloc-seg" style="width:1%;background:#f85149;" title="Other 1%"></div>
-        <div class="alloc-seg" style="width:11%;background:var(--card2);" title="Cash 11%"></div>
+        <div class="alloc-seg" style="width:10%;background:var(--card2);" title="Cash 10%"></div>
       </div>
       <table class="h-table">
-        <thead><tr><th>Ticker</th><th>Value</th><th>Wt</th><th>Gain</th><th></th></tr></thead>
+        <thead><tr><th>Ticker</th><th>Value</th><th>Wt</th><th>Gain</th><th>Chg</th><th></th></tr></thead>
         <tbody>
-          <tr><td class="tk">SPY</td><td>$7,485</td><td>40%</td><td class="pos">+7.9%</td><td><span class="badge b-ok">Core</span></td></tr>
-          <tr><td class="tk">NVDA</td><td>$2,073</td><td>11%</td><td class="pos">+14.6%</td><td><span class="badge b-ok">Auto</span></td></tr>
-          <tr><td class="tk">AMD</td><td>$1,901</td><td>10%</td><td class="pos">+84.4%</td><td><span class="badge b-ok">Hold</span></td></tr>
-          <tr><td class="tk">TSLA</td><td>$1,860</td><td>10%</td><td class="pos">+20.8%</td><td><span class="badge b-hold">Trimmed</span></td></tr>
-          <tr><td class="tk">GLD</td><td>$888</td><td>5%</td><td class="pos">+9.6%</td><td><span class="badge b-info">Hedge</span></td></tr>
-          <tr><td class="tk">ICLN</td><td>$705</td><td>4%</td><td class="pos">+34.1%</td><td><span class="badge b-ok">Auto</span></td></tr>
-          <tr><td class="tk">QQQ</td><td>$571</td><td>3%</td><td class="pos">+3.1%</td><td></td></tr>
-          <tr><td class="tk">MSFT</td><td>$530</td><td>3%</td><td class="pos">+3.4%</td><td></td></tr>
-          <tr><td class="tk">ARKK</td><td>$327</td><td>2%</td><td class="pos">+35.2%</td><td></td></tr>
-          <tr><td class="tk">MKT</td><td>$230</td><td>1%</td><td class="neg">-54%</td><td><span class="badge b-warn">Decide</span></td></tr>
-          <tr><td class="tk">PLTR</td><td>$42</td><td>0%</td><td class="neg">-15%</td><td><span class="badge b-warn">Cut</span></td></tr>
+          <tr><td class="tk">SPY</td><td>$9,459</td><td>45%</td><td class="pos">+12.1%</td><td class="pos">+$1,074</td><td><span class="badge b-ok">Core</span></td></tr>
+          <tr><td class="tk">NVDA</td><td>$2,504</td><td>12%</td><td class="pos">+30.5%</td><td class="pos">+$98</td><td><span class="badge b-ok">Auto</span></td></tr>
+          <tr><td class="tk">AMD</td><td>$1,989</td><td>10%</td><td class="pos">+181.1%</td><td class="neg">-$489</td><td><span class="badge b-ok">Trimmed</span></td></tr>
+          <tr><td class="tk">TSLA</td><td>$1,992</td><td>10%</td><td class="pos">+25.3%</td><td class="neg">-$75</td><td><span class="badge b-hold">Hold</span></td></tr>
+          <tr><td class="tk">GLD</td><td>$903</td><td>4%</td><td class="pos">+7.9%</td><td class="neg">-$5</td><td><span class="badge b-info">Hedge</span></td></tr>
+          <tr><td class="tk">ICLN</td><td>$814</td><td>4%</td><td class="pos">+45.0%</td><td class="pos">+$17</td><td><span class="badge b-ok">Auto</span></td></tr>
+          <tr><td class="tk">QQQ</td><td>$645</td><td>3%</td><td class="pos">+12.7%</td><td class="pos">+$13</td><td></td></tr>
+          <tr><td class="tk">MSFT</td><td>$602</td><td>3%</td><td class="pos">+13.6%</td><td class="neg">-$10</td><td></td></tr>
+          <tr><td class="tk">BKSY</td><td>$501</td><td>2%</td><td class="neg">-9.1%</td><td class="neg">-$73</td><td><span class="badge b-warn">Watch</span></td></tr>
+          <tr><td class="tk">ARKK</td><td>$361</td><td>2%</td><td class="pos">+44.6%</td><td class="neg">-$8</td><td></td></tr>
+          <tr><td class="tk">PLTR</td><td>$39</td><td>0%</td><td class="neg">-22.3%</td><td class="neg">-$2</td><td><span class="badge b-warn">Cut</span></td></tr>
+          <tr><td class="tk">BIRD</td><td>$11</td><td>0%</td><td class="neg">-59.3%</td><td class="neg">-$1</td><td><span class="badge b-warn">Sell</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -219,53 +231,85 @@
       <!-- Trend chart -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div class="card-t" style="margin:0;">Trend</div>
+          <div class="card-t" style="margin:0;">Portfolio Trend</div>
           <div class="t-toggles">
             <button class="t-btn" onclick="setRange('1M',this)">1M</button>
             <button class="t-btn active" onclick="setRange('YTD',this)">YTD</button>
             <button class="t-btn" onclick="setRange('ALL',this)">All</button>
           </div>
         </div>
-        <div style="height:200px;"><canvas id="trendChart"></canvas></div>
+        <div style="height:220px;"><canvas id="trendChart"></canvas></div>
       </div>
 
-      <!-- Right column: Actions + Monthly -->
+      <!-- Right column: Actions + Changes + Monthly -->
       <div>
         <div class="card">
           <div class="card-t">Action Items</div>
           <div class="act">
-            <div class="act-dot urgent"></div>
-            <div class="act-body"><strong>MKT ($230, -54%)</strong> <span class="detail">— Cut or accept as write-off</span></div>
+            <div class="act-dot done"></div>
+            <div class="act-body"><strong>AMD — TRIMMED</strong> <span class="detail">— Sold 2 shares, locked +181% profit ✓</span></div>
+          </div>
+          <div class="act">
+            <div class="act-dot done"></div>
+            <div class="act-body"><strong>SPY — BOUGHT 1 share</strong> <span class="detail">— Rotated AMD proceeds into core ✓</span></div>
           </div>
           <div class="act">
             <div class="act-dot urgent"></div>
-            <div class="act-body"><strong>PLTR ($42, -15%)</strong> <span class="detail">— Sell, redeploy to SPY</span></div>
+            <div class="act-body"><strong>Sell BIRD ($11)</strong> <span class="detail">— No thesis, -59.3%, dead weight</span></div>
+          </div>
+          <div class="act">
+            <div class="act-dot urgent"></div>
+            <div class="act-body"><strong>Sell PLTR ($39)</strong> <span class="detail">— Tiny position, -22.3%, redeploy to SPY</span></div>
           </div>
           <div class="act">
             <div class="act-dot normal"></div>
-            <div class="act-body"><strong>E-fund → EQ Bank</strong> <span class="detail">— $3K at 0% in CIBC, move to ~3.5%</span></div>
+            <div class="act-body"><strong>BKSY — Watch</strong> <span class="detail">— Now -9.1%, monitor closely</span></div>
           </div>
           <div class="act">
             <div class="act-dot normal"></div>
-            <div class="act-body"><strong>Tax refund → TFSA</strong> <span class="detail">— Est. $1.4–1.9K into SPY/NVDA</span></div>
+            <div class="act-body"><strong>E-fund → $9K</strong> <span class="detail">— $2.8K at 0%, move to EQ Bank 3.5%</span></div>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-t">Monthly Flow</div>
-          <div class="cf-row"><span class="cf-label">Wealth-building</span><span class="cf-val pos">$2,894/mo</span></div>
-          <div class="cf-row"><span class="cf-label">TFSA</span><span class="cf-val">$1,200</span></div>
-          <div class="cf-row"><span class="cf-label">RRSP (pre-tax)</span><span class="cf-val">$394</span></div>
-          <div class="cf-row"><span class="cf-label">Crypto</span><span class="cf-val">$200</span></div>
-          <div class="cf-row"><span class="cf-label">Joint / Travel</span><span class="cf-val">$600</span></div>
-          <div class="cf-row"><span class="cf-label">Floating</span><span class="cf-val">$500</span></div>
-          <div class="cf-row"><span class="cf-label">Saving rate</span><span class="cf-val" style="color:var(--green)">52.6%</span></div>
+          <div class="card-t">Changes Since Apr 22</div>
+          <div class="change">
+            <span class="change-up">▲ Net Worth +$1,659</span> ($44,620 → $46,279)
+          </div>
+          <div class="change">
+            <span class="change-up">▲ RRSP +$1,179</span> ($20,228 → $21,407) — refreshed from Wealthsimple as of Apr 29
+          </div>
+          <div class="change">
+            <span class="change-up">▲ TFSA +$480</span> ($20,509 → $20,989) — chip rally, rebalance
+          </div>
+          <div class="change">
+            <span class="change-up">★ AMD trimmed</span> — sold 2 shares at +181%, proceeds → SPY
+          </div>
+          <div class="change">
+            <span class="change-up">★ SPY</span> now 45% of TFSA (was 41%) — core strengthened
+          </div>
+          <div class="change">
+            <span class="change-down">▼ BKSY</span> — dropped from +4% to -9.1%, monitoring
+          </div>
         </div>
       </div>
 
     </div>
 
-    <div class="footer">Dr.Molt · Apr 7, 2026 · Not financial advice</div>
+    <!-- Monthly flow -->
+    <div class="card">
+      <div class="card-t">Monthly Flow</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px;">
+        <div class="cf-row"><span class="cf-label">Wealth-building</span><span class="cf-val pos">$2,894/mo</span></div>
+        <div class="cf-row"><span class="cf-label">Saving rate</span><span class="cf-val" style="color:var(--green)">52.6%</span></div>
+        <div class="cf-row"><span class="cf-label">TFSA</span><span class="cf-val">$1,200</span></div>
+        <div class="cf-row"><span class="cf-label">RRSP (pre-tax)</span><span class="cf-val">$394</span></div>
+        <div class="cf-row"><span class="cf-label">Crypto</span><span class="cf-val">$200</span></div>
+        <div class="cf-row"><span class="cf-label">Joint / Travel</span><span class="cf-val">$600</span></div>
+      </div>
+    </div>
+
+    <div class="footer">Dr.Molt · Apr 29, 2026 · Not financial advice</div>
 
   </main>
 </div>
@@ -292,9 +336,20 @@ if(sessionStorage.getItem('wealthUnlocked')==='1'){
 
 const portfolioHistory=[
   {date:'2026-03-13',nw:42900,tfsa:17405,note:'First snapshot'},
-  {date:'2026-03-23',nw:43591,tfsa:17584,note:'Rebalance'},
-  {date:'2026-04-01',nw:43666,tfsa:17705,note:'Monthly refresh'},
-  {date:'2026-04-07',nw:42244,tfsa:18736,note:'Full update'},
+  {date:'2026-03-23',nw:43591,tfsa:17584,note:'GLD hedge added'},
+  {date:'2026-04-01',nw:43666,tfsa:17705,note:'Monthly auto-buys'},
+  {date:'2026-04-07',nw:42244,tfsa:18736,note:'Market dip, MKT -54%'},
+  {date:'2026-04-22',nw:44620,tfsa:20509,note:'AMD rally +133%, sold MKT'},
+  {date:'2026-04-24',nw:45100,tfsa:20989,note:'AMD trimmed, SPY strengthened'},
+  {date:'2026-04-29',nw:46279,tfsa:20989,note:'RRSP refreshed +$1,179'},
+];
+
+const annotations=[
+  {date:'2026-03-23',label:'GLD hedge\nadded',color:'#d29922'},
+  {date:'2026-04-07',label:'Market dip\nMKT -54%',color:'#f85149'},
+  {date:'2026-04-22',label:'AMD rally\n+133%',color:'#3fb950'},
+  {date:'2026-04-24',label:'AMD trim\n→ SPY',color:'#58a6ff'},
+  {date:'2026-04-29',label:'RRSP refresh\n+$1.18K',color:'#a371f7'},
 ];
 
 let trendInst=null;
@@ -304,7 +359,26 @@ function filterHist(range){
   const cutoff=range==='YTD'?new Date(latest.getFullYear(),0,1):range==='1M'?new Date(latest-30*86400000):new Date(0);
   return portfolioHistory.filter(d=>new Date(d.date)>=cutoff);
 }
-function fmtD(s){return new Date(s).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function fmtD(s){return new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+
+function buildAnnotations(data){
+  const labels=data.map(d=>d.date);
+  const annots={};
+  annotations.forEach((a,i)=>{
+    const idx=labels.indexOf(a.date);
+    if(idx===-1) return;
+    annots['line'+i]={
+      type:'line',xMin:idx,xMax:idx,
+      borderColor:a.color,borderWidth:1,borderDash:[3,3],
+      label:{display:true,content:a.label.split('\n'),
+        position:'start',backgroundColor:'rgba(13,17,23,0.85)',
+        color:a.color,font:{size:8,weight:'bold'},
+        padding:{top:2,bottom:2,left:4,right:4},
+        borderRadius:4,yAdjust:-8}
+    };
+  });
+  return annots;
+}
 
 function setRange(range,btn){
   document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active'));
@@ -313,6 +387,7 @@ function setRange(range,btn){
   trendInst.data.labels=data.map(d=>fmtD(d.date));
   trendInst.data.datasets[0].data=data.map(d=>d.nw);
   trendInst.data.datasets[1].data=data.map(d=>d.tfsa);
+  trendInst.options.plugins.annotation.annotations=buildAnnotations(data);
   trendInst.update();
 }
 
@@ -337,9 +412,10 @@ function renderCharts(){
       plugins:{
         legend:{labels:{boxWidth:8,padding:8,font:{size:9}}},
         tooltip:{callbacks:{
-          title:ctx=>{const e=data[ctx[0].dataIndex];return fmtD(e.date);},
+          title:ctx=>{const e=data[ctx[0].dataIndex];return fmtD(e.date)+(e.note?' — '+e.note:'');},
           label:ctx=>` ${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()}`
-        }}
+        }},
+        annotation:{annotations:buildAnnotations(data)}
       },
       scales:{
         y:{ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K',font:{size:9}},grid:{color:'rgba(48,54,61,.5)'}},

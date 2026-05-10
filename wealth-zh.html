@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>财富仪表盘 — Gary Yong</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -75,6 +76,7 @@
     .b-warn { background:var(--red-dim); color:var(--red); }
     .b-info { background:var(--blue-dim); color:var(--blue); }
     .b-hold { background:var(--yellow-dim); color:var(--yellow); }
+    .b-new { background:rgba(188,140,255,0.15); color:#bc8cff; }
 
     .act { display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid rgba(48,54,61,0.4); }
     .act:last-child { border-bottom:none; }
@@ -82,9 +84,16 @@
     .act-n.p1 { background:var(--red-dim); color:var(--red); }
     .act-n.p2 { background:var(--yellow-dim); color:var(--yellow); }
     .act-n.p3 { background:var(--blue-dim); color:var(--blue); }
+    .act-n.done { background:var(--green-dim); color:var(--green); }
     .act-body { flex:1; }
     .act-body strong { font-size:0.85rem; display:block; margin-bottom:2px; }
     .act-body span { font-size:0.78rem; color:var(--muted); }
+
+    .change { padding:6px 0; border-bottom:1px solid rgba(48,54,61,0.3); font-size:0.78rem; line-height:1.4; }
+    .change:last-child { border-bottom:none; }
+    .change-up { color:var(--green); }
+    .change-down { color:var(--red); }
+    .change-neutral { color:var(--blue); }
 
     @media (max-width:900px) {
       main { padding:14px; }
@@ -119,7 +128,7 @@
       <div><h1>财富仪表盘</h1><span class="sub">Gary Yong · 26岁 · 多伦多</span></div>
     </div>
     <div class="h-right">
-      <div style="text-align:right;"><div class="nw-big">$42,244</div><div class="nw-label">净资产（加元）· 2026年4月7日</div></div>
+      <div style="text-align:right;"><div class="nw-big">$46,279</div><div class="nw-label">净资产（加元）· 2026年4月29日 <span style="color:var(--green);font-weight:700;">RRSP +$1,179</span></div></div>
       <a href="/wealth.html" class="lang-btn">English</a>
     </div>
   </header>
@@ -128,6 +137,7 @@
     <a href="#overview" class="nav-link active">概览</a>
     <a href="#trend" class="nav-link">趋势</a>
     <a href="#holdings" class="nav-link">持仓</a>
+    <a href="#changes" class="nav-link">变动</a>
     <a href="#goal" class="nav-link">目标</a>
     <a href="#actions" class="nav-link">行动</a>
   </nav>
@@ -138,18 +148,18 @@
       <div class="stats">
         <div class="stat">
           <div class="label">TFSA</div>
-          <div class="val" style="color:var(--green)">$18,736</div>
-          <div class="detail pos">历史收益 +13.72%</div>
+          <div class="val" style="color:var(--green)">$20,989</div>
+          <div class="detail pos">今日 +2.25%</div>
         </div>
         <div class="stat">
           <div class="label">RRSP</div>
-          <div class="val">$19,445</div>
-          <div class="detail" style="color:var(--muted)">BlackRock LifePath 2065</div>
+          <div class="val">$21,407</div>
+          <div class="detail pos">增长 +$4,831</div>
         </div>
         <div class="stat">
           <div class="label">加密货币</div>
-          <div class="val">$1,432</div>
-          <div class="detail neg">BTC 成本 -19%</div>
+          <div class="val">$1,651</div>
+          <div class="detail neg">BTC 成本 -11.5%</div>
         </div>
         <div class="stat">
           <div class="label">储蓄率</div>
@@ -195,25 +205,50 @@
     <section id="holdings">
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px;">
-          <div class="card-t" style="margin:0;">TFSA 持仓 — $18,736</div>
-          <span style="font-size:0.72rem; color:var(--muted);">现金: $2,125</span>
+          <div class="card-t" style="margin:0;">TFSA 持仓 — $20,989</div>
+          <span style="font-size:0.72rem; color:var(--muted);">现金: $2,044</span>
         </div>
         <table class="h-table">
-          <thead><tr><th>代码</th><th>价值（加元）</th><th>占比</th><th>盈亏</th><th></th></tr></thead>
+          <thead><tr><th>代码</th><th>价值（加元）</th><th>占比</th><th>盈亏</th><th>变动</th><th></th></tr></thead>
           <tbody>
-            <tr><td class="tk">SPY</td><td>$7,485</td><td>40.0%</td><td class="pos">+7.9%</td><td><span class="badge b-ok">核心</span></td></tr>
-            <tr><td class="tk">NVDA</td><td>$2,073</td><td>11.1%</td><td class="pos">+14.6%</td><td><span class="badge b-ok">自动买入</span></td></tr>
-            <tr><td class="tk">AMD</td><td>$1,901</td><td>10.2%</td><td class="pos">+84.4%</td><td><span class="badge b-ok">持有</span></td></tr>
-            <tr><td class="tk">TSLA</td><td>$1,860</td><td>9.9%</td><td class="pos">+20.8%</td><td><span class="badge b-ok">已减仓</span></td></tr>
-            <tr><td class="tk">GLD</td><td>$888</td><td>4.7%</td><td class="pos">+9.6%</td><td><span class="badge b-ok">对冲</span></td></tr>
-            <tr><td class="tk">ICLN</td><td>$705</td><td>3.8%</td><td class="pos">+34.1%</td><td><span class="badge b-info">自动买入</span></td></tr>
-            <tr><td class="tk">QQQ</td><td>$571</td><td>3.0%</td><td class="pos">+3.1%</td><td><span class="badge b-info">新建仓</span></td></tr>
-            <tr><td class="tk">MSFT</td><td>$530</td><td>2.8%</td><td class="pos">+3.4%</td><td><span class="badge b-info">新建仓</span></td></tr>
-            <tr><td class="tk">ARKK</td><td>$327</td><td>1.7%</td><td class="pos">+35.2%</td><td><span class="badge b-hold">持有</span></td></tr>
-            <tr><td class="tk">MKT</td><td>$230</td><td>1.2%</td><td class="neg">-54.0%</td><td><span class="badge b-warn">待决策</span></td></tr>
-            <tr><td class="tk">PLTR</td><td>$42</td><td>0.2%</td><td class="neg">-14.6%</td><td><span class="badge b-warn">清仓</span></td></tr>
+            <tr><td class="tk">SPY</td><td>$9,459</td><td>45%</td><td class="pos">+12.1%</td><td class="pos">+$1,074</td><td><span class="badge b-ok">核心</span></td></tr>
+            <tr><td class="tk">NVDA</td><td>$2,504</td><td>12%</td><td class="pos">+30.5%</td><td class="pos">+$98</td><td><span class="badge b-ok">自动买入</span></td></tr>
+            <tr><td class="tk">AMD</td><td>$1,989</td><td>10%</td><td class="pos">+181.1%</td><td class="neg">-$489</td><td><span class="badge b-ok">已减仓</span></td></tr>
+            <tr><td class="tk">TSLA</td><td>$1,992</td><td>10%</td><td class="pos">+25.3%</td><td class="neg">-$75</td><td><span class="badge b-hold">持有</span></td></tr>
+            <tr><td class="tk">GLD</td><td>$903</td><td>4%</td><td class="pos">+7.9%</td><td class="neg">-$5</td><td><span class="badge b-info">对冲</span></td></tr>
+            <tr><td class="tk">ICLN</td><td>$814</td><td>4%</td><td class="pos">+45.0%</td><td class="pos">+$17</td><td><span class="badge b-ok">自动买入</span></td></tr>
+            <tr><td class="tk">QQQ</td><td>$645</td><td>3%</td><td class="pos">+12.7%</td><td class="pos">+$13</td><td></td></tr>
+            <tr><td class="tk">MSFT</td><td>$602</td><td>3%</td><td class="pos">+13.6%</td><td class="neg">-$10</td><td></td></tr>
+            <tr><td class="tk">BKSY</td><td>$501</td><td>2%</td><td class="neg">-9.1%</td><td class="neg">-$73</td><td><span class="badge b-warn">观察</span></td></tr>
+            <tr><td class="tk">ARKK</td><td>$361</td><td>2%</td><td class="pos">+44.6%</td><td class="neg">-$8</td><td></td></tr>
+            <tr><td class="tk">PLTR</td><td>$39</td><td>0%</td><td class="neg">-22.3%</td><td class="neg">-$2</td><td><span class="badge b-warn">清仓</span></td></tr>
+            <tr><td class="tk">BIRD</td><td>$11</td><td>0%</td><td class="neg">-59.3%</td><td class="neg">-$1</td><td><span class="badge b-warn">卖出</span></td></tr>
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <section id="changes">
+      <div class="card">
+        <div class="card-t">自4月22日以来的变动</div>
+        <div class="change">
+          <span class="change-up">▲ 净资产 +$1,659</span>（$44,620 → $46,279）
+        </div>
+        <div class="change">
+          <span class="change-up">▲ RRSP +$1,179</span>（$20,228 → $21,407）— 根据 Wealthsimple 4月29日截图刷新
+        </div>
+        <div class="change">
+          <span class="change-up">▲ TFSA +$480</span>（$20,509 → $20,989）— 芯片股暴涨，组合再平衡
+        </div>
+        <div class="change">
+          <span class="change-up">★ AMD 减仓</span> — 卖出2股锁定+181%利润，资金转入SPY
+        </div>
+        <div class="change">
+          <span class="change-up">★ SPY</span> 占比升至45%（原41%）— 核心仓位加强
+        </div>
+        <div class="change">
+          <span class="change-down">▼ BKSY</span> — 从+4%跌至-9.1%，密切关注
+        </div>
       </div>
     </section>
 
@@ -221,11 +256,11 @@
       <div class="card">
         <div class="card-t">财务自由 — 30岁前达到 $190K</div>
         <div style="display:flex; justify-content:space-between; align-items:baseline; font-size:0.82rem; margin-bottom:6px;">
-          <span>$42,244</span>
-          <span style="color:var(--green); font-weight:700;">22.2%</span>
+          <span>$46,279</span>
+          <span style="color:var(--green); font-weight:700;">24.4%</span>
           <span style="color:var(--muted);">$190,000</span>
         </div>
-        <div class="prog-wrap"><div class="prog-fill" style="width:22.2%"></div></div>
+        <div class="prog-wrap"><div class="prog-fill" style="width:24.4%"></div></div>
         <div style="display:flex; gap:16px; margin-top:14px; flex-wrap:wrap;">
           <div style="background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; flex:1; min-width:140px; text-align:center;">
             <div style="font-size:0.62rem; color:var(--muted); text-transform:uppercase; margin-bottom:4px;">下一里程碑</div>
@@ -250,38 +285,52 @@
       <div class="card">
         <div class="card-t">行动项</div>
         <div class="act">
+          <div class="act-n done">✓</div>
+          <div class="act-body">
+            <strong>AMD 减仓完成</strong>
+            <span>卖出2股，锁定+181%利润 ✓</span>
+          </div>
+        </div>
+        <div class="act">
+          <div class="act-n done">✓</div>
+          <div class="act-body">
+            <strong>SPY 加仓1股</strong>
+            <span>AMD卖出资金转入核心仓位 ✓</span>
+          </div>
+        </div>
+        <div class="act">
           <div class="act-n p1">1</div>
           <div class="act-body">
-            <strong>清仓 PLTR（$42，-14.6%）</strong>
-            <span>卖出全部 0.1944 股。仓位太小且持续亏损，资金并入 SPY。</span>
+            <strong>卖出 BIRD（$11，-59.3%）</strong>
+            <span>无投资逻辑，死钱。卖出回收资金。</span>
           </div>
         </div>
         <div class="act">
           <div class="act-n p1">2</div>
           <div class="act-body">
-            <strong>决策 MKT（$230，-54%）</strong>
-            <span>要么割肉将 $230 再投 SPY/QQQ，要么接受为小赌注。二选一。</span>
+            <strong>清仓 PLTR（$39，-22.3%）</strong>
+            <span>仓位太小且持续亏损，资金并入 SPY。</span>
           </div>
         </div>
         <div class="act">
           <div class="act-n p2">3</div>
           <div class="act-body">
-            <strong>应急资金转至 EQ Bank（约3.5%）</strong>
-            <span>$3K 在 CIBC 零利率账户。EQ Bank 10分钟开户，$9K 每年多赚约 $300。</span>
+            <strong>BKSY — 密切关注</strong>
+            <span>已跌至-9.1%，需要密切关注。</span>
           </div>
         </div>
         <div class="act">
           <div class="act-n p3">4</div>
           <div class="act-body">
-            <strong>退税到账后注入 TFSA（预计 $1,400–$1,900）</strong>
-            <span>拆分投入 SPY 和 NVDA。到账时通知 Molt 博士。</span>
+            <strong>应急资金转至 EQ Bank（约3.5%）</strong>
+            <span>$2,831 在CIBC零利率账户。EQ Bank 10分钟开户，$9K目标每年多赚约$300。</span>
           </div>
         </div>
       </div>
     </section>
 
     <div style="text-align:center; padding:16px 0 8px; color:var(--muted); font-size:0.7rem;">
-      🩺 Molt博士财富仪表盘 · 2026年4月7日 · 仅供参考，不构成投资建议
+      🩺 Molt博士财富仪表盘 · 2026年4月29日 · 仅供参考，不构成投资建议
     </div>
 
   </main>
@@ -316,9 +365,20 @@ document.querySelectorAll('.nav-link').forEach(link => {
 
 const portfolioHistory = [
   { date: '2026-03-13', nw: 42900, tfsa: 17405, note: '首次记录' },
-  { date: '2026-03-23', nw: 43591, tfsa: 17584, note: '再平衡：TSLA减仓，DASH/SHIB清仓，加仓GLD/QQQ/SPY' },
-  { date: '2026-04-01', nw: 43666, tfsa: 17705, note: '月度刷新 — GLD +7%' },
-  { date: '2026-04-07', nw: 42244, tfsa: 18736, note: 'RRSP $19,445, TFSA $18,736, 加密 $1,432' },
+  { date: '2026-03-23', nw: 43591, tfsa: 17584, note: 'GLD对冲建仓' },
+  { date: '2026-04-01', nw: 43666, tfsa: 17705, note: '月度自动买入' },
+  { date: '2026-04-07', nw: 42244, tfsa: 18736, note: '市场回调，MKT -54%' },
+  { date: '2026-04-22', nw: 44620, tfsa: 20509, note: 'AMD暴涨+133%，卖出MKT' },
+  { date: '2026-04-24', nw: 45100, tfsa: 20989, note: 'AMD减仓，SPY加仓' },
+  { date: '2026-04-29', nw: 46279, tfsa: 20989, note: 'RRSP刷新 +$1,179' },
+];
+
+const annotations = [
+  { date: '2026-03-23', label: 'GLD对冲\n建仓', color: '#d29922' },
+  { date: '2026-04-07', label: '市场回调\nMKT -54%', color: '#f85149' },
+  { date: '2026-04-22', label: 'AMD暴涨\n+133%', color: '#3fb950' },
+  { date: '2026-04-24', label: 'AMD减仓\n→ SPY', color: '#58a6ff' },
+  { date: '2026-04-29', label: 'RRSP刷新\n+$1.18K', color: '#a371f7' },
 ];
 
 let trendInst = null;
@@ -329,7 +389,26 @@ function filterHist(range) {
   const cutoff = range === 'YTD' ? new Date(latest.getFullYear(), 0, 1) : new Date(latest - (c[range] || 99999) * 86400000);
   return portfolioHistory.filter(d => new Date(d.date) >= cutoff);
 }
-function fmtD(s) { return new Date(s).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }); }
+function fmtD(s) { return new Date(s + 'T12:00:00').toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }); }
+
+function buildAnnotations(data) {
+  const labels = data.map(d => d.date);
+  const annots = {};
+  annotations.forEach((a, i) => {
+    const idx = labels.indexOf(a.date);
+    if (idx === -1) return;
+    annots['line' + i] = {
+      type: 'line', xMin: idx, xMax: idx,
+      borderColor: a.color, borderWidth: 1, borderDash: [3, 3],
+      label: { display: true, content: a.label.split('\n'),
+        position: 'start', backgroundColor: 'rgba(13,17,23,0.85)',
+        color: a.color, font: { size: 8, weight: 'bold' },
+        padding: { top: 2, bottom: 2, left: 4, right: 4 },
+        borderRadius: 4, yAdjust: -8 }
+    };
+  });
+  return annots;
+}
 
 function updateStats(data) {
   const f = data[0], l = data[data.length - 1];
@@ -343,6 +422,7 @@ function updateStats(data) {
   document.getElementById('periodChgPct').textContent = `${s(nwC)}${((nwC / f.nw) * 100).toFixed(1)}%`;
   document.getElementById('periodChgPct').style.color = col(nwC);
 }
+
 function setRange(range, btn) {
   document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -350,6 +430,7 @@ function setRange(range, btn) {
   trendInst.data.labels = data.map(d => fmtD(d.date));
   trendInst.data.datasets[0].data = data.map(d => d.nw);
   trendInst.data.datasets[1].data = data.map(d => d.tfsa);
+  trendInst.options.plugins.annotation.annotations = buildAnnotations(data);
   trendInst.update();
   updateStats(data);
 }
@@ -378,7 +459,8 @@ function renderCharts() {
         tooltip: { callbacks: {
           title: ctx => { const e = data[ctx[0].dataIndex]; return [fmtD(e.date), e.note || '']; },
           label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()}`
-        }}
+        }},
+        annotation: { annotations: buildAnnotations(data) }
       },
       scales: {
         y: { ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'K', font: { size: 11 } }, grid: { color: 'rgba(48,54,61,0.5)' } },
