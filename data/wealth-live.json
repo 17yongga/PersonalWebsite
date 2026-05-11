@@ -1,0 +1,413 @@
+{
+  "schemaVersion": 1,
+  "asOfBaseline": "2026-05-08",
+  "methodology": "Estimated live values from public market prices. No Wealthsimple login/API access.",
+  "rrspMethodology": "RRSP is BlackRock LifePath 2065 from screenshots, estimated using VT as a public global-equity proxy until next manual screenshot reconciliation.",
+  "baseline": {
+    "netWorth": 49300.84,
+    "tfsa": 23017.21,
+    "rrsp": 21406.74,
+    "crypto": 1843.38,
+    "cash": 3033.51
+  },
+  "positions": {
+    "tfsa": [
+      {
+        "symbol": "SPY",
+        "shares": 9.7726,
+        "currency": "USD",
+        "baseline_usd": 7209.59
+      },
+      {
+        "symbol": "NVDA",
+        "shares": 8.5398,
+        "currency": "USD",
+        "baseline_usd": 1836.48
+      },
+      {
+        "symbol": "AMD",
+        "shares": 3.961,
+        "currency": "USD",
+        "baseline_usd": 1826.81
+      },
+      {
+        "symbol": "TSLA",
+        "shares": 3.7126,
+        "currency": "USD",
+        "baseline_usd": 1588.92
+      },
+      {
+        "symbol": "QQQ",
+        "shares": 1.0,
+        "currency": "USD",
+        "baseline_usd": 712.11
+      },
+      {
+        "symbol": "GLD",
+        "shares": 1.4554,
+        "currency": "USD",
+        "baseline_usd": 629.94
+      },
+      {
+        "symbol": "ICLN",
+        "shares": 28.9536,
+        "currency": "USD",
+        "baseline_usd": 613.82
+      },
+      {
+        "symbol": "MSFT",
+        "shares": 1.0,
+        "currency": "USD",
+        "baseline_usd": 415.1
+      },
+      {
+        "symbol": "BKSY",
+        "shares": 10.0,
+        "currency": "USD",
+        "baseline_usd": 391.31
+      },
+      {
+        "symbol": "ARKK",
+        "shares": 3.2657,
+        "currency": "USD",
+        "baseline_usd": 258.38
+      },
+      {
+        "symbol": "PLTR",
+        "shares": 0.1944,
+        "currency": "USD",
+        "baseline_usd": 26.65
+      },
+      {
+        "symbol": "BIRD",
+        "shares": 1.0,
+        "currency": "USD",
+        "baseline_usd": 5.64
+      },
+      {
+        "symbol": "CASH",
+        "cash_cad": 1780.63,
+        "currency": "CAD"
+      }
+    ],
+    "crypto": [
+      {
+        "id": "bitcoin",
+        "symbol": "BTC",
+        "units": 0.016204
+      },
+      {
+        "id": "usd-coin",
+        "symbol": "USDC",
+        "units": 2.100393
+      },
+      {
+        "id": "ethereum",
+        "symbol": "ETH",
+        "units": 3e-06
+      },
+      {
+        "id": "CASH",
+        "symbol": "CASH",
+        "cash_cad": 15.4
+      }
+    ]
+  },
+  "metadata": {
+    "rrspProxyBasePrice": 155.555,
+    "rrspProxySymbol": "VT",
+    "rrspProduct": "BlackRock LifePath 2065"
+  },
+  "history": [
+    {
+      "timestamp": "2026-03-13T12:00:00Z",
+      "date": "2026-03-13",
+      "netWorth": 42900,
+      "tfsa": 17405,
+      "rrsp": null,
+      "crypto": null,
+      "cash": null,
+      "note": "First snapshot"
+    },
+    {
+      "timestamp": "2026-03-23T12:00:00Z",
+      "date": "2026-03-23",
+      "netWorth": 43591,
+      "tfsa": 17584,
+      "rrsp": null,
+      "crypto": null,
+      "cash": null,
+      "note": "GLD hedge added"
+    },
+    {
+      "timestamp": "2026-04-01T12:00:00Z",
+      "date": "2026-04-01",
+      "netWorth": 43666,
+      "tfsa": 17705,
+      "rrsp": null,
+      "crypto": null,
+      "cash": null,
+      "note": "Monthly auto-buys"
+    },
+    {
+      "timestamp": "2026-04-07T12:00:00Z",
+      "date": "2026-04-07",
+      "netWorth": 42244,
+      "tfsa": 18736,
+      "rrsp": 19445,
+      "crypto": 1446,
+      "cash": 2631,
+      "note": "Market dip, MKT -54%"
+    },
+    {
+      "timestamp": "2026-04-22T12:00:00Z",
+      "date": "2026-04-22",
+      "netWorth": 44620,
+      "tfsa": 20509,
+      "rrsp": 20228,
+      "crypto": 1651,
+      "cash": 2631,
+      "note": "AMD rally +133%, sold MKT"
+    },
+    {
+      "timestamp": "2026-04-24T12:00:00Z",
+      "date": "2026-04-24",
+      "netWorth": 45100,
+      "tfsa": 20989,
+      "rrsp": 20228,
+      "crypto": 1651,
+      "cash": 2831,
+      "note": "AMD trimmed, SPY strengthened"
+    },
+    {
+      "timestamp": "2026-04-29T12:00:00Z",
+      "date": "2026-04-29",
+      "netWorth": 46279,
+      "tfsa": 20989,
+      "rrsp": 21407,
+      "crypto": 1651,
+      "cash": 2831,
+      "note": "RRSP refreshed +$1,179"
+    },
+    {
+      "timestamp": "2026-05-08T12:00:00Z",
+      "date": "2026-05-08",
+      "netWorth": 49301,
+      "tfsa": 23017,
+      "rrsp": 21407,
+      "crypto": 1843,
+      "cash": 3034,
+      "note": "Full Wealthsimple refresh"
+    },
+    {
+      "timestamp": "2026-05-11T16:15:13Z",
+      "date": "2026-05-11",
+      "netWorth": 49491.99,
+      "tfsa": 23224.53,
+      "rrsp": 21406.05,
+      "crypto": 1827.9,
+      "cash": 3033.51,
+      "goalPct": 26.0,
+      "changeSinceBaseline": 191.15,
+      "source": "public-market-estimate",
+      "note": "Hourly public-price estimate",
+      "prices": {
+        "usdCad": 1.36683,
+        "public": {
+          "SPY": 740.085,
+          "NVDA": 221.72,
+          "AMD": 464.63,
+          "TSLA": 437.285,
+          "QQQ": 714.02,
+          "GLD": 434.43,
+          "ICLN": 22.01,
+          "MSFT": 410.36,
+          "BKSY": 41.22,
+          "ARKK": 79.91,
+          "PLTR": 135.065,
+          "BIRD": 5.585,
+          "VT": 155.55
+        },
+        "cryptoCad": {
+          "bitcoin": 111677.0,
+          "ethereum": 3194.74,
+          "usd-coin": 1.37
+        }
+      },
+      "holdings": {
+        "tfsa": [
+          {
+            "symbol": "SPY",
+            "valueCad": 9885.67,
+            "weightPct": 42.6
+          },
+          {
+            "symbol": "NVDA",
+            "valueCad": 2588.02,
+            "weightPct": 11.1
+          },
+          {
+            "symbol": "AMD",
+            "valueCad": 2515.51,
+            "weightPct": 10.8
+          },
+          {
+            "symbol": "TSLA",
+            "valueCad": 2219.0,
+            "weightPct": 9.6
+          },
+          {
+            "symbol": "QQQ",
+            "valueCad": 975.94,
+            "weightPct": 4.2
+          },
+          {
+            "symbol": "GLD",
+            "valueCad": 864.2,
+            "weightPct": 3.7
+          },
+          {
+            "symbol": "ICLN",
+            "valueCad": 871.04,
+            "weightPct": 3.8
+          },
+          {
+            "symbol": "MSFT",
+            "valueCad": 560.89,
+            "weightPct": 2.4
+          },
+          {
+            "symbol": "BKSY",
+            "valueCad": 563.41,
+            "weightPct": 2.4
+          },
+          {
+            "symbol": "ARKK",
+            "valueCad": 356.69,
+            "weightPct": 1.5
+          },
+          {
+            "symbol": "PLTR",
+            "valueCad": 35.89,
+            "weightPct": 0.2
+          },
+          {
+            "symbol": "BIRD",
+            "valueCad": 7.63,
+            "weightPct": 0.0
+          },
+          {
+            "symbol": "CASH",
+            "valueCad": 1780.63,
+            "weightPct": 7.7
+          }
+        ]
+      }
+    }
+  ],
+  "latest": {
+    "timestamp": "2026-05-11T16:15:13Z",
+    "date": "2026-05-11",
+    "netWorth": 49491.99,
+    "tfsa": 23224.53,
+    "rrsp": 21406.05,
+    "crypto": 1827.9,
+    "cash": 3033.51,
+    "goalPct": 26.0,
+    "changeSinceBaseline": 191.15,
+    "source": "public-market-estimate",
+    "note": "Hourly public-price estimate",
+    "prices": {
+      "usdCad": 1.36683,
+      "public": {
+        "SPY": 740.085,
+        "NVDA": 221.72,
+        "AMD": 464.63,
+        "TSLA": 437.285,
+        "QQQ": 714.02,
+        "GLD": 434.43,
+        "ICLN": 22.01,
+        "MSFT": 410.36,
+        "BKSY": 41.22,
+        "ARKK": 79.91,
+        "PLTR": 135.065,
+        "BIRD": 5.585,
+        "VT": 155.55
+      },
+      "cryptoCad": {
+        "bitcoin": 111677.0,
+        "ethereum": 3194.74,
+        "usd-coin": 1.37
+      }
+    },
+    "holdings": {
+      "tfsa": [
+        {
+          "symbol": "SPY",
+          "valueCad": 9885.67,
+          "weightPct": 42.6
+        },
+        {
+          "symbol": "NVDA",
+          "valueCad": 2588.02,
+          "weightPct": 11.1
+        },
+        {
+          "symbol": "AMD",
+          "valueCad": 2515.51,
+          "weightPct": 10.8
+        },
+        {
+          "symbol": "TSLA",
+          "valueCad": 2219.0,
+          "weightPct": 9.6
+        },
+        {
+          "symbol": "QQQ",
+          "valueCad": 975.94,
+          "weightPct": 4.2
+        },
+        {
+          "symbol": "GLD",
+          "valueCad": 864.2,
+          "weightPct": 3.7
+        },
+        {
+          "symbol": "ICLN",
+          "valueCad": 871.04,
+          "weightPct": 3.8
+        },
+        {
+          "symbol": "MSFT",
+          "valueCad": 560.89,
+          "weightPct": 2.4
+        },
+        {
+          "symbol": "BKSY",
+          "valueCad": 563.41,
+          "weightPct": 2.4
+        },
+        {
+          "symbol": "ARKK",
+          "valueCad": 356.69,
+          "weightPct": 1.5
+        },
+        {
+          "symbol": "PLTR",
+          "valueCad": 35.89,
+          "weightPct": 0.2
+        },
+        {
+          "symbol": "BIRD",
+          "valueCad": 7.63,
+          "weightPct": 0.0
+        },
+        {
+          "symbol": "CASH",
+          "valueCad": 1780.63,
+          "weightPct": 7.7
+        }
+      ]
+    }
+  }
+}

@@ -167,6 +167,22 @@
           <div class="detail" style="color:var(--muted)">每月部署 $2,894</div>
         </div>
       </div>
+
+      <div class="card" style="margin-top:12px;border-color:rgba(63,185,80,.35);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div class="card-t" style="margin-bottom:4px;color:var(--green);">实时估算跟踪</div>
+            <div id="liveStatus" style="font-size:0.78rem;color:var(--muted);line-height:1.45;">正在加载公开市场价格…</div>
+          </div>
+          <div style="text-align:right;">
+            <div id="liveDelta" style="font-size:1rem;font-weight:800;color:var(--green);">—</div>
+            <div style="font-size:0.65rem;color:var(--muted);">相对5月8日基准</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:0.68rem;color:var(--muted);line-height:1.45;">
+          安全模式：TFSA 和加密货币使用公开行情；RRSP 根据截图中的 BlackRock LifePath 2065 产品，用公开 VT 代理估算，直到下次手动截图校准。
+        </div>
+      </div>
     </section>
 
     <section id="trend">
@@ -363,7 +379,7 @@ document.querySelectorAll('.nav-link').forEach(link => {
   });
 });
 
-const portfolioHistory = [
+let portfolioHistory = [
   { date: '2026-03-13', nw: 42900, tfsa: 17405, note: '首次记录' },
   { date: '2026-03-23', nw: 43591, tfsa: 17584, note: 'GLD对冲建仓' },
   { date: '2026-04-01', nw: 43666, tfsa: 17705, note: '月度自动买入' },
@@ -385,13 +401,54 @@ const annotations = [
 
 let trendInst = null;
 
+function pointTime(d) { return new Date(d.timestamp || (d.date + 'T12:00:00Z')); }
+function pointLabel(d) {
+  const dt = pointTime(d);
+  const opts = d.timestamp ? { month: 'short', day: 'numeric', hour: 'numeric' } : { month: 'short', day: 'numeric' };
+  return dt.toLocaleDateString('zh-CN', opts);
+}
 function filterHist(range) {
-  const latest = new Date(portfolioHistory[portfolioHistory.length - 1].date);
+  const latest = pointTime(portfolioHistory[portfolioHistory.length - 1]);
   const c = { '1W': 7, '1M': 30, 'YTD': 0, '1Y': 365, 'ALL': 99999 };
   const cutoff = range === 'YTD' ? new Date(latest.getFullYear(), 0, 1) : new Date(latest - (c[range] || 99999) * 86400000);
-  return portfolioHistory.filter(d => new Date(d.date) >= cutoff);
+  return portfolioHistory.filter(d => pointTime(d) >= cutoff);
 }
-function fmtD(s) { return new Date(s + 'T12:00:00').toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }); }
+function fmtD(s) { return new Date(s.includes('T') ? s : (s + 'T12:00:00Z')).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }); }
+function money(n) { return '$' + Math.round(n).toLocaleString(); }
+function signedMoney(n) { return (n >= 0 ? '+' : '-') + '$' + Math.abs(Math.round(n)).toLocaleString(); }
+function upsertLiveHistory(history) {
+  const keys = new Set(portfolioHistory.map(d => d.timestamp || d.date));
+  history.forEach(p => {
+    const key = p.timestamp || p.date;
+    if (!keys.has(key)) {
+      portfolioHistory.push({ timestamp:p.timestamp, date:p.date, nw:Math.round(p.netWorth), tfsa:Math.round(p.tfsa), rrsp:Math.round(p.rrsp||0), crypto:Math.round(p.crypto||0), cash:Math.round(p.cash||0), note:p.note || '小时估算' });
+      keys.add(key);
+    }
+  });
+  portfolioHistory.sort((a,b) => pointTime(a) - pointTime(b));
+}
+async function loadLiveTracking() {
+  try {
+    const res = await fetch('/data/wealth-live.json?ts=' + Date.now(), { cache:'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const live = await res.json();
+    const latest = live.latest;
+    upsertLiveHistory(live.history || []);
+    document.querySelector('.nw-big').textContent = money(latest.netWorth);
+    document.querySelector('.nw-label').innerHTML = '净资产（加元）· 实时估算 <span style="color:var(--green);font-weight:700;">' + signedMoney(latest.changeSinceBaseline) + '</span>';
+    const vals = document.querySelectorAll('.stat .val');
+    vals[0].textContent = money(latest.tfsa); vals[1].textContent = money(latest.rrsp); vals[2].textContent = money(latest.crypto);
+    document.querySelector('#goal .prog-fill').style.width = latest.goalPct + '%';
+    const goalSpans = document.querySelectorAll('#goal span');
+    if (goalSpans[0]) goalSpans[0].textContent = money(latest.netWorth);
+    if (goalSpans[1]) goalSpans[1].textContent = latest.goalPct.toFixed(1) + '%';
+    document.getElementById('liveStatus').textContent = '上次刷新 ' + new Date(latest.timestamp).toLocaleString('zh-CN', { timeZone:'America/Toronto', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) + ' ET · 已保存数据点：' + (live.history || []).length;
+    document.getElementById('liveDelta').textContent = signedMoney(latest.changeSinceBaseline);
+  } catch (err) {
+    document.getElementById('liveStatus').textContent = '实时估算暂不可用；显示最新手动 Wealthsimple 截图。';
+    console.warn('wealth live load failed', err);
+  }
+}
 
 function buildAnnotations(data) {
   const labels = data.map(d => d.date);
@@ -429,7 +486,7 @@ function setRange(range, btn) {
   document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const data = filterHist(range);
-  trendInst.data.labels = data.map(d => fmtD(d.date));
+  trendInst.data.labels = data.map(d => pointLabel(d));
   trendInst.data.datasets[0].data = data.map(d => d.nw);
   trendInst.data.datasets[1].data = data.map(d => d.tfsa);
   trendInst.options.plugins.annotation.annotations = buildAnnotations(data);
@@ -441,13 +498,14 @@ Chart.defaults.color = '#8b949e';
 Chart.defaults.borderColor = '#30363d';
 Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
 
-function renderCharts() {
+async function renderCharts() {
+  await loadLiveTracking();
   const data = filterHist('YTD');
   updateStats(data);
   trendInst = new Chart(document.getElementById('trendChart'), {
     type: 'line',
     data: {
-      labels: data.map(d => fmtD(d.date)),
+      labels: data.map(d => pointLabel(d)),
       datasets: [
         { label: '净资产', data: data.map(d => d.nw), borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,0.08)', fill: true, tension: 0.4, pointRadius: 6, borderWidth: 2.5, pointBackgroundColor: '#3fb950', pointBorderColor: '#161b22', pointBorderWidth: 2 },
         { label: 'TFSA', data: data.map(d => d.tfsa), borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,0.06)', fill: true, tension: 0.4, pointRadius: 6, borderWidth: 2, pointBackgroundColor: '#58a6ff', pointBorderColor: '#161b22', pointBorderWidth: 2 }
@@ -459,7 +517,7 @@ function renderCharts() {
       plugins: {
         legend: { labels: { boxWidth: 12, padding: 12, font: { size: 11 } } },
         tooltip: { callbacks: {
-          title: ctx => { const e = data[ctx[0].dataIndex]; return [fmtD(e.date), e.note || '']; },
+          title: ctx => { const e = data[ctx[0].dataIndex]; return [pointLabel(e), e.note || '']; },
           label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()}`
         }},
         annotation: { annotations: buildAnnotations(data) }

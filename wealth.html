@@ -187,6 +187,23 @@
       </div>
     </div>
 
+    <!-- Live tracking -->
+    <div class="card" style="border-color:rgba(63,185,80,.35);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div class="card-t" style="margin-bottom:4px;color:var(--green);">Live Estimated Tracking</div>
+          <div id="liveStatus" style="font-size:.78rem;color:var(--muted);line-height:1.45;">Loading public market prices…</div>
+        </div>
+        <div style="text-align:right;">
+          <div id="liveDelta" style="font-size:1rem;font-weight:800;color:var(--green);">—</div>
+          <div style="font-size:.65rem;color:var(--muted);">since May 8 baseline</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:.68rem;color:var(--muted);line-height:1.45;">
+        Safe mode: TFSA + crypto use public quotes. RRSP uses your BlackRock LifePath 2065 product from screenshots, estimated via a public VT proxy until the next manual Wealthsimple screenshot reconciliation.
+      </div>
+    </div>
+
     <!-- TFSA Holdings -->
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
@@ -334,7 +351,7 @@ if(sessionStorage.getItem('wealthUnlocked')==='1'){
   });
 }
 
-const portfolioHistory=[
+let portfolioHistory=[
   {date:'2026-03-13',nw:42900,tfsa:17405,note:'First snapshot'},
   {date:'2026-03-23',nw:43591,tfsa:17584,note:'GLD hedge added'},
   {date:'2026-04-01',nw:43666,tfsa:17705,note:'Monthly auto-buys'},
@@ -342,7 +359,7 @@ const portfolioHistory=[
   {date:'2026-04-22',nw:44620,tfsa:20509,note:'AMD rally +133%, sold MKT'},
   {date:'2026-04-24',nw:45100,tfsa:20989,note:'AMD trimmed, SPY strengthened'},
   {date:'2026-04-29',nw:46279,tfsa:20989,note:'RRSP refreshed +$1,179'},
-  {date:'2026-05-08',nw:49301,tfsa:23017,note:'Full Wealthsimple refresh'},
+  {date:'2026-05-08',nw:49301,tfsa:23017,rrsp:21407,crypto:1843,cash:3034,note:'Full Wealthsimple refresh'},
 ];
 
 const annotations=[
@@ -356,12 +373,51 @@ const annotations=[
 
 let trendInst=null;
 
-function filterHist(range){
-  const latest=new Date(portfolioHistory[portfolioHistory.length-1].date);
-  const cutoff=range==='YTD'?new Date(latest.getFullYear(),0,1):range==='1M'?new Date(latest-30*86400000):new Date(0);
-  return portfolioHistory.filter(d=>new Date(d.date)>=cutoff);
+function pointTime(d){return new Date(d.timestamp || (d.date+'T12:00:00Z'));}
+function pointLabel(d){
+  const dt=pointTime(d);
+  const opts=d.timestamp?{month:'short',day:'numeric',hour:'numeric'}:{month:'short',day:'numeric'};
+  return dt.toLocaleDateString('en-US',opts);
 }
-function fmtD(s){return new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function filterHist(range){
+  const latest=pointTime(portfolioHistory[portfolioHistory.length-1]);
+  const cutoff=range==='YTD'?new Date(latest.getFullYear(),0,1):range==='1M'?new Date(latest-30*86400000):new Date(0);
+  return portfolioHistory.filter(d=>pointTime(d)>=cutoff);
+}
+function fmtD(s){return new Date(s.includes('T')?s:(s+'T12:00:00Z')).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function money(n){return '$'+Math.round(n).toLocaleString();}
+function signedMoney(n){return (n>=0?'+':'-')+'$'+Math.abs(Math.round(n)).toLocaleString();}
+function upsertLiveHistory(history){
+  const manualKeys=new Set(portfolioHistory.map(d=>d.timestamp||d.date));
+  history.forEach(p=>{
+    const key=p.timestamp||p.date;
+    if(!manualKeys.has(key)){
+      portfolioHistory.push({timestamp:p.timestamp,date:p.date,nw:Math.round(p.netWorth),tfsa:Math.round(p.tfsa),rrsp:Math.round(p.rrsp||0),crypto:Math.round(p.crypto||0),cash:Math.round(p.cash||0),note:p.note||'Hourly estimate'});
+      manualKeys.add(key);
+    }
+  });
+  portfolioHistory.sort((a,b)=>pointTime(a)-pointTime(b));
+}
+async function loadLiveTracking(){
+  try{
+    const res=await fetch('/data/wealth-live.json?ts='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const live=await res.json();
+    const latest=live.latest;
+    upsertLiveHistory(live.history||[]);
+    document.querySelector('.h-nw .big').textContent=money(latest.netWorth);
+    document.querySelector('.h-nw .sub').innerHTML='Net Worth <span style="color:var(--green);font-weight:700;">'+signedMoney(latest.changeSinceBaseline)+' since May 8</span>';
+    const vals=document.querySelectorAll('.acct .val');
+    vals[0].textContent=money(latest.tfsa); vals[1].textContent=money(latest.rrsp); vals[2].textContent=money(latest.crypto); vals[3].textContent=money(latest.cash);
+    document.querySelector('.prog-fill').style.width=latest.goalPct+'%';
+    document.querySelector('.goal-strip .pct').textContent=latest.goalPct.toFixed(1)+'%';
+    document.getElementById('liveStatus').textContent='Last refreshed '+new Date(latest.timestamp).toLocaleString('en-CA',{timeZone:'America/Toronto',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' ET · data points kept: '+(live.history||[]).length;
+    document.getElementById('liveDelta').textContent=signedMoney(latest.changeSinceBaseline);
+  }catch(err){
+    document.getElementById('liveStatus').textContent='Live estimate unavailable; showing latest manual Wealthsimple snapshot.';
+    console.warn('wealth live load failed',err);
+  }
+}
 
 function buildAnnotations(data){
   const labels=data.map(d=>d.date);
@@ -386,7 +442,7 @@ function setRange(range,btn){
   document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   const data=filterHist(range);
-  trendInst.data.labels=data.map(d=>fmtD(d.date));
+  trendInst.data.labels=data.map(d=>pointLabel(d));
   trendInst.data.datasets[0].data=data.map(d=>d.nw);
   trendInst.data.datasets[1].data=data.map(d=>d.tfsa);
   trendInst.options.plugins.annotation.annotations=buildAnnotations(data);
@@ -397,12 +453,13 @@ Chart.defaults.color='#8b949e';
 Chart.defaults.borderColor='#30363d';
 Chart.defaults.font.family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif";
 
-function renderCharts(){
+async function renderCharts(){
+  await loadLiveTracking();
   const data=filterHist('YTD');
   trendInst=new Chart(document.getElementById('trendChart'),{
     type:'line',
     data:{
-      labels:data.map(d=>fmtD(d.date)),
+      labels:data.map(d=>pointLabel(d)),
       datasets:[
         {label:'Net Worth',data:data.map(d=>d.nw),borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,.08)',fill:true,tension:.4,pointRadius:4,borderWidth:2,pointBackgroundColor:'#3fb950',pointBorderColor:'#161b22',pointBorderWidth:2},
         {label:'TFSA',data:data.map(d=>d.tfsa),borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.06)',fill:true,tension:.4,pointRadius:4,borderWidth:1.5,pointBackgroundColor:'#58a6ff',pointBorderColor:'#161b22',pointBorderWidth:2}
@@ -414,7 +471,7 @@ function renderCharts(){
       plugins:{
         legend:{labels:{boxWidth:8,padding:8,font:{size:9}}},
         tooltip:{callbacks:{
-          title:ctx=>{const e=data[ctx[0].dataIndex];return fmtD(e.date)+(e.note?' — '+e.note:'');},
+          title:ctx=>{const e=data[ctx[0].dataIndex];return pointLabel(e)+(e.note?' — '+e.note:'');},
           label:ctx=>` ${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()}`
         }},
         annotation:{annotations:buildAnnotations(data)}
