@@ -26,9 +26,11 @@ async function start() {
   // Load routes after DB is ready
   const { router: authRouter } = require('./auth');
   const householdsRouter = require('./households');
+  const aiRouter = require('./ai');
 
   app.use('/api/auth', authRouter);
   app.use('/api/households', householdsRouter);
+  app.use('/api/ai', aiRouter);
 
   app.listen(PORT, '127.0.0.1', () => {
     console.log(`FinSync API running on port ${PORT}`);
