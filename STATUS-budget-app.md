@@ -1,5 +1,5 @@
 # Budget App — STATUS.md
-> Updated: 2026-04-07 (17:21 EDT)
+> Updated: 2026-05-31 (13:24 EDT)
 
 ## Business Registration (CRA)
 - **Business Number (BN9):** 78908 2971
@@ -12,10 +12,23 @@
 
 ## What's Live
 - **URL:** https://gary-yong.com/budget.html (frontend via S3/CloudFront)
+- **Flowt landing:** https://useflowt.app/ (S3 bucket `useflowt-app-site-628063714079`, CloudFront `E2OGDPVMTBXKHP`)
 - **App name:** Flowt (confirmed 2026-03-14)
 - Full login/register system, shared vs. individual expense tracking, Chart.js visualizations
 - Backend: PM2 `budget-server` on EC2, port 3002, online
 - Receipt scanner: PM2 `receipt-server` on EC2, port 3002 (proxied via nginx)
+
+## Current State (2026-06-03)
+- **Settlement audit/fix is local only, not deployed:** production API health is OK, but SSH to `ubuntu@52.86.178.139:22` still times out and IAM user `Dr.Molt` lacks `ec2:AuthorizeSecurityGroupIngress`, so backend deployment/JWT rotation is blocked on security-group/SSH access.
+- **Correct current Archie Home settlement:** under the latest-settlement-resets-balance model, Gary owes Emily **$454.73**. Regression test added for this exact scenario.
+- **Local backend changes ready:** JWT secret fallback removed, production now hard-fails if `JWT_SECRET` is missing/default/too short; backend balance engine + `/api/households/:id/balance` endpoint added; directional settlement fields added with backwards-compatible schema migration; settlement creation now requires explicit `fromUserId`/`toUserId`.
+- **Local app changes ready:** settlement screen and dashboard now consume backend balance source of truth instead of duplicating all-time settlement math in the client.
+- **Verification:** backend `npm test` passes 18/18; added `scripts/run-settlement-local-tests.js` with 10/10 endpoint/integration checks covering auth, non-member rejection, Archie regression analytics, settlement direction validation, over-settlement rejection, valid full settlement, zeroed balance after settlement, snapshot persistence, and activity-log metadata; local server smoke test passed `/api/health` and unauthenticated balance/settlement 401s. Frontend `tsc --noEmit` still only fails on pre-existing `marketing/remotion-demo` missing `remotion` types, with no errors in changed settlement/dashboard/type files.
+
+## Current State (2026-05-31)
+- **Flowt landing page deployed:** removed the demo highlight pills (`52 sec`, `Real app UI`, `Loads on play`) from production `useflowt.app`.
+- AWS IAM access for `arn:aws:iam::628063714079:user/Dr.Molt` now permits S3 list/read/write on `useflowt-app-site-628063714079` and CloudFront invalidation for `E2OGDPVMTBXKHP`.
+- Verification: CloudFront invalidation `I6X5UD5JLQJOP1Q4JZHN45IXQK` completed; live `https://useflowt.app/` no longer contains `52 sec`, `Real app UI`, `Loads on play`, or `demo-points`.
 
 ## Current State (2026-04-15)
 
@@ -125,6 +138,13 @@
 - [ ] Budget Settings: rename "Shared Budget" label → "Household Budget" in the UI
 - [ ] PostgreSQL migration (SQLite → AWS RDS)
 - [ ] Google Play Developer account ($25)
+
+## Flowt Landing Deploy Commands
+```bash
+aws s3 cp ~/clawd/flowt-app/marketing/flowt-site/index.html s3://useflowt-app-site-628063714079/index.html --content-type text/html --profile clawdbot-deploy
+aws s3 cp ~/clawd/flowt-app/marketing/flowt-site/styles.css s3://useflowt-app-site-628063714079/styles.css --content-type text/css --profile clawdbot-deploy
+aws cloudfront create-invalidation --distribution-id E2OGDPVMTBXKHP --paths "/" "/index.html" "/styles.css" --profile clawdbot-deploy
+```
 
 ## App Store Connect Status
 - ✅ Flowt Pro Monthly — $9.99 USD, 175 countries

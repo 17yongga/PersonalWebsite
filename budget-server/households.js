@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const { queryAll, queryOne, runSql } = require('./database');
+const { buildBalanceSnapshot, roundMoney } = require('./lib/balances');
 
 // ── Category canonicalization ─────────────────────────────────────────────
 // Strips leading emoji/whitespace for comparison, then resolves to whichever
@@ -131,6 +132,52 @@ function logActivity(householdId, userId, action, entityType, entityId, details)
     } catch (err) {
         console.error('Activity log failed:', err);
     }
+}
+
+
+function getHouseholdMembers(householdId) {
+  return queryAll(`
+    SELECT hm.user_id, hm.role, hm.partner_name, u.email, u.name
+    FROM household_members hm JOIN users u ON hm.user_id = u.id
+    WHERE hm.household_id = ?`,
+    [householdId]
+  );
+}
+
+function getHouseholdExpenses(householdId) {
+  return queryAll(`
+    SELECT e.*, u.name as paid_by_name, u.email as paid_by_email
+    FROM expenses e JOIN users u ON e.paid_by = u.id
+    WHERE e.household_id = ?
+    ORDER BY e.date DESC, e.created_at DESC`,
+    [householdId]
+  );
+}
+
+function getHouseholdSettlements(householdId) {
+  return queryAll(`
+    SELECT s.*, u.name as settled_by_name
+    FROM settlements s JOIN users u ON s.settled_by = u.id
+    WHERE s.household_id = ?
+    ORDER BY s.date DESC, s.created_at DESC`,
+    [householdId]
+  );
+}
+
+function getBalanceSnapshot(householdId) {
+  const members = getHouseholdMembers(householdId);
+  const expenses = getHouseholdExpenses(householdId);
+  const settlements = getHouseholdSettlements(householdId);
+  return buildBalanceSnapshot({ members, expenses, settlements });
+}
+
+function assertHouseholdMember(householdId, userId, res) {
+  const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [householdId, userId]);
+  if (!member) {
+    res.status(403).json({ error: 'Not a member' });
+    return null;
+  }
+  return member;
 }
 
 
@@ -437,25 +484,125 @@ router.delete('/:id/categories/:name', authenticate, (req, res) => {
   }
 });
 
+// --- BALANCE / SETTLEMENT ANALYTICS ---
+
+router.get('/:id/balance', authenticate, (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!assertHouseholdMember(id, req.user.id, res)) return;
+
+    const members = getHouseholdMembers(id);
+    const expenses = getHouseholdExpenses(id);
+    const settlements = getHouseholdSettlements(id);
+    const sharedExpenses = expenses.filter(e => Number(e.is_shared) === 1);
+    const personalExpenses = expenses.filter(e => Number(e.is_shared) !== 1);
+    const snapshot = buildBalanceSnapshot({ members, expenses, settlements });
+
+    const categoryTotals = new Map();
+    const payerTotals = new Map();
+    const monthTotals = new Map();
+    for (const expense of sharedExpenses) {
+      const amount = Number(expense.amount) || 0;
+      categoryTotals.set(expense.category, (categoryTotals.get(expense.category) || 0) + amount);
+      payerTotals.set(expense.paid_by_name || String(expense.paid_by), (payerTotals.get(expense.paid_by_name || String(expense.paid_by)) || 0) + amount);
+      const month = String(expense.date || '').slice(0, 7);
+      if (month) monthTotals.set(month, (monthTotals.get(month) || 0) + amount);
+    }
+
+    res.json({
+      household_id: Number(id),
+      currency: 'CAD',
+      generated_at: new Date().toISOString(),
+      balances: snapshot.balances,
+      suggested_settlements: snapshot.suggested_settlements,
+      legacy_cutoff_date: snapshot.legacy_cutoff_date,
+      legacy_settlement_count: snapshot.legacy_settlement_count,
+      analytics: {
+        shared_count: sharedExpenses.length,
+        personal_count: personalExpenses.length,
+        shared_total: roundMoney(sharedExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0)),
+        personal_total: roundMoney(personalExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0)),
+        settlements_count: settlements.length,
+        shared_by_payer: Array.from(payerTotals.entries()).map(([name, total]) => ({ name, total: roundMoney(total) })).sort((a, b) => b.total - a.total),
+        shared_by_month: Array.from(monthTotals.entries()).map(([month, total]) => ({ month, total: roundMoney(total) })).sort((a, b) => a.month.localeCompare(b.month)),
+        top_shared_categories: Array.from(categoryTotals.entries()).map(([category, total]) => ({ category, total: roundMoney(total) })).sort((a, b) => b.total - a.total).slice(0, 10),
+        latest_shared_expenses: sharedExpenses.slice(0, 15).map(expense => ({
+          id: expense.id,
+          date: expense.date,
+          amount: roundMoney(Number(expense.amount || 0)),
+          paid_by: expense.paid_by,
+          paid_by_name: expense.paid_by_name,
+          category: expense.category,
+          notes: expense.notes || '',
+          split_type: expense.split_type,
+          custom_split: expense.custom_split,
+        })),
+      },
+    });
+  } catch (err) {
+    console.error('Get balance error:', err);
+    res.status(500).json({ error: 'Failed to calculate balance' });
+  }
+});
+
 // --- SETTLEMENTS ---
 
 router.post('/:id/settlements', authenticate, (req, res) => {
   try {
     const { id } = req.params;
-    const { amount, date, notes } = req.body;
-    const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
-    if (!member) return res.status(403).json({ error: 'Not a member' });
+    const { amount, date, notes, fromUserId, toUserId, settlementType } = req.body;
+    if (!assertHouseholdMember(id, req.user.id, res)) return;
 
-    const result = runSql('INSERT INTO settlements (household_id, settled_by, amount, date, notes) VALUES (?,?,?,?,?)',
-      [id, req.user.id, amount, date, notes || '']);
+    const settlementAmount = roundMoney(Number(amount));
+    if (!Number.isFinite(settlementAmount) || settlementAmount <= 0) {
+      return res.status(400).json({ error: 'Settlement amount must be positive' });
+    }
+
+    const fromId = Number(fromUserId);
+    const toId = Number(toUserId);
+    if (!Number.isFinite(fromId) || !Number.isFinite(toId) || fromId === toId) {
+      return res.status(400).json({ error: 'Settlement requires distinct fromUserId and toUserId' });
+    }
+
+    const fromMember = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, fromId]);
+    const toMember = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, toId]);
+    if (!fromMember || !toMember) {
+      return res.status(400).json({ error: 'Settlement users must both be household members' });
+    }
+
+    const snapshot = getBalanceSnapshot(id);
+    const suggestion = snapshot.suggested_settlements.find(s => Number(s.from_user_id) === fromId && Number(s.to_user_id) === toId);
+    const isManualAdjustment = settlementType === 'manual_adjustment';
+    if (!isManualAdjustment && (!suggestion || settlementAmount > roundMoney(suggestion.amount + 0.01))) {
+      return res.status(400).json({ error: 'Settlement amount does not match current outstanding balance' });
+    }
+
+    const settlementDate = date || new Date().toISOString().split('T')[0];
+    const result = runSql(
+      `INSERT INTO settlements (household_id, settled_by, from_user_id, to_user_id, amount, date, notes, settlement_type, balance_snapshot_json)
+       VALUES (?,?,?,?,?,?,?,?,?)`,
+      [id, req.user.id, fromId, toId, settlementAmount, settlementDate, notes || '', settlementType || 'full', JSON.stringify(snapshot)]
+    );
     
-    // Log activity
     logActivity(id, req.user.id, 'settled', 'settlement', result.lastInsertRowid, {
-      amount: amount,
-      note: notes || ''
+      amount: settlementAmount,
+      fromUserId: fromId,
+      toUserId: toId,
+      note: notes || '',
+      settlementType: settlementType || 'full',
     });
     
-    res.json({ settlement: { id: result.lastInsertRowid, amount, date, notes } });
+    res.json({
+      settlement: {
+        id: result.lastInsertRowid,
+        amount: settlementAmount,
+        date: settlementDate,
+        notes: notes || '',
+        from_user_id: fromId,
+        to_user_id: toId,
+        settlement_type: settlementType || 'full',
+      }
+    });
   } catch (err) {
     console.error('Settlement error:', err);
     res.status(500).json({ error: 'Failed to create settlement' });
@@ -465,10 +612,9 @@ router.post('/:id/settlements', authenticate, (req, res) => {
 router.get('/:id/settlements', authenticate, (req, res) => {
   try {
     const { id } = req.params;
-    const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
-    if (!member) return res.status(403).json({ error: 'Not a member' });
+    if (!assertHouseholdMember(id, req.user.id, res)) return;
 
-    res.json({ settlements: queryAll(`SELECT s.*, u.name as settled_by_name FROM settlements s JOIN users u ON s.settled_by = u.id WHERE s.household_id = ? ORDER BY s.date DESC`, [id]) });
+    res.json({ settlements: getHouseholdSettlements(id) });
   } catch (err) {
     console.error('Get settlements error:', err);
     res.status(500).json({ error: 'Failed to get settlements' });

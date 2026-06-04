@@ -6,7 +6,21 @@ const nodemailer = require('nodemailer');
 const { queryOne, queryAll, runSql } = require('./database');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'finsync-secret-key-change-in-production';
+const DEFAULT_INSECURE_JWT_SECRET = 'finsync-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is required. Refusing to start without explicit auth secret.');
+}
+
+if (process.env.NODE_ENV === 'production' && JWT_SECRET === DEFAULT_INSECURE_JWT_SECRET) {
+  throw new Error('Refusing to start with default JWT_SECRET in production.');
+}
+
+if (process.env.NODE_ENV === 'production' && JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET must be at least 32 characters in production.');
+}
+
 const TOKEN_EXPIRY = '30d';
 const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 

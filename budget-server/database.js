@@ -117,12 +117,27 @@ async function initialize() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       household_id INTEGER NOT NULL,
       settled_by INTEGER NOT NULL,
+      from_user_id INTEGER,
+      to_user_id INTEGER,
       amount REAL NOT NULL,
       date TEXT NOT NULL,
       notes TEXT,
+      settlement_type TEXT DEFAULT 'legacy',
+      balance_snapshot_json TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     )
   `);
+
+  const settlementColumns = db.exec(`PRAGMA table_info(settlements)`)[0]?.values.map(row => row[1]) || [];
+  const addSettlementColumn = (name, definition) => {
+    if (!settlementColumns.includes(name)) {
+      db.run(`ALTER TABLE settlements ADD COLUMN ${name} ${definition}`);
+    }
+  };
+  addSettlementColumn('from_user_id', 'INTEGER');
+  addSettlementColumn('to_user_id', 'INTEGER');
+  addSettlementColumn('settlement_type', `TEXT DEFAULT 'legacy'`);
+  addSettlementColumn('balance_snapshot_json', 'TEXT');
 
   db.run(`
     CREATE TABLE IF NOT EXISTS activity_log (
