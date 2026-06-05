@@ -3,6 +3,7 @@ const { queryAll, queryOne, runSql } = require('./database');
 const { buildBalanceSnapshot, roundMoney } = require('./lib/balances');
 const { assertValidRelationshipType, assertRelationshipTypeAllowedForMemberCount } = require('./lib/householdMode');
 const { validateExpenseInput } = require('./lib/expenseValidation');
+const { validateExpenseParticipants, buildEqualSplitRows } = require('./lib/expenseSplits');
 const { generateUniqueInviteCode } = require('./lib/inviteCode');
 const {
   assertCanRemoveMember,
@@ -148,6 +149,13 @@ function countMemberFinancialReferences(householdId, userId) {
     `SELECT COUNT(*) as count FROM expenses WHERE household_id = ? AND (paid_by = ? OR created_by = ?)`,
     [householdId, userId, userId],
   )?.count ?? 0;
+  const splitCount = queryOne(
+    `SELECT COUNT(*) as count
+     FROM expense_splits es
+     JOIN expenses e ON es.expense_id = e.id
+     WHERE e.household_id = ? AND es.user_id = ?`,
+    [householdId, userId],
+  )?.count ?? 0;
   const settlementCount = queryOne(
     `SELECT COUNT(*) as count FROM settlements WHERE household_id = ? AND (settled_by = ? OR from_user_id = ? OR to_user_id = ?)`,
     [householdId, userId, userId, userId],
@@ -156,7 +164,7 @@ function countMemberFinancialReferences(householdId, userId) {
     `SELECT COUNT(*) as count FROM budgets WHERE household_id = ? AND user_id = ?`,
     [householdId, userId],
   )?.count ?? 0;
-  return Number(expenseCount) + Number(settlementCount) + Number(budgetCount);
+  return Number(expenseCount) + Number(splitCount) + Number(settlementCount) + Number(budgetCount);
 }
 
 function getHouseholdMembers(householdId) {
@@ -179,14 +187,68 @@ function getHouseholdDetails(householdId) {
   return { ...household, members, categories };
 }
 
+function attachSplitDetails(expenses) {
+  const rows = Array.isArray(expenses) ? expenses : [];
+  if (rows.length === 0) return rows;
+
+  const expenseIds = rows.map((expense) => Number(expense.id)).filter(Number.isInteger);
+  if (expenseIds.length === 0) return rows;
+
+  const placeholders = expenseIds.map(() => '?').join(',');
+  const splitRows = queryAll(
+    `SELECT expense_id, user_id, share_amount, share_percent
+     FROM expense_splits
+     WHERE expense_id IN (${placeholders})
+     ORDER BY expense_id ASC, user_id ASC`,
+    expenseIds,
+  );
+  const splitsByExpense = new Map();
+  for (const split of splitRows) {
+    const expenseId = Number(split.expense_id);
+    if (!splitsByExpense.has(expenseId)) splitsByExpense.set(expenseId, []);
+    splitsByExpense.get(expenseId).push({
+      user_id: Number(split.user_id),
+      share_amount: Number(split.share_amount),
+      share_percent: split.share_percent == null ? null : Number(split.share_percent),
+    });
+  }
+
+  return rows.map((expense) => ({
+    ...expense,
+    split_details: splitsByExpense.get(Number(expense.id)) || [],
+  }));
+}
+
+function persistExpenseSplits(expenseId, amount, participantIds) {
+  runSql('DELETE FROM expense_splits WHERE expense_id = ?', [expenseId]);
+  if (!participantIds || participantIds.length < 2) return [];
+
+  const rows = buildEqualSplitRows({ expenseId, amount, participantIds });
+  for (const row of rows) {
+    runSql(
+      'INSERT INTO expense_splits (expense_id, user_id, share_amount, share_percent) VALUES (?, ?, ?, ?)',
+      [row.expense_id, row.user_id, row.share_amount, row.share_percent],
+    );
+  }
+  return rows;
+}
+
+function getExpenseByIdWithSplits(expenseId) {
+  const rows = attachSplitDetails(queryAll(
+    'SELECT e.*, u.name as paid_by_name FROM expenses e JOIN users u ON e.paid_by = u.id WHERE e.id = ?',
+    [expenseId],
+  ));
+  return rows[0] || null;
+}
+
 function getHouseholdExpenses(householdId) {
-  return queryAll(`
+  return attachSplitDetails(queryAll(`
     SELECT e.*, u.name as paid_by_name, u.email as paid_by_email
     FROM expenses e JOIN users u ON e.paid_by = u.id
     WHERE e.household_id = ?
     ORDER BY e.date DESC, e.created_at DESC`,
     [householdId]
-  );
+  ));
 }
 
 function getHouseholdSettlements(householdId) {
@@ -402,7 +464,7 @@ router.get('/:id/expenses', authenticate, (req, res) => {
     }
 
     sql += ' ORDER BY e.date DESC, e.created_at DESC';
-    res.json({ expenses: queryAll(sql, params) });
+    res.json({ expenses: attachSplitDetails(queryAll(sql, params)) });
   } catch (err) {
     console.error('List expenses error:', err);
     res.status(500).json({ error: 'Failed to list expenses' });
@@ -422,11 +484,18 @@ router.post('/:id/expenses', authenticate, (req, res) => {
     const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
     const members = queryAll('SELECT user_id FROM household_members WHERE household_id = ?', [id]);
     let validated;
+    let participantIds;
     try {
       validated = validateExpenseInput(req.body, {
         members,
         currentUserId: req.user.id,
         relationshipType: household?.relationship_type || 'partner',
+      });
+      participantIds = validateExpenseParticipants({
+        isShared: validated.isShared,
+        relationshipType: household?.relationship_type || 'partner',
+        participantIds: req.body.participantIds,
+        members,
       });
     } catch (err) {
       return res.status(400).json({ error: err.message });
@@ -439,6 +508,7 @@ router.post('/:id/expenses', authenticate, (req, res) => {
       `INSERT INTO expenses (household_id, amount, category, paid_by, split_type, custom_split, date, notes, is_recurring, is_shared, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, validated.amount, category, validated.paidBy, validated.splitType, validated.customSplit, validated.date, notes || '', isRecurring ? 1 : 0, validated.isShared ? 1 : 0, req.user.id]
     );
+    persistExpenseSplits(result.lastInsertRowid, validated.amount, participantIds);
 
     // Log activity
     logActivity(id, req.user.id, 'added', 'expense', result.lastInsertRowid, {
@@ -449,7 +519,7 @@ router.post('/:id/expenses', authenticate, (req, res) => {
       isShared: validated.isShared
     });
 
-    const expense = queryOne('SELECT e.*, u.name as paid_by_name FROM expenses e JOIN users u ON e.paid_by = u.id WHERE e.id = ?', [result.lastInsertRowid]);
+    const expense = getExpenseByIdWithSplits(result.lastInsertRowid);
     res.json({ expense });
   } catch (err) {
     console.error('Add expense error:', err);
@@ -470,11 +540,18 @@ router.put('/:id/expenses/:expenseId', authenticate, (req, res) => {
     const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
     const members = queryAll('SELECT user_id FROM household_members WHERE household_id = ?', [id]);
     let validated;
+    let participantIds;
     try {
       validated = validateExpenseInput(req.body, {
         members,
         currentUserId: req.user.id,
         relationshipType: household?.relationship_type || 'partner',
+      });
+      participantIds = validateExpenseParticipants({
+        isShared: validated.isShared,
+        relationshipType: household?.relationship_type || 'partner',
+        participantIds: req.body.participantIds,
+        members,
       });
     } catch (err) {
       return res.status(400).json({ error: err.message });
@@ -487,6 +564,7 @@ router.put('/:id/expenses/:expenseId', authenticate, (req, res) => {
       `UPDATE expenses SET amount=?, category=?, paid_by=?, split_type=?, custom_split=?, date=?, notes=?, is_recurring=?, is_shared=?, updated_at=datetime('now') WHERE id=? AND household_id=?`,
       [validated.amount, category, validated.paidBy, validated.splitType, validated.customSplit, validated.date, notes || '', isRecurring ? 1 : 0, validated.isShared ? 1 : 0, expenseId, id]
     );
+    persistExpenseSplits(expenseId, validated.amount, participantIds);
 
     // Log activity
     logActivity(id, req.user.id, 'edited', 'expense', expenseId, {
@@ -496,7 +574,7 @@ router.put('/:id/expenses/:expenseId', authenticate, (req, res) => {
       isShared: validated.isShared
     });
 
-    const expense = queryOne('SELECT e.*, u.name as paid_by_name FROM expenses e JOIN users u ON e.paid_by = u.id WHERE e.id = ?', [expenseId]);
+    const expense = getExpenseByIdWithSplits(expenseId);
     res.json({ expense });
   } catch (err) {
     console.error('Update expense error:', err);
@@ -513,6 +591,7 @@ router.delete('/:id/expenses/:expenseId', authenticate, (req, res) => {
     // Get expense data before deleting for activity log
     const existing = queryOne('SELECT * FROM expenses WHERE id = ? AND household_id = ?', [expenseId, id]);
     
+    runSql('DELETE FROM expense_splits WHERE expense_id = ?', [expenseId]);
     runSql('DELETE FROM expenses WHERE id = ? AND household_id = ?', [expenseId, id]);
     
     // Log activity

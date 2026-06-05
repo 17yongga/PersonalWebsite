@@ -93,6 +93,17 @@ async function initialize() {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS expense_splits (
+      expense_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      share_amount REAL NOT NULL,
+      share_percent REAL,
+      created_at TEXT DEFAULT (datetime('now')),
+      PRIMARY KEY (expense_id, user_id)
+    )
+  `);
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS budgets (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       household_id INTEGER NOT NULL,

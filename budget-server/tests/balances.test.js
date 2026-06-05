@@ -133,6 +133,42 @@ test('three-member custom split shares remaining amount among non-payers', () =>
   assert.equal(netFor(3, rows), -30);
 });
 
+test('selected participant split excludes non-participants from balances', () => {
+  const rows = balanceArray({
+    members: threeMembers,
+    expenses: [expense({
+      amount: 90,
+      paid_by: 1,
+      split_type: 'equal',
+      split_details: [
+        { user_id: 1, share_amount: 45 },
+        { user_id: 3, share_amount: 45 },
+      ],
+    })],
+  });
+  assert.equal(netFor(1, rows), 45);
+  assert.equal(netFor(2, rows), 0);
+  assert.equal(netFor(3, rows), -45);
+});
+
+test('selected participant split can reimburse payer for a bill paid only for others', () => {
+  const rows = balanceArray({
+    members: threeMembers,
+    expenses: [expense({
+      amount: 60,
+      paid_by: 1,
+      split_type: 'equal',
+      split_details: [
+        { user_id: 2, share_amount: 30 },
+        { user_id: 3, share_amount: 30 },
+      ],
+    })],
+  });
+  assert.equal(netFor(1, rows), 60);
+  assert.equal(netFor(2, rows), -30);
+  assert.equal(netFor(3, rows), -30);
+});
+
 test('one-member household produces no settlement balance', () => {
   const rows = balanceArray({ members: [members[0]], expenses: [expense({ amount: 100, paid_by: 1 })] });
   assert.equal(netFor(1, rows), 0);
