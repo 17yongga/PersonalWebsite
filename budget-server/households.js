@@ -4,6 +4,12 @@ const { buildBalanceSnapshot, roundMoney } = require('./lib/balances');
 const { assertValidRelationshipType, assertRelationshipTypeAllowedForMemberCount } = require('./lib/householdMode');
 const { validateExpenseInput } = require('./lib/expenseValidation');
 const { generateUniqueInviteCode } = require('./lib/inviteCode');
+const {
+  assertCanRemoveMember,
+  assertCanLeaveSpace,
+  assertCanTransferOwnership,
+  relationshipTypeAfterMemberRemoval,
+} = require('./lib/memberManagement');
 
 // ── Category canonicalization ─────────────────────────────────────────────
 // Strips leading emoji/whitespace for comparison, then resolves to whichever
@@ -137,13 +143,40 @@ function logActivity(householdId, userId, action, entityType, entityId, details)
 }
 
 
+function countMemberFinancialReferences(householdId, userId) {
+  const expenseCount = queryOne(
+    `SELECT COUNT(*) as count FROM expenses WHERE household_id = ? AND (paid_by = ? OR created_by = ?)`,
+    [householdId, userId, userId],
+  )?.count ?? 0;
+  const settlementCount = queryOne(
+    `SELECT COUNT(*) as count FROM settlements WHERE household_id = ? AND (settled_by = ? OR from_user_id = ? OR to_user_id = ?)`,
+    [householdId, userId, userId, userId],
+  )?.count ?? 0;
+  const budgetCount = queryOne(
+    `SELECT COUNT(*) as count FROM budgets WHERE household_id = ? AND user_id = ?`,
+    [householdId, userId],
+  )?.count ?? 0;
+  return Number(expenseCount) + Number(settlementCount) + Number(budgetCount);
+}
+
 function getHouseholdMembers(householdId) {
   return queryAll(`
     SELECT hm.user_id, hm.role, hm.partner_name, u.email, u.name
     FROM household_members hm JOIN users u ON hm.user_id = u.id
     WHERE hm.household_id = ?`,
     [householdId]
-  );
+  ).map((member) => ({
+    ...member,
+    financial_reference_count: countMemberFinancialReferences(householdId, member.user_id),
+  }));
+}
+
+function getHouseholdDetails(householdId) {
+  const household = queryOne('SELECT * FROM households WHERE id = ?', [householdId]);
+  if (!household) return null;
+  const members = getHouseholdMembers(householdId);
+  const categories = queryAll('SELECT name FROM categories WHERE household_id = ?', [householdId]).map(c => c.name);
+  return { ...household, members, categories };
 }
 
 function getHouseholdExpenses(householdId) {
@@ -260,10 +293,7 @@ router.get('/', authenticate, (req, res) => {
 
     const result = households.map(h => ({
       ...h,
-      members: queryAll(`
-        SELECT hm.user_id, hm.role, hm.partner_name, u.email, u.name
-        FROM household_members hm JOIN users u ON hm.user_id = u.id
-        WHERE hm.household_id = ?`, [h.id])
+      members: getHouseholdMembers(h.id),
     }));
 
     res.json({ households: result });
@@ -280,13 +310,10 @@ router.get('/:id', authenticate, (req, res) => {
     const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
     if (!member) return res.status(403).json({ error: 'Not a member' });
 
-    const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    const household = getHouseholdDetails(id);
     if (!household) return res.status(404).json({ error: 'Not found' });
 
-    const members = queryAll(`SELECT hm.user_id, hm.role, hm.partner_name, u.email, u.name FROM household_members hm JOIN users u ON hm.user_id = u.id WHERE hm.household_id = ?`, [id]);
-    const categories = queryAll('SELECT name FROM categories WHERE household_id = ?', [id]).map(c => c.name);
-
-    res.json({ household: { ...household, members, categories } });
+    res.json({ household });
   } catch (err) {
     console.error('Get household error:', err);
     res.status(500).json({ error: 'Failed to get household' });
@@ -327,10 +354,8 @@ router.put('/:id', authenticate, (req, res) => {
       runSql(`UPDATE households SET ${updates.join(', ')} WHERE id = ?`, params);
     }
 
-    const updated = queryOne('SELECT * FROM households WHERE id = ?', [id]);
-    const members = queryAll(`SELECT hm.user_id, hm.role, hm.partner_name, u.email, u.name FROM household_members hm JOIN users u ON hm.user_id = u.id WHERE hm.household_id = ?`, [id]);
-    const categories = queryAll('SELECT name FROM categories WHERE household_id = ?', [id]).map(c => c.name);
-    res.json({ household: { ...updated, members, categories } });
+    const updated = getHouseholdDetails(id);
+    res.json({ household: updated });
   } catch (err) {
     console.error('Update household error:', err);
     res.status(500).json({ error: 'Failed to update space settings' });
@@ -350,10 +375,8 @@ router.post('/:id/invite-code/regenerate', authenticate, (req, res) => {
     const inviteCode = generateUniqueInviteCode(getExistingInviteCodes(id));
     runSql('UPDATE households SET invite_code = ? WHERE id = ?', [inviteCode, id]);
 
-    const updated = queryOne('SELECT * FROM households WHERE id = ?', [id]);
-    const members = queryAll(`SELECT hm.user_id, hm.role, hm.partner_name, u.email, u.name FROM household_members hm JOIN users u ON hm.user_id = u.id WHERE hm.household_id = ?`, [id]);
-    const categories = queryAll('SELECT name FROM categories WHERE household_id = ?', [id]).map(c => c.name);
-    res.json({ household: { ...updated, members, categories } });
+    const updated = getHouseholdDetails(id);
+    res.json({ household: updated });
   } catch (err) {
     console.error('Regenerate invite code error:', err);
     res.status(500).json({ error: 'Failed to regenerate join code' });
@@ -728,28 +751,97 @@ router.get('/:id/settlements', authenticate, (req, res) => {
 
 
 
-// Kick member from household (owner only)
+function removeMemberAndReturnHousehold(household, targetUserId) {
+  runSql('DELETE FROM household_members WHERE household_id = ? AND user_id = ?', [household.id, targetUserId]);
+  const remainingCount = queryOne('SELECT COUNT(*) as count FROM household_members WHERE household_id = ?', [household.id])?.count ?? 0;
+  const nextRelationshipType = relationshipTypeAfterMemberRemoval(household.relationship_type || 'partner', remainingCount);
+  runSql('UPDATE households SET relationship_type = ? WHERE id = ?', [nextRelationshipType, household.id]);
+  return getHouseholdDetails(household.id);
+}
+
+// Remove member from budget space (owner only, safe only for no-history members)
 router.delete('/:id/members/:userId', authenticate, (req, res) => {
   try {
     const { id, userId } = req.params;
     const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
     if (!household) return res.status(404).json({ error: 'Space not found' });
-    if (household.created_by !== req.user.id) return res.status(403).json({ error: 'Only the space owner can remove members' });
-    if (parseInt(userId) === req.user.id) return res.status(400).json({ error: 'You cannot remove yourself — delete the space instead' });
 
-    const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, parseInt(userId)]);
-    if (!member) return res.status(404).json({ error: 'Member not found in this space' });
+    const members = getHouseholdMembers(id);
+    const targetFinancialReferenceCount = countMemberFinancialReferences(id, Number(userId));
+    try {
+      assertCanRemoveMember({ requesterId: req.user.id, targetUserId: Number(userId), members, targetFinancialReferenceCount });
+    } catch (err) {
+      const message = err.message || 'Could not remove member';
+      const status = /not found/i.test(message) ? 404 : /financial history/i.test(message) ? 409 : 403;
+      return res.status(status).json({ error: message });
+    }
 
-    runSql('DELETE FROM household_members WHERE household_id = ? AND user_id = ?', [id, parseInt(userId)]);
-
-    res.json({ message: 'Member removed' });
+    const updated = removeMemberAndReturnHousehold(household, Number(userId));
+    logActivity(id, req.user.id, 'removed_member', 'household_member', Number(userId), { removedUserId: Number(userId) });
+    res.json({ household: updated });
   } catch (err) {
-    console.error('Kick member error:', err);
+    console.error('Remove member error:', err);
     res.status(500).json({ error: 'Failed to remove member' });
   }
 });
 
-// Regenerate invite code (owner only)
+// Leave budget space (non-owner only unless ownership has already been transferred)
+router.post('/:id/leave', authenticate, (req, res) => {
+  try {
+    const { id } = req.params;
+    const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    if (!household) return res.status(404).json({ error: 'Space not found' });
+
+    const members = getHouseholdMembers(id);
+    const requesterFinancialReferenceCount = countMemberFinancialReferences(id, req.user.id);
+    try {
+      assertCanLeaveSpace({ requesterId: req.user.id, members, requesterFinancialReferenceCount });
+    } catch (err) {
+      const message = err.message || 'Could not leave budget space';
+      const status = /financial history/i.test(message) ? 409 : 403;
+      return res.status(status).json({ error: message });
+    }
+
+    const updated = removeMemberAndReturnHousehold(household, req.user.id);
+    logActivity(id, req.user.id, 'left_space', 'household_member', req.user.id, { userId: req.user.id });
+    res.json({ household: updated });
+  } catch (err) {
+    console.error('Leave space error:', err);
+    res.status(500).json({ error: 'Failed to leave budget space' });
+  }
+});
+
+// Transfer budget-space ownership to another current member
+router.post('/:id/owner-transfer', authenticate, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newOwnerId } = req.body;
+    const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    if (!household) return res.status(404).json({ error: 'Space not found' });
+
+    const members = getHouseholdMembers(id);
+    try {
+      assertCanTransferOwnership({ requesterId: req.user.id, newOwnerId: Number(newOwnerId), members });
+    } catch (err) {
+      const message = err.message || 'Could not transfer ownership';
+      const status = /current member/i.test(message) ? 404 : 403;
+      return res.status(status).json({ error: message });
+    }
+
+    runSql('UPDATE household_members SET role = ? WHERE household_id = ? AND user_id = ?', ['member', id, req.user.id]);
+    runSql('UPDATE household_members SET role = ? WHERE household_id = ? AND user_id = ?', ['owner', id, Number(newOwnerId)]);
+    runSql('UPDATE households SET created_by = ? WHERE id = ?', [Number(newOwnerId), id]);
+
+    const updated = getHouseholdDetails(id);
+    logActivity(id, req.user.id, 'transferred_ownership', 'household', Number(id), { fromUserId: req.user.id, toUserId: Number(newOwnerId) });
+    res.json({ household: updated });
+  } catch (err) {
+    console.error('Transfer ownership error:', err);
+    res.status(500).json({ error: 'Failed to transfer ownership' });
+  }
+});
+
+// Backward-compatible invite-code route for old clients
 router.post('/:id/regenerate-code', authenticate, (req, res) => {
   try {
     const { id } = req.params;
@@ -759,10 +851,10 @@ router.post('/:id/regenerate-code', authenticate, (req, res) => {
     const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
     if (!member || member.role !== 'owner') return res.status(403).json({ error: 'Only the space owner can regenerate the invite code' });
 
-    const newCode = crypto.randomBytes(3).toString('hex').toUpperCase();
-    runSql('UPDATE households SET invite_code = ? WHERE id = ?', [newCode, id]);
+    const inviteCode = generateUniqueInviteCode(getExistingInviteCodes(id));
+    runSql('UPDATE households SET invite_code = ? WHERE id = ?', [inviteCode, id]);
 
-    res.json({ invite_code: newCode });
+    res.json({ invite_code: inviteCode, household: getHouseholdDetails(id) });
   } catch (err) {
     console.error('Regenerate code error:', err);
     res.status(500).json({ error: 'Failed to regenerate invite code' });
