@@ -22,6 +22,9 @@ function assertRelationshipTypeAllowedForMemberCount(value, memberCount) {
   if (normalized === 'solo' && Number(memberCount) > 1) {
     throw new Error('Solo budget spaces can only have one member');
   }
+  if (normalized === 'partner' && Number(memberCount) > 2) {
+    throw new Error('Partner budget spaces can only have two members');
+  }
   return normalized;
 }
 

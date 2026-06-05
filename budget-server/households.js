@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const { queryAll, queryOne, runSql } = require('./database');
 const { buildBalanceSnapshot, roundMoney } = require('./lib/balances');
 const { assertValidRelationshipType, assertRelationshipTypeAllowedForMemberCount } = require('./lib/householdMode');
+const { validateExpenseInput } = require('./lib/expenseValidation');
 
 // ── Category canonicalization ─────────────────────────────────────────────
 // Strips leading emoji/whitespace for comparison, then resolves to whichever
@@ -366,23 +367,34 @@ router.post('/:id/expenses', authenticate, (req, res) => {
     const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
     if (!member) return res.status(403).json({ error: 'Not a member' });
 
+    const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    const members = queryAll('SELECT user_id FROM household_members WHERE household_id = ?', [id]);
+    let validated;
+    try {
+      validated = validateExpenseInput(req.body, {
+        members,
+        currentUserId: req.user.id,
+        relationshipType: household?.relationship_type || 'partner',
+      });
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+
     // Ensure canonical category exists in categories table
     runSql('INSERT OR IGNORE INTO categories (household_id, name) VALUES (?, ?)', [id, category]);
 
-    const resolvedIsShared = isShared !== false;
-    const resolvedSplitType = splitType || (resolvedIsShared ? '50/50' : 'single');
     const result = runSql(
       `INSERT INTO expenses (household_id, amount, category, paid_by, split_type, custom_split, date, notes, is_recurring, is_shared, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, amount, category, paidBy || req.user.id, resolvedSplitType, customSplit || null, date, notes || '', isRecurring ? 1 : 0, resolvedIsShared ? 1 : 0, req.user.id]
+      [id, validated.amount, category, validated.paidBy, validated.splitType, validated.customSplit, validated.date, notes || '', isRecurring ? 1 : 0, validated.isShared ? 1 : 0, req.user.id]
     );
 
     // Log activity
     logActivity(id, req.user.id, 'added', 'expense', result.lastInsertRowid, {
-      amount: amount,
+      amount: validated.amount,
       category: category,
       notes: notes || '',
-      whoPaid: paidBy || req.user.id,
-      isShared: isShared !== false
+      whoPaid: validated.paidBy,
+      isShared: validated.isShared
     });
 
     const expense = queryOne('SELECT e.*, u.name as paid_by_name FROM expenses e JOIN users u ON e.paid_by = u.id WHERE e.id = ?', [result.lastInsertRowid]);
@@ -403,22 +415,33 @@ router.put('/:id/expenses/:expenseId', authenticate, (req, res) => {
     const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
     if (!member) return res.status(403).json({ error: 'Not a member' });
 
+    const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    const members = queryAll('SELECT user_id FROM household_members WHERE household_id = ?', [id]);
+    let validated;
+    try {
+      validated = validateExpenseInput(req.body, {
+        members,
+        currentUserId: req.user.id,
+        relationshipType: household?.relationship_type || 'partner',
+      });
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+
     // Ensure canonical category exists
     runSql('INSERT OR IGNORE INTO categories (household_id, name) VALUES (?, ?)', [id, category]);
 
-    const resolvedIsSharedUpd = isShared !== false;
-    const resolvedSplitTypeUpd = splitType || (resolvedIsSharedUpd ? '50/50' : 'single');
     runSql(
       `UPDATE expenses SET amount=?, category=?, paid_by=?, split_type=?, custom_split=?, date=?, notes=?, is_recurring=?, is_shared=?, updated_at=datetime('now') WHERE id=? AND household_id=?`,
-      [amount, category, paidBy || req.user.id, resolvedSplitTypeUpd, customSplit || null, date, notes || '', isRecurring ? 1 : 0, resolvedIsSharedUpd ? 1 : 0, expenseId, id]
+      [validated.amount, category, validated.paidBy, validated.splitType, validated.customSplit, validated.date, notes || '', isRecurring ? 1 : 0, validated.isShared ? 1 : 0, expenseId, id]
     );
 
     // Log activity
     logActivity(id, req.user.id, 'edited', 'expense', expenseId, {
-      amount: amount,
+      amount: validated.amount,
       category: category,
       notes: notes || '',
-      isShared: isShared !== false
+      isShared: validated.isShared
     });
 
     const expense = queryOne('SELECT e.*, u.name as paid_by_name FROM expenses e JOIN users u ON e.paid_by = u.id WHERE e.id = ?', [expenseId]);

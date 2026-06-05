@@ -27,3 +27,8 @@ test('rejects solo relationship type when a space already has multiple members',
   assert.equal(assertRelationshipTypeAllowedForMemberCount('solo', 1), 'solo');
   assert.equal(assertRelationshipTypeAllowedForMemberCount('group', 2), 'group');
 });
+
+test('rejects partner relationship type for 3+ member budget spaces', () => {
+  assert.throws(() => assertRelationshipTypeAllowedForMemberCount('partner', 3), /Partner budget spaces can only have two members/);
+  assert.equal(assertRelationshipTypeAllowedForMemberCount('partner', 2), 'partner');
+});
