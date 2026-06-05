@@ -1,9 +1,9 @@
 const express = require('express');
-const crypto = require('crypto');
 const { queryAll, queryOne, runSql } = require('./database');
 const { buildBalanceSnapshot, roundMoney } = require('./lib/balances');
 const { assertValidRelationshipType, assertRelationshipTypeAllowedForMemberCount } = require('./lib/householdMode');
 const { validateExpenseInput } = require('./lib/expenseValidation');
+const { generateUniqueInviteCode } = require('./lib/inviteCode');
 
 // ── Category canonicalization ─────────────────────────────────────────────
 // Strips leading emoji/whitespace for comparison, then resolves to whichever
@@ -187,8 +187,14 @@ const { authenticate } = require('./auth');
 
 const router = express.Router();
 
-function generateInviteCode() {
-  return crypto.randomBytes(3).toString('hex').toUpperCase();
+function getExistingInviteCodes(excludingHouseholdId = null) {
+  const rows = queryAll(
+    excludingHouseholdId
+      ? 'SELECT invite_code FROM households WHERE id != ?'
+      : 'SELECT invite_code FROM households',
+    excludingHouseholdId ? [excludingHouseholdId] : [],
+  );
+  return new Set(rows.map((row) => row.invite_code));
 }
 
 // Create household
@@ -204,7 +210,7 @@ router.post('/', authenticate, (req, res) => {
       return res.status(400).json({ error: err.message });
     }
 
-    const inviteCode = generateInviteCode();
+    const inviteCode = generateUniqueInviteCode(getExistingInviteCodes());
     const result = runSql('INSERT INTO households (name, invite_code, created_by, relationship_type) VALUES (?, ?, ?, ?)', [name, inviteCode, req.user.id, normalizedRelationshipType]);
 
     runSql('INSERT INTO household_members (household_id, user_id, role, partner_name) VALUES (?, ?, ?, ?)',
@@ -328,6 +334,29 @@ router.put('/:id', authenticate, (req, res) => {
   } catch (err) {
     console.error('Update household error:', err);
     res.status(500).json({ error: 'Failed to update space settings' });
+  }
+});
+
+// Regenerate household invite code (owner only)
+router.post('/:id/invite-code/regenerate', authenticate, (req, res) => {
+  try {
+    const { id } = req.params;
+    const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    if (!household) return res.status(404).json({ error: 'Space not found' });
+
+    const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
+    if (!member || member.role !== 'owner') return res.status(403).json({ error: 'Only the space owner can regenerate the join code' });
+
+    const inviteCode = generateUniqueInviteCode(getExistingInviteCodes(id));
+    runSql('UPDATE households SET invite_code = ? WHERE id = ?', [inviteCode, id]);
+
+    const updated = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    const members = queryAll(`SELECT hm.user_id, hm.role, hm.partner_name, u.email, u.name FROM household_members hm JOIN users u ON hm.user_id = u.id WHERE hm.household_id = ?`, [id]);
+    const categories = queryAll('SELECT name FROM categories WHERE household_id = ?', [id]).map(c => c.name);
+    res.json({ household: { ...updated, members, categories } });
+  } catch (err) {
+    console.error('Regenerate invite code error:', err);
+    res.status(500).json({ error: 'Failed to regenerate join code' });
   }
 });
 
