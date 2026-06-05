@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const { queryAll, queryOne, runSql } = require('./database');
 const { buildBalanceSnapshot, roundMoney } = require('./lib/balances');
+const { assertValidRelationshipType, assertRelationshipTypeAllowedForMemberCount } = require('./lib/householdMode');
 
 // ── Category canonicalization ─────────────────────────────────────────────
 // Strips leading emoji/whitespace for comparison, then resolves to whichever
@@ -192,11 +193,18 @@ function generateInviteCode() {
 // Create household
 router.post('/', authenticate, (req, res) => {
   try {
-    const { name, partnerName } = req.body;
+    const { name, partnerName, relationshipType } = req.body;
     if (!name) return res.status(400).json({ error: 'Household name is required' });
 
+    let normalizedRelationshipType;
+    try {
+      normalizedRelationshipType = assertValidRelationshipType(relationshipType || 'partner');
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+
     const inviteCode = generateInviteCode();
-    const result = runSql('INSERT INTO households (name, invite_code, created_by) VALUES (?, ?, ?)', [name, inviteCode, req.user.id]);
+    const result = runSql('INSERT INTO households (name, invite_code, created_by, relationship_type) VALUES (?, ?, ?, ?)', [name, inviteCode, req.user.id, normalizedRelationshipType]);
 
     runSql('INSERT INTO household_members (household_id, user_id, role, partner_name) VALUES (?, ?, ?, ?)',
       [result.lastInsertRowid, req.user.id, 'owner', partnerName || req.user.name]);
@@ -206,7 +214,7 @@ router.post('/', authenticate, (req, res) => {
       try { runSql('INSERT INTO categories (household_id, name) VALUES (?, ?)', [result.lastInsertRowid, cat]); } catch(e) {}
     });
 
-    res.json({ household: { id: result.lastInsertRowid, name, invite_code: inviteCode, created_by: req.user.id } });
+    res.json({ household: { id: result.lastInsertRowid, name, invite_code: inviteCode, created_by: req.user.id, relationship_type: normalizedRelationshipType } });
   } catch (err) {
     console.error('Create household error:', err);
     res.status(500).json({ error: 'Failed to create household' });
@@ -275,6 +283,50 @@ router.get('/:id', authenticate, (req, res) => {
   } catch (err) {
     console.error('Get household error:', err);
     res.status(500).json({ error: 'Failed to get household' });
+  }
+});
+
+// Update household budget-space settings (owner only)
+router.put('/:id', authenticate, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, relationshipType } = req.body;
+    const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    if (!household) return res.status(404).json({ error: 'Space not found' });
+
+    const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
+    if (!member || member.role !== 'owner') return res.status(403).json({ error: 'Only the space owner can update settings' });
+
+    const updates = [];
+    const params = [];
+    if (typeof name === 'string' && name.trim()) {
+      updates.push('name = ?');
+      params.push(name.trim());
+    }
+    if (relationshipType !== undefined) {
+      let normalizedRelationshipType;
+      try {
+        const memberCount = queryOne('SELECT COUNT(*) as count FROM household_members WHERE household_id = ?', [id])?.count ?? 1;
+        normalizedRelationshipType = assertRelationshipTypeAllowedForMemberCount(relationshipType, memberCount);
+      } catch (err) {
+        return res.status(400).json({ error: err.message });
+      }
+      updates.push('relationship_type = ?');
+      params.push(normalizedRelationshipType);
+    }
+
+    if (updates.length > 0) {
+      params.push(id);
+      runSql(`UPDATE households SET ${updates.join(', ')} WHERE id = ?`, params);
+    }
+
+    const updated = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    const members = queryAll(`SELECT hm.user_id, hm.role, hm.partner_name, u.email, u.name FROM household_members hm JOIN users u ON hm.user_id = u.id WHERE hm.household_id = ?`, [id]);
+    const categories = queryAll('SELECT name FROM categories WHERE household_id = ?', [id]).map(c => c.name);
+    res.json({ household: { ...updated, members, categories } });
+  } catch (err) {
+    console.error('Update household error:', err);
+    res.status(500).json({ error: 'Failed to update space settings' });
   }
 });
 

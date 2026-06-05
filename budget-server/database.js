@@ -52,9 +52,15 @@ async function initialize() {
       name TEXT NOT NULL,
       invite_code TEXT UNIQUE NOT NULL,
       created_by INTEGER NOT NULL,
+      relationship_type TEXT DEFAULT 'partner',
       created_at TEXT DEFAULT (datetime('now'))
     )
   `);
+
+  const householdColumns = db.exec(`PRAGMA table_info(households)`)[0]?.values.map(row => row[1]) || [];
+  if (!householdColumns.includes('relationship_type')) {
+    db.run(`ALTER TABLE households ADD COLUMN relationship_type TEXT DEFAULT 'partner'`);
+  }
 
   db.run(`
     CREATE TABLE IF NOT EXISTS household_members (
