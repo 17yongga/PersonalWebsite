@@ -6,6 +6,7 @@ const nodemailer = require('nodemailer');
 const { queryOne, queryAll, runSql } = require('./database');
 const { serializeUserSubscription } = require('./lib/promoCodes');
 const { serializeUserProfileInput } = require('./lib/userProfile');
+const { normalizeSubscriptionSyncInput } = require('./lib/subscriptionSync');
 
 const router = express.Router();
 const DEFAULT_INSECURE_JWT_SECRET = 'finsync-secret-key-change-in-production';
@@ -250,6 +251,34 @@ router.get('/me', authenticate, (req, res) => {
   );
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json({ user: serializeUserSubscription(user) });
+});
+
+// ── POST /api/auth/subscription/sync ─────────────────────────────────────────
+// Mobile RevenueCat knows immediately when a user has Flowt Pro. Persist the
+// entitlement so backend-only features such as Flowt Assistant quota treat the
+// same user as Pro on the next request.
+router.post('/subscription/sync', authenticate, (req, res) => {
+  try {
+    const subscription = normalizeSubscriptionSyncInput(req.body);
+    runSql(
+      `UPDATE users
+       SET subscription_status = ?, current_entitlement = ?, subscription_expires_at = ?, promo_grant_source = ?
+       WHERE id = ?`,
+      [
+        subscription.subscription_status,
+        subscription.current_entitlement,
+        subscription.subscription_expires_at,
+        subscription.promo_grant_source,
+        req.user.id,
+      ]
+    );
+
+    const user = queryOne('SELECT * FROM users WHERE id = ?', [req.user.id]);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ user: serializeUserSubscription(user) });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Subscription sync failed' });
+  }
 });
 
 // ── PUT /api/auth/profile ─────────────────────────────────────────────────────
