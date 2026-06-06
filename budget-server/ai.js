@@ -3,10 +3,11 @@ const { authenticate } = require('./auth');
 const { queryAll, queryOne, runSql } = require('./database');
 const { buildAssistantContextFromRows, sanitizeAssistantMessage } = require('./lib/aiContext');
 const { callAssistantModel } = require('./lib/aiProvider');
+const { isBackendProActive } = require('./lib/promoCodes');
 
 const router = express.Router();
 
-const DEFAULT_FREE_MONTHLY_QUOTA = Number(process.env.FLOWT_AI_FREE_QUOTA || 3);
+const DEFAULT_FREE_MONTHLY_QUOTA = Number(process.env.FLOWT_AI_FREE_QUOTA || 10);
 const DEFAULT_PRO_MONTHLY_QUOTA = Number(process.env.FLOWT_AI_PRO_QUOTA || 100);
 
 function getCurrentMonth() {
@@ -43,8 +44,16 @@ function getAssistantUsageThisMonth({ userId }) {
   return Number(row?.count || 0);
 }
 
+function isUserFlowtPro(user) {
+  return Boolean(user?.isPro || user?.is_pro || isBackendProActive(user));
+}
+
 function getMonthlyQuota({ isPro = false }) {
   return isPro ? DEFAULT_PRO_MONTHLY_QUOTA : DEFAULT_FREE_MONTHLY_QUOTA;
+}
+
+function getUserWithSubscription(userId) {
+  return queryOne('SELECT * FROM users WHERE id = ?', [userId]);
 }
 
 function loadAssistantRows({ householdId, month }) {
@@ -75,8 +84,20 @@ function loadAssistantRows({ householdId, month }) {
   return { members, expenses, settlements, budgets };
 }
 
-function logAssistantUsage({ householdId, userId, message, response }) {
+function buildAssistantUsageDetails({ message, response }) {
   const usage = response?.usage || {};
+  return {
+    messageLength: Number(message?.length || 0),
+    providerStatus: response?.providerStatus || 'unknown',
+    model: usage.model || 'unknown',
+    estimatedCostCents: Number(usage.estimatedCostCents || 0),
+    inputTokens: Number(usage.inputTokens || 0),
+    outputTokens: Number(usage.outputTokens || 0),
+    transcriptStored: false,
+  };
+}
+
+function logAssistantUsage({ householdId, userId, message, response }) {
   runSql(
     `INSERT INTO activity_log (household_id, user_id, action, entity_type, entity_id, details, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -86,15 +107,7 @@ function logAssistantUsage({ householdId, userId, message, response }) {
       'assistant_chat',
       'ai_assistant',
       null,
-      JSON.stringify({
-        messageLength: message.length,
-        providerStatus: response?.providerStatus || 'unknown',
-        model: usage.model || 'unknown',
-        estimatedCostCents: usage.estimatedCostCents || 0,
-        inputTokens: usage.inputTokens || 0,
-        outputTokens: usage.outputTokens || 0,
-        transcriptStored: false,
-      }),
+      JSON.stringify(buildAssistantUsageDetails({ message, response })),
       new Date().toISOString(),
     ]
   );
@@ -107,8 +120,9 @@ router.post('/chat', authenticate, async (req, res) => {
     const household = getUserHousehold({ householdId: req.body?.householdId, userId: req.user.id });
     if (!household) return res.status(403).json({ error: 'No household access' });
 
-    // TODO: wire real RevenueCat entitlement into backend. Until then, all users get free teaser quota.
-    const isPro = Boolean(req.user.isPro);
+    // JWT payloads are intentionally compact, so load persisted subscription fields for Pro quota.
+    const profile = getUserWithSubscription(req.user.id) || req.user;
+    const isPro = isUserFlowtPro(profile);
     const quota = getMonthlyQuota({ isPro });
     const used = getAssistantUsageThisMonth({ userId: req.user.id });
     if (used >= quota) {
@@ -147,4 +161,7 @@ router.post('/chat', authenticate, async (req, res) => {
   }
 });
 
+router.buildAssistantUsageDetails = buildAssistantUsageDetails;
+router.getMonthlyQuota = getMonthlyQuota;
+router.isUserFlowtPro = isUserFlowtPro;
 module.exports = router;
