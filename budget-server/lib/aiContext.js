@@ -113,6 +113,70 @@ function getAnomalies(expenses) {
     }));
 }
 
+function buildActionPlan({ categoryDrivers = [], budget = {}, anomalies = [], sharedBalance = {} }) {
+  const actions = [];
+  const topCategory = categoryDrivers[0];
+
+  if (topCategory && Number(topCategory.amount || 0) > 0) {
+    const targetReduction = roundMoney(Math.max(10, Number(topCategory.amount || 0) * 0.15));
+    actions.push({
+      id: 'reduce-top-category',
+      type: 'reduce_category_spend',
+      title: `Trim ${topCategory.label || topCategory.category}`,
+      description: `Try cutting about ${formatCurrency(targetReduction)} from ${topCategory.label || topCategory.category} before month end.`,
+      category: topCategory.category,
+      estimatedImpact: targetReduction,
+      requiresConfirmation: true,
+    });
+  }
+
+  if (budget.remaining != null && Number(budget.remaining) < 0) {
+    actions.push({
+      id: 'recover-over-budget',
+      type: 'budget_recovery',
+      title: 'Recover the over-budget month',
+      description: `You are ${formatCurrency(Math.abs(Number(budget.remaining)))} over budget. Pause non-essential spending first.`,
+      estimatedImpact: roundMoney(Math.abs(Number(budget.remaining))),
+      requiresConfirmation: true,
+    });
+  } else if (budget.remaining != null) {
+    actions.push({
+      id: 'protect-remaining-budget',
+      type: 'budget_guardrail',
+      title: 'Protect remaining budget',
+      description: `You have ${formatCurrency(Math.max(0, Number(budget.remaining)))} left. Keep daily discretionary spend below that runway.`,
+      estimatedImpact: roundMoney(Math.max(0, Number(budget.remaining))),
+      requiresConfirmation: true,
+    });
+  }
+
+  if ((anomalies || []).length > 0) {
+    actions.push({
+      id: 'review-unusual-spending',
+      type: 'review_transactions',
+      title: 'Review unusual transactions',
+      description: `Check ${Math.min(anomalies.length, 3)} unusually large transaction${anomalies.length === 1 ? '' : 's'} before making budget changes.`,
+      requiresConfirmation: true,
+    });
+  }
+
+  if ((sharedBalance.suggestedSettlements || []).length > 0) {
+    actions.push({
+      id: 'settle-shared-balance',
+      type: 'settlement_prompt',
+      title: 'Settle outstanding shared balance',
+      description: sharedBalance.summary,
+      requiresConfirmation: true,
+    });
+  }
+
+  return {
+    mode: 'proposal_only',
+    disclaimer: 'These are suggestions only. Flowt Assistant will not change budgets, transactions, or settlements without explicit confirmation.',
+    actions: actions.slice(0, 4),
+  };
+}
+
 function buildAssistantContextFromRows({
   userId,
   userName,
@@ -131,6 +195,13 @@ function buildAssistantContextFromRows({
   const personalSpent = roundMoney(totalSpent - sharedSpent);
   const householdBudget = getHouseholdBudget(budgets);
   const categoryDrivers = getCategoryDrivers(expenses, totalSpent);
+  const budget = {
+    householdBudget,
+    usedPercent: householdBudget > 0 ? roundMoney((totalSpent / householdBudget) * 100) : null,
+    remaining: householdBudget > 0 ? roundMoney(householdBudget - totalSpent) : null,
+  };
+  const sharedBalance = getSharedBalanceSummary({ members, expenses, settlements, userId });
+  const anomalies = getAnomalies(expenses);
 
   return {
     scope: {
@@ -140,6 +211,7 @@ function buildAssistantContextFromRows({
       userName: userName || memberName(members.find((member) => Number(member.user_id) === Number(userId))),
       month,
       intent: classifyAssistantIntent(sanitizedMessage),
+      assistantPhase: 2,
     },
     monthly: {
       totalSpent,
@@ -147,17 +219,15 @@ function buildAssistantContextFromRows({
       personalSpent,
       transactionCount: expenses.length,
     },
-    budget: {
-      householdBudget,
-      usedPercent: householdBudget > 0 ? roundMoney((totalSpent / householdBudget) * 100) : null,
-      remaining: householdBudget > 0 ? roundMoney(householdBudget - totalSpent) : null,
-    },
+    budget,
     categoryDrivers,
-    sharedBalance: getSharedBalanceSummary({ members, expenses, settlements, userId }),
-    anomalies: getAnomalies(expenses),
+    sharedBalance,
+    anomalies,
+    actionPlan: buildActionPlan({ categoryDrivers, budget, anomalies, sharedBalance }),
     recentTransactions: getRecentTransactions(expenses),
     security: {
       mode: 'read_only',
+      allowedActions: 'proposal_only_no_mutations',
       untrustedFields: ['transaction.notes', 'transaction.category', 'transaction.paidBy'],
       dataMinimization: `Capped transaction details at ${MAX_TRANSACTIONS_IN_CONTEXT} rows`,
     },
@@ -170,4 +240,5 @@ module.exports = {
   sanitizeAssistantMessage,
   classifyAssistantIntent,
   buildAssistantContextFromRows,
+  buildActionPlan,
 };

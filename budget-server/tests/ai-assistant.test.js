@@ -150,6 +150,39 @@ test('deterministic assistant fallback returns structured cards without calling 
   assert.equal(response.suggestedPrompts.length > 0, true);
 });
 
+test('phase 2 assistant context proposes safe read-only action plan cards', () => {
+  const context = buildAssistantContextFromRows({
+    userId: 1,
+    userName: 'Gary',
+    householdId: 1,
+    householdName: 'Archie Home',
+    month: '2026-06',
+    message: 'Suggest ways to stay on budget',
+    members,
+    expenses: [
+      expense({ id: 1, amount: 900, category: '🍕 Food/Dining', is_shared: 0, notes: 'Restaurants' }),
+      expense({ id: 2, amount: 650, category: '🛒 Groceries', is_shared: 0, notes: 'Groceries' }),
+      expense({ id: 3, amount: 220, category: '☕ Coffee', is_shared: 0, notes: 'Coffee' }),
+    ],
+    budgets: [{ amount: 1500, budget_type: 'personal', user_id: 1, month: '2026-06' }],
+    settlements: [],
+  });
+
+  assert.equal(context.scope.assistantPhase, 2);
+  assert.equal(context.actionPlan.mode, 'proposal_only');
+  assert.ok(context.actionPlan.actions.length >= 2);
+  assert.equal(context.actionPlan.actions.every((action) => action.requiresConfirmation === true), true);
+  assert.equal(context.actionPlan.actions.some((action) => action.type === 'reduce_category_spend' && action.category === '🍕 Food/Dining'), true);
+  assert.equal(context.security.allowedActions, 'proposal_only_no_mutations');
+
+  const response = buildDeterministicAssistantResponse({ context });
+  const actionCard = response.cards.find((card) => card.type === 'action_plan');
+  assert.ok(actionCard, 'expected action_plan card');
+  assert.equal(actionCard.mode, 'proposal_only');
+  assert.ok(actionCard.actions.length >= 2);
+  assert.match(response.answer, /suggested next steps/i);
+});
+
 test('assistant usage cost estimator is deterministic and tiny for compact contexts', () => {
   const cents = estimateAssistantUsageCostCents({ inputTokens: 1500, outputTokens: 300 });
   assert.equal(cents > 0, true);
