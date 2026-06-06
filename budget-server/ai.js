@@ -14,6 +14,48 @@ function getCurrentMonth() {
   return new Date().toISOString().slice(0, 7);
 }
 
+const MONTH_NAMES = [
+  'january', 'february', 'march', 'april', 'may', 'june',
+  'july', 'august', 'september', 'october', 'november', 'december',
+];
+const MONTH_ALIASES = new Map(MONTH_NAMES.flatMap((name, index) => [
+  [name, index + 1],
+  [name.slice(0, 3), index + 1],
+]));
+
+function normalizeMonthValue(value, fallback = getCurrentMonth()) {
+  const text = String(value || '').trim();
+  return /^\d{4}-\d{2}$/.test(text) ? text : fallback;
+}
+
+function resolveAssistantMonth({ message, requestedMonth, referenceMonth = getCurrentMonth() }) {
+  const fallbackMonth = normalizeMonthValue(requestedMonth, normalizeMonthValue(referenceMonth));
+  const reference = normalizeMonthValue(referenceMonth, fallbackMonth);
+  const text = String(message || '').toLowerCase();
+  let resolved = fallbackMonth;
+
+  const explicit = text.match(/\b(20\d{2})[-/](0?[1-9]|1[0-2])\b/);
+  if (explicit) {
+    return `${explicit[1]}-${String(Number(explicit[2])).padStart(2, '0')}`;
+  }
+
+  const foundMonths = [];
+  for (const [alias, monthNumber] of MONTH_ALIASES.entries()) {
+    const re = new RegExp(`\\b${alias}\\b`, 'i');
+    if (!re.test(text)) continue;
+    const yearNearMonth = text.match(new RegExp(`\\b${alias}\\b[^0-9]{0,12}(20\\d{2})`, 'i'))
+      || text.match(new RegExp(`(20\\d{2})[^a-z]{0,12}\\b${alias}\\b`, 'i'));
+    const referenceYear = Number(reference.slice(0, 4));
+    const referenceMonthNumber = Number(reference.slice(5, 7));
+    const year = yearNearMonth ? Number(yearNearMonth[1]) : (monthNumber > referenceMonthNumber ? referenceYear - 1 : referenceYear);
+    foundMonths.push(`${year}-${String(monthNumber).padStart(2, '0')}`);
+  }
+  if (foundMonths.length > 0) {
+    resolved = foundMonths.sort().at(-1);
+  }
+  return resolved;
+}
+
 function getUserHousehold({ householdId, userId }) {
   if (householdId) {
     return queryOne(
@@ -81,7 +123,40 @@ function loadAssistantRows({ householdId, month }) {
     `SELECT * FROM budgets WHERE household_id = ? AND month = ?`,
     [householdId, month]
   );
-  return { members, expenses, settlements, budgets };
+  const monthlyHistory = queryAll(
+    `SELECT substr(date, 1, 7) as month,
+            ROUND(SUM(amount), 2) as totalSpent,
+            ROUND(SUM(CASE WHEN is_shared = 1 THEN amount ELSE 0 END), 2) as sharedSpent,
+            COUNT(*) as transactionCount
+     FROM expenses
+     WHERE household_id = ?
+     GROUP BY substr(date, 1, 7)
+     ORDER BY month DESC
+     LIMIT 12`,
+    [householdId]
+  );
+  const budgetRows = queryAll(
+    `SELECT b.month, b.amount, b.budget_type, b.user_id, u.name
+     FROM budgets b
+     LEFT JOIN users u ON u.id = b.user_id
+     WHERE b.household_id = ?
+     ORDER BY b.month DESC, b.user_id IS NULL, b.user_id
+     LIMIT 120`,
+    [householdId]
+  );
+  const budgetByMonth = new Map();
+  for (const row of budgetRows) {
+    if (!budgetByMonth.has(row.month)) {
+      budgetByMonth.set(row.month, { month: row.month, householdBudget: 0, personalBudgets: [] });
+    }
+    const item = budgetByMonth.get(row.month);
+    if (row.budget_type === 'personal' && row.user_id != null) {
+      item.householdBudget = Number((item.householdBudget + Number(row.amount || 0)).toFixed(2));
+      item.personalBudgets.push({ userId: Number(row.user_id), name: row.name, amount: Number(row.amount || 0) });
+    }
+  }
+  const budgetHistory = Array.from(budgetByMonth.values()).slice(0, 12);
+  return { members, expenses, settlements, budgets, monthlyHistory, budgetHistory };
 }
 
 function buildAssistantUsageDetails({ message, response }) {
@@ -116,7 +191,11 @@ function logAssistantUsage({ householdId, userId, message, response }) {
 router.post('/chat', authenticate, async (req, res) => {
   try {
     const message = sanitizeAssistantMessage(req.body?.message);
-    const month = String(req.body?.month || getCurrentMonth()).slice(0, 7);
+    const month = resolveAssistantMonth({
+      message,
+      requestedMonth: req.body?.month,
+      referenceMonth: getCurrentMonth(),
+    });
     const household = getUserHousehold({ householdId: req.body?.householdId, userId: req.user.id });
     if (!household) return res.status(403).json({ error: 'No household access' });
 
@@ -164,4 +243,5 @@ router.post('/chat', authenticate, async (req, res) => {
 router.buildAssistantUsageDetails = buildAssistantUsageDetails;
 router.getMonthlyQuota = getMonthlyQuota;
 router.isUserFlowtPro = isUserFlowtPro;
+router.resolveAssistantMonth = resolveAssistantMonth;
 module.exports = router;

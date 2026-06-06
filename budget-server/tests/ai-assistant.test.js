@@ -77,6 +77,38 @@ test('assistant context summarizes budget, category drivers, and shared balance 
   assert.equal(context.recentTransactions.length, 3);
 });
 
+test('assistant context includes available month history so prior-month budget questions are grounded', () => {
+  const context = buildAssistantContextFromRows({
+    userId: 1,
+    userName: 'Gary',
+    householdId: 1,
+    householdName: 'Archie Home',
+    month: '2026-05',
+    message: 'What was my May budget?',
+    members,
+    expenses: [expense({ id: 4, amount: 320, category: '🍕 Food/Dining', date: '2026-05-08' })],
+    budgets: [
+      { amount: 5200, budget_type: 'personal', user_id: 1, month: '2026-05' },
+      { amount: 4800, budget_type: 'personal', user_id: 2, month: '2026-05' },
+    ],
+    settlements: [],
+    monthlyHistory: [
+      { month: '2026-06', totalSpent: 230.9, transactionCount: 3 },
+      { month: '2026-05', totalSpent: 320, transactionCount: 1 },
+    ],
+    budgetHistory: [
+      { month: '2026-06', householdBudget: 10600, personalBudgets: [{ userId: 1, name: 'Gary', amount: 5600 }] },
+      { month: '2026-05', householdBudget: 10000, personalBudgets: [{ userId: 1, name: 'Gary', amount: 5200 }] },
+    ],
+  });
+
+  assert.equal(context.scope.month, '2026-05');
+  assert.equal(context.budget.householdBudget, 10000);
+  assert.equal(context.appData.monthsAvailable.includes('2026-05'), true);
+  assert.equal(context.appData.budgetHistory.find((item) => item.month === '2026-05').householdBudget, 10000);
+  assert.equal(context.appData.budgetHistory.find((item) => item.month === '2026-05').personalBudgets[0].amount, 5200);
+});
+
 test('assistant context caps transaction details and treats notes as untrusted data', () => {
   const manyExpenses = Array.from({ length: 25 }, (_, idx) => expense({
     id: idx + 1,
@@ -99,7 +131,7 @@ test('assistant context caps transaction details and treats notes as untrusted d
 
   assert.equal(context.recentTransactions.length, 10);
   assert.equal(context.security.untrustedFields.includes('transaction.notes'), true);
-  assert.equal(context.security.dataMinimization, 'Capped transaction details at 10 rows');
+  assert.match(context.security.dataMinimization, /Capped transaction details at 10 rows/);
 });
 
 test('assistant message sanitizer enforces concise bounded user input', () => {

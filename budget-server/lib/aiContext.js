@@ -37,6 +37,35 @@ function getHouseholdBudget(budgets) {
     .reduce((sum, budget) => sum + Number(budget.amount || 0), 0));
 }
 
+function getBudgetHistory({ budgetHistory = [], members = [] }) {
+  const memberById = new Map((members || []).map((member) => [Number(member.user_id), memberName(member)]));
+  return (budgetHistory || [])
+    .map((item) => ({
+      month: item.month,
+      householdBudget: roundMoney(item.householdBudget || 0),
+      personalBudgets: (item.personalBudgets || []).map((budget) => ({
+        userId: Number(budget.userId),
+        name: budget.name || memberById.get(Number(budget.userId)) || `User ${budget.userId}`,
+        amount: roundMoney(budget.amount || 0),
+      })),
+    }))
+    .filter((item) => item.month)
+    .slice(0, 12);
+}
+
+function getMonthlyHistory(monthlyHistory = []) {
+  return (monthlyHistory || [])
+    .map((item) => ({
+      month: item.month,
+      totalSpent: roundMoney(item.totalSpent || 0),
+      sharedSpent: roundMoney(item.sharedSpent || 0),
+      personalSpent: roundMoney(item.personalSpent || Math.max(0, Number(item.totalSpent || 0) - Number(item.sharedSpent || 0))),
+      transactionCount: Number(item.transactionCount || 0),
+    }))
+    .filter((item) => item.month)
+    .slice(0, 12);
+}
+
 function getCategoryDrivers(expenses, totalSpent) {
   const byCategory = new Map();
   for (const expense of expenses || []) {
@@ -188,6 +217,8 @@ function buildAssistantContextFromRows({
   expenses = [],
   budgets = [],
   settlements = [],
+  monthlyHistory = [],
+  budgetHistory = [],
 }) {
   const sanitizedMessage = sanitizeAssistantMessage(message);
   const totalSpent = roundMoney(expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
@@ -202,6 +233,13 @@ function buildAssistantContextFromRows({
   };
   const sharedBalance = getSharedBalanceSummary({ members, expenses, settlements, userId });
   const anomalies = getAnomalies(expenses);
+  const compactMonthlyHistory = getMonthlyHistory(monthlyHistory);
+  const compactBudgetHistory = getBudgetHistory({ budgetHistory, members });
+  const monthsAvailable = Array.from(new Set([
+    month,
+    ...compactMonthlyHistory.map((item) => item.month),
+    ...compactBudgetHistory.map((item) => item.month),
+  ].filter(Boolean))).slice(0, 12);
 
   return {
     scope: {
@@ -225,11 +263,17 @@ function buildAssistantContextFromRows({
     anomalies,
     actionPlan: buildActionPlan({ categoryDrivers, budget, anomalies, sharedBalance }),
     recentTransactions: getRecentTransactions(expenses),
+    appData: {
+      monthsAvailable,
+      monthlyHistory: compactMonthlyHistory,
+      budgetHistory: compactBudgetHistory,
+      note: 'Compact authenticated Budget Space history; detailed transaction rows remain capped for safety.',
+    },
     security: {
       mode: 'read_only',
       allowedActions: 'proposal_only_no_mutations',
       untrustedFields: ['transaction.notes', 'transaction.category', 'transaction.paidBy'],
-      dataMinimization: `Capped transaction details at ${MAX_TRANSACTIONS_IN_CONTEXT} rows`,
+      dataMinimization: `Capped transaction details at ${MAX_TRANSACTIONS_IN_CONTEXT} rows; included compact 12-month budget/spending history`,
     },
   };
 }
