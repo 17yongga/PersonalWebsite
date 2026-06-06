@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { queryOne, queryAll, runSql } = require('./database');
+const { serializeUserSubscription } = require('./lib/promoCodes');
+const { serializeUserProfileInput } = require('./lib/userProfile');
 
 const router = express.Router();
 const DEFAULT_INSECURE_JWT_SECRET = 'finsync-secret-key-change-in-production';
@@ -98,7 +100,7 @@ function authenticate(req, res, next) {
 // ── POST /api/auth/register ───────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, eTransferEmail, etransfer_email } = req.body;
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Email, password, and name are required' });
     }
@@ -109,17 +111,28 @@ router.post('/register', async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    let profileInput;
+    try {
+      profileInput = serializeUserProfileInput({
+        name,
+        eTransferEmail: eTransferEmail ?? etransfer_email ?? email,
+      });
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Invalid profile details' });
+    }
+
     const result = runSql(
-      'INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)',
-      [email, passwordHash, name]
+      'INSERT INTO users (email, password_hash, name, etransfer_email) VALUES (?, ?, ?, ?)',
+      [email, passwordHash, profileInput.name, profileInput.etransfer_email]
     );
 
     const token = jwt.sign(
-      { id: result.lastInsertRowid, email, name },
+      { id: result.lastInsertRowid, email, name: profileInput.name },
       JWT_SECRET,
       { expiresIn: TOKEN_EXPIRY }
     );
-    res.json({ token, user: { id: result.lastInsertRowid, email, name } });
+    const createdUser = queryOne('SELECT * FROM users WHERE id = ?', [result.lastInsertRowid]);
+    res.json({ token, user: serializeUserSubscription(createdUser) });
   } catch (err) {
     console.error('Register error:', err);
     res.status(500).json({ error: 'Registration failed' });
@@ -141,7 +154,7 @@ router.post('/login', async (req, res) => {
       JWT_SECRET,
       { expiresIn: TOKEN_EXPIRY }
     );
-    res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
+    res.json({ token, user: serializeUserSubscription(user) });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Login failed' });
@@ -232,11 +245,33 @@ router.post('/reset-password', async (req, res) => {
 // ── GET /api/auth/me ──────────────────────────────────────────────────────────
 router.get('/me', authenticate, (req, res) => {
   const user = queryOne(
-    'SELECT id, email, name, created_at FROM users WHERE id = ?',
+    'SELECT * FROM users WHERE id = ?',
     [req.user.id]
   );
   if (!user) return res.status(404).json({ error: 'User not found' });
-  res.json({ user });
+  res.json({ user: serializeUserSubscription(user) });
+});
+
+// ── PUT /api/auth/profile ─────────────────────────────────────────────────────
+router.put('/profile', authenticate, (req, res) => {
+  try {
+    let profileInput;
+    try {
+      profileInput = serializeUserProfileInput(req.body);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Invalid profile details' });
+    }
+
+    runSql(
+      'UPDATE users SET name = ?, avatar_url = ?, etransfer_email = ? WHERE id = ?',
+      [profileInput.name, profileInput.avatar_url, profileInput.etransfer_email, req.user.id]
+    );
+    const user = queryOne('SELECT * FROM users WHERE id = ?', [req.user.id]);
+    res.json({ user: serializeUserSubscription(user) });
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
 });
 
 // ── DELETE /api/auth/account ──────────────────────────────────────────────────

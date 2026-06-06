@@ -203,11 +203,16 @@ test('directional settlements after a legacy cutoff are applied', () => {
 });
 
 test('suggested settlements convert balances into debtor-to-creditor payments', () => {
-  const result = calculateHouseholdBalance({ members: threeMembers, expenses: [expense({ amount: 90, paid_by: 1 })] });
-  const suggestions = suggestSettlements({ balances: result.balances, members: threeMembers });
+  const membersWithTransferEmails = [
+    { user_id: 1, name: 'Gary', email: 'gary@example.com', etransfer_email: 'gary-pay@example.com' },
+    { user_id: 2, name: 'Emily', email: 'emily@example.com', etransfer_email: 'emily-pay@example.com' },
+    { user_id: 3, name: 'Kevin', email: 'kevin@example.com' },
+  ];
+  const result = calculateHouseholdBalance({ members: membersWithTransferEmails, expenses: [expense({ amount: 90, paid_by: 1 })] });
+  const suggestions = suggestSettlements({ balances: result.balances, members: membersWithTransferEmails });
   assert.deepEqual(suggestions, [
-    { from_user_id: 2, from_name: 'Emily', to_user_id: 1, to_name: 'Gary', amount: 30 },
-    { from_user_id: 3, from_name: 'Kevin', to_user_id: 1, to_name: 'Gary', amount: 30 },
+    { from_user_id: 2, from_name: 'Emily', from_etransfer_email: 'emily-pay@example.com', to_user_id: 1, to_name: 'Gary', to_etransfer_email: 'gary-pay@example.com', amount: 30 },
+    { from_user_id: 3, from_name: 'Kevin', from_etransfer_email: null, to_user_id: 1, to_name: 'Gary', to_etransfer_email: 'gary-pay@example.com', amount: 30 },
   ]);
 });
 

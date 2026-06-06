@@ -9,6 +9,7 @@ const {
   assertCanRemoveMember,
   assertCanLeaveSpace,
   assertCanTransferOwnership,
+  assertCanDeleteBudgetSpace,
   relationshipTypeAfterMemberRemoval,
 } = require('./lib/memberManagement');
 
@@ -167,9 +168,31 @@ function countMemberFinancialReferences(householdId, userId) {
   return Number(expenseCount) + Number(splitCount) + Number(settlementCount) + Number(budgetCount);
 }
 
+function countHouseholdFinancialReferences(householdId) {
+  const expenseCount = queryOne('SELECT COUNT(*) as count FROM expenses WHERE household_id = ?', [householdId])?.count ?? 0;
+  const splitCount = queryOne(
+    `SELECT COUNT(*) as count
+     FROM expense_splits es
+     JOIN expenses e ON es.expense_id = e.id
+     WHERE e.household_id = ?`,
+    [householdId],
+  )?.count ?? 0;
+  const settlementCount = queryOne('SELECT COUNT(*) as count FROM settlements WHERE household_id = ?', [householdId])?.count ?? 0;
+  const budgetCount = queryOne('SELECT COUNT(*) as count FROM budgets WHERE household_id = ?', [householdId])?.count ?? 0;
+  return Number(expenseCount) + Number(splitCount) + Number(settlementCount) + Number(budgetCount);
+}
+
+function countUnsettledBalancePairs(householdId) {
+  const household = getHouseholdDetails(householdId);
+  if (!household) return 0;
+  const expenses = attachSplitDetails(queryAll('SELECT * FROM expenses WHERE household_id = ?', [householdId]));
+  const snapshot = buildBalanceSnapshot({ members: household.members, expenses });
+  return (snapshot.suggested_settlements || []).filter((settlement) => Number(settlement.amount || 0) >= 0.01).length;
+}
+
 function getHouseholdMembers(householdId) {
   return queryAll(`
-    SELECT hm.user_id, hm.role, hm.partner_name, u.email, u.name
+    SELECT hm.user_id, hm.role, hm.partner_name, u.email, u.name, u.avatar_url, u.etransfer_email
     FROM household_members hm JOIN users u ON hm.user_id = u.id
     WHERE hm.household_id = ?`,
     [householdId]
@@ -873,11 +896,12 @@ router.post('/:id/leave', authenticate, (req, res) => {
 
     const members = getHouseholdMembers(id);
     const requesterFinancialReferenceCount = countMemberFinancialReferences(id, req.user.id);
+    const unsettledSettlementCount = countUnsettledBalancePairs(id);
     try {
-      assertCanLeaveSpace({ requesterId: req.user.id, members, requesterFinancialReferenceCount });
+      assertCanLeaveSpace({ requesterId: req.user.id, members, requesterFinancialReferenceCount, unsettledSettlementCount });
     } catch (err) {
       const message = err.message || 'Could not leave budget space';
-      const status = /financial history/i.test(message) ? 409 : 403;
+      const status = /financial history|outstanding balances/i.test(message) ? 409 : 403;
       return res.status(status).json({ error: message });
     }
 
@@ -940,23 +964,41 @@ router.post('/:id/regenerate-code', authenticate, (req, res) => {
   }
 });
 
-// Delete household (owner only)
+// Delete budget space (owner only, safe only before financial history or unsettled balances)
 router.delete('/:id', authenticate, (req, res) => {
   try {
     const { id } = req.params;
     const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
     if (!household) return res.status(404).json({ error: 'Space not found' });
-    if (household.created_by !== req.user.id) return res.status(403).json({ error: 'Only the space owner can delete it' });
 
-    // Delete all related data
-    runSql('DELETE FROM expenses WHERE household_id = ?', [id]);
-    runSql('DELETE FROM budgets WHERE household_id = ?', [id]);
+    const members = getHouseholdMembers(id);
+    const totalFinancialReferenceCount = countHouseholdFinancialReferences(id);
+    const unsettledSettlementCount = countUnsettledBalancePairs(id);
+
+    try {
+      assertCanDeleteBudgetSpace({
+        requesterId: req.user.id,
+        members,
+        totalFinancialReferenceCount,
+        unsettledSettlementCount,
+      });
+    } catch (err) {
+      const message = err.message || 'Could not delete budget space';
+      const status = /owner/i.test(message) ? 403 : 409;
+      return res.status(status).json({
+        error: message,
+        blockers: {
+          totalFinancialReferenceCount,
+          unsettledSettlementCount,
+        },
+      });
+    }
+
     runSql('DELETE FROM categories WHERE household_id = ?', [id]);
-    runSql('DELETE FROM settlements WHERE household_id = ?', [id]);
     runSql('DELETE FROM household_members WHERE household_id = ?', [id]);
     runSql('DELETE FROM households WHERE id = ?', [id]);
 
-    res.json({ message: 'Space deleted successfully' });
+    res.json({ message: 'Budget space deleted successfully' });
   } catch (err) {
     console.error('Delete household error:', err);
     res.status(500).json({ error: 'Failed to delete space' });

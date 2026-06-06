@@ -38,7 +38,7 @@ function assertCanRemoveMember({ requesterId, targetUserId, members, targetFinan
   return true;
 }
 
-function assertCanLeaveSpace({ requesterId, members, requesterFinancialReferenceCount = 0 }) {
+function assertCanLeaveSpace({ requesterId, members, requesterFinancialReferenceCount = 0, unsettledSettlementCount = 0 }) {
   const requester = findMember(members, requesterId);
   if (!requester) {
     throw new Error('Not a member');
@@ -48,6 +48,9 @@ function assertCanLeaveSpace({ requesterId, members, requesterFinancialReference
   }
   if (requester.role === 'owner') {
     throw new Error('Transfer ownership before leaving this budget space');
+  }
+  if (Number(unsettledSettlementCount || 0) > 0) {
+    throw new Error('Settle outstanding balances before leaving this budget space');
   }
   if (hasFinancialHistory(requesterFinancialReferenceCount)) {
     throw new Error('You have financial history in this budget space. Keep your membership for now so balances, expenses, and settlements stay accurate.');
@@ -70,6 +73,20 @@ function assertCanTransferOwnership({ requesterId, newOwnerId, members }) {
   return true;
 }
 
+function assertCanDeleteBudgetSpace({ requesterId, members, totalFinancialReferenceCount = 0, unsettledSettlementCount = 0 }) {
+  const requester = findMember(members, requesterId);
+  if (!requester || requester.role !== 'owner') {
+    throw new Error('Only the space owner can delete this budget space');
+  }
+  if (Number(unsettledSettlementCount || 0) > 0) {
+    throw new Error('Settle outstanding balances before deleting this budget space');
+  }
+  if (hasFinancialHistory(totalFinancialReferenceCount)) {
+    throw new Error('This budget space has financial history. Keep it for records instead of deleting it.');
+  }
+  return true;
+}
+
 function relationshipTypeAfterMemberRemoval(currentRelationshipType, remainingMemberCount) {
   if (Number(remainingMemberCount) <= 1) return 'solo';
   if (currentRelationshipType === 'partner' && Number(remainingMemberCount) > 2) return 'group';
@@ -81,6 +98,7 @@ module.exports = {
   assertCanRemoveMember,
   assertCanLeaveSpace,
   assertCanTransferOwnership,
+  assertCanDeleteBudgetSpace,
   relationshipTypeAfterMemberRemoval,
   findMember,
   findOwner,

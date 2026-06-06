@@ -47,10 +47,14 @@ test('non-owner can leave, but owner must transfer ownership before leaving shar
   );
 });
 
-test('members with financial history cannot leave silently', () => {
+test('members with financial history or unsettled balances cannot leave silently', () => {
   assert.throws(
     () => assertCanLeaveSpace({ requesterId: 2, members, requesterFinancialReferenceCount: 1 }),
     /financial history/,
+  );
+  assert.throws(
+    () => assertCanLeaveSpace({ requesterId: 2, members, requesterFinancialReferenceCount: 0, unsettledSettlementCount: 1 }),
+    /Settle outstanding balances before leaving/i,
   );
 });
 

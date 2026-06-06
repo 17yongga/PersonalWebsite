@@ -2,16 +2,23 @@ const fs = require('fs');
 const path = require('path');
 const initSqlJs = require('sql.js');
 
-const DB_PATH = path.join(__dirname, 'finsync.db');
 let db = null;
+let dbPath = null;
+let autosaveTimer = null;
+
+function getDbPath() {
+  return process.env.BUDGET_DB_PATH || path.join(__dirname, 'finsync.db');
+}
 
 async function getDb() {
   if (db) return db;
 
+  dbPath = getDbPath();
+
   const SQL = await initSqlJs();
 
-  if (fs.existsSync(DB_PATH)) {
-    const buffer = fs.readFileSync(DB_PATH);
+  if (fs.existsSync(dbPath)) {
+    const buffer = fs.readFileSync(dbPath);
     db = new SQL.Database(buffer);
   } else {
     db = new SQL.Database();
@@ -27,11 +34,20 @@ function saveDb() {
   if (!db) return;
   const data = db.export();
   const buffer = Buffer.from(data);
-  fs.writeFileSync(DB_PATH, buffer);
+  fs.writeFileSync(dbPath || getDbPath(), buffer);
 }
 
-// Auto-save every 5 seconds if there are changes
-setInterval(saveDb, 5000);
+function enableAutosave(intervalMs = 5000) {
+  if (autosaveTimer) return autosaveTimer;
+  autosaveTimer = setInterval(saveDb, intervalMs);
+  return autosaveTimer;
+}
+
+function disableAutosave() {
+  if (!autosaveTimer) return;
+  clearInterval(autosaveTimer);
+  autosaveTimer = null;
+}
 
 async function initialize() {
   const db = await getDb();
@@ -45,6 +61,19 @@ async function initialize() {
       created_at TEXT DEFAULT (datetime('now'))
     )
   `);
+
+  const userColumns = db.exec(`PRAGMA table_info(users)`)[0]?.values.map(row => row[1]) || [];
+  const addUserColumn = (name, definition) => {
+    if (!userColumns.includes(name)) {
+      db.run(`ALTER TABLE users ADD COLUMN ${name} ${definition}`);
+    }
+  };
+  addUserColumn('subscription_status', 'TEXT');
+  addUserColumn('current_entitlement', 'TEXT');
+  addUserColumn('subscription_expires_at', 'TEXT');
+  addUserColumn('promo_grant_source', 'TEXT');
+  addUserColumn('avatar_url', 'TEXT');
+  addUserColumn('etransfer_email', 'TEXT');
 
   db.run(`
     CREATE TABLE IF NOT EXISTS households (
@@ -183,6 +212,33 @@ async function initialize() {
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS promo_codes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code_hash TEXT NOT NULL UNIQUE,
+      label TEXT,
+      duration_days INTEGER NOT NULL DEFAULT 31,
+      max_redemptions INTEGER NOT NULL DEFAULT 1,
+      redemption_count INTEGER NOT NULL DEFAULT 0,
+      active INTEGER NOT NULL DEFAULT 1,
+      expires_at TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS promo_code_redemptions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      promo_code_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      redeemed_at TEXT NOT NULL,
+      grant_expires_at TEXT NOT NULL,
+      UNIQUE(promo_code_id, user_id),
+      FOREIGN KEY (promo_code_id) REFERENCES promo_codes(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
   saveDb();
 }
 
@@ -213,4 +269,4 @@ function runSql(sql, params = []) {
   return { lastInsertRowid: lastId, changes };
 }
 
-module.exports = { getDb, initialize, queryAll, queryOne, runSql, saveDb };
+module.exports = { getDb, initialize, queryAll, queryOne, runSql, saveDb, enableAutosave, disableAutosave, getDbPath };

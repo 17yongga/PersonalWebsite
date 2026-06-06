@@ -187,8 +187,10 @@ function suggestSettlements({ balances, members = [] }) {
       settlements.push({
         from_user_id: debtor.userId,
         from_name: fromMember.name || fromMember.partner_name || `User ${debtor.userId}`,
+        from_etransfer_email: fromMember.etransfer_email || null,
         to_user_id: creditor.userId,
         to_name: toMember.name || toMember.partner_name || `User ${creditor.userId}`,
+        to_etransfer_email: toMember.etransfer_email || null,
         amount,
       });
     }
