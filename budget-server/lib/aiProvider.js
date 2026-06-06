@@ -116,10 +116,16 @@ function normalizeAssistantResponse(raw, fallback) {
   if (!parsed || typeof parsed !== 'object' || typeof parsed.answer !== 'string') {
     return fallback;
   }
+  const parsedCards = Array.isArray(parsed.cards) && parsed.cards.length > 0 ? parsed.cards.slice(0, 5) : fallback.cards;
+  const fallbackHasActionPlan = (fallback.cards || []).some((card) => card.type === 'action_plan');
+  const parsedHasActionPlan = (parsedCards || []).some((card) => card.type === 'action_plan');
+  const cards = fallbackHasActionPlan && !parsedHasActionPlan
+    ? [...parsedCards.filter((card) => card.type !== 'action_plan'), ...fallback.cards.filter((card) => card.type === 'action_plan')].slice(0, 5)
+    : parsedCards;
   return {
     answer: parsed.answer.slice(0, 1600),
-    cards: Array.isArray(parsed.cards) ? parsed.cards.slice(0, 5) : fallback.cards,
-    suggestedPrompts: Array.isArray(parsed.suggestedPrompts) ? parsed.suggestedPrompts.slice(0, 4) : fallback.suggestedPrompts,
+    cards,
+    suggestedPrompts: Array.isArray(parsed.suggestedPrompts) && parsed.suggestedPrompts.length > 0 ? parsed.suggestedPrompts.slice(0, 4) : fallback.suggestedPrompts,
   };
 }
 

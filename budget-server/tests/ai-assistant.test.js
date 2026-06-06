@@ -8,6 +8,7 @@ const {
 } = require('../lib/aiContext');
 const {
   buildAssistantMessages,
+  callAssistantModel,
   buildDeterministicAssistantResponse,
   estimateAssistantUsageCostCents,
 } = require('../lib/aiProvider');
@@ -181,6 +182,41 @@ test('phase 2 assistant context proposes safe read-only action plan cards', () =
   assert.equal(actionCard.mode, 'proposal_only');
   assert.ok(actionCard.actions.length >= 2);
   assert.match(response.answer, /suggested next steps/i);
+});
+
+test('phase 2 assistant falls back to deterministic action cards when model omits cards', async () => {
+  const context = buildAssistantContextFromRows({
+    userId: 1,
+    userName: 'Gary',
+    householdId: 1,
+    householdName: 'Archie Home',
+    month: '2026-06',
+    message: 'Suggest ways to stay on budget',
+    members,
+    expenses: [expense({ id: 1, amount: 300, category: '🍕 Food/Dining', is_shared: 0 })],
+    budgets: [{ amount: 500, budget_type: 'personal', user_id: 1, month: '2026-06' }],
+    settlements: [],
+  });
+  const originalKey = process.env.OPENAI_API_KEY;
+  process.env.OPENAI_API_KEY = 'test-key';
+  try {
+    const response = await callAssistantModel({
+      message: 'Suggest ways to stay on budget',
+      context,
+      fetchImpl: async () => ({
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: JSON.stringify({ answer: 'Short answer', cards: [], suggestedPrompts: [] }) } }],
+          usage: { prompt_tokens: 100, completion_tokens: 20 },
+        }),
+      }),
+    });
+    assert.equal(response.cards.some((card) => card.type === 'action_plan'), true);
+    assert.equal(response.suggestedPrompts.length > 0, true);
+  } finally {
+    if (originalKey == null) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = originalKey;
+  }
 });
 
 test('assistant usage cost estimator is deterministic and tiny for compact contexts', () => {
