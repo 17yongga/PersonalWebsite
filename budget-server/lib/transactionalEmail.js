@@ -2,9 +2,9 @@ const nodemailer = require('nodemailer');
 const { SESv2Client, SendEmailCommand } = require('@aws-sdk/client-sesv2');
 
 const DEFAULT_FROM = 'Flowt <noreply@useflowt.app>';
-const DEFAULT_RESET_WEB_URL = 'https://useflowt.app/reset-password';
-const DEFAULT_VERIFY_WEB_URL = 'https://useflowt.app/verify-email';
-const DEFAULT_INVITE_WEB_URL = 'https://useflowt.app/join';
+const DEFAULT_RESET_WEB_URL = 'https://useflowt.app/reset-password.html';
+const DEFAULT_VERIFY_WEB_URL = 'https://useflowt.app/verify-email.html';
+const DEFAULT_INVITE_WEB_URL = 'https://useflowt.app/join-budget-space.html';
 const DEFAULT_AWS_REGION = 'us-east-1';
 
 function htmlEscape(value) {

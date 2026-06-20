@@ -10,42 +10,37 @@ const {
   sendBudgetSpaceInviteEmail,
 } = require('../lib/transactionalEmail');
 
-test('reset password email includes web fallback and app deep link', () => {
+test('reset password email includes static web fallback and app deep link', () => {
   const token = 'abc 123/+=';
-  const email = buildResetPasswordEmail(token, {
-    RESET_PASSWORD_WEB_URL: 'https://useflowt.app/reset-password',
-  });
+  const email = buildResetPasswordEmail(token);
 
   assert.equal(email.subject, 'Reset your Flowt password');
-  assert.match(email.text, /https:\/\/useflowt\.app\/reset-password\?token=abc%20123%2F%2B%3D/);
+  assert.match(email.text, /https:\/\/useflowt\.app\/reset-password\.html\?token=abc%20123%2F%2B%3D/);
   assert.match(email.text, /flowt:\/\/reset-password\?token=abc%20123%2F%2B%3D/);
   assert.match(email.html, /Reset Password/);
   assert.match(email.html, /This link expires in 1 hour/);
 });
 
-test('email verification email includes web fallback and app deep link', () => {
-  const email = buildEmailVerificationEmail('verify-token', {
-    VERIFY_EMAIL_WEB_URL: 'https://useflowt.app/verify-email',
-  });
+test('email verification email includes static web fallback and app deep link', () => {
+  const email = buildEmailVerificationEmail('verify-token');
 
   assert.equal(email.subject, 'Verify your Flowt email');
-  assert.match(email.text, /https:\/\/useflowt\.app\/verify-email\?token=verify-token/);
+  assert.match(email.text, /https:\/\/useflowt\.app\/verify-email\.html\?token=verify-token/);
   assert.match(email.text, /flowt:\/\/verify-email\?token=verify-token/);
   assert.match(email.html, /Verify Email/);
   assert.match(email.html, /expires in 24 hours/);
 });
 
-test('budget space invite email includes join code and app link', () => {
+test('budget space invite email includes join code, static web fallback, and app link', () => {
   const email = buildBudgetSpaceInviteEmail({
     inviterName: 'Gary',
     spaceName: 'Sandbanks Trip',
     inviteCode: 'ab12cd',
-  }, {
-    INVITE_WEB_URL: 'https://useflowt.app/join',
   });
 
   assert.equal(email.subject, 'Gary invited you to Sandbanks Trip on Flowt');
   assert.match(email.text, /Join code: AB12CD/);
+  assert.match(email.text, /https:\/\/useflowt\.app\/join-budget-space\.html\?inviteCode=AB12CD/);
   assert.match(email.text, /flowt:\/\/join-budget-space\?inviteCode=AB12CD/);
   assert.match(email.html, /AB12CD/);
 });
