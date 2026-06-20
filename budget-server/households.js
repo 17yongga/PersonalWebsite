@@ -6,6 +6,7 @@ const { validateExpenseInput } = require('./lib/expenseValidation');
 const { validateExpenseParticipants, buildEqualSplitRows } = require('./lib/expenseSplits');
 const { generateUniqueInviteCode } = require('./lib/inviteCode');
 const { sendBudgetSpaceInviteEmail } = require('./lib/transactionalEmail');
+const { createNotification, notifyHouseholdMembers } = require('./lib/notifications');
 const {
   assertCanRemoveMember,
   assertCanLeaveSpace,
@@ -492,6 +493,16 @@ router.post('/:id/invitations/email', authenticate, async (req, res) => {
       inviteCode: household.invite_code,
     });
 
+    createNotification({
+      userId: req.user.id,
+      householdId: id,
+      type: 'budget_space_invite_sent',
+      title: 'Invitation sent',
+      body: `${toEmail} was invited to ${household.name}.`,
+      actionUrl: 'flowt://settings',
+      metadata: { email: toEmail, householdName: household.name },
+    });
+
     res.json({
       message: 'Invitation email sent.',
       email: toEmail,
@@ -578,6 +589,19 @@ router.post('/:id/expenses', authenticate, (req, res) => {
       isShared: validated.isShared
     });
 
+    if (validated.isShared) {
+      notifyHouseholdMembers({
+        householdId: id,
+        actorUserId: req.user.id,
+        recipientIds: participantIds.length ? participantIds : members.map((m) => m.user_id),
+        type: 'expense_added',
+        title: 'Shared expense added',
+        body: `${req.user.name || 'Someone'} added ${category} for $${Number(validated.amount).toFixed(2)}.`,
+        actionUrl: 'flowt://transactions',
+        metadata: { expenseId: result.lastInsertRowid, amount: validated.amount, category },
+      });
+    }
+
     const expense = getExpenseByIdWithSplits(result.lastInsertRowid);
     res.json({ expense });
   } catch (err) {
@@ -633,6 +657,19 @@ router.put('/:id/expenses/:expenseId', authenticate, (req, res) => {
       isShared: validated.isShared
     });
 
+    if (validated.isShared) {
+      notifyHouseholdMembers({
+        householdId: id,
+        actorUserId: req.user.id,
+        recipientIds: participantIds.length ? participantIds : members.map((m) => m.user_id),
+        type: 'expense_updated',
+        title: 'Shared expense updated',
+        body: `${req.user.name || 'Someone'} updated ${category} to $${Number(validated.amount).toFixed(2)}.`,
+        actionUrl: 'flowt://transactions',
+        metadata: { expenseId: Number(expenseId), amount: validated.amount, category },
+      });
+    }
+
     const expense = getExpenseByIdWithSplits(expenseId);
     res.json({ expense });
   } catch (err) {
@@ -649,6 +686,8 @@ router.delete('/:id/expenses/:expenseId', authenticate, (req, res) => {
 
     // Get expense data before deleting for activity log
     const existing = queryOne('SELECT * FROM expenses WHERE id = ? AND household_id = ?', [expenseId, id]);
+    const participantRows = queryAll('SELECT user_id FROM expense_splits WHERE expense_id = ?', [expenseId]);
+    const householdMembers = queryAll('SELECT user_id FROM household_members WHERE household_id = ?', [id]);
     
     runSql('DELETE FROM expense_splits WHERE expense_id = ?', [expenseId]);
     runSql('DELETE FROM expenses WHERE id = ? AND household_id = ?', [expenseId, id]);
@@ -661,6 +700,19 @@ router.delete('/:id/expenses/:expenseId', authenticate, (req, res) => {
         notes: existing.notes || '',
         isShared: existing.is_shared !== 0
       });
+      if (Number(existing.is_shared) !== 0) {
+        const recipientIds = participantRows.length ? participantRows.map((row) => row.user_id) : householdMembers.map((row) => row.user_id);
+        notifyHouseholdMembers({
+          householdId: id,
+          actorUserId: req.user.id,
+          recipientIds,
+          type: 'expense_deleted',
+          title: 'Shared expense deleted',
+          body: `${req.user.name || 'Someone'} deleted ${existing.category} for $${Number(existing.amount).toFixed(2)}.`,
+          actionUrl: 'flowt://transactions',
+          metadata: { expenseId: Number(expenseId), amount: existing.amount, category: existing.category },
+        });
+      }
     }
     
     res.json({ message: 'Expense deleted' });
@@ -855,6 +907,20 @@ router.post('/:id/settlements', authenticate, (req, res) => {
       toUserId: toId,
       note: notes || '',
       settlementType: settlementType || 'full',
+    });
+
+    const fromUser = queryOne('SELECT name FROM users WHERE id = ?', [fromId]);
+    const toUser = queryOne('SELECT name FROM users WHERE id = ?', [toId]);
+    notifyHouseholdMembers({
+      householdId: id,
+      actorUserId: req.user.id,
+      recipientIds: [fromId, toId],
+      type: 'settlement_recorded',
+      title: 'Payment recorded',
+      body: `${fromUser?.name || 'Someone'} paid ${toUser?.name || 'someone'} $${settlementAmount.toFixed(2)}.`,
+      actionUrl: 'flowt://settlement',
+      metadata: { settlementId: result.lastInsertRowid, amount: settlementAmount, fromUserId: fromId, toUserId: toId },
+      includeActor: false,
     });
     
     res.json({

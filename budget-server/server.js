@@ -28,11 +28,13 @@ async function start() {
   const householdsRouter = require('./households');
   const aiRouter = require('./ai');
   const promoCodesRouter = require('./promoCodes');
+  const notificationsRouter = require('./notifications');
 
   app.use('/api/auth', authRouter);
   app.use('/api/households', householdsRouter);
   app.use('/api/ai', aiRouter);
   app.use('/api/promo-codes', promoCodesRouter);
+  app.use('/api/notifications', notificationsRouter);
 
   enableAutosave();
   app.listen(PORT, '0.0.0.0', () => {

@@ -235,6 +235,55 @@ async function initialize() {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      household_id INTEGER,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT,
+      action_url TEXT,
+      metadata_json TEXT,
+      read_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (household_id) REFERENCES households(id) ON DELETE CASCADE
+    )
+  `);
+  try {
+    db.run(`CREATE INDEX IF NOT EXISTS idx_notifications_user_read_created ON notifications(user_id, read_at, created_at)`);
+  } catch(e) { /* index may already exist */ }
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS notification_preferences (
+      user_id INTEGER PRIMARY KEY,
+      in_app_enabled INTEGER NOT NULL DEFAULT 1,
+      push_enabled INTEGER NOT NULL DEFAULT 0,
+      email_digest_enabled INTEGER NOT NULL DEFAULT 0,
+      expense_activity INTEGER NOT NULL DEFAULT 1,
+      settlement_activity INTEGER NOT NULL DEFAULT 1,
+      invite_activity INTEGER NOT NULL DEFAULT 1,
+      budget_alerts INTEGER NOT NULL DEFAULT 1,
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS notification_push_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      platform TEXT,
+      device_name TEXT,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS promo_codes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       code_hash TEXT NOT NULL UNIQUE,
