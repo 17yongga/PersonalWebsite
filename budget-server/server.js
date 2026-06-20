@@ -36,6 +36,10 @@ async function start() {
   app.use('/api/promo-codes', promoCodesRouter);
   app.use('/api/notifications', notificationsRouter);
 
+  app.use('/api', (req, res) => {
+    res.status(404).json({ error: `API route not found: ${req.method} ${req.path}` });
+  });
+
   enableAutosave();
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`FinSync API running on port ${PORT}`);

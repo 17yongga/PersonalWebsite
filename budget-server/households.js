@@ -471,7 +471,7 @@ router.post('/:id/invite-code/regenerate', authenticate, (req, res) => {
 });
 
 // Send household invite email (owner only)
-router.post('/:id/invitations/email', authenticate, async (req, res) => {
+router.post(['/:id/invitations/email', '/:id/invite-email', '/:id/invites/email'], authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const { email } = req.body;
