@@ -2,9 +2,9 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 const { queryOne, queryAll, runSql } = require('./database');
 const { serializeUserSubscription } = require('./lib/promoCodes');
+const { sendResetEmail } = require('./lib/transactionalEmail');
 const { serializeUserProfileInput } = require('./lib/userProfile');
 const { normalizeSubscriptionSyncInput } = require('./lib/subscriptionSync');
 
@@ -26,61 +26,6 @@ if (process.env.NODE_ENV === 'production' && JWT_SECRET.length < 32) {
 
 const TOKEN_EXPIRY = '30d';
 const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
-
-// ── Email transport ────────────────────────────────────────────────────────────
-// Set EMAIL_USER + EMAIL_PASS (Gmail App Password) on EC2 via PM2 env or .env
-// If not configured, reset tokens are logged to console for local dev/testing.
-function createTransport() {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return null;
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-  });
-}
-
-async function sendResetEmail(toEmail, rawToken) {
-  const deepLink = `flowt://reset-password?token=${rawToken}`;
-  const transport = createTransport();
-
-  if (!transport) {
-    // Dev fallback — log token so you can test without email creds
-    console.log(`[DEV] Password reset token for ${toEmail}: ${rawToken}`);
-    console.log(`[DEV] Deep link: ${deepLink}`);
-    return;
-  }
-
-  await transport.sendMail({
-    from: `"Flowt" <${process.env.EMAIL_USER}>`,
-    to: toEmail,
-    subject: 'Reset your Flowt password',
-    text: [
-      'You requested a password reset for your Flowt account.',
-      '',
-      'Tap the link below on your iPhone to reset your password:',
-      deepLink,
-      '',
-      'This link expires in 1 hour and can only be used once.',
-      '',
-      'If you did not request this, you can safely ignore this email.',
-    ].join('\n'),
-    html: `
-      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
-        <h2 style="color:#0f172a">Reset your Flowt password</h2>
-        <p style="color:#475569">You requested a password reset for your Flowt account.</p>
-        <p style="margin:24px 0">
-          <a href="${deepLink}"
-             style="background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">
-            Reset Password
-          </a>
-        </p>
-        <p style="color:#94a3b8;font-size:13px">
-          This link expires in 1 hour and can only be used once.<br>
-          If you didn't request this, ignore this email — your password won't change.
-        </p>
-      </div>
-    `,
-  });
-}
 
 // ── Auth middleware (used by protected routes in other files) ──────────────────
 function authenticate(req, res, next) {
@@ -189,9 +134,16 @@ router.post('/forgot-password', async (req, res) => {
       );
 
       // Fire-and-forget — don't let email errors surface to client
-      sendResetEmail(user.email, rawToken).catch(err =>
-        console.error('Reset email send error:', err)
-      );
+      sendResetEmail(user.email, rawToken)
+        .then((result) => {
+          console.log('Reset email sent', {
+            provider: result.provider,
+            messageId: result.messageId || null,
+          });
+        })
+        .catch(err =>
+          console.error('Reset email send error:', err.message || err)
+        );
     }
 
     // Always the same response regardless of whether email exists
