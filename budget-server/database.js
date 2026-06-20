@@ -66,7 +66,10 @@ async function initialize() {
   const addUserColumn = (name, definition) => {
     if (!userColumns.includes(name)) {
       db.run(`ALTER TABLE users ADD COLUMN ${name} ${definition}`);
+      userColumns.push(name);
+      return true;
     }
+    return false;
   };
   addUserColumn('subscription_status', 'TEXT');
   addUserColumn('current_entitlement', 'TEXT');
@@ -74,6 +77,12 @@ async function initialize() {
   addUserColumn('promo_grant_source', 'TEXT');
   addUserColumn('avatar_url', 'TEXT');
   addUserColumn('etransfer_email', 'TEXT');
+  const addedEmailVerifiedAt = addUserColumn('email_verified_at', 'TEXT');
+  if (addedEmailVerifiedAt) {
+    // Existing accounts predate signup verification; treat them as verified so
+    // the migration does not lock current users out on first deploy.
+    db.run("UPDATE users SET email_verified_at = COALESCE(created_at, datetime('now')) WHERE email_verified_at IS NULL");
+  }
 
   db.run(`
     CREATE TABLE IF NOT EXISTS households (
@@ -202,6 +211,19 @@ async function initialize() {
   // token_hash stores SHA-256 of the raw token (never store raw tokens)
   db.run(`
     CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      used INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Email verification tokens — one-time use, 24 hour expiry
+  db.run(`
+    CREATE TABLE IF NOT EXISTS email_verification_tokens (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
       token_hash TEXT NOT NULL UNIQUE,

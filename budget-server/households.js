@@ -5,6 +5,7 @@ const { assertValidRelationshipType, assertRelationshipTypeAllowedForMemberCount
 const { validateExpenseInput } = require('./lib/expenseValidation');
 const { validateExpenseParticipants, buildEqualSplitRows } = require('./lib/expenseSplits');
 const { generateUniqueInviteCode } = require('./lib/inviteCode');
+const { sendBudgetSpaceInviteEmail } = require('./lib/transactionalEmail');
 const {
   assertCanRemoveMember,
   assertCanLeaveSpace,
@@ -465,6 +466,41 @@ router.post('/:id/invite-code/regenerate', authenticate, (req, res) => {
   } catch (err) {
     console.error('Regenerate invite code error:', err);
     res.status(500).json({ error: 'Failed to regenerate join code' });
+  }
+});
+
+// Send household invite email (owner only)
+router.post('/:id/invitations/email', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.body;
+    const toEmail = String(email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toEmail)) {
+      return res.status(400).json({ error: 'Please enter a valid invite email.' });
+    }
+
+    const household = queryOne('SELECT * FROM households WHERE id = ?', [id]);
+    if (!household) return res.status(404).json({ error: 'Space not found' });
+
+    const member = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [id, req.user.id]);
+    if (!member || member.role !== 'owner') return res.status(403).json({ error: 'Only the space owner can send invitation emails' });
+
+    const requester = queryOne('SELECT * FROM users WHERE id = ?', [req.user.id]);
+    const result = await sendBudgetSpaceInviteEmail(toEmail, {
+      inviterName: requester?.name || req.user.name,
+      spaceName: household.name,
+      inviteCode: household.invite_code,
+    });
+
+    res.json({
+      message: 'Invitation email sent.',
+      email: toEmail,
+      provider: result.provider,
+      messageId: result.messageId || null,
+    });
+  } catch (err) {
+    console.error('Send invite email error:', err);
+    res.status(500).json({ error: 'Failed to send invitation email' });
   }
 });
 

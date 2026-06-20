@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { queryOne, queryAll, runSql } = require('./database');
 const { serializeUserSubscription } = require('./lib/promoCodes');
-const { sendResetEmail } = require('./lib/transactionalEmail');
+const { sendResetEmail, sendVerificationEmail } = require('./lib/transactionalEmail');
 const { serializeUserProfileInput } = require('./lib/userProfile');
 const { normalizeSubscriptionSyncInput } = require('./lib/subscriptionSync');
 
@@ -26,6 +26,38 @@ if (process.env.NODE_ENV === 'production' && JWT_SECRET.length < 32) {
 
 const TOKEN_EXPIRY = '30d';
 const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
+const EMAIL_VERIFICATION_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+const BYPASS_EMAIL_VERIFICATION_FOR_TESTS = process.env.NODE_ENV === 'test' && process.env.EMAIL_VERIFICATION_REQUIRED !== 'true';
+
+function createRawToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function hashToken(rawToken) {
+  return crypto.createHash('sha256').update(rawToken).digest('hex');
+}
+
+function issueEmailVerificationToken(userId) {
+  runSql('UPDATE email_verification_tokens SET used = 1 WHERE user_id = ? AND used = 0', [userId]);
+  const rawToken = createRawToken();
+  const tokenHash = hashToken(rawToken);
+  const expiresAt = new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_EXPIRY_MS).toISOString();
+  runSql(
+    'INSERT INTO email_verification_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)',
+    [userId, tokenHash, expiresAt]
+  );
+  return rawToken;
+}
+
+async function sendVerificationEmailForUser(user) {
+  const rawToken = issueEmailVerificationToken(user.id);
+  const result = await sendVerificationEmail(user.email, rawToken);
+  console.log('Verification email sent', {
+    provider: result.provider,
+    messageId: result.messageId || null,
+  });
+  return { ...result, rawToken };
+}
 
 // ── Auth middleware (used by protected routes in other files) ──────────────────
 function authenticate(req, res, next) {
@@ -51,7 +83,8 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Email, password, and name are required' });
     }
 
-    const existing = queryOne('SELECT id FROM users WHERE email = ?', [email]);
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const existing = queryOne('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
     if (existing) {
       return res.status(409).json({ error: 'Email already registered' });
     }
@@ -61,24 +94,40 @@ router.post('/register', async (req, res) => {
     try {
       profileInput = serializeUserProfileInput({
         name,
-        eTransferEmail: eTransferEmail ?? etransfer_email ?? email,
+        eTransferEmail: eTransferEmail ?? etransfer_email ?? normalizedEmail,
       });
     } catch (err) {
       return res.status(400).json({ error: err.message || 'Invalid profile details' });
     }
 
     const result = runSql(
-      'INSERT INTO users (email, password_hash, name, etransfer_email) VALUES (?, ?, ?, ?)',
-      [email, passwordHash, profileInput.name, profileInput.etransfer_email]
+      "INSERT INTO users (email, password_hash, name, etransfer_email, email_verified_at) VALUES (?, ?, ?, ?, CASE WHEN ? THEN datetime('now') ELSE NULL END)",
+      [normalizedEmail, passwordHash, profileInput.name, profileInput.etransfer_email, BYPASS_EMAIL_VERIFICATION_FOR_TESTS ? 1 : 0]
     );
 
-    const token = jwt.sign(
-      { id: result.lastInsertRowid, email, name: profileInput.name },
-      JWT_SECRET,
-      { expiresIn: TOKEN_EXPIRY }
-    );
     const createdUser = queryOne('SELECT * FROM users WHERE id = ?', [result.lastInsertRowid]);
-    res.json({ token, user: serializeUserSubscription(createdUser) });
+    if (BYPASS_EMAIL_VERIFICATION_FOR_TESTS) {
+      const token = jwt.sign(
+        { id: result.lastInsertRowid, email: normalizedEmail, name: profileInput.name },
+        JWT_SECRET,
+        { expiresIn: TOKEN_EXPIRY }
+      );
+      return res.json({ token, user: serializeUserSubscription(createdUser) });
+    }
+    try {
+      const emailResult = await sendVerificationEmailForUser(createdUser);
+      return res.json({
+        pendingVerification: true,
+        email: normalizedEmail,
+        message: 'Check your email to verify your Flowt account before signing in.',
+        ...(process.env.NODE_ENV !== 'production' && process.env.EMAIL_DEBUG_TOKENS === 'true'
+          ? { debugVerificationToken: emailResult.rawToken }
+          : {}),
+      });
+    } catch (emailErr) {
+      console.error('Verification email send error:', emailErr.message || emailErr);
+      return res.status(502).json({ error: 'Account created, but verification email could not be sent. Please try resending the verification email.' });
+    }
   } catch (err) {
     console.error('Register error:', err);
     res.status(500).json({ error: 'Registration failed' });
@@ -89,11 +138,19 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = queryOne('SELECT * FROM users WHERE email = ?', [email]);
+    const user = queryOne('SELECT * FROM users WHERE email = ?', [String(email || '').trim().toLowerCase()]);
     if (!user) return res.status(401).json({ error: 'User not found' });
 
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Invalid password' });
+
+    if (!user.email_verified_at) {
+      return res.status(403).json({
+        error: 'Please verify your email before signing in.',
+        code: 'EMAIL_NOT_VERIFIED',
+        email: user.email,
+      });
+    }
 
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name },
@@ -113,6 +170,7 @@ router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
+    let debugResetToken = null;
 
     const user = queryOne('SELECT id, email FROM users WHERE email = ?', [email.trim().toLowerCase()]);
 
@@ -124,8 +182,9 @@ router.post('/forgot-password', async (req, res) => {
       );
 
       // Generate a cryptographically secure raw token
-      const rawToken = crypto.randomBytes(32).toString('hex');
-      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const rawToken = createRawToken();
+      debugResetToken = rawToken;
+      const tokenHash = hashToken(rawToken);
       const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRY_MS).toISOString();
 
       runSql(
@@ -147,7 +206,12 @@ router.post('/forgot-password', async (req, res) => {
     }
 
     // Always the same response regardless of whether email exists
-    res.json({ message: 'If that email is registered, a reset link is on its way.' });
+    res.json({
+      message: 'If that email is registered, a reset link is on its way.',
+      ...(process.env.NODE_ENV !== 'production' && process.env.EMAIL_DEBUG_TOKENS === 'true' && debugResetToken
+        ? { debugResetToken }
+        : {}),
+    });
   } catch (err) {
     console.error('Forgot password error:', err);
     res.status(500).json({ error: 'Request failed' });
@@ -166,7 +230,7 @@ router.post('/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const tokenHash = hashToken(token);
     const record = queryOne(
       'SELECT * FROM password_reset_tokens WHERE token_hash = ?',
       [tokenHash]
@@ -192,6 +256,71 @@ router.post('/reset-password', async (req, res) => {
   } catch (err) {
     console.error('Reset password error:', err);
     res.status(500).json({ error: 'Password reset failed' });
+  }
+});
+
+// ── POST /api/auth/verify-email ───────────────────────────────────────────────
+router.post('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ error: 'Verification token is required' });
+
+    const tokenHash = hashToken(token);
+    const record = queryOne(
+      'SELECT * FROM email_verification_tokens WHERE token_hash = ?',
+      [tokenHash]
+    );
+
+    if (!record) return res.status(400).json({ error: 'Invalid or expired verification link' });
+    if (record.used) return res.status(400).json({ error: 'This verification link has already been used' });
+    if (new Date(record.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'This verification link has expired. Please request a new one.' });
+    }
+
+    const user = queryOne('SELECT * FROM users WHERE id = ?', [record.user_id]);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    runSql('UPDATE email_verification_tokens SET used = 1 WHERE id = ?', [record.id]);
+    if (!user.email_verified_at) {
+      runSql("UPDATE users SET email_verified_at = datetime('now') WHERE id = ?", [user.id]);
+    }
+
+    res.json({ message: 'Email verified. You can now sign in.', email: user.email });
+  } catch (err) {
+    console.error('Verify email error:', err);
+    res.status(500).json({ error: 'Email verification failed' });
+  }
+});
+
+// ── POST /api/auth/resend-verification ────────────────────────────────────────
+// Always returns 200 for well-formed emails to avoid account enumeration.
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    if (!normalizedEmail) return res.status(400).json({ error: 'Email is required' });
+
+    const user = queryOne('SELECT * FROM users WHERE email = ?', [normalizedEmail]);
+    let debugVerificationToken = null;
+    if (user && !user.email_verified_at) {
+      try {
+        const emailResult = await sendVerificationEmailForUser(user);
+        debugVerificationToken = emailResult.rawToken;
+      } catch (emailErr) {
+        console.error('Resend verification email error:', emailErr.message || emailErr);
+        return res.status(502).json({ error: 'Verification email could not be sent. Please try again.' });
+      }
+    }
+
+    res.json({
+      message: 'If that email needs verification, a new link is on its way.',
+      ...(process.env.NODE_ENV !== 'production' && process.env.EMAIL_DEBUG_TOKENS === 'true' && debugVerificationToken
+        ? { debugVerificationToken }
+        : {}),
+    });
+  } catch (err) {
+    console.error('Resend verification error:', err);
+    res.status(500).json({ error: 'Request failed' });
   }
 });
 

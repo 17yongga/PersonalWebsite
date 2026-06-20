@@ -66,7 +66,7 @@ async function stopServer(server) {
 test('promo redemption and user pro state persist across server restart', async () => {
   const dir = tempDir();
   const dbPath = path.join(dir, 'flowt-persist.db');
-  const env = { BUDGET_DB_PATH: dbPath, JWT_SECRET: 'restart-persistence-test-secret' };
+  const env = { BUDGET_DB_PATH: dbPath, JWT_SECRET: 'restart-persistence-test-secret', NODE_ENV: 'test' };
 
   const code = runNode(`
     (async () => {

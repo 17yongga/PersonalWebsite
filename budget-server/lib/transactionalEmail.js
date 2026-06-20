@@ -3,6 +3,8 @@ const { SESv2Client, SendEmailCommand } = require('@aws-sdk/client-sesv2');
 
 const DEFAULT_FROM = 'Flowt <noreply@useflowt.app>';
 const DEFAULT_RESET_WEB_URL = 'https://useflowt.app/reset-password';
+const DEFAULT_VERIFY_WEB_URL = 'https://useflowt.app/verify-email';
+const DEFAULT_INVITE_WEB_URL = 'https://useflowt.app/join';
 const DEFAULT_AWS_REGION = 'us-east-1';
 
 function htmlEscape(value) {
@@ -65,6 +67,106 @@ function buildResetPasswordEmail(rawToken, env = process.env) {
   `;
 
   return { subject: 'Reset your Flowt password', text, html, deepLink, webLink };
+}
+
+function buildEmailVerificationEmail(rawToken, env = process.env) {
+  const deepLink = `flowt://verify-email?token=${encodeURIComponent(rawToken)}`;
+  const webBaseUrl = env.VERIFY_EMAIL_WEB_URL || DEFAULT_VERIFY_WEB_URL;
+  const webLink = appendToken(webBaseUrl, rawToken);
+
+  const text = [
+    'Welcome to Flowt — please verify your email address.',
+    '',
+    'Verify your email:',
+    webLink,
+    '',
+    'If you are opening this on your iPhone, this app link may also work:',
+    deepLink,
+    '',
+    'This link expires in 24 hours and can only be used once.',
+    '',
+    'If you did not create a Flowt account, you can safely ignore this email.',
+  ].join('\n');
+
+  const escapedWebLink = htmlEscape(webLink);
+  const escapedDeepLink = htmlEscape(deepLink);
+  const html = `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#0f172a">
+      <h2 style="margin:0 0 12px;color:#0f172a">Verify your Flowt email</h2>
+      <p style="color:#475569;line-height:1.5">Welcome to Flowt. Please verify this email before signing in.</p>
+      <p style="margin:24px 0">
+        <a href="${escapedWebLink}"
+           style="background:#0ea5e9;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">
+          Verify Email
+        </a>
+      </p>
+      <p style="color:#475569;line-height:1.5">
+        If the button does not open Flowt on your phone, copy and paste this link:<br>
+        <a href="${escapedWebLink}" style="color:#0ea5e9;word-break:break-all">${escapedWebLink}</a>
+      </p>
+      <p style="color:#64748b;font-size:13px;line-height:1.5">
+        iPhone app link: <a href="${escapedDeepLink}" style="color:#0ea5e9;word-break:break-all">${escapedDeepLink}</a>
+      </p>
+      <p style="color:#94a3b8;font-size:13px;line-height:1.5">
+        This link expires in 24 hours and can only be used once.<br>
+        If you didn't create a Flowt account, ignore this email.
+      </p>
+    </div>
+  `;
+
+  return { subject: 'Verify your Flowt email', text, html, deepLink, webLink };
+}
+
+function buildBudgetSpaceInviteEmail({ inviterName, spaceName, inviteCode }, env = process.env) {
+  const normalizedCode = String(inviteCode || '').trim().toUpperCase();
+  const deepLink = `flowt://join-budget-space?inviteCode=${encodeURIComponent(normalizedCode)}`;
+  const webBaseUrl = env.INVITE_WEB_URL || DEFAULT_INVITE_WEB_URL;
+  const separator = webBaseUrl.includes('?') ? '&' : '?';
+  const webLink = `${webBaseUrl}${separator}inviteCode=${encodeURIComponent(normalizedCode)}`;
+  const safeSpaceName = spaceName || 'a Budget Space';
+  const safeInviterName = inviterName || 'A Flowt user';
+
+  const text = [
+    `${safeInviterName} invited you to join ${safeSpaceName} on Flowt.`,
+    '',
+    `Join code: ${normalizedCode}`,
+    '',
+    'Open Flowt and enter the join code, or use this link:',
+    webLink,
+    '',
+    'If you are opening this on your iPhone, this app link may also work:',
+    deepLink,
+  ].join('\n');
+
+  const escapedSpaceName = htmlEscape(safeSpaceName);
+  const escapedInviterName = htmlEscape(safeInviterName);
+  const escapedCode = htmlEscape(normalizedCode);
+  const escapedWebLink = htmlEscape(webLink);
+  const escapedDeepLink = htmlEscape(deepLink);
+  const html = `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#0f172a">
+      <h2 style="margin:0 0 12px;color:#0f172a">Join ${escapedSpaceName} on Flowt</h2>
+      <p style="color:#475569;line-height:1.5">${escapedInviterName} invited you to share budgeting and expenses in Flowt.</p>
+      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:16px;margin:20px 0">
+        <div style="font-size:12px;color:#0369a1;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Join code</div>
+        <div style="font-size:28px;font-weight:800;letter-spacing:.18em;color:#0f172a;margin-top:6px">${escapedCode}</div>
+      </div>
+      <p style="margin:24px 0">
+        <a href="${escapedWebLink}"
+           style="background:#0ea5e9;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">
+          Open Flowt Invite
+        </a>
+      </p>
+      <p style="color:#475569;line-height:1.5">
+        If the button does not open Flowt, copy this join code into the app: <strong>${escapedCode}</strong>
+      </p>
+      <p style="color:#64748b;font-size:13px;line-height:1.5">
+        iPhone app link: <a href="${escapedDeepLink}" style="color:#0ea5e9;word-break:break-all">${escapedDeepLink}</a>
+      </p>
+    </div>
+  `;
+
+  return { subject: `${safeInviterName} invited you to ${safeSpaceName} on Flowt`, text, html, deepLink, webLink };
 }
 
 function resolveEmailConfig(env = process.env) {
@@ -150,11 +252,39 @@ async function sendResetEmail(toEmail, rawToken, options = {}) {
   }, options);
 }
 
+async function sendVerificationEmail(toEmail, rawToken, options = {}) {
+  const content = buildEmailVerificationEmail(rawToken, options.env || process.env);
+  return sendTransactionalEmail({
+    to: toEmail,
+    subject: content.subject,
+    text: content.text,
+    html: content.html,
+    type: 'email_verification',
+  }, options);
+}
+
+async function sendBudgetSpaceInviteEmail(toEmail, invite, options = {}) {
+  const content = buildBudgetSpaceInviteEmail(invite, options.env || process.env);
+  return sendTransactionalEmail({
+    to: toEmail,
+    subject: content.subject,
+    text: content.text,
+    html: content.html,
+    type: 'budget_space_invite',
+  }, options);
+}
+
 module.exports = {
   DEFAULT_FROM,
   DEFAULT_RESET_WEB_URL,
+  DEFAULT_VERIFY_WEB_URL,
+  DEFAULT_INVITE_WEB_URL,
   buildResetPasswordEmail,
+  buildEmailVerificationEmail,
+  buildBudgetSpaceInviteEmail,
   resolveEmailConfig,
   sendResetEmail,
+  sendVerificationEmail,
+  sendBudgetSpaceInviteEmail,
   sendTransactionalEmail,
 };

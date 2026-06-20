@@ -68,6 +68,8 @@ function serializeUserSubscription(user, now = new Date()) {
     etransfer_email: user.etransfer_email ?? null,
     eTransferEmail: user.etransfer_email ?? null,
     created_at: user.created_at,
+    email_verified_at: user.email_verified_at ?? null,
+    emailVerifiedAt: user.email_verified_at ?? null,
     is_pro: active,
     isPro: active,
     subscription_status: active ? 'active' : (user.subscription_status ?? null),
