@@ -40,9 +40,12 @@ test('budget space invite email includes join code, static web fallback, and app
 
   assert.equal(email.subject, 'Gary invited you to Sandbanks Trip on Flowt');
   assert.match(email.text, /Join code: AB12CD/);
+  assert.match(email.text, /Use the join code below in Flowt/);
   assert.match(email.text, /https:\/\/useflowt\.app\/join-budget-space\.html\?inviteCode=AB12CD/);
   assert.match(email.text, /flowt:\/\/join-budget-space\?inviteCode=AB12CD/);
   assert.match(email.html, /AB12CD/);
+  assert.match(email.html, /enter this join code manually/);
+  assert.match(email.html, /newer app versions/);
 });
 
 test('production defaults to SES with Flowt sender', () => {

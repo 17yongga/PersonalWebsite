@@ -351,10 +351,11 @@ router.post('/', authenticate, (req, res) => {
 // Join household
 router.post('/join', authenticate, (req, res) => {
   try {
-    const { inviteCode, partnerName } = req.body;
+    const inviteCode = req.body.inviteCode || req.body.invite_code || req.body.code || req.body.joinCode;
+    const partnerName = req.body.partnerName || req.body.partner_name || req.user.name;
     if (!inviteCode) return res.status(400).json({ error: 'Invite code is required' });
 
-    const household = queryOne('SELECT * FROM households WHERE invite_code = ?', [inviteCode.toUpperCase()]);
+    const household = queryOne('SELECT * FROM households WHERE invite_code = ?', [String(inviteCode).trim().toUpperCase()]);
     if (!household) return res.status(404).json({ error: 'Invalid invite code' });
 
     const existing = queryOne('SELECT * FROM household_members WHERE household_id = ? AND user_id = ?', [household.id, req.user.id]);

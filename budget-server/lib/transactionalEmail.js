@@ -131,10 +131,10 @@ function buildBudgetSpaceInviteEmail({ inviterName, spaceName, inviteCode }, env
     '',
     `Join code: ${normalizedCode}`,
     '',
-    'Open Flowt and enter the join code, or use this link:',
+    'Use the join code below in Flowt. If you have a newer app version, the invite link may open the app for you:',
     webLink,
     '',
-    'If you are opening this on your iPhone, this app link may also work:',
+    'App link for newer Flowt versions:',
     deepLink,
   ].join('\n');
 
@@ -158,10 +158,10 @@ function buildBudgetSpaceInviteEmail({ inviterName, spaceName, inviteCode }, env
         </a>
       </p>
       <p style="color:#475569;line-height:1.5">
-        If the button does not open Flowt, copy this join code into the app: <strong>${escapedCode}</strong>
+        Open Flowt and enter this join code manually. The invite link is optional and works best on newer app versions.
       </p>
       <p style="color:#64748b;font-size:13px;line-height:1.5">
-        iPhone app link: <a href="${escapedDeepLink}" style="color:#0ea5e9;word-break:break-all">${escapedDeepLink}</a>
+        App link for newer Flowt versions: <a href="${escapedDeepLink}" style="color:#0ea5e9;word-break:break-all">${escapedDeepLink}</a>
       </p>
     </div>
   `;
