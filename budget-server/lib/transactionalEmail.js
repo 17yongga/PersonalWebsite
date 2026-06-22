@@ -22,7 +22,7 @@ function appendToken(url, rawToken) {
 }
 
 function buildResetPasswordEmail(rawToken, env = process.env) {
-  const deepLink = `flowt://reset-password?token=${encodeURIComponent(rawToken)}`;
+  const deepLink = `flowt:///reset-password?token=${encodeURIComponent(rawToken)}`;
   const webBaseUrl = env.RESET_PASSWORD_WEB_URL || DEFAULT_RESET_WEB_URL;
   const webLink = appendToken(webBaseUrl, rawToken);
 
@@ -70,7 +70,7 @@ function buildResetPasswordEmail(rawToken, env = process.env) {
 }
 
 function buildEmailVerificationEmail(rawToken, env = process.env) {
-  const deepLink = `flowt://verify-email?token=${encodeURIComponent(rawToken)}`;
+  const deepLink = `flowt:///verify-email?token=${encodeURIComponent(rawToken)}`;
   const webBaseUrl = env.VERIFY_EMAIL_WEB_URL || DEFAULT_VERIFY_WEB_URL;
   const webLink = appendToken(webBaseUrl, rawToken);
 
@@ -119,7 +119,7 @@ function buildEmailVerificationEmail(rawToken, env = process.env) {
 
 function buildBudgetSpaceInviteEmail({ inviterName, spaceName, inviteCode }, env = process.env) {
   const normalizedCode = String(inviteCode || '').trim().toUpperCase();
-  const deepLink = `flowt://join-budget-space?inviteCode=${encodeURIComponent(normalizedCode)}`;
+  const deepLink = `flowt:///join-budget-space?inviteCode=${encodeURIComponent(normalizedCode)}`;
   const webBaseUrl = env.INVITE_WEB_URL || DEFAULT_INVITE_WEB_URL;
   const separator = webBaseUrl.includes('?') ? '&' : '?';
   const webLink = `${webBaseUrl}${separator}inviteCode=${encodeURIComponent(normalizedCode)}`;
