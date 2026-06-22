@@ -120,6 +120,9 @@ function buildExpoPushMessage(notification, token) {
       ...(notification.metadata || {}),
     },
     priority: 'high',
+    channelId: 'flowt-shared-money',
+    badge: unreadCount(notification.user_id),
+    interruptionLevel: 'active',
   };
 }
 

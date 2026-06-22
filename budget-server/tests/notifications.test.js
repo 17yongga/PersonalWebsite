@@ -134,6 +134,9 @@ test('push delivery sends Expo payloads for enabled shared-expense notifications
     assert.equal(sentBatches.at(-1)[0].to, 'ExponentPushToken[emily]');
     assert.equal(sentBatches.at(-1)[0].title, 'Shared expense added');
     assert.equal(sentBatches.at(-1)[0].data.expenseId, 42);
+    assert.equal(sentBatches.at(-1)[0].channelId, 'flowt-shared-money');
+    assert.equal(sentBatches.at(-1)[0].interruptionLevel, 'active');
+    assert.equal(sentBatches.at(-1)[0].badge, 1);
   } finally {
     setPushTransportForTests(null);
   }
