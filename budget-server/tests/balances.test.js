@@ -198,6 +198,24 @@ test('selected split details freeze participant shares after settlement', () => 
   assert.equal(netFor(3, rows), 0);
 });
 
+test('persisted split details are authoritative even if split_scope is all_participants', () => {
+  const rows = balanceArray({
+    members: threeMembers,
+    expenses: [expense({
+      amount: 90,
+      paid_by: 1,
+      split_scope: 'all_participants',
+      split_details: [
+        { user_id: 1, share_amount: 45 },
+        { user_id: 2, share_amount: 45 },
+      ],
+    })],
+  });
+  assert.equal(netFor(1, rows), 45);
+  assert.equal(netFor(2, rows), -45);
+  assert.equal(netFor(3, rows), 0);
+});
+
 test('one-member household produces no settlement balance', () => {
   const rows = balanceArray({ members: [members[0]], expenses: [expense({ amount: 100, paid_by: 1 })] });
   assert.equal(netFor(1, rows), 0);
@@ -309,6 +327,17 @@ test('direct settlements subtract recorded pairwise payments and can flip direct
 
   assert.deepEqual(direct.map(({ from_user_id, to_user_id, amount }) => ({ from_user_id, to_user_id, amount })), [
     { from_user_id: 65, to_user_id: 1, amount: 3.52 },
+  ]);
+});
+
+test('direct settlements honor custom split percentages when no explicit split rows exist', () => {
+  const direct = suggestDirectSettlements({
+    members,
+    expenses: [expense({ amount: 14.68, paid_by: 2, split_type: 'custom', custom_split: 5, split_details: [] })],
+  });
+
+  assert.deepEqual(direct.map(({ from_user_id, to_user_id, amount }) => ({ from_user_id, to_user_id, amount })), [
+    { from_user_id: 1, to_user_id: 2, amount: 13.95 },
   ]);
 });
 

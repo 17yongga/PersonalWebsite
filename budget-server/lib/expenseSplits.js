@@ -73,6 +73,56 @@ function buildEqualSplitRows({ expenseId, amount, participantIds }) {
   });
 }
 
+function buildCustomSplitRows({ expenseId, amount, payerId, participantIds, payerPercent }) {
+  const ids = (participantIds || []).map(Number).filter(Number.isInteger);
+  const payer = Number(payerId);
+  if (ids.length < 2) {
+    throw new Error('shared expenses require at least two participants');
+  }
+  if (!ids.includes(payer)) {
+    throw new Error('paidBy must be included in custom split participants');
+  }
+
+  const totalCents = Math.round(Number(amount) * 100);
+  if (!Number.isFinite(totalCents) || totalCents <= 0) {
+    throw new Error('amount must be greater than 0');
+  }
+  const payerPct = Number(payerPercent);
+  if (!Number.isFinite(payerPct) || payerPct <= 0 || payerPct >= 100) {
+    throw new Error('customSplit must be between 1 and 99');
+  }
+
+  const payerShareCents = Math.round(totalCents * (payerPct / 100));
+  const nonPayerIds = ids.filter((userId) => userId !== payer);
+  const baseCents = Math.floor((totalCents - payerShareCents) / nonPayerIds.length);
+  let remainder = totalCents - payerShareCents - baseCents * nonPayerIds.length;
+
+  return ids.map((userId) => {
+    let shareCents;
+    if (userId === payer) {
+      shareCents = payerShareCents;
+    } else {
+      const extra = remainder > 0 ? 1 : 0;
+      if (remainder > 0) remainder -= 1;
+      shareCents = baseCents + extra;
+    }
+    const shareAmount = roundMoney(shareCents / 100);
+    return {
+      expense_id: Number(expenseId),
+      user_id: userId,
+      share_amount: shareAmount,
+      share_percent: roundMoney((shareAmount / Number(amount)) * 100),
+    };
+  });
+}
+
+function buildSplitRows({ expenseId, amount, paidBy, participantIds, splitType, customSplit }) {
+  if (splitType === 'custom') {
+    return buildCustomSplitRows({ expenseId, amount, payerId: paidBy, participantIds, payerPercent: customSplit });
+  }
+  return buildEqualSplitRows({ expenseId, amount, participantIds });
+}
+
 function validateSplitRowsTotal(rows, amount) {
   const total = roundMoney((rows || []).reduce((sum, row) => sum + Number(row.share_amount || 0), 0));
   if (total !== roundMoney(amount)) {
@@ -86,5 +136,7 @@ module.exports = {
   normalizeParticipantIds,
   validateExpenseParticipants,
   buildEqualSplitRows,
+  buildCustomSplitRows,
+  buildSplitRows,
   validateSplitRowsTotal,
 };

@@ -2,8 +2,8 @@ const express = require('express');
 const { queryAll, queryOne, runSql } = require('./database');
 const { buildBalanceSnapshot, roundMoney } = require('./lib/balances');
 const { assertValidRelationshipType, assertRelationshipTypeAllowedForMemberCount } = require('./lib/householdMode');
-const { validateExpenseInput } = require('./lib/expenseValidation');
-const { validateExpenseParticipants, buildEqualSplitRows } = require('./lib/expenseSplits');
+const { validateExpenseInput, isValidIsoDate } = require('./lib/expenseValidation');
+const { validateExpenseParticipants, buildSplitRows } = require('./lib/expenseSplits');
 const { generateUniqueInviteCode } = require('./lib/inviteCode');
 const { sendBudgetSpaceInviteEmail } = require('./lib/transactionalEmail');
 const { createNotification, notifyHouseholdMembers } = require('./lib/notifications');
@@ -188,7 +188,8 @@ function countUnsettledBalancePairs(householdId) {
   const household = getHouseholdDetails(householdId);
   if (!household) return 0;
   const expenses = attachSplitDetails(queryAll('SELECT * FROM expenses WHERE household_id = ?', [householdId]));
-  const snapshot = buildBalanceSnapshot({ members: household.members, expenses });
+  const settlements = getHouseholdSettlements(householdId);
+  const snapshot = buildBalanceSnapshot({ members: household.members, expenses, settlements });
   return (snapshot.suggested_settlements || []).filter((settlement) => Number(settlement.amount || 0) >= 0.01).length;
 }
 
@@ -244,12 +245,12 @@ function attachSplitDetails(expenses) {
   }));
 }
 
-function persistExpenseSplits(expenseId, amount, participantIds, splitScope = 'selected') {
+function persistExpenseSplits(expenseId, amount, participantIds, splitScope = 'selected', splitType = '50/50', customSplit = null, paidBy = null) {
   runSql('DELETE FROM expense_splits WHERE expense_id = ?', [expenseId]);
   if (splitScope === 'all_participants') return [];
   if (!participantIds || participantIds.length < 2) return [];
 
-  const rows = buildEqualSplitRows({ expenseId, amount, participantIds });
+  const rows = buildSplitRows({ expenseId, amount, paidBy, participantIds, splitType, customSplit });
   for (const row of rows) {
     runSql(
       'INSERT INTO expense_splits (expense_id, user_id, share_amount, share_percent) VALUES (?, ?, ?, ?)',
@@ -269,7 +270,7 @@ function freezeAllParticipantExpenses(householdId) {
   const members = queryAll('SELECT user_id FROM household_members WHERE household_id = ?', [householdId]).map((member) => Number(member.user_id));
   let frozen = 0;
   for (const expense of dynamicExpenses) {
-    persistExpenseSplits(expense.id, expense.amount, members, 'selected');
+    persistExpenseSplits(expense.id, expense.amount, members, 'selected', expense.split_type, expense.custom_split, expense.paid_by);
     runSql(`UPDATE expenses SET split_scope = 'selected', updated_at = datetime('now') WHERE id = ?`, [expense.id]);
     frozen += 1;
   }
@@ -597,7 +598,7 @@ router.post('/:id/expenses', authenticate, (req, res) => {
       `INSERT INTO expenses (household_id, amount, category, paid_by, split_type, split_scope, custom_split, date, notes, is_recurring, is_shared, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, validated.amount, category, validated.paidBy, validated.splitType, validated.splitScope, validated.customSplit, validated.date, notes || '', isRecurring ? 1 : 0, validated.isShared ? 1 : 0, req.user.id]
     );
-    persistExpenseSplits(result.lastInsertRowid, validated.amount, participantIds, validated.splitScope);
+    persistExpenseSplits(result.lastInsertRowid, validated.amount, participantIds, validated.splitScope, validated.splitType, validated.customSplit, validated.paidBy);
 
     // Log activity
     logActivity(id, req.user.id, 'added', 'expense', result.lastInsertRowid, {
@@ -666,7 +667,7 @@ router.put('/:id/expenses/:expenseId', authenticate, (req, res) => {
       `UPDATE expenses SET amount=?, category=?, paid_by=?, split_type=?, split_scope=?, custom_split=?, date=?, notes=?, is_recurring=?, is_shared=?, updated_at=datetime('now') WHERE id=? AND household_id=?`,
       [validated.amount, category, validated.paidBy, validated.splitType, validated.splitScope, validated.customSplit, validated.date, notes || '', isRecurring ? 1 : 0, validated.isShared ? 1 : 0, expenseId, id]
     );
-    persistExpenseSplits(expenseId, validated.amount, participantIds, validated.splitScope);
+    persistExpenseSplits(expenseId, validated.amount, participantIds, validated.splitScope, validated.splitType, validated.customSplit, validated.paidBy);
 
     // Log activity
     logActivity(id, req.user.id, 'edited', 'expense', expenseId, {
@@ -918,8 +919,11 @@ router.post('/:id/settlements', authenticate, (req, res) => {
       return res.status(400).json({ error: 'Settlement amount does not match current outstanding balance' });
     }
 
-    const frozenDynamicExpenseCount = freezeAllParticipantExpenses(id);
     const settlementDate = date || new Date().toISOString().split('T')[0];
+    if (!isValidIsoDate(settlementDate)) {
+      return res.status(400).json({ error: 'Settlement date must be a valid YYYY-MM-DD date' });
+    }
+    const frozenDynamicExpenseCount = freezeAllParticipantExpenses(id);
     const result = runSql(
       `INSERT INTO settlements (household_id, settled_by, from_user_id, to_user_id, amount, date, notes, settlement_type, balance_snapshot_json)
        VALUES (?,?,?,?,?,?,?,?,?)`,

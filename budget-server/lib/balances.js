@@ -48,11 +48,9 @@ function calculateExpenseBalances({ members, expenses }) {
     const payerId = Number(expense.paid_by);
     ensureBalanceSlot(balances, payerId);
 
-    const explicitSplits = expense.split_scope === 'all_participants'
-      ? []
-      : Array.isArray(expense.split_details)
-        ? expense.split_details.filter((split) => Number.isFinite(Number(split.user_id)) && Number(split.share_amount) > 0)
-        : [];
+    const explicitSplits = Array.isArray(expense.split_details)
+      ? expense.split_details.filter((split) => Number.isFinite(Number(split.user_id)) && Number(split.share_amount) > 0)
+      : [];
 
     if (explicitSplits.length > 0) {
       balances.set(payerId, (balances.get(payerId) || 0) + amount);
@@ -191,9 +189,34 @@ function buildAllParticipantSplitRows(expense, memberIds) {
   });
 }
 
+function buildCustomSplitRowsForExpense(expense, memberIds) {
+  const payerId = Number(expense.paid_by);
+  const participantIds = Array.from(new Set(Number.isInteger(payerId) ? [...memberIds, payerId] : memberIds));
+  if (participantIds.length < 2) return [];
+
+  const totalCents = Math.round(Number(expense.amount || 0) * 100);
+  const payerPct = Number(expense.custom_split);
+  if (!Number.isFinite(totalCents) || totalCents <= 0 || !Number.isFinite(payerPct) || payerPct <= 0 || payerPct >= 100) return [];
+
+  const payerShareCents = Math.round(totalCents * (payerPct / 100));
+  const nonPayerIds = participantIds.filter((userId) => userId !== payerId);
+  const baseCents = Math.floor((totalCents - payerShareCents) / nonPayerIds.length);
+  let remainder = totalCents - payerShareCents - baseCents * nonPayerIds.length;
+
+  return participantIds.map((userId) => {
+    if (userId === payerId) return { user_id: userId, share_amount: roundMoney(payerShareCents / 100) };
+    const extra = remainder > 0 ? 1 : 0;
+    if (remainder > 0) remainder -= 1;
+    return { user_id: userId, share_amount: roundMoney((baseCents + extra) / 100) };
+  });
+}
+
 function getExpenseSplitRowsForDirectSettlement(expense, memberIds) {
+  const explicitRows = Array.isArray(expense.split_details) ? expense.split_details.filter((split) => Number.isFinite(Number(split.user_id)) && Number(split.share_amount) > 0) : [];
+  if (explicitRows.length > 0) return explicitRows;
   if (expense.split_scope === 'all_participants') return buildAllParticipantSplitRows(expense, memberIds);
-  return Array.isArray(expense.split_details) ? expense.split_details : [];
+  if (expense.split_type === 'custom' && expense.custom_split != null) return buildCustomSplitRowsForExpense(expense, memberIds);
+  return buildAllParticipantSplitRows(expense, memberIds);
 }
 
 function suggestDirectSettlements({ members = [], expenses = [], settlements = [] }) {

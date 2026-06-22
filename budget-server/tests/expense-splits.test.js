@@ -3,6 +3,8 @@ const assert = require('node:assert/strict');
 const {
   normalizeParticipantIds,
   buildEqualSplitRows,
+  buildCustomSplitRows,
+  buildSplitRows,
   validateExpenseParticipants,
 } = require('../lib/expenseSplits');
 
@@ -48,5 +50,21 @@ test('equal split rows round to cents and keep totals exact', () => {
     { expense_id: 42, user_id: 1, share_amount: 33.34, share_percent: 33.34 },
     { expense_id: 42, user_id: 2, share_amount: 33.33, share_percent: 33.33 },
     { expense_id: 42, user_id: 3, share_amount: 33.33, share_percent: 33.33 },
+  ]);
+});
+
+test('custom split rows preserve payer percentage and keep cent totals exact', () => {
+  assert.deepEqual(buildCustomSplitRows({ expenseId: 43, amount: 100, payerId: 1, participantIds: [1, 2, 3], payerPercent: 70 }), [
+    { expense_id: 43, user_id: 1, share_amount: 70, share_percent: 70 },
+    { expense_id: 43, user_id: 2, share_amount: 15, share_percent: 15 },
+    { expense_id: 43, user_id: 3, share_amount: 15, share_percent: 15 },
+  ]);
+});
+
+test('split row builder dispatches custom split instead of accidentally equal-splitting', () => {
+  const rows = buildSplitRows({ expenseId: 44, amount: 14.68, paidBy: 2, participantIds: [1, 2], splitType: 'custom', customSplit: 5 });
+  assert.deepEqual(rows.map(({ user_id, share_amount }) => ({ user_id, share_amount })), [
+    { user_id: 1, share_amount: 13.95 },
+    { user_id: 2, share_amount: 0.73 },
   ]);
 });
