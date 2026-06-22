@@ -851,6 +851,7 @@ router.get('/:id/balance', authenticate, (req, res) => {
       generated_at: new Date().toISOString(),
       balances: snapshot.balances,
       suggested_settlements: snapshot.suggested_settlements,
+      direct_settlements: snapshot.direct_settlements || [],
       legacy_cutoff_date: snapshot.legacy_cutoff_date,
       legacy_settlement_count: snapshot.legacy_settlement_count,
       analytics: {
@@ -907,9 +908,13 @@ router.post('/:id/settlements', authenticate, (req, res) => {
     }
 
     const snapshot = getBalanceSnapshot(id);
-    const suggestion = snapshot.suggested_settlements.find(s => Number(s.from_user_id) === fromId && Number(s.to_user_id) === toId);
+    const optimizedSuggestion = snapshot.suggested_settlements.find(s => Number(s.from_user_id) === fromId && Number(s.to_user_id) === toId);
+    const directSuggestion = (snapshot.direct_settlements || []).find(s => Number(s.from_user_id) === fromId && Number(s.to_user_id) === toId);
+    const allowedSuggestion = [optimizedSuggestion, directSuggestion]
+      .filter(Boolean)
+      .some((s) => settlementAmount <= roundMoney(Number(s.amount || 0) + 0.01));
     const isManualAdjustment = settlementType === 'manual_adjustment';
-    if (!isManualAdjustment && (!suggestion || settlementAmount > roundMoney(suggestion.amount + 0.01))) {
+    if (!isManualAdjustment && !allowedSuggestion) {
       return res.status(400).json({ error: 'Settlement amount does not match current outstanding balance' });
     }
 

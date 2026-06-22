@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const {
   calculateHouseholdBalance,
   suggestSettlements,
+  suggestDirectSettlements,
   serializeBalances,
   roundMoney,
 } = require('../lib/balances');
@@ -255,6 +256,60 @@ test('production Archie Home current period calculates Gary owes Emily $454.73',
   });
   assert.equal(netFor(1, rows), -454.73);
   assert.equal(netFor(2, rows), 454.73);
+});
+
+test('direct settlements net selected and all-participants expenses for Sandbanks Gary-Alan pair', () => {
+  const sandbanksMembers = [
+    { user_id: 1, name: 'Gary' },
+    { user_id: 2, name: 'Emily Bi' },
+    { user_id: 65, name: 'Alan q' },
+    { user_id: 73, name: 'Gabrielle' },
+    { user_id: 81, name: 'Emma G' },
+  ];
+  const direct = suggestDirectSettlements({
+    members: sandbanksMembers,
+    settlements: [],
+    expenses: [
+      expense({
+        id: 591,
+        amount: 105.91,
+        paid_by: 65,
+        split_scope: 'selected',
+        split_details: [
+          { user_id: 1, share_amount: 26.48 },
+          { user_id: 2, share_amount: 26.48 },
+          { user_id: 65, share_amount: 26.48 },
+          { user_id: 73, share_amount: 26.47 },
+        ],
+      }),
+      expense({ id: 590, amount: 116.97, paid_by: 1, split_scope: 'all_participants', split_details: [] }),
+    ],
+  });
+
+  const garyAlan = direct.find((row) => row.from_user_id === 1 && row.to_user_id === 65);
+  assert.equal(garyAlan?.amount, 3.09);
+  assert.equal(direct.some((row) => row.from_user_id === 1 && row.to_user_id === 65 && row.amount === 26.48), false);
+});
+
+test('direct settlements subtract recorded pairwise payments and can flip direction', () => {
+  const direct = suggestDirectSettlements({
+    members: [{ user_id: 1, name: 'Gary' }, { user_id: 65, name: 'Alan q' }],
+    expenses: [expense({
+      id: 591,
+      amount: 105.91,
+      paid_by: 65,
+      split_scope: 'selected',
+      split_details: [
+        { user_id: 1, share_amount: 26.48 },
+        { user_id: 65, share_amount: 26.48 },
+      ],
+    })],
+    settlements: [{ amount: 30, from_user_id: 1, to_user_id: 65, date: '2026-06-01' }],
+  });
+
+  assert.deepEqual(direct.map(({ from_user_id, to_user_id, amount }) => ({ from_user_id, to_user_id, amount })), [
+    { from_user_id: 65, to_user_id: 1, amount: 3.52 },
+  ]);
 });
 
 test('rounding keeps money to cents', () => {

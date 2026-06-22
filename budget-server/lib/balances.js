@@ -160,6 +160,101 @@ function calculateHouseholdBalance({ members, expenses, settlements, legacyMode 
   };
 }
 
+function addDirectPairDebt(pairNetCents, debtorId, creditorId, cents) {
+  const fromId = Number(debtorId);
+  const toId = Number(creditorId);
+  const amountCents = Number(cents);
+  if (!Number.isFinite(fromId) || !Number.isFinite(toId) || fromId === toId) return;
+  if (!Number.isFinite(amountCents) || amountCents === 0) return;
+
+  const lowId = Math.min(fromId, toId);
+  const highId = Math.max(fromId, toId);
+  const key = `${lowId}:${highId}`;
+  const signedCents = amountCents * (fromId === lowId ? 1 : -1);
+  pairNetCents.set(key, (pairNetCents.get(key) || 0) + signedCents);
+}
+
+function buildAllParticipantSplitRows(expense, memberIds) {
+  const payerId = Number(expense.paid_by);
+  const participantIds = Array.from(new Set(Number.isInteger(payerId) ? [...memberIds, payerId] : memberIds));
+  if (participantIds.length < 2) return [];
+
+  const totalCents = Math.round(Number(expense.amount || 0) * 100);
+  if (!Number.isFinite(totalCents) || totalCents <= 0) return [];
+
+  const baseCents = Math.floor(totalCents / participantIds.length);
+  let remainder = totalCents - baseCents * participantIds.length;
+  return participantIds.map((userId) => {
+    const extra = remainder > 0 ? 1 : 0;
+    if (remainder > 0) remainder -= 1;
+    return { user_id: userId, share_amount: roundMoney((baseCents + extra) / 100) };
+  });
+}
+
+function getExpenseSplitRowsForDirectSettlement(expense, memberIds) {
+  if (expense.split_scope === 'all_participants') return buildAllParticipantSplitRows(expense, memberIds);
+  return Array.isArray(expense.split_details) ? expense.split_details : [];
+}
+
+function suggestDirectSettlements({ members = [], expenses = [], settlements = [] }) {
+  const memberIds = (members || []).map(getMemberId).filter(Number.isInteger);
+  const memberById = new Map((members || []).map((member) => [getMemberId(member), member]));
+  const legacyCutoffDate = getLegacyCutoffDate(settlements);
+  const pairNetCents = new Map();
+
+  for (const expense of expenses || []) {
+    if (Number(expense.is_shared) !== 1) continue;
+    if (legacyCutoffDate && toDateOnly(expense.date) < legacyCutoffDate) continue;
+
+    const payerId = Number(expense.paid_by);
+    if (!Number.isFinite(payerId)) continue;
+
+    const splitRows = getExpenseSplitRowsForDirectSettlement(expense, memberIds);
+    for (const split of splitRows) {
+      const debtorId = Number(split.user_id);
+      const shareAmount = Number(split.share_amount);
+      if (!Number.isFinite(debtorId) || !Number.isFinite(shareAmount)) continue;
+      if (debtorId === payerId || shareAmount <= 0) continue;
+      addDirectPairDebt(pairNetCents, debtorId, payerId, Math.round(shareAmount * 100));
+    }
+  }
+
+  for (const settlement of settlements || []) {
+    if (!isDirectionalSettlement(settlement)) continue;
+    if (legacyCutoffDate && toDateOnly(settlement.date || settlement.created_at) < legacyCutoffDate) continue;
+
+    const fromId = Number(settlement.from_user_id);
+    const toId = Number(settlement.to_user_id);
+    const amount = Number(settlement.amount);
+    if (!Number.isFinite(fromId) || !Number.isFinite(toId) || !Number.isFinite(amount) || amount <= 0) continue;
+
+    addDirectPairDebt(pairNetCents, fromId, toId, -Math.round(amount * 100));
+  }
+
+  const rows = [];
+  for (const [key, netCents] of pairNetCents.entries()) {
+    const amount = roundMoney(Math.abs(netCents) / 100);
+    if (amount <= 0.01) continue;
+
+    const [lowId, highId] = key.split(':').map(Number);
+    const fromUserId = netCents > 0 ? lowId : highId;
+    const toUserId = netCents > 0 ? highId : lowId;
+    const fromMember = memberById.get(fromUserId) || {};
+    const toMember = memberById.get(toUserId) || {};
+    rows.push({
+      from_user_id: fromUserId,
+      from_name: fromMember.name || fromMember.partner_name || `User ${fromUserId}`,
+      from_etransfer_email: fromMember.etransfer_email || null,
+      to_user_id: toUserId,
+      to_name: toMember.name || toMember.partner_name || `User ${toUserId}`,
+      to_etransfer_email: toMember.etransfer_email || null,
+      amount,
+    });
+  }
+
+  return rows.sort((a, b) => b.amount - a.amount || a.from_user_id - b.from_user_id || a.to_user_id - b.to_user_id);
+}
+
 function suggestSettlements({ balances, members = [] }) {
   const memberById = new Map((members || []).map((member) => [getMemberId(member), member]));
   const creditors = [];
@@ -227,6 +322,7 @@ function buildBalanceSnapshot({ members, expenses, settlements }) {
   return {
     balances: serializeBalances({ balances: result.balances, members }),
     suggested_settlements: suggestSettlements({ balances: result.balances, members }),
+    direct_settlements: suggestDirectSettlements({ members, expenses, settlements }),
     legacy_cutoff_date: result.legacyCutoffDate,
     legacy_settlement_count: result.legacySettlementCount,
   };
@@ -238,6 +334,7 @@ module.exports = {
   applySettlementBalances,
   calculateHouseholdBalance,
   suggestSettlements,
+  suggestDirectSettlements,
   serializeBalances,
   buildBalanceSnapshot,
 };
