@@ -3,7 +3,7 @@ const { queryAll, queryOne, runSql } = require('./database');
 const { buildBalanceSnapshot, roundMoney } = require('./lib/balances');
 const { assertValidRelationshipType, assertRelationshipTypeAllowedForMemberCount } = require('./lib/householdMode');
 const { validateExpenseInput, isValidIsoDate } = require('./lib/expenseValidation');
-const { validateExpenseParticipants, buildSplitRows } = require('./lib/expenseSplits');
+const { validateExpenseParticipants, buildEqualSplitRows, buildSplitRows } = require('./lib/expenseSplits');
 const { generateUniqueInviteCode } = require('./lib/inviteCode');
 const { sendBudgetSpaceInviteEmail } = require('./lib/transactionalEmail');
 const { createNotification, notifyHouseholdMembers } = require('./lib/notifications');
@@ -213,7 +213,7 @@ function getHouseholdDetails(householdId) {
   return { ...household, members, categories };
 }
 
-function attachSplitDetails(expenses) {
+function attachSplitDetails(expenses, members = null) {
   const rows = Array.isArray(expenses) ? expenses : [];
   if (rows.length === 0) return rows;
 
@@ -239,10 +239,37 @@ function attachSplitDetails(expenses) {
     });
   }
 
-  return rows.map((expense) => ({
-    ...expense,
-    split_details: splitsByExpense.get(Number(expense.id)) || [],
-  }));
+  const dynamicParticipantIds = Array.isArray(members)
+    ? members
+        .map((member) => Number(member.user_id ?? member.id))
+        .filter(Number.isInteger)
+    : [];
+
+  return rows.map((expense) => {
+    let splitDetails = splitsByExpense.get(Number(expense.id)) || [];
+    if (
+      splitDetails.length === 0 &&
+      expense.is_shared === 1 &&
+      expense.split_scope === 'all_participants' &&
+      dynamicParticipantIds.length >= 2
+    ) {
+      // Dynamic all-participants expenses intentionally do not persist split rows
+      // until settlement time, but API consumers still need the current fair share.
+      splitDetails = buildEqualSplitRows({
+        expenseId: expense.id,
+        amount: expense.amount,
+        participantIds: dynamicParticipantIds,
+      }).map((row) => ({
+        user_id: row.user_id,
+        share_amount: row.share_amount,
+        share_percent: row.share_percent,
+      }));
+    }
+    return {
+      ...expense,
+      split_details: splitDetails,
+    };
+  });
 }
 
 function persistExpenseSplits(expenseId, amount, participantIds, splitScope = 'selected', splitType = '50/50', customSplit = null, paidBy = null) {
@@ -278,21 +305,25 @@ function freezeAllParticipantExpenses(householdId) {
 }
 
 function getExpenseByIdWithSplits(expenseId) {
-  const rows = attachSplitDetails(queryAll(
+  const baseRows = queryAll(
     'SELECT e.*, u.name as paid_by_name FROM expenses e JOIN users u ON e.paid_by = u.id WHERE e.id = ?',
     [expenseId],
-  ));
+  );
+  const householdId = baseRows[0]?.household_id;
+  const members = householdId ? getHouseholdMembers(householdId) : null;
+  const rows = attachSplitDetails(baseRows, members);
   return rows[0] || null;
 }
 
 function getHouseholdExpenses(householdId) {
+  const members = getHouseholdMembers(householdId);
   return attachSplitDetails(queryAll(`
     SELECT e.*, u.name as paid_by_name, u.email as paid_by_email
     FROM expenses e JOIN users u ON e.paid_by = u.id
     WHERE e.household_id = ?
     ORDER BY e.date DESC, e.created_at DESC`,
     [householdId]
-  ));
+  ), members);
 }
 
 function getHouseholdSettlements(householdId) {
@@ -554,7 +585,7 @@ router.get('/:id/expenses', authenticate, (req, res) => {
     }
 
     sql += ' ORDER BY e.date DESC, e.created_at DESC';
-    res.json({ expenses: attachSplitDetails(queryAll(sql, params)) });
+    res.json({ expenses: attachSplitDetails(queryAll(sql, params), getHouseholdMembers(id)) });
   } catch (err) {
     console.error('List expenses error:', err);
     res.status(500).json({ error: 'Failed to list expenses' });
