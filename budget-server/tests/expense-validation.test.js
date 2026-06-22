@@ -75,6 +75,31 @@ test('requires custom split percentage to be within 1 and 99 percent', () => {
   assert.equal(normalized.customSplit, 70);
 });
 
+test('accepts all-participants split scope for shared expenses', () => {
+  const normalized = validateExpenseInput(validExpense({ splitScope: 'all_participants' }), {
+    members,
+    currentUserId: 1,
+    relationshipType: 'partner',
+  });
+  assert.equal(normalized.splitScope, 'all_participants');
+});
+
+test('rejects unknown split scopes', () => {
+  assert.throws(
+    () => validateExpenseInput(validExpense({ splitScope: 'everyone_forever' }), { members, currentUserId: 1, relationshipType: 'partner' }),
+    /splitScope must be selected or all_participants/,
+  );
+});
+
+test('personal expenses normalize split scope back to selected', () => {
+  const normalized = validateExpenseInput(validExpense({ isShared: false, splitType: 'single', splitScope: 'all_participants' }), {
+    members,
+    currentUserId: 1,
+    relationshipType: 'partner',
+  });
+  assert.equal(normalized.splitScope, 'selected');
+});
+
 test('solo spaces only accept personal expenses paid by the current user', () => {
   const soloMembers = [{ user_id: 1, name: 'Gary' }];
   assert.throws(

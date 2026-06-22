@@ -130,6 +130,11 @@ async function initialize() {
     )
   `);
 
+  const expenseColumns = db.exec(`PRAGMA table_info(expenses)`)[0]?.values.map(row => row[1]) || [];
+  if (!expenseColumns.includes('split_scope')) {
+    db.run(`ALTER TABLE expenses ADD COLUMN split_scope TEXT DEFAULT 'selected'`);
+  }
+
   db.run(`
     CREATE TABLE IF NOT EXISTS expense_splits (
       expense_id INTEGER NOT NULL,

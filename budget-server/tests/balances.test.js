@@ -169,6 +169,34 @@ test('selected participant split can reimburse payer for a bill paid only for ot
   assert.equal(netFor(3, rows), -30);
 });
 
+test('all-participants scope expands open expenses to members who join before settlement', () => {
+  const rows = balanceArray({
+    members: threeMembers,
+    expenses: [expense({ amount: 90, paid_by: 1, split_scope: 'all_participants', split_details: [] })],
+  });
+  assert.equal(netFor(1, rows), 60);
+  assert.equal(netFor(2, rows), -30);
+  assert.equal(netFor(3, rows), -30);
+});
+
+test('selected split details freeze participant shares after settlement', () => {
+  const rows = balanceArray({
+    members: threeMembers,
+    expenses: [expense({
+      amount: 90,
+      paid_by: 1,
+      split_scope: 'selected',
+      split_details: [
+        { user_id: 1, share_amount: 45 },
+        { user_id: 2, share_amount: 45 },
+      ],
+    })],
+  });
+  assert.equal(netFor(1, rows), 45);
+  assert.equal(netFor(2, rows), -45);
+  assert.equal(netFor(3, rows), 0);
+});
+
 test('one-member household produces no settlement balance', () => {
   const rows = balanceArray({ members: [members[0]], expenses: [expense({ amount: 100, paid_by: 1 })] });
   assert.equal(netFor(1, rows), 0);

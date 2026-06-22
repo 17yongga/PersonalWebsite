@@ -244,8 +244,9 @@ function attachSplitDetails(expenses) {
   }));
 }
 
-function persistExpenseSplits(expenseId, amount, participantIds) {
+function persistExpenseSplits(expenseId, amount, participantIds, splitScope = 'selected') {
   runSql('DELETE FROM expense_splits WHERE expense_id = ?', [expenseId]);
+  if (splitScope === 'all_participants') return [];
   if (!participantIds || participantIds.length < 2) return [];
 
   const rows = buildEqualSplitRows({ expenseId, amount, participantIds });
@@ -256,6 +257,23 @@ function persistExpenseSplits(expenseId, amount, participantIds) {
     );
   }
   return rows;
+}
+
+function freezeAllParticipantExpenses(householdId) {
+  const dynamicExpenses = attachSplitDetails(queryAll(
+    `SELECT * FROM expenses
+     WHERE household_id = ? AND is_shared = 1 AND split_scope = 'all_participants'`,
+    [householdId],
+  ));
+  if (!dynamicExpenses.length) return 0;
+  const members = queryAll('SELECT user_id FROM household_members WHERE household_id = ?', [householdId]).map((member) => Number(member.user_id));
+  let frozen = 0;
+  for (const expense of dynamicExpenses) {
+    persistExpenseSplits(expense.id, expense.amount, members, 'selected');
+    runSql(`UPDATE expenses SET split_scope = 'selected', updated_at = datetime('now') WHERE id = ?`, [expense.id]);
+    frozen += 1;
+  }
+  return frozen;
 }
 
 function getExpenseByIdWithSplits(expenseId) {
@@ -576,10 +594,10 @@ router.post('/:id/expenses', authenticate, (req, res) => {
     runSql('INSERT OR IGNORE INTO categories (household_id, name) VALUES (?, ?)', [id, category]);
 
     const result = runSql(
-      `INSERT INTO expenses (household_id, amount, category, paid_by, split_type, custom_split, date, notes, is_recurring, is_shared, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, validated.amount, category, validated.paidBy, validated.splitType, validated.customSplit, validated.date, notes || '', isRecurring ? 1 : 0, validated.isShared ? 1 : 0, req.user.id]
+      `INSERT INTO expenses (household_id, amount, category, paid_by, split_type, split_scope, custom_split, date, notes, is_recurring, is_shared, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, validated.amount, category, validated.paidBy, validated.splitType, validated.splitScope, validated.customSplit, validated.date, notes || '', isRecurring ? 1 : 0, validated.isShared ? 1 : 0, req.user.id]
     );
-    persistExpenseSplits(result.lastInsertRowid, validated.amount, participantIds);
+    persistExpenseSplits(result.lastInsertRowid, validated.amount, participantIds, validated.splitScope);
 
     // Log activity
     logActivity(id, req.user.id, 'added', 'expense', result.lastInsertRowid, {
@@ -594,7 +612,7 @@ router.post('/:id/expenses', authenticate, (req, res) => {
       notifyHouseholdMembers({
         householdId: id,
         actorUserId: req.user.id,
-        recipientIds: participantIds.length ? participantIds : members.map((m) => m.user_id),
+        recipientIds: validated.splitScope === 'all_participants' ? members.map((m) => m.user_id) : (participantIds.length ? participantIds : members.map((m) => m.user_id)),
         type: 'expense_added',
         title: 'Shared expense added',
         body: `${req.user.name || 'Someone'} added ${category} for $${Number(validated.amount).toFixed(2)}.`,
@@ -645,10 +663,10 @@ router.put('/:id/expenses/:expenseId', authenticate, (req, res) => {
     runSql('INSERT OR IGNORE INTO categories (household_id, name) VALUES (?, ?)', [id, category]);
 
     runSql(
-      `UPDATE expenses SET amount=?, category=?, paid_by=?, split_type=?, custom_split=?, date=?, notes=?, is_recurring=?, is_shared=?, updated_at=datetime('now') WHERE id=? AND household_id=?`,
-      [validated.amount, category, validated.paidBy, validated.splitType, validated.customSplit, validated.date, notes || '', isRecurring ? 1 : 0, validated.isShared ? 1 : 0, expenseId, id]
+      `UPDATE expenses SET amount=?, category=?, paid_by=?, split_type=?, split_scope=?, custom_split=?, date=?, notes=?, is_recurring=?, is_shared=?, updated_at=datetime('now') WHERE id=? AND household_id=?`,
+      [validated.amount, category, validated.paidBy, validated.splitType, validated.splitScope, validated.customSplit, validated.date, notes || '', isRecurring ? 1 : 0, validated.isShared ? 1 : 0, expenseId, id]
     );
-    persistExpenseSplits(expenseId, validated.amount, participantIds);
+    persistExpenseSplits(expenseId, validated.amount, participantIds, validated.splitScope);
 
     // Log activity
     logActivity(id, req.user.id, 'edited', 'expense', expenseId, {
@@ -662,7 +680,7 @@ router.put('/:id/expenses/:expenseId', authenticate, (req, res) => {
       notifyHouseholdMembers({
         householdId: id,
         actorUserId: req.user.id,
-        recipientIds: participantIds.length ? participantIds : members.map((m) => m.user_id),
+        recipientIds: validated.splitScope === 'all_participants' ? members.map((m) => m.user_id) : (participantIds.length ? participantIds : members.map((m) => m.user_id)),
         type: 'expense_updated',
         title: 'Shared expense updated',
         body: `${req.user.name || 'Someone'} updated ${category} to $${Number(validated.amount).toFixed(2)}.`,
@@ -895,6 +913,7 @@ router.post('/:id/settlements', authenticate, (req, res) => {
       return res.status(400).json({ error: 'Settlement amount does not match current outstanding balance' });
     }
 
+    const frozenDynamicExpenseCount = freezeAllParticipantExpenses(id);
     const settlementDate = date || new Date().toISOString().split('T')[0];
     const result = runSql(
       `INSERT INTO settlements (household_id, settled_by, from_user_id, to_user_id, amount, date, notes, settlement_type, balance_snapshot_json)
@@ -908,6 +927,7 @@ router.post('/:id/settlements', authenticate, (req, res) => {
       toUserId: toId,
       note: notes || '',
       settlementType: settlementType || 'full',
+      frozenDynamicExpenseCount,
     });
 
     const fromUser = queryOne('SELECT name FROM users WHERE id = ?', [fromId]);
@@ -920,7 +940,7 @@ router.post('/:id/settlements', authenticate, (req, res) => {
       title: 'Payment recorded',
       body: `${fromUser?.name || 'Someone'} paid ${toUser?.name || 'someone'} $${settlementAmount.toFixed(2)}.`,
       actionUrl: 'flowt://settlement',
-      metadata: { settlementId: result.lastInsertRowid, amount: settlementAmount, fromUserId: fromId, toUserId: toId },
+      metadata: { settlementId: result.lastInsertRowid, amount: settlementAmount, fromUserId: fromId, toUserId: toId, frozenDynamicExpenseCount },
       includeActor: false,
     });
     

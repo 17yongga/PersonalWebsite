@@ -48,9 +48,11 @@ function calculateExpenseBalances({ members, expenses }) {
     const payerId = Number(expense.paid_by);
     ensureBalanceSlot(balances, payerId);
 
-    const explicitSplits = Array.isArray(expense.split_details)
-      ? expense.split_details.filter((split) => Number.isFinite(Number(split.user_id)) && Number(split.share_amount) > 0)
-      : [];
+    const explicitSplits = expense.split_scope === 'all_participants'
+      ? []
+      : Array.isArray(expense.split_details)
+        ? expense.split_details.filter((split) => Number.isFinite(Number(split.user_id)) && Number(split.share_amount) > 0)
+        : [];
 
     if (explicitSplits.length > 0) {
       balances.set(payerId, (balances.get(payerId) || 0) + amount);

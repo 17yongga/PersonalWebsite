@@ -1,4 +1,5 @@
 const VALID_SPLIT_TYPES = new Set(['50/50', 'custom', 'single']);
+const VALID_SPLIT_SCOPES = new Set(['selected', 'all_participants']);
 
 function isValidIsoDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -36,6 +37,10 @@ function validateExpenseInput(input, { members, currentUserId, relationshipType 
   if (!VALID_SPLIT_TYPES.has(splitType)) {
     throw new Error('splitType must be 50/50, custom, or single');
   }
+  const splitScope = isShared ? (input.splitScope || input.split_scope || 'selected') : 'selected';
+  if (!VALID_SPLIT_SCOPES.has(splitScope)) {
+    throw new Error('splitScope must be selected or all_participants');
+  }
 
   let customSplit = null;
   if (splitType === 'custom') {
@@ -58,6 +63,7 @@ function validateExpenseInput(input, { members, currentUserId, relationshipType 
     amount,
     paidBy,
     splitType,
+    splitScope,
     customSplit,
     date: input.date,
     isShared,
