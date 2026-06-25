@@ -48,46 +48,19 @@ function calculateExpenseBalances({ members, expenses }) {
     const payerId = Number(expense.paid_by);
     ensureBalanceSlot(balances, payerId);
 
-    const explicitSplits = Array.isArray(expense.split_details)
-      ? expense.split_details.filter((split) => Number.isFinite(Number(split.user_id)) && Number(split.share_amount) > 0)
-      : [];
+    const splitRows = getExpenseSplitRowsForDirectSettlement(expense, memberIds);
+    if (splitRows.length === 0) continue;
 
-    if (explicitSplits.length > 0) {
-      balances.set(payerId, (balances.get(payerId) || 0) + amount);
-      for (const split of explicitSplits) {
-        const participantId = Number(split.user_id);
-        const shareAmount = Number(split.share_amount);
-        ensureBalanceSlot(balances, participantId);
-        balances.set(participantId, (balances.get(participantId) || 0) - shareAmount);
-      }
-      continue;
-    }
-
-    const participatingMemberIds = memberIds.includes(payerId)
-      ? memberIds
-      : Array.from(new Set([...memberIds, payerId]));
-
-    const memberCount = participatingMemberIds.length;
-    if (memberCount <= 1) continue;
-
-    let payerShare;
-    let otherShare;
-
-    if (expense.split_type === 'custom' && expense.custom_split != null) {
-      const payerPct = normalizePercent(expense.custom_split);
-      payerShare = amount * payerPct;
-      otherShare = (amount - payerShare) / (memberCount - 1);
-    } else {
-      payerShare = amount / memberCount;
-      otherShare = amount / memberCount;
-    }
-
-    balances.set(payerId, (balances.get(payerId) || 0) + amount - payerShare);
-
-    for (const memberId of participatingMemberIds) {
-      if (memberId === payerId) continue;
-      ensureBalanceSlot(balances, memberId);
-      balances.set(memberId, (balances.get(memberId) || 0) - otherShare);
+    // Use the same cent-allocated split rows as direct/simple settlement.
+    // This keeps the net balance and direct pair ledger in agreement for odd
+    // cents and legacy custom splits instead of rounding floats at the end.
+    balances.set(payerId, (balances.get(payerId) || 0) + amount);
+    for (const split of splitRows) {
+      const participantId = Number(split.user_id);
+      const shareAmount = Number(split.share_amount);
+      if (!Number.isFinite(participantId) || !Number.isFinite(shareAmount) || shareAmount <= 0) continue;
+      ensureBalanceSlot(balances, participantId);
+      balances.set(participantId, (balances.get(participantId) || 0) - shareAmount);
     }
   }
 

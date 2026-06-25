@@ -263,7 +263,7 @@ test('suggested settlements convert balances into debtor-to-creditor payments', 
   ]);
 });
 
-test('production Archie Home current period calculates Gary owes Emily $454.73', () => {
+test('production Archie Home current period uses cent-allocated ledger math', () => {
   const rows = balanceArray({
     expenses: [
       expense({ id: 1, amount: 1727.05, paid_by: 2, date: '2026-05-27' }),
@@ -272,8 +272,30 @@ test('production Archie Home current period calculates Gary owes Emily $454.73',
     ],
     settlements: [{ amount: 209.71, settled_by: 2, date: '2026-05-11' }],
   });
-  assert.equal(netFor(1, rows), -454.73);
-  assert.equal(netFor(2, rows), 454.73);
+  assert.equal(netFor(1, rows), -454.74);
+  assert.equal(netFor(2, rows), 454.74);
+});
+
+test('settlement balance and direct rows agree for cent remainders', () => {
+  const archieMembers = [
+    { user_id: 1, name: 'Gary', email: 'gary@example.com' },
+    { user_id: 2, name: 'Emily Bi', email: 'emily@example.com' },
+  ];
+  const archieExpenses = [
+    expense({ id: 1, amount: 100, paid_by: 2, date: '2026-06-01' }),
+  ];
+  const archieSettlements = [
+    { amount: 49.92, from_user_id: 1, to_user_id: 2, date: '2026-06-04' },
+  ];
+
+  const result = calculateHouseholdBalance({ members: archieMembers, expenses: archieExpenses, settlements: archieSettlements });
+  const rows = serializeBalances({ balances: result.balances, members: archieMembers });
+  const direct = suggestDirectSettlements({ members: archieMembers, expenses: archieExpenses, settlements: archieSettlements });
+
+  assert.equal(netFor(1, rows), -0.08);
+  assert.deepEqual(direct.map(({ from_user_id, to_user_id, amount }) => ({ from_user_id, to_user_id, amount })), [
+    { from_user_id: 1, to_user_id: 2, amount: 0.08 },
+  ]);
 });
 
 test('direct settlements net selected and all-participants expenses for Sandbanks Gary-Alan pair', () => {
