@@ -341,6 +341,24 @@ test('direct settlements honor custom split percentages when no explicit split r
   ]);
 });
 
+test('direct settlements suppress tiny post-payment dust but preserve meaningful small balances', () => {
+  const dust = suggestDirectSettlements({
+    members,
+    expenses: [expense({ amount: 100, paid_by: 2 })],
+    settlements: [{ amount: 49.92, from_user_id: 1, to_user_id: 2, date: '2026-06-02' }],
+  });
+  assert.deepEqual(dust, []);
+
+  const smallButReal = suggestDirectSettlements({
+    members,
+    expenses: [expense({ amount: 1.58, paid_by: 2 })],
+    settlements: [],
+  });
+  assert.deepEqual(smallButReal.map(({ from_user_id, to_user_id, amount }) => ({ from_user_id, to_user_id, amount })), [
+    { from_user_id: 1, to_user_id: 2, amount: 0.79 },
+  ]);
+});
+
 test('rounding keeps money to cents', () => {
   assert.equal(roundMoney(10 / 3), 3.33);
 });

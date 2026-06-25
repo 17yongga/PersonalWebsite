@@ -2,6 +2,8 @@ function roundMoney(value) {
   return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
 }
 
+const SETTLEMENT_DUST_THRESHOLD_CENTS = 10;
+
 function toDateOnly(value) {
   return String(value || '').split('T')[0];
 }
@@ -257,7 +259,10 @@ function suggestDirectSettlements({ members = [], expenses = [], settlements = [
   const rows = [];
   for (const [key, netCents] of pairNetCents.entries()) {
     const amount = roundMoney(Math.abs(netCents) / 100);
-    if (amount <= 0.01) continue;
+    // Tiny post-settlement remainders are usually cent-allocation dust from
+    // rounded historical payments. Do not ask users to e-transfer pennies after
+    // the authoritative ledger has effectively settled the pair.
+    if (Math.abs(netCents) <= SETTLEMENT_DUST_THRESHOLD_CENTS) continue;
 
     const [lowId, highId] = key.split(':').map(Number);
     const fromUserId = netCents > 0 ? lowId : highId;
