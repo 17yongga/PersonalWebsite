@@ -277,24 +277,24 @@ test('production Archie Home current period uses cent-allocated ledger math', ()
 });
 
 test('settlement balance and direct rows agree for cent remainders', () => {
-  const archieMembers = [
-    { user_id: 1, name: 'Gary', email: 'gary@example.com' },
-    { user_id: 2, name: 'Emily Bi', email: 'emily@example.com' },
+  const genericMembers = [
+    { user_id: 10, name: 'Alex', email: 'alex@example.com' },
+    { user_id: 20, name: 'Blair', email: 'blair@example.com' },
   ];
-  const archieExpenses = [
-    expense({ id: 1, amount: 100, paid_by: 2, date: '2026-06-01' }),
+  const genericExpenses = [
+    expense({ id: 1, amount: 100, paid_by: 20, date: '2026-06-01' }),
   ];
-  const archieSettlements = [
-    { amount: 49.92, from_user_id: 1, to_user_id: 2, date: '2026-06-04' },
+  const genericSettlements = [
+    { amount: 49.92, from_user_id: 10, to_user_id: 20, date: '2026-06-04' },
   ];
 
-  const result = calculateHouseholdBalance({ members: archieMembers, expenses: archieExpenses, settlements: archieSettlements });
-  const rows = serializeBalances({ balances: result.balances, members: archieMembers });
-  const direct = suggestDirectSettlements({ members: archieMembers, expenses: archieExpenses, settlements: archieSettlements });
+  const result = calculateHouseholdBalance({ members: genericMembers, expenses: genericExpenses, settlements: genericSettlements });
+  const rows = serializeBalances({ balances: result.balances, members: genericMembers });
+  const direct = suggestDirectSettlements({ members: genericMembers, expenses: genericExpenses, settlements: genericSettlements });
 
-  assert.equal(netFor(1, rows), -0.08);
+  assert.equal(netFor(10, rows), -0.08);
   assert.deepEqual(direct.map(({ from_user_id, to_user_id, amount }) => ({ from_user_id, to_user_id, amount })), [
-    { from_user_id: 1, to_user_id: 2, amount: 0.08 },
+    { from_user_id: 10, to_user_id: 20, amount: 0.08 },
   ]);
 });
 
