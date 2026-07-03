@@ -50,3 +50,45 @@ test('starting full server preserves migrated promo schema on disk', async () =>
   assert.deepEqual(schema.tables.sort(), ['promo_code_redemptions', 'promo_codes']);
   assert.deepEqual(schema.cols.sort(), ['current_entitlement', 'promo_grant_source', 'subscription_expires_at', 'subscription_status']);
 });
+
+test('production server refuses a non-canonical DB filename by default', () => {
+  const dir = tempDir();
+  const dbPath = path.join(dir, 'finsync-promo-accidental.db');
+  const result = spawnSync(process.execPath, ['server.js'], {
+    cwd: repoDir,
+    env: {
+      ...process.env,
+      NODE_ENV: 'production',
+      BUDGET_DB_PATH: dbPath,
+      PORT: '3317',
+      JWT_SECRET: 'server-start-schema-test-secret-32chars',
+      MIN_PRODUCTION_USERS: '0',
+      MIN_PRODUCTION_HOUSEHOLDS: '0',
+    },
+    encoding: 'utf8',
+    timeout: 10000,
+  });
+  assert.notEqual(result.status, 0, 'server should fail closed for non-canonical production DB path');
+  assert.match(result.stderr + result.stdout, /Production DB file mismatch/);
+});
+
+test('production server refuses an underpopulated canonical DB', () => {
+  const dir = tempDir();
+  const dbPath = path.join(dir, 'finsync.db');
+  const result = spawnSync(process.execPath, ['server.js'], {
+    cwd: repoDir,
+    env: {
+      ...process.env,
+      NODE_ENV: 'production',
+      BUDGET_DB_PATH: dbPath,
+      PORT: '3318',
+      JWT_SECRET: 'server-start-schema-test-secret-32chars',
+      MIN_PRODUCTION_USERS: '2',
+      MIN_PRODUCTION_HOUSEHOLDS: '1',
+    },
+    encoding: 'utf8',
+    timeout: 10000,
+  });
+  assert.notEqual(result.status, 0, 'server should fail closed for empty production DB');
+  assert.match(result.stderr + result.stdout, /Production DB sanity check failed/);
+});

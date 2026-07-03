@@ -1,5 +1,5 @@
 # Budget App — STATUS.md
-> Updated: 2026-06-28 (Flowt hero image + Why card alignment/text polish deployed; app hotfix batch still local/no new build yet)
+> Updated: 2026-07-03 (production login outage fixed; PM2 DB path restored to canonical Flowt DB)
 
 ## Business Registration (CRA)
 - **Business Number (BN9):** 78908 2971
@@ -17,6 +17,12 @@
 - Full login/register system, shared vs. individual expense tracking, Chart.js visualizations
 - Backend: PM2 `budget-server` on EC2, port 3002, online
 - Receipt scanner: PM2 `receipt-server` on EC2, port 3002 (proxied via nginx)
+
+## Current State (2026-07-03)
+- **Production login outage fixed:** Flowt backend was online, but PM2 `budget-server` was running with `BUDGET_DB_PATH=/home/ubuntu/budget-server/finsync-promo-20260605-152030.db`, a promo/test DB that had only **1 user and 0 households**, so existing users saw login failures (`User not found`). Backed up both DB files to `/home/ubuntu/budget-server/backups/incident-login-dbpath-20260703-222054/`, restarted only PM2 `budget-server` with `BUDGET_DB_PATH=/home/ubuntu/budget-server/finsync.db`, and ran `pm2 save` so the corrected DB path persists across restarts.
+- **Verification after hotfix:** public `https://api.gary-yong.com/budget/api/health` returned **200**; existing-user login probes for Gary/Emily changed from `User not found` to `Invalid password` with intentionally wrong passwords, proving the auth route sees the canonical user table; server-minted short-lived JWT smoke verified `GET /api/auth/me`, `GET /api/households`, and `GET /api/households/1/balance` all return **200** against real Archie Home data. Canonical DB now reports **9 users / 13 households** and migrated user columns including `email_verified_at`. PM2 dump now contains `BUDGET_DB_PATH=/home/ubuntu/budget-server/finsync.db`. Clean backend verification from a temp copy excluding live backups passed **113/113** tests.
+- **Residual note:** one registration occurred during the incident while the server was pointed at the wrong promo DB. That record is preserved in the incident backup/wrong DB but was not merged into the canonical DB during the emergency hotfix; if that person still cannot sign in, re-registering or a careful one-row merge is the follow-up.
+- **Prevention deployed:** added a production startup guard in `budget-server/server.js` that fails closed if the live DB path is not the expected canonical file or if the selected production DB has fewer than the configured minimum real users/households. Production PM2 and `/home/ubuntu/ecosystem.config.js` now both pin `BUDGET_DB_PATH` and `EXPECTED_BUDGET_DB_PATH` to `/home/ubuntu/budget-server/finsync.db` with minimum sanity thresholds. New regression tests prove the server refuses a non-canonical DB filename and an underpopulated production DB. Verification: local backend tests **120/120**, clean remote current tests **113/113**, remote guard tests **3/3**, public health **200**, startup log confirms canonical DB with **9 users / 13 households**.
 
 ## Current State (2026-06-28)
 - **Flowt hero + Why card alignment/text polish is live:** Replaced the first-section hero image with Gary’s supplied dashboard/add/settlement composite (`hero-flowt-dashboard-settle.jpg`). Aligned all three Why Flowt right-side cards to the same width/left edge by removing the offset treatment, equalized mobile card heights, and replaced confusing accent labels (`On track`, `$88.25`, `Added`) with feature labels: `Budget view`, `Settlement plan`, `Shared expense`. Deployed `index.html`, `styles.css`, and the hero asset to S3 bucket `useflowt-app-site-628063714079`, invalidated CloudFront `E2OGDPVMTBXKHP` (`I2WGOHPYUGH1A9S1QJ8VBTTP2I`), and verified live HTML/image plus desktop/mobile computed layout: card widths/heights aligned, margin-left `0px`, overflow `0`, production visual QA passed.
