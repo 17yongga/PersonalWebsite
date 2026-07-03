@@ -67,7 +67,7 @@ ssh ubuntu@52.86.178.139 -i ~/.ssh/id_ed25519 "pm2 restart casino-server"
 
 **Live URL:** https://api.gary-yong.com/budget
 **PM2:** `budget-server` → port 3003
-**DB:** SQLite at `/home/ubuntu/budget-server/finsync-restored-20260703.db` (pinned by PM2 `BUDGET_DB_PATH` + `EXPECTED_BUDGET_DB_PATH`; legacy `/home/ubuntu/budget-server/finsync.db` is intentionally a fail-closed directory after the 2026-07-03 incident)
+**DB:** SQLite at `/home/ubuntu/budget-server/finsync-restored-20260703.db` (pinned by PM2 `BUDGET_DB_PATH` + `EXPECTED_BUDGET_DB_PATH`; legacy `/home/ubuntu/budget-server/finsync.db` is intentionally a fail-closed directory after the 2026-07-03 incident; current watermarks 36 users / 33 households / 551 expenses / maxExpenseId 641)
 
 ### Files
 - `budget.html` — frontend (S3 → gary-yong.com/budget.html)

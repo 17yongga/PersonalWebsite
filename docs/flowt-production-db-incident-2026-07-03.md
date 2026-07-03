@@ -2,40 +2,73 @@
 
 ## Executive summary
 
-Gary was correct that the first restore was incomplete. The incident was not only a login outage; production had accepted successful Archie Home expense writes after the latest durable DB backup used for restore. Those writes are no longer present in any DB file found on the EC2 host.
+Gary was correct that the first restore was incomplete. This was not only a login outage; production had accepted successful Archie Home writes after the initially restored DB's latest durable Archie rows.
 
-The durable restore currently running is the best DB file found on disk:
+A second recovery pass found the missing Archie rows inside a compressed pre-category-release archive backup:
+
+`/home/ubuntu/budget-server-backups/pre-category-release-20260701-120505.tgz`
+
+Source DB inside archive:
+
+`budget-server/finsync-promo-20260605-152030.db`
+
+Those rows were merged into the active production DB on 2026-07-03 with PM2 stopped, then PM2 was restarted with raised watermarks.
+
+## Current production state
 
 - Live DB path: `/home/ubuntu/budget-server/finsync-restored-20260703.db`
-- Source: `/home/ubuntu/budget-server-backup-dynamic-split-20260621-203834/finsync-promo-20260605-152030.db`
-- Current watermarks: 36 users / 33 households / 504 expenses / max expense ID 591 / 95 split rows / 5 notifications
+- Current watermarks: 36 users / 33 households / 551 expenses / max expense ID 641
+- Archie Home recovered IDs: 595–641
+- Archie recovered expenses: 47
+- Archie recovered split rows: 36
+- Archie recovered total through public API: $5,425.32
+- Sandbanks household 59: 5 expenses totaling $342.20
 
-## Confirmed lost window
+## Archie recovery details
 
-### What exists durably now
+The recovered rows cover successful writes from:
 
-Archie Home (`household_id=1`) currently has 479 expenses. Durable June rows in all scanned DB files are only:
+- 2026-06-28 14:14:35Z through 2026-06-28 14:57:06Z
 
-| ID | Date | Amount | Category | Paid by | Notes |
-|---:|---|---:|---|---:|---|
-| 465 | 2026-06-01 | 1614.40 | 🏠 Rent/Mortgage | 1 | rent |
-| 509 | 2026-06-03 | 50.00 | ❤️ Charity/Donations | 2 | GOFNDME* EMERGENCY VET TORONTO |
+Public API verification after merge:
 
-### What logs prove was later accepted
+| Metric | Value |
+|---|---:|
+| Recovered Archie rows | 47 |
+| Related `expense_splits` rows | 36 |
+| First recovered ID | 595 |
+| Last recovered ID | 641 |
+| Recovered total | $5,425.32 |
 
-Nginx access logs and PM2 app logs show many successful Archie Home expense writes on 2026-06-28 from Flowt iOS build 42:
+Examples:
 
-- `POST /budget/api/households/1/expenses` returned HTTP 200 repeatedly from `14:14:35` through `14:57:06` UTC.
-- `PUT /budget/api/households/1/expenses/598` returned HTTP 200 at `14:16:52` UTC.
-- `PUT /budget/api/households/1/expenses/596` returned HTTP 200 at `14:17:05` UTC.
+| ID | Date | Amount | Category | Notes | Split |
+|---:|---|---:|---|---|---|
+| 595 | 2026-06-01 | 74.52 | 💡 Utilities | PREAUTHORIZED DEBIT TORONTO HYDRO | 50/50 |
+| 596 | 2026-06-01 | 63.00 | 🍕 Food/Dining | E-TRANSFER 105969824964 Lucy | 50/50 |
+| 598 | 2026-06-12 | 71.47 | 🍕 Food/Dining | E-TRANSFER 105988320895 Mike | single |
+| 641 | 2026-06-28 | 2707.02 | ✈️ Travel | Flights and stays | single |
 
-The presence of edits to expense IDs 596 and 598 proves runtime state had advanced beyond restored max expense ID 591.
+Evidence directory for the recovery merge:
 
-### What cannot be recovered from current server evidence
+`/home/ubuntu/budget-server/backups/recover-archie-jun28-20260703-232147`
 
-No DB file under `/home/ubuntu` contains expense IDs >= 592. Nginx access logs record method/path/status/response size/user agent, but not request bodies or response bodies. PM2 app logs record method/path only, not body or returned JSON. Therefore the exact merchant/amount/category/date for the Jun 28 Archie writes cannot be reconstructed from EC2 logs alone.
+That directory contains:
 
-If Gary's phone or app storage still has local cached transaction data, that may be the remaining recovery path. Otherwise the server-side evidence can prove the writes existed and were lost, but not reconstruct their content.
+- active DB before merge
+- manifest before merge
+- source archive DB copy
+- SHA256 sums
+- merge result JSON
+
+## Evidence collected
+
+- PM2/app logs showed successful Jun 28 Archie writes.
+- Nginx/access evidence showed HTTP 200 responses.
+- Initial direct DB-file scans did not find IDs >=592 because the surviving copy was embedded inside a `.tgz` archive.
+- Archive scan found a DB with 41 users / 35 households / 554 expenses / maxExpenseId 641.
+- AWS check found no EBS snapshots or AWS Backup recovery points for the production volume in the relevant window.
+- Flowt app code stores transaction lists in volatile Zustand state; it does not maintain a durable local expense cache suitable for recovery.
 
 ## Root cause chain
 
@@ -43,18 +76,18 @@ If Gary's phone or app storage still has local cached transaction data, that may
    - legacy `/home/ubuntu/budget-server/finsync.db`
    - promo/current-ish `/home/ubuntu/budget-server/finsync-promo-20260605-152030.db`
    - restored `/home/ubuntu/budget-server/finsync-restored-20260703.db`
-2. The backup script was hardcoded to `/home/ubuntu/budget-server/finsync.db`, so it kept backing up the stale legacy path instead of the active PM2 `BUDGET_DB_PATH`.
+2. The backup script was hardcoded to `/home/ubuntu/budget-server/finsync.db`, so it kept backing up a stale legacy path instead of the active PM2 `BUDGET_DB_PATH`.
 3. Two orphan raw `node -` processes, started Jun 5 outside PM2, were still alive in `/home/ubuntu/budget-server`. They were not serving traffic but were consistent with SQL.js in-memory autosave writers. Their activity was confirmed by `finsync.db` mtime changing every few seconds with the stale checksum.
 4. The first guard only checked user/household counts, and the initial minimum was too low. This allowed stale 9-user / 13-household DBs to be treated as acceptable until stricter thresholds were added.
-5. The Jun 28 successful writes likely lived in a SQL.js in-memory runtime image or a DB path that was later overwritten/removed before any correct backup captured it.
+5. SQL.js file persistence is fragile for production when multiple processes or DB paths can exist.
 
 ## Hardening applied
 
 ### Runtime/process
 
-- Killed the two orphan `node -` processes.
+- Killed orphan `node -` processes.
 - Verified only one `budget-server` Node process remains.
-- Quarantined default `finsync.db` by moving the stale file into `backups/quarantine-default-db/` and replacing the default path with a directory. Accidental default-path starts now fail closed with `EISDIR` instead of silently running or overwriting a stale DB.
+- Quarantined default `finsync.db` and replaced it with a directory so accidental default-path starts fail closed with `EISDIR`.
 
 ### Backend code
 
@@ -64,40 +97,44 @@ If Gary's phone or app storage still has local cached transaction data, that may
 - Added explicit production watermarks:
   - min users: 30
   - min households: 30
-  - min expenses: 504
-  - min maxExpenseId: 591
-- Added graceful PM2 restart/termination DB flush.
+  - min expenses: 551
+  - min max expense ID: 641
+- Added graceful shutdown final save before PM2 exits.
 
 ### PM2/config
 
-- PM2 now pins both:
+- PM2 now pins:
   - `BUDGET_DB_PATH=/home/ubuntu/budget-server/finsync-restored-20260703.db`
   - `EXPECTED_BUDGET_DB_PATH=/home/ubuntu/budget-server/finsync-restored-20260703.db`
-- PM2 saved dump contains restored path and expense watermarks.
+- PM2 saved dump contains restored path and updated expense watermarks.
 
 ### Backups/monitoring
 
-- Replaced `/home/ubuntu/backup.sh` so it reads the live PM2 `BUDGET_DB_PATH`, validates DB watermarks, copies the active DB, copies manifest when present, writes sha256, and refuses to back up regressed DBs.
-- Changed server crontab from every 6 hours to hourly verified backups.
-- Added Hermes watchdog cron `36c39def7cf9` every 15 minutes. It alerts the Budgeting Platform Project chat if:
-  - orphan `node -` writers reappear,
-  - PM2 DB path changes,
-  - counts/watermarks regress,
-  - default `finsync.db` fail-closed directory disappears,
-  - latest verified backup is older than 2 hours.
+- Replaced `/home/ubuntu/backup.sh` so it reads the actual PM2 `BUDGET_DB_PATH`.
+- Backup script validates watermarks before copying.
+- Backup script writes `.db`, `.manifest.json`, and `.sha256`.
+- Added 15-minute silent Hermes watchdog.
+- Added daily 9:00 AM production health report.
+- Added weekly Monday 9:30 AM maintenance/restore-drill report.
 
-## Verification evidence
+## Verification
 
-- Local targeted tests: 122/122 passed.
-- Remote startup hardening tests: 5/5 passed.
-- Public health: `https://api.gary-yong.com/budget/api/health` returned 200.
-- Public authenticated smoke for Gary returned Budget Spaces:
-  - Archie Home (`id=1`)
-  - Sandbanks Camping Trip 2026 (`id=59`)
-- Sandbanks public authenticated API returns 5 expenses totaling 342.20.
-- Starting production with default `/home/ubuntu/budget-server/finsync.db` fails closed with `EISDIR`.
-- Watchdog dry run returned no alerts.
+- Local targeted backend tests passed: 122/122.
+- Remote startup hardening tests passed: 5/5.
+- Public health endpoint returns 200/ok.
+- Default-path startup fails closed.
+- Public API sees 47 recovered Archie rows and split details.
+- Backup after merge created successfully with 551 expenses / maxExpenseId 641.
+- Daily health script passes.
+- Weekly maintenance restore drill passes.
 
-## Remaining limitation
+## Remaining recommendations
 
-The Jun 28 Archie writes are proven by access/app logs but not recoverable from server DB files/log bodies. The only remaining possible source for exact values is client-side app/device cache or screenshots/receipts/bank exports from Gary/Emily.
+See `docs/flowt-db-operations-runbook.md` for the durable operating model.
+
+Highest priority next steps:
+
+1. Add off-box S3 backups with versioning/lifecycle.
+2. Resize EC2 root volume from ~8GB to at least 20–30GB or move backups/logs off root.
+3. Add append-only write-audit ledger for expense mutations.
+4. Plan migration from SQL.js file persistence to Postgres/RDS or native SQLite WAL with single-writer guarantees.
