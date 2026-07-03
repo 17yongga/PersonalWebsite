@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const initSqlJs = require('sql.js');
 
 let db = null;
@@ -8,6 +9,10 @@ let autosaveTimer = null;
 
 function getDbPath() {
   return process.env.BUDGET_DB_PATH || path.join(__dirname, 'finsync.db');
+}
+
+function getManifestPath() {
+  return process.env.BUDGET_DB_MANIFEST_PATH || `${getDbPath()}.manifest.json`;
 }
 
 async function getDb() {
@@ -30,11 +35,72 @@ async function getDb() {
   return db;
 }
 
-function saveDb() {
+function sha256(buffer) {
+  return crypto.createHash('sha256').update(buffer).digest('hex');
+}
+
+function atomicWriteFile(filePath, buffer) {
+  const dir = path.dirname(filePath);
+  const base = path.basename(filePath);
+  const tmpPath = path.join(dir, `.${base}.${process.pid}.${Date.now()}.tmp`);
+  const fd = fs.openSync(tmpPath, 'w');
+  try {
+    fs.writeFileSync(fd, buffer);
+    fs.fsyncSync(fd);
+  } finally {
+    fs.closeSync(fd);
+  }
+  fs.renameSync(tmpPath, filePath);
+  try {
+    const dirFd = fs.openSync(dir, 'r');
+    try { fs.fsyncSync(dirFd); } finally { fs.closeSync(dirFd); }
+  } catch (_) {
+    // Directory fsync is best-effort across filesystems/platforms.
+  }
+}
+
+function safeScalar(sql) {
+  try {
+    const result = db.exec(sql)[0];
+    return result?.values?.[0]?.[0] ?? null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function getDbStats() {
+  if (!db) return null;
+  return {
+    users: Number(safeScalar('SELECT COUNT(*) FROM users') || 0),
+    households: Number(safeScalar('SELECT COUNT(*) FROM households') || 0),
+    expenses: Number(safeScalar('SELECT COUNT(*) FROM expenses') || 0),
+    maxExpenseId: Number(safeScalar('SELECT MAX(id) FROM expenses') || 0),
+    latestExpenseDate: safeScalar('SELECT MAX(date) FROM expenses'),
+    latestExpenseCreatedAt: safeScalar('SELECT MAX(created_at) FROM expenses'),
+    latestExpenseUpdatedAt: safeScalar('SELECT MAX(updated_at) FROM expenses'),
+    expenseSplits: Number(safeScalar('SELECT COUNT(*) FROM expense_splits') || 0),
+    notifications: Number(safeScalar('SELECT COUNT(*) FROM notifications') || 0),
+  };
+}
+
+function writeManifest(buffer) {
+  const manifest = {
+    dbPath: path.resolve(dbPath || getDbPath()),
+    sha256: sha256(buffer),
+    stats: getDbStats(),
+    savedAt: new Date().toISOString(),
+    pid: process.pid,
+  };
+  atomicWriteFile(getManifestPath(), Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`));
+}
+
+function saveDb(options = {}) {
   if (!db) return;
+  const { updateManifest = true } = options;
   const data = db.export();
   const buffer = Buffer.from(data);
-  fs.writeFileSync(dbPath || getDbPath(), buffer);
+  atomicWriteFile(dbPath || getDbPath(), buffer);
+  if (updateManifest) writeManifest(buffer);
 }
 
 function enableAutosave(intervalMs = 5000) {
@@ -315,7 +381,11 @@ async function initialize() {
     )
   `);
 
-  saveDb();
+  // In production, startup validation must compare the loaded DB against the
+  // previous manifest before the new process is allowed to advance the manifest.
+  // Otherwise an accidentally stale DB could rewrite the manifest during schema
+  // migration and make the regression look legitimate.
+  saveDb({ updateManifest: process.env.NODE_ENV !== 'production' });
 }
 
 // Helper: run a query that returns rows (SELECT)
@@ -345,4 +415,16 @@ function runSql(sql, params = []) {
   return { lastInsertRowid: lastId, changes };
 }
 
-module.exports = { getDb, initialize, queryAll, queryOne, runSql, saveDb, enableAutosave, disableAutosave, getDbPath };
+module.exports = {
+  getDb,
+  initialize,
+  queryAll,
+  queryOne,
+  runSql,
+  saveDb,
+  enableAutosave,
+  disableAutosave,
+  getDbPath,
+  getManifestPath,
+  getDbStats,
+};

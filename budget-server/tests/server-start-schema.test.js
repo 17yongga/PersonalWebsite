@@ -92,3 +92,75 @@ test('production server refuses an underpopulated canonical DB', () => {
   assert.notEqual(result.status, 0, 'server should fail closed for empty production DB');
   assert.match(result.stderr + result.stdout, /Production DB sanity check failed/);
 });
+
+test('production server refuses a DB whose manifest watermarks regressed', () => {
+  const dir = tempDir();
+  const dbPath = path.join(dir, 'finsync.db');
+  const manifestPath = `${dbPath}.manifest.json`;
+
+  const init = spawnSync(process.execPath, ['-e', `
+    (async () => {
+      process.env.BUDGET_DB_PATH = ${JSON.stringify(dbPath)};
+      const { initialize } = require('./database');
+      await initialize();
+    })().catch((err) => { console.error(err); process.exit(1); });
+  `], { cwd: repoDir, encoding: 'utf8', timeout: 10000 });
+  assert.equal(init.status, 0, init.stderr || init.stdout);
+
+  fs.writeFileSync(manifestPath, JSON.stringify({
+    dbPath,
+    stats: {
+      users: 2,
+      households: 1,
+      expenses: 504,
+      maxExpenseId: 591,
+      expenseSplits: 95,
+      notifications: 5,
+    },
+    savedAt: '2026-07-03T00:00:00.000Z',
+  }));
+
+  const result = spawnSync(process.execPath, ['server.js'], {
+    cwd: repoDir,
+    env: {
+      ...process.env,
+      NODE_ENV: 'production',
+      BUDGET_DB_PATH: dbPath,
+      PORT: '3319',
+      JWT_SECRET: 'server-start-schema-test-secret-32chars',
+      MIN_PRODUCTION_USERS: '0',
+      MIN_PRODUCTION_HOUSEHOLDS: '0',
+      MIN_PRODUCTION_EXPENSES: '0',
+      MIN_PRODUCTION_MAX_EXPENSE_ID: '0',
+    },
+    encoding: 'utf8',
+    timeout: 10000,
+  });
+
+  assert.notEqual(result.status, 0, 'server should fail closed when DB watermarks go backwards');
+  assert.match(result.stderr + result.stdout, /Production DB regression check failed/);
+});
+
+test('production server refuses a canonical DB below explicit expense watermarks', () => {
+  const dir = tempDir();
+  const dbPath = path.join(dir, 'finsync.db');
+  const result = spawnSync(process.execPath, ['server.js'], {
+    cwd: repoDir,
+    env: {
+      ...process.env,
+      NODE_ENV: 'production',
+      BUDGET_DB_PATH: dbPath,
+      PORT: '3320',
+      JWT_SECRET: 'server-start-schema-test-secret-32chars',
+      MIN_PRODUCTION_USERS: '0',
+      MIN_PRODUCTION_HOUSEHOLDS: '0',
+      MIN_PRODUCTION_EXPENSES: '504',
+      MIN_PRODUCTION_MAX_EXPENSE_ID: '591',
+    },
+    encoding: 'utf8',
+    timeout: 10000,
+  });
+
+  assert.notEqual(result.status, 0, 'server should fail closed below explicit production expense watermarks');
+  assert.match(result.stderr + result.stdout, /minimum users=0, households=0, expenses=504, maxExpenseId=591/);
+});

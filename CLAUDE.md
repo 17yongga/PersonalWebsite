@@ -67,7 +67,7 @@ ssh ubuntu@52.86.178.139 -i ~/.ssh/id_ed25519 "pm2 restart casino-server"
 
 **Live URL:** https://api.gary-yong.com/budget
 **PM2:** `budget-server` → port 3003
-**DB:** SQLite at `/home/ubuntu/budget-server/finsync.db`
+**DB:** SQLite at `/home/ubuntu/budget-server/finsync-restored-20260703.db` (pinned by PM2 `BUDGET_DB_PATH` + `EXPECTED_BUDGET_DB_PATH`; legacy `/home/ubuntu/budget-server/finsync.db` is intentionally a fail-closed directory after the 2026-07-03 incident)
 
 ### Files
 - `budget.html` — frontend (S3 → gary-yong.com/budget.html)
@@ -89,9 +89,11 @@ rsync -avz -e "ssh -i ~/.ssh/id_ed25519" ~/clawd/PersonalWebsite/budget-server/ 
 ssh ubuntu@52.86.178.139 -i ~/.ssh/id_ed25519 "pm2 restart budget-server"
 ```
 
-### SQLite Rules
-- Always use `PRAGMA journal_mode=OFF` when editing via sqlite3 CLI (disk space issue on EC2)
-- Do NOT run multiple Node processes — zombie processes will overwrite the DB
+### SQLite / SQL.js Rules
+- Always use the active PM2 `BUDGET_DB_PATH`; never assume `finsync.db` is production. After the 2026-07-03 data incident, default `finsync.db` is intentionally a fail-closed directory.
+- Backups must copy the PM2 env DB path and validate watermarks before backup.
+- Do NOT run multiple Node processes — zombie processes can keep an in-memory SQL.js DB and overwrite files via autosave.
+- Always verify restored DB persistence after autosave/restart before declaring recovery.
 
 ### Pending (as of 2026-03-01)
 - Tab split controls UI fix (3-button group replacing checkbox) — local only, not deployed
