@@ -24,7 +24,9 @@ if (process.env.NODE_ENV === 'production' && JWT_SECRET.length < 32) {
   throw new Error('JWT_SECRET must be at least 32 characters in production.');
 }
 
-const TOKEN_EXPIRY = '30d';
+const TOKEN_EXPIRY = '12h';
+const SESSION_EXPIRY_MS = 12 * 60 * 60 * 1000;
+const REFRESH_TOKEN_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000;
 const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 const EMAIL_VERIFICATION_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 const BYPASS_EMAIL_VERIFICATION_FOR_TESTS = process.env.NODE_ENV === 'test' && process.env.EMAIL_VERIFICATION_REQUIRED !== 'true';
@@ -35,6 +37,101 @@ function createRawToken() {
 
 function hashToken(rawToken) {
   return crypto.createHash('sha256').update(rawToken).digest('hex');
+}
+
+function getUserTokenVersion(userId) {
+  const user = queryOne('SELECT id, token_version FROM users WHERE id = ?', [userId]);
+  if (!user) return null;
+  return Number(user.token_version || 0);
+}
+
+function selectUserWithEffectivePromo(userId) {
+  return queryOne(
+    `SELECT u.*,
+            (
+              SELECT MAX(r.grant_expires_at)
+              FROM promo_code_redemptions r
+              JOIN promo_codes p ON p.id = r.promo_code_id
+              WHERE r.user_id = u.id
+                AND p.active = 1
+                AND r.grant_expires_at IS NOT NULL
+            ) AS promo_redemption_expires_at
+     FROM users u
+     WHERE u.id = ?`,
+    [userId]
+  );
+}
+
+function hashOptional(value) {
+  if (!value || typeof value !== 'string') return null;
+  return crypto.createHash('sha256').update(value.trim()).digest('hex');
+}
+
+function getDeviceId(req) {
+  const header = req.headers['x-flowt-device-id'];
+  return Array.isArray(header) ? header[0] : header;
+}
+
+function getRequestIp(req) {
+  return String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim();
+}
+
+function createAuthSession(user, req) {
+  const sessionId = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + SESSION_EXPIRY_MS).toISOString();
+  const deviceIdHash = hashOptional(getDeviceId(req));
+  const userAgentHash = hashOptional(req.headers['user-agent'] || '');
+  const ipHash = hashOptional(getRequestIp(req));
+  runSql(
+    `INSERT INTO auth_sessions (id, user_id, device_id_hash, user_agent_hash, ip_hash, expires_at, last_seen_at)
+     VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+    [sessionId, user.id, deviceIdHash, userAgentHash, ipHash, expiresAt]
+  );
+  return { sessionId, deviceIdHash };
+}
+
+function issueRefreshToken({ sessionId, userId, deviceIdHash }) {
+  const refreshToken = createRawToken();
+  const tokenHash = hashToken(refreshToken);
+  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY_MS).toISOString();
+  runSql(
+    `INSERT INTO auth_refresh_tokens (token_hash, session_id, user_id, device_id_hash, expires_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [tokenHash, sessionId, userId, deviceIdHash || null, expiresAt]
+  );
+  return refreshToken;
+}
+
+function issueAuthCredentials(user, req) {
+  const session = createAuthSession(user, req);
+  const token = signAuthToken(user, session);
+  const refreshToken = issueRefreshToken({
+    sessionId: session.sessionId,
+    userId: user.id,
+    deviceIdHash: session.deviceIdHash,
+  });
+  return { token, refreshToken };
+}
+
+function revokeSession(sessionId) {
+  runSql("UPDATE auth_sessions SET revoked_at = datetime('now') WHERE id = ? AND revoked_at IS NULL", [sessionId]);
+  runSql("UPDATE auth_refresh_tokens SET revoked_at = datetime('now') WHERE session_id = ? AND revoked_at IS NULL", [sessionId]);
+}
+
+function signAuthToken(user, session = {}) {
+  const tokenVersion = Number(user.token_version || 0);
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      tokenVersion,
+      sid: session.sessionId,
+      deviceIdHash: session.deviceIdHash || undefined,
+    },
+    JWT_SECRET,
+    { expiresIn: TOKEN_EXPIRY }
+  );
 }
 
 function issueEmailVerificationToken(userId) {
@@ -68,6 +165,34 @@ function authenticate(req, res, next) {
   try {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET);
+    if (!decoded || !Number.isInteger(Number(decoded.id))) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    if (!Object.prototype.hasOwnProperty.call(decoded, 'tokenVersion')) {
+      return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+    }
+    const currentTokenVersion = getUserTokenVersion(decoded.id);
+    if (currentTokenVersion === null || Number(decoded.tokenVersion) !== currentTokenVersion) {
+      return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+    }
+    if (!decoded.sid || typeof decoded.sid !== 'string') {
+      return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+    }
+    const session = queryOne(
+      `SELECT * FROM auth_sessions
+       WHERE id = ? AND user_id = ? AND revoked_at IS NULL AND datetime(expires_at) > datetime('now')`,
+      [decoded.sid, decoded.id]
+    );
+    if (!session) {
+      return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+    }
+    if (decoded.deviceIdHash) {
+      const currentDeviceHash = hashOptional(getDeviceId(req));
+      if (!currentDeviceHash || currentDeviceHash !== decoded.deviceIdHash || currentDeviceHash !== session.device_id_hash) {
+        return res.status(401).json({ error: 'This session belongs to another device. Please sign in again.' });
+      }
+    }
+    try { runSql("UPDATE auth_sessions SET last_seen_at = datetime('now') WHERE id = ?", [decoded.sid]); } catch(e) {}
     req.user = decoded;
     next();
   } catch (err) {
@@ -105,14 +230,10 @@ router.post('/register', async (req, res) => {
       [normalizedEmail, passwordHash, profileInput.name, profileInput.etransfer_email, BYPASS_EMAIL_VERIFICATION_FOR_TESTS ? 1 : 0]
     );
 
-    const createdUser = queryOne('SELECT * FROM users WHERE id = ?', [result.lastInsertRowid]);
+    const createdUser = selectUserWithEffectivePromo(result.lastInsertRowid);
     if (BYPASS_EMAIL_VERIFICATION_FOR_TESTS) {
-      const token = jwt.sign(
-        { id: result.lastInsertRowid, email: normalizedEmail, name: profileInput.name },
-        JWT_SECRET,
-        { expiresIn: TOKEN_EXPIRY }
-      );
-      return res.json({ token, user: serializeUserSubscription(createdUser) });
+      const credentials = issueAuthCredentials(createdUser, req);
+      return res.json({ ...credentials, user: serializeUserSubscription(createdUser) });
     }
     try {
       const emailResult = await sendVerificationEmailForUser(createdUser);
@@ -152,12 +273,9 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name },
-      JWT_SECRET,
-      { expiresIn: TOKEN_EXPIRY }
-    );
-    res.json({ token, user: serializeUserSubscription(user) });
+    const credentials = issueAuthCredentials(user, req);
+    const profile = selectUserWithEffectivePromo(user.id) || user;
+    res.json({ ...credentials, user: serializeUserSubscription(profile) });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Login failed' });
@@ -250,7 +368,9 @@ router.post('/reset-password', async (req, res) => {
     runSql('UPDATE password_reset_tokens SET used = 1 WHERE id = ?', [record.id]);
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
-    runSql('UPDATE users SET password_hash = ? WHERE id = ?', [passwordHash, record.user_id]);
+    runSql('UPDATE users SET password_hash = ?, token_version = COALESCE(token_version, 0) + 1 WHERE id = ?', [passwordHash, record.user_id]);
+    runSql("UPDATE auth_sessions SET revoked_at = datetime('now') WHERE user_id = ? AND revoked_at IS NULL", [record.user_id]);
+    runSql("UPDATE auth_refresh_tokens SET revoked_at = datetime('now') WHERE user_id = ? AND revoked_at IS NULL", [record.user_id]);
 
     res.json({ message: 'Password updated successfully. You can now sign in.' });
   } catch (err) {
@@ -324,12 +444,66 @@ router.post('/resend-verification', async (req, res) => {
   }
 });
 
+// ── POST /api/auth/refresh ───────────────────────────────────────────────────
+// Rotates a long-lived, device-bound refresh token into a fresh 12h access token.
+// The mobile app gates this call behind biometric auth when biometric unlock is enabled.
+router.post('/refresh', (req, res) => {
+  try {
+    const rawRefreshToken = String(req.body?.refreshToken || '').trim();
+    if (!rawRefreshToken) return res.status(400).json({ error: 'Refresh token is required' });
+
+    const tokenHash = hashToken(rawRefreshToken);
+    const record = queryOne('SELECT * FROM auth_refresh_tokens WHERE token_hash = ?', [tokenHash]);
+    if (!record) return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+
+    if (record.used_at) {
+      revokeSession(record.session_id);
+      return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+    }
+    if (record.revoked_at || new Date(record.expires_at) < new Date()) {
+      return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+    }
+
+    const session = queryOne(
+      `SELECT * FROM auth_sessions
+       WHERE id = ? AND user_id = ? AND revoked_at IS NULL AND datetime(expires_at) > datetime('now')`,
+      [record.session_id, record.user_id]
+    );
+    if (!session) return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+
+    const currentDeviceHash = hashOptional(getDeviceId(req));
+    if (record.device_id_hash && (!currentDeviceHash || currentDeviceHash !== record.device_id_hash || currentDeviceHash !== session.device_id_hash)) {
+      revokeSession(record.session_id);
+      return res.status(401).json({ error: 'This session belongs to another device. Please sign in again.' });
+    }
+
+    const user = selectUserWithEffectivePromo(record.user_id);
+    if (!user) return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+
+    const currentTokenVersion = getUserTokenVersion(user.id);
+    if (currentTokenVersion === null || Number(user.token_version || 0) !== currentTokenVersion) {
+      revokeSession(record.session_id);
+      return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+    }
+
+    runSql("UPDATE auth_refresh_tokens SET used_at = datetime('now') WHERE token_hash = ?", [tokenHash]);
+    runSql("UPDATE auth_sessions SET last_seen_at = datetime('now') WHERE id = ?", [record.session_id]);
+    const refreshToken = issueRefreshToken({
+      sessionId: record.session_id,
+      userId: user.id,
+      deviceIdHash: record.device_id_hash,
+    });
+    const token = signAuthToken(user, { sessionId: record.session_id, deviceIdHash: record.device_id_hash });
+    res.json({ token, refreshToken, user: serializeUserSubscription(user) });
+  } catch (err) {
+    console.error('Refresh session error:', err);
+    res.status(500).json({ error: 'Session refresh failed' });
+  }
+});
+
 // ── GET /api/auth/me ──────────────────────────────────────────────────────────
 router.get('/me', authenticate, (req, res) => {
-  const user = queryOne(
-    'SELECT * FROM users WHERE id = ?',
-    [req.user.id]
-  );
+  const user = selectUserWithEffectivePromo(req.user.id);
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json({ user: serializeUserSubscription(user) });
 });
@@ -354,7 +528,7 @@ router.post('/subscription/sync', authenticate, (req, res) => {
       ]
     );
 
-    const user = queryOne('SELECT * FROM users WHERE id = ?', [req.user.id]);
+    const user = selectUserWithEffectivePromo(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json({ user: serializeUserSubscription(user) });
   } catch (err) {
@@ -376,7 +550,7 @@ router.put('/profile', authenticate, (req, res) => {
       'UPDATE users SET name = ?, avatar_url = ?, etransfer_email = ? WHERE id = ?',
       [profileInput.name, profileInput.avatar_url, profileInput.etransfer_email, req.user.id]
     );
-    const user = queryOne('SELECT * FROM users WHERE id = ?', [req.user.id]);
+    const user = selectUserWithEffectivePromo(req.user.id);
     res.json({ user: serializeUserSubscription(user) });
   } catch (err) {
     console.error('Profile update error:', err);
@@ -438,8 +612,10 @@ router.delete('/account', authenticate, async (req, res) => {
       }
     }
 
-    // Clean up password reset tokens (CASCADE handles it, but explicit is safer)
+    // Clean up password reset tokens and sessions (CASCADE handles it, but explicit is safer)
     runSql('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
+    runSql('DELETE FROM auth_refresh_tokens WHERE user_id = ?', [userId]);
+    runSql('DELETE FROM auth_sessions WHERE user_id = ?', [userId]);
 
     // Finally delete the user record
     runSql('DELETE FROM users WHERE id = ?', [userId]);
@@ -451,4 +627,17 @@ router.delete('/account', authenticate, async (req, res) => {
   }
 });
 
-module.exports = { router, authenticate };
+// ── POST /api/auth/logout-all ────────────────────────────────────────────────
+router.post('/logout-all', authenticate, (req, res) => {
+  try {
+    runSql('UPDATE users SET token_version = COALESCE(token_version, 0) + 1 WHERE id = ?', [req.user.id]);
+    runSql("UPDATE auth_sessions SET revoked_at = datetime('now') WHERE user_id = ? AND revoked_at IS NULL", [req.user.id]);
+    runSql("UPDATE auth_refresh_tokens SET revoked_at = datetime('now') WHERE user_id = ? AND revoked_at IS NULL", [req.user.id]);
+    res.json({ message: 'All sessions have been signed out.' });
+  } catch (err) {
+    console.error('Logout all error:', err);
+    res.status(500).json({ error: 'Failed to sign out sessions' });
+  }
+});
+
+module.exports = { router, authenticate, signAuthToken };

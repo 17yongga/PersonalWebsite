@@ -11,6 +11,10 @@ function getDbPath() {
   return process.env.BUDGET_DB_PATH || path.join(__dirname, 'finsync.db');
 }
 
+function getLoadedDb() {
+  return db;
+}
+
 function getManifestPath() {
   return process.env.BUDGET_DB_MANIFEST_PATH || `${getDbPath()}.manifest.json`;
 }
@@ -143,6 +147,8 @@ async function initialize() {
   addUserColumn('promo_grant_source', 'TEXT');
   addUserColumn('avatar_url', 'TEXT');
   addUserColumn('etransfer_email', 'TEXT');
+  addUserColumn('token_version', 'INTEGER NOT NULL DEFAULT 0');
+  db.run('UPDATE users SET token_version = 0 WHERE token_version IS NULL');
   const addedEmailVerifiedAt = addUserColumn('email_verified_at', 'TEXT');
   if (addedEmailVerifiedAt) {
     // Existing accounts predate signup verification; treat them as verified so
@@ -306,6 +312,39 @@ async function initialize() {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS auth_sessions (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      device_id_hash TEXT,
+      user_agent_hash TEXT,
+      ip_hash TEXT,
+      revoked_at TEXT,
+      last_seen_at TEXT,
+      expires_at TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+  try { db.run(`CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_active ON auth_sessions(user_id, revoked_at, expires_at)`); } catch(e) {}
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
+      token_hash TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL,
+      device_id_hash TEXT,
+      expires_at TEXT NOT NULL,
+      used_at TEXT,
+      revoked_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (session_id) REFERENCES auth_sessions(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+  try { db.run(`CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_session_active ON auth_refresh_tokens(session_id, revoked_at, used_at, expires_at)`); } catch(e) {}
+  try { db.run(`CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_user_active ON auth_refresh_tokens(user_id, revoked_at, used_at, expires_at)`); } catch(e) {}
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS notifications (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -425,6 +464,7 @@ module.exports = {
   enableAutosave,
   disableAutosave,
   getDbPath,
+  getLoadedDb,
   getManifestPath,
   getDbStats,
 };
