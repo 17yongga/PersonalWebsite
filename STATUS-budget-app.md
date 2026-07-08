@@ -1,5 +1,5 @@
 # Budget App — STATUS.md
-> Updated: 2026-07-04 (application-wide DB healthcheck + safe backup/deploy structure live)
+> Updated: 2026-07-08 (Flowt iOS 1.0.11 build 47 uploaded to TestFlight)
 
 ## Business Registration (CRA)
 - **Business Number (BN9):** 78908 2971
@@ -17,6 +17,9 @@
 - Full login/register system, shared vs. individual expense tracking, Chart.js visualizations
 - Backend: PM2 `budget-server` on EC2, port 3002, online
 - Receipt scanner: PM2 `receipt-server` on EC2, port 3002 (proxied via nginx)
+
+## Current State (2026-07-08)
+- **Flowt iOS 1.0.11 build 47 uploaded to TestFlight/App Store Connect and Apple processing is VALID:** packaged the accumulated local mobile changes that were not in TestFlight, including biometric refresh-session mobile support, Scan Receipt Pro sheet animation polish, transaction Budget Space switch crash guards/stale-load invalidation, compact Notification Settings, password reset app/web polish, and conservative settled/outstanding expense classification. Bumped app/store metadata from **1.0.10 → 1.0.11**, committed release slice `b1bc7ed` (`chore(flowt): prepare v1.0.11 testflight build`), built from clean worktree `/tmp/flowt-release-1.0.11-1783510212`, and submitted exact EAS build `e1c7b856-7cbb-43fa-9b7b-7a7cdbe5002d`. App version/build: **1.0.11 (47)**; artifact `https://expo.dev/artifacts/eas/Nb7FKPlRWFqASyFgbZ2nhR8hQQOiwBHSRgGQUYWhjkg.ipa`; EAS submission `ebaf66b4-1a07-454e-9447-a23ce0608f5b`; ASC build `00d54350-2923-4bb9-9895-7eb276087fe1` is **VALID / APP_STORE_ELIGIBLE**. Verification passed from the release worktree: Flowt app UI/source tests **195/195**, `npx tsc --noEmit`, `npx expo install --check`, `eas metadata:lint`, production backend health **200**, EAS build view `FINISHED`, EAS upload success, and App Store Connect API processing verification. No App Review/public release submission was started.
 
 ## Current State (2026-07-05)
 - **Dashboard scan-receipt Pro sheet polish + transaction Budget Space switch crash guard fixed locally; no build queued:** improved the Scan Receipt paywall sheet so the dark backdrop appears immediately and only the bottom sheet slides, instead of the background fading/sliding as part of the animation. Also hardened the Budget Space switch crash path after transaction browsing: Transactions tab now clears hidden Add/Edit Expense state, long-press state, and expanded group insights on active Budget Space changes; household expense loading now invalidates stale in-flight expense responses so old-space transactions cannot repopulate after Settings switches spaces. Verification passed: Flowt app UI/source tests **195/195** and `npx tsc --noEmit`. Local-only; no EAS/TestFlight build was started per Gary's instruction.
