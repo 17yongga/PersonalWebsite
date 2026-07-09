@@ -1,5 +1,5 @@
 # Budget App — STATUS.md
-> Updated: 2026-07-08 (Flowt iOS 1.0.11 build 47 uploaded to TestFlight)
+> Updated: 2026-07-09 (Flowt backend hang recovered via PM2 restart)
 
 ## Business Registration (CRA)
 - **Business Number (BN9):** 78908 2971
@@ -17,6 +17,9 @@
 - Full login/register system, shared vs. individual expense tracking, Chart.js visualizations
 - Backend: PM2 `budget-server` on EC2, port 3002, online
 - Receipt scanner: PM2 `receipt-server` on EC2, port 3002 (proxied via nginx)
+
+## Current State (2026-07-09)
+- **Flowt backend hang recovered; service live again:** Gary asked whether Flowt was still up. Public HTTPS and local localhost probes showed nginx/EC2/PM2 were up but `budget-server` was hanging on `/api/health` and not returning app responses. Restarted only PM2 `budget-server` (no nginx/global PM2/DB changes). Verification after restart: local `http://127.0.0.1:3003/api/health` returned **200**, public `https://api.gary-yong.com/budget/api/health` returned **200**, unauthenticated `/api/auth/me` returned expected **401**, startup check confirmed production DB `/home/ubuntu/budget-server/finsync-restored-20260703.db` with **37 users / 32 households / 553 expenses / maxExpenseId 641**, and `scripts/flowt-db-healthcheck.js` passed. PM2 `budget-server` is online as pid `402467` with 1 restart. Root cause not yet proven beyond a stuck Node process; monitor for recurrence.
 
 ## Current State (2026-07-08)
 - **Flowt iOS 1.0.11 build 47 uploaded to TestFlight/App Store Connect and Apple processing is VALID:** packaged the accumulated local mobile changes that were not in TestFlight, including biometric refresh-session mobile support, Scan Receipt Pro sheet animation polish, transaction Budget Space switch crash guards/stale-load invalidation, compact Notification Settings, password reset app/web polish, and conservative settled/outstanding expense classification. Bumped app/store metadata from **1.0.10 → 1.0.11**, committed release slice `b1bc7ed` (`chore(flowt): prepare v1.0.11 testflight build`), built from clean worktree `/tmp/flowt-release-1.0.11-1783510212`, and submitted exact EAS build `e1c7b856-7cbb-43fa-9b7b-7a7cdbe5002d`. App version/build: **1.0.11 (47)**; artifact `https://expo.dev/artifacts/eas/Nb7FKPlRWFqASyFgbZ2nhR8hQQOiwBHSRgGQUYWhjkg.ipa`; EAS submission `ebaf66b4-1a07-454e-9447-a23ce0608f5b`; ASC build `00d54350-2923-4bb9-9895-7eb276087fe1` is **VALID / APP_STORE_ELIGIBLE**. Verification passed from the release worktree: Flowt app UI/source tests **195/195**, `npx tsc --noEmit`, `npx expo install --check`, `eas metadata:lint`, production backend health **200**, EAS build view `FINISHED`, EAS upload success, and App Store Connect API processing verification. No App Review/public release submission was started.
