@@ -1,5 +1,5 @@
 # Trading Platform (PaperTrade) — STATUS.md
-> Updated: 2026-03-22 11:17 EDT
+> Updated: 2026-07-31 11:05 EDT
 
 ## What's Live
 - **Frontend:** https://gary-yong.com/trading/index.html#/leaderboard (S3/CloudFront)
@@ -95,6 +95,15 @@ aws cloudfront create-invalidation --distribution-id EUVZ94LCG1QV2 --paths "/tra
 | 2026-03-14 | **All pages made public** — removed login requirement, auth middleware now optional (defaults to Gary) |
 | 2026-03-15 | **Risk Dashboard bug fixes** — 4 root causes fixed: (1) wrong deploy dir `/trading-server/` vs actual PM2 path, (2) auth middleware blocking all requests, (3) empty DB tables used instead of live Alpaca data, (4) missing snapshot endpoint. Portfolio now $97K live, 14 positions visible, snapshot pipeline wired up for Sharpe tracking |
 | 2026-03-21 | **Strategy Comparison shipped** — #/compare page, side-by-side all 5 strategies, Sharpe/Sortino/win rate/drawdown |
+
+## Personal Semiconductor Put Research (2026-07-31)
+- **Current decision:** Do **not** buy the NVDA Sep. 18, 2026 $205 put now. The 10:30 failed-rebound alert expired when NVDA reclaimed VWAP and the sector remained above the prior close.
+- **Preferred contract if confirmed:** `NVDA260918P00205000`; one contract; maximum planned debit $17.25 ($1,725 plus fees).
+- **Preferred timing:** Reassess Aug. 5–7 after AMD reports Aug. 4. Require a post-earnings failed rebound, 30 minutes below VWAP, NVDA below its prior close, SMH below both VWAP and its prior close, ask ≤ $17.25, spread ≤ $0.25, IV ≤ 45%, and no >3% downside gap chase.
+- **Skip:** no qualified setup by Aug. 14, NVDA sustains two closes above $203, SMH recovers above ~$550 with improving breadth, or contract-quality gates fail.
+- **Monitor:** Hermes job `bdb064e0ed49` remains active but is intentionally silent before Aug. 5; synthetic confirmed-rebound and direct-gap tests passed.
+- **Research memo:** `~/clawd/research/semiconductor-puts-2026-07-28/nvda_sep205_entry_decision_2026-07-31.md`.
+- **Execution:** No brokerage order was placed.
 
 ## Bug Fix Log (2026-03-10)
 | # | File | Bug | Impact | Fix |
