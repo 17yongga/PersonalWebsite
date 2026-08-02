@@ -1,20 +1,21 @@
 {
   "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1097.0",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
+    "better-sqlite3": "^12.11.1",
     "cheerio": "^1.0.0",
     "express": "^4.22.1",
-    "node-cron": "^3.0.3",
+    "lossless-json": "^4.3.0",
+    "node-cron": "^4.6.0",
+    "nodemailer": "^9.0.3",
     "socket.io": "^4.8.3"
-  },
-  "optionalDependencies": {
-    "puppeteer": "^24.0.0"
   },
   "name": "personalwebsite",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test tests/casino-*.test.js"
   },
   "repository": {
     "type": "git",
@@ -27,5 +28,10 @@
     "url": "https://github.com/17yongga/PersonalWebsite/issues"
   },
   "homepage": "https://github.com/17yongga/PersonalWebsite#readme",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "axe-core": "^4.12.1",
+    "puppeteer": "^24.0.0",
+    "socket.io-client": "^4.8.1"
+  }
 }

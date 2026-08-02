@@ -11,6 +11,9 @@ class CS2ModernBettingGame {
     this.selectedEvent = null;
     this.selectedOutcome = null;
     this.betAmount = 100;
+    this.currentBetsTab = 'open';
+    this.pendingBetRequestId = null;
+    this.pendingBetRequestSignature = null;
     this.refreshInterval = null;
     
     // Modern UI state management
@@ -24,6 +27,10 @@ class CS2ModernBettingGame {
     this.touchThreshold = 50;
     this.longPressTimer = null;
     this.hapticEnabled = 'vibrate' in navigator;
+    this.root = null;
+    this._managedListeners = [];
+    this.soundKnownSettled = null;
+    this.previousScrollBehavior = null;
     
     // Team logos
     this.teamLogos = null;
@@ -40,6 +47,7 @@ class CS2ModernBettingGame {
         setTimeout(() => this.init(), 100);
         return;
       }
+      this.root = gameView;
       
       this.renderModernUI();
       this.attachEventListeners();
@@ -96,7 +104,7 @@ class CS2ModernBettingGame {
             <!-- Events Panel -->
             <div class="cs2-events-panel">
               <div class="events-panel-header">
-                <h3>🏆 Upcoming Matches</h3>
+                <h3><span class="live-heading-dot" aria-hidden="true"></span> Live &amp; Upcoming Matches</h3>
                 <button id="refreshEventsBtn" class="cs2-refresh-btn">
                   <span class="refresh-icon">🔄</span>
                   Refresh
@@ -111,26 +119,26 @@ class CS2ModernBettingGame {
               </div>
             </div>
 
-            <!-- Sidebar Panel -->
-            <div class="cs2-sidebar-panel">
-              <!-- My Bets Section -->
-              <div class="cs2-my-bets-panel">
-                <div class="my-bets-header">
-                  <h3>📋 My Bets</h3>
+            <!-- My Bets Workspace: full width on desktop, never compressed into a sidebar -->
+            <section class="cs2-my-bets-workspace" aria-labelledby="cs2MyBetsHeading">
+              <div class="my-bets-header">
+                <div>
+                  <span class="workspace-kicker">PORTFOLIO</span>
+                  <h3 id="cs2MyBetsHeading">My Bets</h3>
                 </div>
-                <div class="bets-tabs">
-                  <button class="bet-tab active" data-tab="open">Open</button>
-                  <button class="bet-tab" data-tab="settled">History</button>
-                </div>
-                <div id="cs2MyBets" class="cs2-my-bets">
-                  <div class="empty-state">
-                    <div class="empty-state-icon">🎯</div>
-                    <div class="empty-state-text">No bets placed yet</div>
-                    <div class="empty-state-subtext">Select a match to get started</div>
-                  </div>
+                <div class="bets-tabs" role="tablist" aria-label="Bet status">
+                  <button class="bet-tab active" data-tab="open" role="tab" aria-selected="true">Open</button>
+                  <button class="bet-tab" data-tab="settled" role="tab" aria-selected="false">History</button>
                 </div>
               </div>
-            </div>
+              <div id="cs2MyBets" class="cs2-my-bets" role="tabpanel">
+                <div class="empty-state">
+                  <div class="empty-state-icon">🎯</div>
+                  <div class="empty-state-text">No bets placed yet</div>
+                  <div class="empty-state-subtext">Select live or upcoming odds to get started</div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
 
@@ -250,37 +258,52 @@ class CS2ModernBettingGame {
     `;
   }
 
+  addManagedListener(target, type, handler, options) {
+    if (!target) return;
+    target.addEventListener(type, handler, options);
+    this._managedListeners.push({ target, type, handler, options });
+  }
+
   attachEventListeners() {
+    const root = this.root;
+    if (!root) return;
     this.attachBasicListeners();
     this.attachModernInteractions();
     this.attachKeyboardListeners();
+    this.addManagedListener(root, 'click', event => {
+      const tournamentHeader = event.target.closest('.cs2-tournament-header');
+      if (tournamentHeader) {
+        const section = tournamentHeader.parentElement;
+        const collapsed = section.classList.toggle('collapsed');
+        tournamentHeader.setAttribute('aria-expanded', String(!collapsed));
+      }
+      if (event.target.closest('.cs2-retry-button')) window.location.reload();
+    });
+    this.addManagedListener(root, 'error', event => {
+      const image = event.target.closest?.('img.team-logo-large[data-fallback-logo]');
+      if (!image || image.dataset.fallbackApplied === 'true') return;
+      image.dataset.fallbackApplied = 'true';
+      image.src = image.dataset.fallbackLogo;
+    }, true);
   }
 
   attachBasicListeners() {
-    // Refresh events with enhanced feedback
-    const refreshBtn = document.getElementById('refreshEventsBtn');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', this.handleRefreshEvents.bind(this));
-    }
+    const root = this.root;
+    if (!root) return;
+    const refreshBtn = root.querySelector('#refreshEventsBtn');
+    if (refreshBtn) refreshBtn.addEventListener('click', this.handleRefreshEvents.bind(this));
 
-    // Credit History button
-    const creditHistoryBtn = document.getElementById('creditHistoryBtn');
-    if (creditHistoryBtn) {
-      creditHistoryBtn.addEventListener('click', this.openCreditHistory.bind(this));
-    }
+    const creditHistoryBtn = root.querySelector('#creditHistoryBtn');
+    if (creditHistoryBtn) creditHistoryBtn.addEventListener('click', this.openCreditHistory.bind(this));
 
-    // Theme toggle - REMOVED
-
-    // Bet amount controls with real-time validation
-    const betAmountInput = document.getElementById('cs2BetAmount');
+    const betAmountInput = root.querySelector('#cs2BetAmount');
     if (betAmountInput) {
       betAmountInput.addEventListener('input', this.handleBetAmountChange.bind(this));
       betAmountInput.addEventListener('blur', this.validateBetAmount.bind(this));
     }
 
-    // Quick bet buttons with haptic feedback
-    document.querySelectorAll('.quick-bet-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    root.querySelectorAll('.quick-bet-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
         this.triggerHapticFeedback('light');
         const rawAmount = btn.dataset.amount;
         const amount = rawAmount === 'all' ? this.currentBalance : parseInt(rawAmount);
@@ -289,116 +312,88 @@ class CS2ModernBettingGame {
       });
     });
 
-    // Enhanced bet placement
-    const placeBetBtn = document.getElementById('placeBetBtn');
-    if (placeBetBtn) {
-      placeBetBtn.addEventListener('click', this.handlePlaceBet.bind(this));
-    }
+    const placeBetBtn = root.querySelector('#placeBetBtn');
+    if (placeBetBtn) placeBetBtn.addEventListener('click', this.handlePlaceBet.bind(this));
 
-    // Bet tabs with smooth transitions
-    document.querySelectorAll('.bet-tab').forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        this.handleTabSwitch(tab);
-      });
+    root.querySelectorAll('.bet-tab').forEach(tab => {
+      tab.addEventListener('click', () => this.handleTabSwitch(tab));
     });
 
-    // Modal controls
     this.attachModalListeners();
   }
 
   attachModernInteractions() {
-    // Enhanced odds card interactions
-    document.addEventListener('click', (e) => {
-      if (e.target.closest('.odds-pill:not(.disabled)')) {
-        e.preventDefault();
-        this.handleOddsSelection(e.target.closest('.odds-pill'));
-      }
-    });
-
-    // Pull-to-refresh gesture (mobile)
-    let pullStartY = 0;
-    let pullDistance = 0;
+    if (!this.root) return;
+    const pullState = { startY: 0, distance: 0 };
     const pullThreshold = 80;
 
-    document.addEventListener('touchstart', (e) => {
-      if (window.scrollY === 0) {
-        pullStartY = e.touches[0].clientY;
-      }
+    // One rooted odds-selection path prevents hidden, stale CS2 instances from
+    // handling clicks and avoids the former delegated + per-card double fire.
+    this.addManagedListener(this.root, 'click', e => {
+      const odds = e.target.closest('.odds-pill:not(.disabled)');
+      if (!odds) return;
+      e.preventDefault();
+      this.handleOddsSelection(odds);
     });
 
-    document.addEventListener('touchmove', (e) => {
-      if (pullStartY > 0) {
-        pullDistance = e.touches[0].clientY - pullStartY;
-        if (pullDistance > 0) {
-          e.preventDefault();
-          this.updatePullToRefreshIndicator(pullDistance, pullThreshold);
-        }
+    this.addManagedListener(this.root, 'touchstart', e => {
+      if (window.scrollY === 0) pullState.startY = e.touches[0].clientY;
+    });
+    this.addManagedListener(this.root, 'touchmove', e => {
+      if (pullState.startY <= 0) return;
+      pullState.distance = e.touches[0].clientY - pullState.startY;
+      if (pullState.distance > 0) {
+        e.preventDefault();
+        this.updatePullToRefreshIndicator(pullState.distance, pullThreshold);
       }
     });
-
-    document.addEventListener('touchend', () => {
-      if (pullDistance > pullThreshold) {
-        this.handleRefreshEvents();
-      }
+    this.addManagedListener(this.root, 'touchend', () => {
+      if (pullState.distance > pullThreshold) this.handleRefreshEvents();
       this.resetPullToRefresh();
-      pullStartY = 0;
-      pullDistance = 0;
+      pullState.startY = 0;
+      pullState.distance = 0;
     });
   }
 
   attachKeyboardListeners() {
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-      // ESC to close modals
+    const handler = e => {
+      const creditHistoryModal = this.root?.querySelector('#creditHistoryModal');
+      const betSlipModal = this.root?.querySelector('#cs2BetSlipModal');
       if (e.key === 'Escape') {
-        const creditHistoryModal = document.getElementById('creditHistoryModal');
-        const betSlipModal = document.getElementById('cs2BetSlipModal');
-        
-        if (creditHistoryModal && creditHistoryModal.classList.contains('visible')) {
-          this.closeCreditHistory();
-        } else if (betSlipModal && !betSlipModal.classList.contains('hidden')) {
-          this.closeBetSlipModal();
-        }
+        if (creditHistoryModal?.classList.contains('visible')) this.closeCreditHistory();
+        else if (betSlipModal && !betSlipModal.classList.contains('hidden')) this.closeBetSlipModal();
       }
-      
-      // Enter to place bet (if modal is open)
-      if (e.key === 'Enter' && !document.getElementById('cs2BetSlipModal').classList.contains('hidden')) {
-        e.preventDefault();
-        this.handlePlaceBet();
-      }
-
-      // R to refresh (with Ctrl/Cmd)
       if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
         e.preventDefault();
         this.handleRefreshEvents();
       }
-    });
+    };
+    this.addManagedListener(document, 'keydown', handler);
   }
 
   setupTouchOptimization() {
-    // Enable smooth scrolling
+    if (!this.root) return;
+    if (this.previousScrollBehavior === null) this.previousScrollBehavior = document.documentElement.style.scrollBehavior;
     document.documentElement.style.scrollBehavior = 'smooth';
-    
-    // Add touch-action optimization
-    const scrollContainers = document.querySelectorAll('.cs2-events-list, .cs2-my-bets');
+    const scrollContainers = this.root.querySelectorAll('.cs2-events-list, .cs2-my-bets');
     scrollContainers.forEach(container => {
       container.style.touchAction = 'pan-y';
       container.style.webkitOverflowScrolling = 'touch';
     });
-
-    // Prevent zoom on double-tap for betting buttons
-    const bettingElements = document.querySelectorAll('.odds-pill, .quick-bet-btn, .btn');
+    const bettingElements = this.root.querySelectorAll('.odds-pill, .quick-bet-btn, .btn');
     bettingElements.forEach(element => {
       element.style.touchAction = 'manipulation';
     });
   }
 
   attachModalListeners() {
+    const root = this.root;
+    if (!root) return;
     // Bet Slip Modal
-    const modal = document.getElementById('cs2BetSlipModal');
-    const closeBtn = document.getElementById('closeBetSlipBtn');
+    const modal = root.querySelector('#cs2BetSlipModal');
+    const closeBtn = root.querySelector('#closeBetSlipBtn');
     const overlay = modal?.querySelector('.cs2-betslip-modal-overlay');
-    const cancelBtn = document.getElementById('cancelBetBtn');
+    const cancelBtn = root.querySelector('#cancelBetBtn');
 
     [closeBtn, overlay, cancelBtn].forEach(element => {
       if (element) {
@@ -409,8 +404,8 @@ class CS2ModernBettingGame {
     });
 
     // Credit History Modal
-    const creditHistoryModal = document.getElementById('creditHistoryModal');
-    const closeCreditHistoryBtn = document.getElementById('closeCreditHistoryBtn');
+    const creditHistoryModal = root.querySelector('#creditHistoryModal');
+    const closeCreditHistoryBtn = root.querySelector('#closeCreditHistoryBtn');
     
     if (closeCreditHistoryBtn) {
       closeCreditHistoryBtn.addEventListener('click', () => {
@@ -440,19 +435,10 @@ class CS2ModernBettingGame {
         `;
       }
 
-      this.showToast('Syncing latest odds...', 'info');
-      
-      const serverUrl = window.CASINO_SERVER_URL || this.getServerUrl();
-      const response = await fetch(`${serverUrl}/api/cs2/sync`, { method: 'GET' });
-      const data = await response.json();
-
-      if (data.success) {
-        await this.loadEvents();
-        this.showToast('✅ Odds updated successfully!', 'success');
-        this.triggerHapticFeedback('success');
-      } else {
-        throw new Error(data.error || 'Failed to refresh');
-      }
+      this.showToast('Refreshing cached events...', 'info');
+      await this.loadEvents();
+      this.showToast('Events refreshed', 'success');
+      this.triggerHapticFeedback('success');
     } catch (error) {
       console.error('[CS2 Modern] Refresh error:', error);
       this.showToast('❌ Failed to refresh odds', 'error');
@@ -517,7 +503,7 @@ class CS2ModernBettingGame {
 
   animateQuickBetSelection(selectedBtn) {
     // Remove previous selections
-    document.querySelectorAll('.quick-bet-btn').forEach(btn => {
+    this.root?.querySelectorAll('.quick-bet-btn').forEach(btn => {
       btn.classList.remove('selected');
     });
     
@@ -528,12 +514,14 @@ class CS2ModernBettingGame {
 
   handleTabSwitch(activeTab) {
     const tabType = activeTab.dataset.tab;
+    this.currentBetsTab = tabType === 'history' ? 'history' : 'open';
     
     // Update tab states with animation
-    document.querySelectorAll('.bet-tab').forEach(tab => {
-      tab.classList.remove('active');
+    this.root?.querySelectorAll('.bet-tab').forEach(tab => {
+      const selected = tab === activeTab;
+      tab.classList.toggle('active', selected);
+      tab.setAttribute('aria-selected', String(selected));
     });
-    activeTab.classList.add('active');
     
     // Animate content change
     const betsContainer = document.getElementById('cs2MyBets');
@@ -547,7 +535,7 @@ class CS2ModernBettingGame {
     this.triggerHapticFeedback('light');
   }
 
-  handleOddsSelection(oddsCard) {
+  async handleOddsSelection(oddsCard) {
     const eventId = oddsCard.dataset.eventId;
     const selection = oddsCard.dataset.selection;
     
@@ -556,17 +544,19 @@ class CS2ModernBettingGame {
     this.triggerHapticFeedback('medium');
     
     // Fetch odds and show bet slip
+    await this.fetchEventOddsIfNeeded(eventId);
     this.selectOutcome(eventId, selection);
   }
 
   animateOddsSelection(oddsCard) {
-    // Remove previous selections
-    document.querySelectorAll('.odds-pill').forEach(card => {
+    // Remove previous selections only inside this game instance.
+    this.root?.querySelectorAll('.odds-pill').forEach(card => {
       card.classList.remove('selected');
     });
 
     // Add selection with animation
     oddsCard.classList.add('selected');
+    window.casinoSound?.play('ui', { game: 'cs2betting' });
 
     // Pulse animation
     oddsCard.style.transform = 'scale(0.95)';
@@ -592,7 +582,7 @@ class CS2ModernBettingGame {
       return;
     }
 
-    const placeBetBtn = document.getElementById('placeBetBtn');
+    const placeBetBtn = this.root?.querySelector('#placeBetBtn');
     const originalContent = placeBetBtn.innerHTML;
     
     try {
@@ -603,12 +593,17 @@ class CS2ModernBettingGame {
         Placing Bet...
       `;
 
-      const serverUrl = this.getServerUrl();
-      const response = await fetch(`${serverUrl}/api/cs2/bets`, {
+      const requestSignature = JSON.stringify({ eventId: this.selectedEvent.id, selection: this.selectedOutcome, amount: this.betAmount });
+      if (!this.pendingBetRequestId || this.pendingBetRequestSignature !== requestSignature) {
+        this.pendingBetRequestId = globalThis.crypto?.randomUUID?.() || `cs2_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        this.pendingBetRequestSignature = requestSignature;
+      }
+      const requestId = this.pendingBetRequestId;
+      const response = await this.casino.apiFetch('/api/cs2/bets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
+          requestId,
           eventId: this.selectedEvent.id,
           selection: this.selectedOutcome,
           amount: this.betAmount
@@ -616,6 +611,10 @@ class CS2ModernBettingGame {
       });
 
       const data = await response.json();
+      if (response.ok || response.status < 500) {
+        this.pendingBetRequestId = null;
+        this.pendingBetRequestSignature = null;
+      }
 
       if (data.success) {
         // Success feedback with enhanced animations
@@ -623,6 +622,7 @@ class CS2ModernBettingGame {
         this.currentBalance = data.newBalance;
         this.casino.credits = this.currentBalance;
         this.casino.updateCreditsDisplay();
+        window.casinoSound?.play('betPlaced', { game: 'cs2betting' });
         
         // Show success animation
         this.animateBetSuccess();
@@ -726,7 +726,7 @@ class CS2ModernBettingGame {
   updateHeaderBalance() {
     const el = document.getElementById('cs2HeaderBalanceValue');
     if (el) {
-      el.textContent = this.currentBalance.toLocaleString();
+      el.textContent = this.casino.formatBalance?.(this.currentBalance) || Number(this.currentBalance || 0).toFixed(2);
       el.classList.add('updating');
       setTimeout(() => el.classList.remove('updating'), 500);
     }
@@ -769,18 +769,16 @@ class CS2ModernBettingGame {
       return;
     }
 
-    // Filter and group events — hide matches once they've started
-    const now = new Date().getTime();
-    const upcomingEvents = this.events.filter(event => {
-      const eventTime = new Date(event.commenceTime || event.startTime || 0).getTime();
-      const hasStarted = eventTime < now;
-      const isFinished = event.status === 'finished';
-      const hasRealOdds = this.hasValidOdds(event);
-      
-      return !hasStarted && !isFinished && hasRealOdds;
+    // Keep eligible live markets visible ahead of upcoming matches. A live
+    // market with stale odds remains visible in a suspended state instead of
+    // disappearing, which avoids implying that the match does not exist.
+    const activeEvents = this.events.filter(event => {
+      if (event.status === 'finished') return false;
+      if (event.status === 'live') return true;
+      return event.status === 'scheduled' && this.hasValidOdds(event);
     });
 
-    if (upcomingEvents.length === 0) {
+    if (activeEvents.length === 0) {
       eventsList.innerHTML = `
         <div class="cs2-empty-state">
           <div class="empty-state-icon">⏰</div>
@@ -791,8 +789,8 @@ class CS2ModernBettingGame {
       return;
     }
 
-    // Group by tournament
-    const groupedEvents = this.groupEventsByTournament(upcomingEvents);
+    // Group by live state and tournament
+    const groupedEvents = this.groupEventsByTournament(activeEvents);
     let htmlContent = '';
 
     Object.entries(groupedEvents).forEach(([tournament, tournamentEvents]) => {
@@ -811,7 +809,7 @@ class CS2ModernBettingGame {
   groupEventsByTournament(events) {
     const grouped = {};
     events.forEach(event => {
-      const tournament = event.tournamentName || 'Other Events';
+      const tournament = event.status === 'live' ? 'LIVE NOW' : (event.tournamentName || 'Other Events');
       if (!grouped[tournament]) {
         grouped[tournament] = [];
       }
@@ -833,8 +831,8 @@ class CS2ModernBettingGame {
     Object.keys(grouped).sort((a, b) => {
       const aLower = a.toLowerCase();
       const bLower = b.toLowerCase();
-      const aOrder = tierOrder[aLower] !== undefined ? tierOrder[aLower] : (aLower === 'other events' ? 99 : 10);
-      const bOrder = tierOrder[bLower] !== undefined ? tierOrder[bLower] : (bLower === 'other events' ? 99 : 10);
+      const aOrder = aLower === 'live now' ? -1 : (tierOrder[aLower] !== undefined ? tierOrder[aLower] : (aLower === 'other events' ? 99 : 10));
+      const bOrder = bLower === 'live now' ? -1 : (tierOrder[bLower] !== undefined ? tierOrder[bLower] : (bLower === 'other events' ? 99 : 10));
       if (aOrder !== bOrder) return aOrder - bOrder;
       return a.localeCompare(b);
     }).forEach(key => {
@@ -847,6 +845,7 @@ class CS2ModernBettingGame {
   renderTournamentSection(tournament, events) {
     const safeTournamentName = this.escapeHtml(tournament);
     const lowerName = tournament.toLowerCase();
+    const isLiveSection = lowerName === 'live now';
 
     // Determine tier
     let tierLabel = '';
@@ -859,17 +858,18 @@ class CS2ModernBettingGame {
       tierLabel = 'B'; tierClass = 'tier-b';
     }
 
-    const sectionTierClass = tierClass ? `${tierClass}-section` : '';
+    const sectionTierClass = isLiveSection ? 'live-section' : (tierClass ? `${tierClass}-section` : '');
+    const defaultCollapsed = !isLiveSection && window.matchMedia?.('(max-width: 767px)').matches;
 
     return `
-      <div class="cs2-tournament-section ${sectionTierClass}">
-        <div class="cs2-tournament-header" onclick="this.parentElement.classList.toggle('collapsed')">
-          ${tierLabel ? `<div class="cs2-tier-badge ${tierClass}">${tierLabel}</div>` : '<div class="cs2-tournament-icon">&#127942;</div>'}
+      <div class="cs2-tournament-section ${sectionTierClass}${defaultCollapsed ? ' collapsed' : ''}">
+        <button type="button" class="cs2-tournament-header" aria-expanded="${String(!defaultCollapsed)}">
+          ${isLiveSection ? '<div class="cs2-live-dot" aria-hidden="true"></div>' : (tierLabel ? `<div class="cs2-tier-badge ${tierClass}">${tierLabel}</div>` : '<div class="cs2-tournament-icon">&#127942;</div>')}
           <div class="cs2-tournament-logo-area"></div>
           <div class="cs2-tournament-name">${safeTournamentName}</div>
           <div class="cs2-tournament-count">${events.length} ${events.length === 1 ? 'match' : 'matches'}</div>
           <div class="cs2-tournament-chevron">&#9660;</div>
-        </div>
+        </button>
         <div class="cs2-tournament-events">
           ${events.map(event => this.renderEventCard(event)).join('')}
         </div>
@@ -880,7 +880,9 @@ class CS2ModernBettingGame {
   renderEventCard(event) {
     const startTime = new Date(event.commenceTime || event.startTime);
     const isLive = event.status === 'live';
-    const canBet = event.status === 'scheduled' || event.status === 'live';
+    const hasOdds = this.hasValidOdds(event);
+    const canBet = hasOdds && (event.bettingStatus ? event.bettingStatus === 'open' : (event.status === 'scheduled' || event.status === 'live'));
+    const marketMessage = canBet ? 'Betting open' : (event.reason || 'Market paused');
 
     // Countdown timer
     const now = new Date();
@@ -902,8 +904,8 @@ class CS2ModernBettingGame {
     const safeHomeTeam = this.escapeHtml(homeTeamName);
     const safeAwayTeam = this.escapeHtml(awayTeamName);
 
-    const team1Odds = this.getDisplayOdds(event.odds?.team1);
-    const team2Odds = this.getDisplayOdds(event.odds?.team2);
+    const team1Odds = hasOdds ? Number(event.odds.team1) : null;
+    const team2Odds = hasOdds ? Number(event.odds.team2) : null;
 
     const homeTeamLogo = event.team1Logo || this.getTeamLogo(homeTeamName);
     const awayTeamLogo = event.team2Logo || this.getTeamLogo(awayTeamName);
@@ -924,7 +926,7 @@ class CS2ModernBettingGame {
     return `
       <div class="cs2-event-card ${isLive ? 'live' : (event.status === 'scheduled' ? 'upcoming' : '')}" data-event-id="${event.id}">
         <div class="event-card-header">
-          <span class="match-time-countdown${isLive ? ' live' : ''}">${isLive ? '' : '<span class="countdown-icon">⏱</span>'}${countdownStr}</span>
+          ${isLive ? '' : `<span class="match-time-countdown"><span class="countdown-icon">⏱</span>${countdownStr}</span>`}
           ${formatBadge ? `<span class="match-format-badge">${formatBadge}</span>` : ''}
           <span class="match-status-badge ${statusClass}">${statusText}</span>
         </div>
@@ -932,32 +934,33 @@ class CS2ModernBettingGame {
         <div class="event-card-teams">
           <div class="team-side team-home">
             <img src="${homeTeamLogo}" alt="${safeHomeTeam}" class="team-logo-large"
-                 onerror="this.src='${this.getFallbackLogo(homeTeamName)}'">
+                 data-fallback-logo="${this.getFallbackLogo(homeTeamName)}">
             <span class="team-name">${safeHomeTeam}</span>
           </div>
           <div class="vs-divider"><span>VS</span></div>
           <div class="team-side team-away">
             <img src="${awayTeamLogo}" alt="${safeAwayTeam}" class="team-logo-large"
-                 onerror="this.src='${this.getFallbackLogo(awayTeamName)}'">
+                 data-fallback-logo="${this.getFallbackLogo(awayTeamName)}">
             <span class="team-name">${safeAwayTeam}</span>
           </div>
         </div>
-        <div class="event-card-odds">
-          <button class="odds-pill ${canBet ? '' : 'disabled'} ${team1Odds < team2Odds ? 'favorite' : 'underdog'}"
+        <div class="event-card-odds ${canBet ? '' : 'suspended'}">
+          <div class="live-market-state ${canBet ? 'open' : 'suspended'}">${this.escapeHtml(marketMessage)}</div>
+          <button class="odds-pill ${canBet ? '' : 'disabled'} ${canBet && team1Odds < team2Odds ? 'favorite' : 'underdog'}"
                   data-event-id="${event.id}"
                   data-selection="team1"
                   ${!canBet ? 'disabled' : ''}
-                  title="Bet on ${safeHomeTeam}">
+                  title="${canBet ? `Bet on ${safeHomeTeam}` : this.escapeHtml(marketMessage)}">
             <span class="odds-team-label">${safeHomeTeam}</span>
-            <span class="odds-value-display">${team1Odds.toFixed(2)}</span>
+            <span class="odds-value-display">${team1Odds === null ? '—' : team1Odds.toFixed(2)}</span>
           </button>
-          <button class="odds-pill ${canBet ? '' : 'disabled'} ${team2Odds < team1Odds ? 'favorite' : 'underdog'}"
+          <button class="odds-pill ${canBet ? '' : 'disabled'} ${canBet && team2Odds < team1Odds ? 'favorite' : 'underdog'}"
                   data-event-id="${event.id}"
                   data-selection="team2"
                   ${!canBet ? 'disabled' : ''}
-                  title="Bet on ${safeAwayTeam}">
+                  title="${canBet ? `Bet on ${safeAwayTeam}` : this.escapeHtml(marketMessage)}">
             <span class="odds-team-label">${safeAwayTeam}</span>
-            <span class="odds-value-display">${team2Odds.toFixed(2)}</span>
+            <span class="odds-value-display">${team2Odds === null ? '—' : team2Odds.toFixed(2)}</span>
           </button>
         </div>
       </div>
@@ -965,30 +968,16 @@ class CS2ModernBettingGame {
   }
 
   attachEventCardListeners() {
-    // Enhanced odds button interactions
-    document.querySelectorAll('.odds-pill:not(.disabled)').forEach(card => {
-      card.addEventListener('click', async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const eventId = card.dataset.eventId;
-        const selection = card.dataset.selection;
-        
-        await this.fetchEventOddsIfNeeded(eventId);
-        this.selectOutcome(eventId, selection);
-      });
-
-      // Long press for quick bet (mobile)
-      card.addEventListener('touchstart', (e) => {
+    // Click selection is delegated once from this.root. Card-local listeners
+    // only implement the optional long-press hint.
+    this.root?.querySelectorAll('.odds-pill:not(.disabled)').forEach(card => {
+      card.addEventListener('touchstart', () => {
         this.longPressTimer = setTimeout(() => {
           this.triggerHapticFeedback('medium');
           this.showToast('💡 Tap to select, hold for quick bet', 'info');
         }, 800);
       });
-
-      card.addEventListener('touchend', () => {
-        clearTimeout(this.longPressTimer);
-      });
+      card.addEventListener('touchend', () => clearTimeout(this.longPressTimer));
     });
   }
 
@@ -999,12 +988,13 @@ class CS2ModernBettingGame {
       return;
     }
 
-    // Ensure odds exist
-    if (!event.odds) {
-      event.odds = {};
+    if (event.bettingStatus && event.bettingStatus !== 'open') {
+      this.showToast(event.reason || 'This market is temporarily suspended', 'info');
+      return;
     }
-    if (!event.odds[selection]) {
-      event.odds[selection] = 2.0; // Default odds
+    if (!this.hasValidOdds(event) || !event.odds?.[selection]) {
+      this.showToast('Valid odds are not available for this market', 'info');
+      return;
     }
 
     this.selectedEvent = event;
@@ -1045,9 +1035,12 @@ class CS2ModernBettingGame {
     // Restore background scroll
     document.body.style.overflow = '';
     
-    // Reset selection
+    // Reset selection and abandon any ambiguous request identity. A newly
+    // selected payload must never inherit the prior wager's idempotency key.
     this.selectedEvent = null;
     this.selectedOutcome = null;
+    this.pendingBetRequestId = null;
+    this.pendingBetRequestSignature = null;
     
     // Reset UI
     const betSlip = document.getElementById('cs2BetSlip');
@@ -1068,7 +1061,7 @@ class CS2ModernBettingGame {
     }
     
     // Remove odds selections
-    document.querySelectorAll('.odds-pill.selected').forEach(card => {
+    this.root?.querySelectorAll('.odds-pill.selected').forEach(card => {
       card.classList.remove('selected');
     });
   }
@@ -1117,7 +1110,7 @@ class CS2ModernBettingGame {
       `;
 
       const serverUrl = this.getServerUrl();
-      const response = await fetch(`${serverUrl}/api/cs2/bets?userId=${userId}`);
+      const response = await this.casino.apiFetch('/api/cs2/bets');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1138,12 +1131,13 @@ class CS2ModernBettingGame {
 
   renderCreditHistory(data) {
     // Update summary stats
-    document.getElementById('summaryCurrentBalance').textContent = data.currentBalance;
-    document.getElementById('summaryTotalWagered').textContent = data.totalWagered;
-    document.getElementById('summaryTotalWon').textContent = data.totalWon;
+    document.getElementById('summaryCurrentBalance').textContent = this.casino.formatBalance(data.currentBalance);
+    document.getElementById('summaryTotalWagered').textContent = this.casino.formatCredits(data.totalWagered);
+    document.getElementById('summaryTotalWon').textContent = this.casino.formatCredits(data.totalWon);
     
     const netProfitElement = document.getElementById('summaryNetProfit');
-    netProfitElement.textContent = data.netProfit > 0 ? `+${data.netProfit}` : data.netProfit;
+    const roundedNet = Math.round(Number(data.netProfit || 0));
+    netProfitElement.textContent = roundedNet > 0 ? `+${this.casino.formatCredits(roundedNet)}` : this.casino.formatCredits(roundedNet);
     netProfitElement.className = `summary-stat-value ${data.netProfit >= 0 ? 'positive' : 'negative'}`;
     
     document.getElementById('summaryWinRate').textContent = `${data.winRate}%`;
@@ -1216,7 +1210,7 @@ class CS2ModernBettingGame {
       <div class="credit-history-empty">
         <div class="empty-state-icon">⚠️</div>
         <div class="empty-state-text">Error loading history</div>
-        <div class="empty-state-subtext">${error.message}</div>
+        <div class="empty-state-subtext">${this.escapeHtml(error.message)}</div>
       </div>
     `;
   }
@@ -1234,17 +1228,17 @@ class CS2ModernBettingGame {
     betSlip.innerHTML = `
       <div class="selection-match">
         <div class="match-tournament">
-          🏆 ${this.selectedEvent.tournamentName || 'Tournament'}
+          🏆 ${this.escapeHtml(this.selectedEvent.tournamentName || 'Tournament')}
         </div>
         <div class="match-teams">
-          <span>${this.selectedEvent.homeTeam || 'Team 1'}</span>
+          <span>${this.escapeHtml(this.selectedEvent.homeTeam || 'Team 1')}</span>
           <span class="vs-text">vs</span>
-          <span>${this.selectedEvent.awayTeam || 'Team 2'}</span>
+          <span>${this.escapeHtml(this.selectedEvent.awayTeam || 'Team 2')}</span>
         </div>
       </div>
       <div class="selection-outcome">
         <div class="outcome-label">Your Selection:</div>
-        <div class="outcome-value">${selectionName} @ ${odds.toFixed(2)}</div>
+        <div class="outcome-value">${this.escapeHtml(selectionName)} @ ${odds.toFixed(2)}</div>
       </div>
     `;
 
@@ -1263,20 +1257,20 @@ class CS2ModernBettingGame {
     payoutDiv.innerHTML = `
       <div class="payout-info">
         <div>
-          <span>Bet Amount:</span>
+          <span>Stake</span>
           <span class="payout-value">${this.betAmount} credits</span>
         </div>
         <div>
-          <span>Odds:</span>
+          <span>Odds</span>
           <span class="payout-value">${odds.toFixed(2)}x</span>
         </div>
         <div class="total-payout">
-          <span>Potential Payout:</span>
-          <span class="payout-value profit">+${payout.toFixed(2)} credits</span>
+          <span>Total return</span>
+          <span class="payout-value total-return">${this.casino.formatCredits(payout)} credits</span>
         </div>
         <div>
-          <span>Net Profit:</span>
-          <span class="payout-value profit">+${profit.toFixed(2)} credits</span>
+          <span>Profit</span>
+          <span class="payout-value profit">+${this.casino.formatCredits(profit)} credits</span>
         </div>
       </div>
     `;
@@ -1288,12 +1282,24 @@ class CS2ModernBettingGame {
       if (!userId) return;
 
       const serverUrl = this.getServerUrl();
-      const response = await fetch(`${serverUrl}/api/cs2/bets?userId=${userId}`);
+      const response = await this.casino.apiFetch('/api/cs2/bets');
       const data = await response.json();
 
       if (data.success) {
-        this.bets = (data.bets || []).map(b => b.bet ? b.bet : b);
-        this.showBets('open'); // Show current tab
+        const nextBets = (data.bets || []).map(b => b.bet ? b.bet : b);
+        const settled = nextBets.filter(bet => bet.status && bet.status !== 'pending');
+        const settledKey = bet => String(bet.id || bet.betId || `${bet.eventId}:${bet.selection}:${bet.placedAt || bet.createdAt || ''}`);
+        if (this.soundKnownSettled) {
+          settled.filter(bet => !this.soundKnownSettled.has(settledKey(bet))).forEach((bet, index) => {
+            const effect = bet.status === 'won' ? 'win' : bet.status === 'lost' ? 'lose' : 'push';
+            window.casinoSound?.playOnce(`cs2:${settledKey(bet)}:result`, effect, {
+              game: 'cs2betting', delay: index * .18, cooldown: 0
+            });
+          });
+        }
+        this.soundKnownSettled = new Set(settled.map(settledKey));
+        this.bets = nextBets;
+        this.showBets(this.currentBetsTab);
         this.updateQuickStats();
       }
     } catch (error) {
@@ -1302,6 +1308,8 @@ class CS2ModernBettingGame {
   }
 
   showBets(tabType) {
+    this.currentBetsTab = tabType === 'history' ? 'history' : 'open';
+    tabType = this.currentBetsTab;
     const betsContainer = document.getElementById('cs2MyBets');
     
     const filteredBets = tabType === 'open' 
@@ -1385,7 +1393,7 @@ class CS2ModernBettingGame {
           </div>
           <div class="bet-detail-item">
             <div class="bet-detail-label">Payout:</div>
-            <div class="bet-detail-value ${bet.status === 'won' ? 'profit' : bet.status === 'lost' ? 'loss' : ''}">${potentialPayout.toFixed(2)}</div>
+            <div class="bet-detail-value ${bet.status === 'won' ? 'profit' : bet.status === 'lost' ? 'loss' : ''}">${this.casino.formatCredits(potentialPayout)}</div>
           </div>
         </div>
         ${bet.settledAt ? `<div class="bet-settled">Settled: ${new Date(bet.settledAt).toLocaleString()}</div>` : ''}
@@ -1395,6 +1403,9 @@ class CS2ModernBettingGame {
 
   // Utility Functions
   getServerUrl() {
+    if (this.casino?.serverUrl) {
+      return this.casino.serverUrl;
+    }
     // Always prefer the globally configured server URL (set in casino.html)
     if (window.CASINO_SERVER_URL) {
       return window.CASINO_SERVER_URL;
@@ -1580,8 +1591,8 @@ class CS2ModernBettingGame {
           <div class="error-state">
             <div class="error-state-icon">⚠️</div>
             <div class="error-text">Failed to load CS2 betting</div>
-            <div class="error-subtext">${error.message}</div>
-            <button class="btn btn-primary" onclick="location.reload()">
+            <div class="error-subtext">${this.escapeHtml(error.message)}</div>
+            <button class="btn btn-primary cs2-retry-button">
               🔄 Retry
             </button>
           </div>
@@ -1596,7 +1607,7 @@ class CS2ModernBettingGame {
       <div class="error-state">
         <div class="error-state-icon">🔌</div>
         <div class="error-text">Failed to load matches</div>
-        <div class="error-subtext">${error.message}</div>
+        <div class="error-subtext">${this.escapeHtml(error.message)}</div>
       </div>
     `;
   }
@@ -1651,9 +1662,17 @@ class CS2ModernBettingGame {
     
     // Restore body scroll
     document.body.style.overflow = '';
+    if (this.previousScrollBehavior !== null) {
+      document.documentElement.style.scrollBehavior = this.previousScrollBehavior;
+      this.previousScrollBehavior = null;
+    }
   }
 
   destroy() {
+    for (const listener of this._managedListeners) {
+      listener.target.removeEventListener(listener.type, listener.handler, listener.options);
+    }
+    this._managedListeners = [];
     this.cleanup();
   }
 }

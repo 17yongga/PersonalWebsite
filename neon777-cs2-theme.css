@@ -6,6 +6,10 @@
    of using tokens (odds pills, etc.).
    ═══════════════════════════════════════════════════════════════════ */
 
+/* Keep utility actions touch-safe at every breakpoint. */
+.cs2-betting-container .credit-history-btn,
+.cs2-betting-container .cs2-refresh-btn { min-height:44px!important; }
+
 :root {
   /* ── Brand ── */
   --cs2-primary:         #ffb54d;
@@ -96,7 +100,7 @@
   background: linear-gradient(145deg, rgba(255,181,77,.18), rgba(255,181,77,.06)) !important;
   border-color: rgba(255,181,77,.4) !important;
   color: var(--amber) !important;
-  text-shadow: 0 0 12px rgba(255,181,77,.35) !important;
+  text-shadow: var(--glow-text-active) !important;
   box-shadow: 0 2px 12px rgba(255,181,77,.12), inset 0 1px 0 rgba(255,181,77,.08) !important;
 }
 .odds-pill.favorite .odds-team-label { color: rgba(255,181,77,.7) !important; }
@@ -105,14 +109,14 @@
   background: linear-gradient(145deg, rgba(255,181,77,.28), rgba(255,181,77,.1)) !important;
   border-color: rgba(255,181,77,.6) !important;
   box-shadow: 0 8px 28px rgba(255,181,77,.28), 0 0 20px rgba(255,181,77,.12) !important;
-  text-shadow: 0 0 14px rgba(255,181,77,.55) !important;
+  text-shadow: var(--glow-text-active) !important;
 }
 
 .odds-pill.underdog {
   background: linear-gradient(145deg, rgba(255,90,168,.18), rgba(255,90,168,.06)) !important;
   border-color: rgba(255,90,168,.4) !important;
   color: var(--neon-pink) !important;
-  text-shadow: 0 0 12px rgba(255,90,168,.35) !important;
+  text-shadow: var(--glow-text-active) !important;
   box-shadow: 0 2px 12px rgba(255,90,168,.12), inset 0 1px 0 rgba(255,90,168,.08) !important;
 }
 .odds-pill.underdog .odds-team-label { color: rgba(255,90,168,.7) !important; }
@@ -121,7 +125,7 @@
   background: linear-gradient(145deg, rgba(255,90,168,.28), rgba(255,90,168,.1)) !important;
   border-color: rgba(255,90,168,.6) !important;
   box-shadow: 0 8px 28px rgba(255,90,168,.28), 0 0 20px rgba(255,90,168,.12) !important;
-  text-shadow: 0 0 14px rgba(255,90,168,.55) !important;
+  text-shadow: var(--glow-text-active) !important;
 }
 
 /* Odds pill selected state — already uses tokens but make sure it's amber */
@@ -202,13 +206,13 @@
   background: rgba(176,100,255,.14) !important;
   color: var(--neon-violet) !important;
   border: 1px solid rgba(176,100,255,.4) !important;
-  text-shadow: 0 0 6px rgba(176,100,255,.4);
+  text-shadow: var(--glow-text-subtle);
 }
 .match-status-badge.live {
   background: rgba(255,58,92,.14) !important;
   color: var(--neon-red) !important;
   border: 1px solid rgba(255,58,92,.4) !important;
-  text-shadow: 0 0 6px rgba(255,58,92,.4);
+  text-shadow: var(--glow-text-semantic);
 }
 .match-status-badge.finished {
   background: rgba(255,243,228,.08) !important;
@@ -366,8 +370,8 @@
 
 /* ========== NEON 777 CS2 FULL-SURFACE REDESIGN ========== */
 .cs2-betting-container {
-  width: min(100%, 1080px) !important;
-  max-width: 1080px !important;
+  width: min(100%, 1320px) !important;
+  max-width: 1320px !important;
   margin: 0 auto !important;
   padding: 18px !important;
   background:
@@ -418,7 +422,7 @@
   color: var(--amber) !important;
   font-size: clamp(22px, 2.8vw, 34px) !important;
   line-height: 1.05 !important;
-  text-shadow: 0 0 1px rgba(255,181,77,.55), 0 0 8px rgba(255,181,77,.26) !important;
+  text-shadow: var(--glow-text-signature) !important;
 }
 
 .cs2-title-icon {
@@ -473,7 +477,7 @@
 .balance-value {
   color: var(--neon-pink) !important;
   font-family: var(--font-mono) !important;
-  text-shadow: 0 0 8px rgba(255,90,168,.35);
+  text-shadow: var(--glow-text-subtle);
 }
 
 .cs2-disclaimer {
@@ -515,7 +519,7 @@
 .sidebar-panel-header h3,
 .betslip-modal-header h3 {
   color: var(--cream) !important;
-  text-shadow: 0 0 6px rgba(255,181,77,.24);
+  text-shadow: var(--glow-text-subtle);
 }
 
 .tournament-header,
@@ -575,4 +579,101 @@
   .cs2-title {
     font-size: 22px !important;
   }
+}
+
+/* Mobile density overrides for the CS2 betting flow. Loaded after the base CS2 skin. */
+@media (max-width: 768px) {
+  .cs2-betting-container {
+    padding: 0 0 calc(116px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .cs2-header {
+    margin: 0 0 6px !important;
+    padding: 7px 0 !important;
+    border-width: 1px !important;
+  }
+
+  .cs2-header-content {
+    display: flex !important;
+    grid-template-columns: none !important;
+    justify-content: center !important;
+    gap: 0 !important;
+  }
+
+  .cs2-title {
+    justify-content: center !important;
+    font-size: clamp(17px, 4.4vw, 20px) !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .cs2-header-stats,
+  .cs2-disclaimer,
+  .cs2-tournament-logo-area,
+  .cs2-tournament-count,
+  .odds-movement-note {
+    display: none !important;
+  }
+
+  .cs2-betting-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 0 0 calc(104px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .cs2-events-panel {
+    margin-bottom: 0 !important;
+  }
+
+  .events-panel-header {
+    padding: 9px 10px !important;
+  }
+
+  .events-panel-header h3 {
+    font-size: 15px !important;
+  }
+
+  .cs2-tournament-header {
+    padding: 9px 10px !important;
+  }
+
+  .cs2-tournament-events {
+    gap: 7px !important;
+    padding: 7px !important;
+  }
+
+  .cs2-event-card {
+    margin-bottom: 0 !important;
+    padding: 9px !important;
+    border-radius: 12px !important;
+  }
+
+  .team-logo-large,
+  .team-acronym-circle {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .event-card-teams {
+    margin-bottom: 7px !important;
+  }
+
+  .odds-pill {
+    min-height: 46px !important;
+    padding: 7px 8px !important;
+    border-radius: 12px !important;
+  }
+
+  .cs2-betslip-modal-content {
+    max-height: 82vh !important;
+    border-radius: 18px 18px 0 0 !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .cs2-container { max-width: 1600px !important; padding-inline: clamp(18px, 2vw, 32px) !important; }
+  .cs2-betting-layout { grid-template-columns: minmax(0, 1fr) minmax(360px, 400px) !important; gap: 24px !important; padding-block: 24px !important; }
+  .cs2-sidebar-panel { top: 16px !important; max-height: calc(100dvh - 32px) !important; }
+  .cs2-events-panel { min-width: 0; }
+  .cs2-event-card { contain: layout paint; }
 }

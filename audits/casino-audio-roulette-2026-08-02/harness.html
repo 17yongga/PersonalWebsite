@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Casino audio and Roulette QA</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../../casino.css">
+  <link rel="stylesheet" href="../../games/games.css">
+  <link rel="stylesheet" href="../../games/premium-games.css">
+  <style>
+    body { margin: 0; min-height: 100vh; background: #07070a; color: #fff; font-family: system-ui, sans-serif; }
+    #rouletteGame { padding: 16px; }
+  </style>
+  <script>
+    localStorage.setItem('neon777:sound-effects', 'on');
+    window.qaAudioContexts = [];
+    const param = () => ({ value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {} });
+    const node = () => ({ gain: param(), frequency: param(), detune: param(), pan: param(), connect() { return this; }, start() {}, stop() {}, buffer: null });
+    class QAAudioContext {
+      constructor() { this.state = 'running'; this.currentTime = 1; this.sampleRate = 44100; this.destination = node(); window.qaAudioContexts.push(this); }
+      createGain() { return node(); }
+      createOscillator() { return node(); }
+      createStereoPanner() { return node(); }
+      createBiquadFilter() { return node(); }
+      createBufferSource() { return node(); }
+      createBuffer(channels, frames) { return { getChannelData: () => new Float32Array(frames) }; }
+      resume() { this.state = 'running'; return Promise.resolve(); }
+    }
+    window.AudioContext = QAAudioContext;
+  </script>
+</head>
+<body>
+  <main id="rouletteGame"></main>
+  <script src="../../casino-sound.js"></script>
+  <script>
+    window.qaSounds = [];
+    window.addEventListener('casino:sound-play', event => window.qaSounds.push(event.detail));
+    class FakeSocket {
+      constructor() { this.connected = true; this.id = 'qa-socket'; this.handlers = new Map(); this.balance = 1000; this.bet = null; this.rejectNext = false; this.emits = []; }
+      on(event, handler) { if (!this.handlers.has(event)) this.handlers.set(event, new Set()); this.handlers.get(event).add(handler); }
+      off(event, handler) { this.handlers.get(event)?.delete(handler); }
+      timeout() { return this; }
+      emit(event, payload, callback) {
+        this.emits.push({ event, payload });
+        if (event === 'joinCasino') return;
+        if (event === 'setRouletteBet') {
+          if (this.rejectNext) {
+            this.rejectNext = false;
+            queueMicrotask(() => callback?.(null, { success: false, error: 'Rejected QA wager' }));
+            return;
+          }
+          const action = this.bet ? (this.bet.color === payload.color && this.bet.amount === payload.amount ? 'unchanged' : 'replaced') : 'placed';
+          this.balance += this.bet?.amount || 0;
+          this.balance -= payload.amount;
+          this.bet = { color: payload.color, amount: payload.amount };
+          queueMicrotask(() => callback?.(null, { success: true, action, bet: this.bet, balance: this.balance }));
+          return;
+        }
+        if (event === 'clearRouletteBet') {
+          this.balance += this.bet?.amount || 0;
+          this.bet = null;
+          queueMicrotask(() => callback?.(null, { success: true, action: 'cleared', bet: null, balance: this.balance }));
+        }
+      }
+      fire(event, payload) { this.handlers.get(event)?.forEach(handler => handler(payload)); }
+      listenerCounts() { return Object.fromEntries([...this.handlers].map(([event, handlers]) => [event, handlers.size])); }
+    }
+    window.qaSocket = new FakeSocket();
+    window.io = () => window.qaSocket;
+    window.qaCasino = {
+      username: 'QA_User', credits: 1000, currentGame: 'roulette',
+      getSocket: () => window.qaSocket,
+      setBetPlacementInProgress(value) { this.pending = Boolean(value); },
+      updateCreditsDisplay() {},
+      updateCreditsLocal(delta) { this.credits += Number(delta || 0); }
+    };
+    window.casinoManager = window.qaCasino;
+  </script>
+  <script src="../../games/roulette-casino.js"></script>
+  <script>
+    window.qaGame = new RouletteGame(window.qaCasino);
+    window.qaSocket.fire('rouletteState', {
+      roundId: 'roulette_qa_round', spinning: false, currentBets: {}, history: [],
+      nextSpinTime: Date.now() + 60000
+    });
+  </script>
+</body>
+</html>

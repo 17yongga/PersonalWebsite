@@ -16,6 +16,7 @@ class PokerGame {
 
   init() {
     const gameView = document.getElementById('pokerGame');
+    this.root = gameView;
     gameView.innerHTML = `
       <div class="poker-casino-container">
         <h2 class="game-title">🃏 Texas Hold'em Poker</h2>
@@ -259,11 +260,12 @@ class PokerGame {
     });
     this._on('pokerTableState', state => {
       if (this._destroyed) return;
+      const previousState = this.tableState;
       this.tableState = state;
       if (state.tableId === this.currentTableId) {
         document.getElementById('pokerLobby')?.classList.add('hidden');
         document.getElementById('pokerTable')?.classList.remove('hidden');
-        try { this.renderTable(state); } catch(e) { console.error('[Poker] render error:', e); }
+        try { this.renderTable(state, previousState); } catch(e) { console.error('[Poker] render error:', e); }
       }
     });
     this._on('pokerChatMessage', ({username, message}) => {
@@ -444,15 +446,50 @@ class PokerGame {
     const el = document.getElementById('chatMessages');
     if (!el) return;
     const d = document.createElement('div'); d.className = 'poker-chat-msg';
-    d.innerHTML = `<strong>${this.esc(username)}:</strong> ${this.esc(message)}`;
+    const author = document.createElement('strong');
+    author.textContent = `${String(username || 'Player')}:`;
+    d.append(author, document.createTextNode(` ${String(message || '')}`));
     el.appendChild(d); el.scrollTop = el.scrollHeight;
     while (el.children.length > 100) el.removeChild(el.firstChild);
   }
 
   // ---- Render Table ----
 
-  renderTable(state) {
+  renderTable(state, previousState = null) {
     if (!state) return;
+    const sound = window.casinoSound;
+    const handKey = `${state.tableId || this.currentTableId}:${state.handNumber || state.currentHand?.fairRoundId || 'hand'}`;
+    const previousHandNumber = previousState?.handNumber;
+    const previousMe = previousState?.currentHand?.players?.find(player => player.socketId === this.socket?.id);
+    const currentMe = state.currentHand?.players?.find(player => player.socketId === this.socket?.id);
+    if (sound && previousMe && currentMe && state.handNumber === previousHandNumber) {
+      const wagerDelta = (currentMe.totalBetThisRound || 0) - (previousMe.totalBetThisRound || 0);
+      let actionEffect = null;
+      if (!previousMe.isFolded && currentMe.isFolded) actionEffect = 'pokerFold';
+      else if (wagerDelta > 0) {
+        actionEffect = (currentMe.totalBetThisRound || 0) > (previousState.currentHand.currentBet || 0) ? 'pokerRaise' : 'pokerCall';
+      } else if (!previousMe.hasActed && currentMe.hasActed) actionEffect = 'pokerCheck';
+      if (actionEffect) {
+        const actionKey = `${state.currentHand.phase}:${currentMe.totalBetThisRound || 0}:${Boolean(currentMe.isFolded)}:${Boolean(currentMe.hasActed)}`;
+        sound.playOnce(`poker:${handKey}:action:${actionKey}`, actionEffect, { game: 'poker' });
+      }
+    }
+    if (sound && previousState && state.currentHand && state.handNumber !== previousHandNumber) {
+      sound.playOnce(`poker:${handKey}:hole:0`, 'cardDeal', { game: 'poker', cooldown: 0, pan: -.15 });
+      sound.playOnce(`poker:${handKey}:hole:1`, 'cardDeal', { game: 'poker', cooldown: 0, delay: .11, pan: .15 });
+    }
+    const previousCommunityCount = previousState?.currentHand?.communityCards?.length || 0;
+    const communityCount = state.currentHand?.communityCards?.length || 0;
+    for (let index = previousCommunityCount; previousState && index < communityCount; index += 1) {
+      sound?.playOnce(`poker:${handKey}:community:${index}`, 'cardDeal', {
+        game: 'poker', cooldown: 0, delay: (index - previousCommunityCount) * .09
+      });
+    }
+    if (previousState && previousState.gameState !== 'showdown' && state.gameState === 'showdown') {
+      const participated = state.currentHand?.players?.some(player => player.socketId === this.socket?.id);
+      const won = state.currentHand?.winners?.some(winner => winner.socketId === this.socket?.id || winner.username === this.casino.username);
+      if (participated) sound?.playOnce(`poker:${handKey}:result`, won ? 'potWin' : 'lose', { game: 'poker', delay: .16 });
+    }
     document.getElementById('tableNameDisplay').textContent = state.tableName;
     document.getElementById('blindsDisplay').textContent = `${state.smallBlind}/${state.bigBlind}`;
 
@@ -531,20 +568,24 @@ class PokerGame {
     // Winner
     this.renderWinners(state);
 
-    // Game status
+    // Game status. Scope generated IDs to Poker so a retained hidden
+    // Coinflip view cannot receive these updates.
+    const gameStatus = this.root?.querySelector('#gameStatus');
+    const startHandBtn = this.root?.querySelector('#startHandBtn');
+    const statusMessage = this.root?.querySelector('#statusMessage');
     if (state.currentHand && state.gameState !== 'showdown') {
-      document.getElementById('gameStatus')?.classList.add('hidden');
+      gameStatus?.classList.add('hidden');
     } else if (state.gameState === 'showdown') {
-      document.getElementById('gameStatus')?.classList.add('hidden');
+      gameStatus?.classList.add('hidden');
     } else {
-      document.getElementById('gameStatus')?.classList.remove('hidden');
+      gameStatus?.classList.remove('hidden');
       const active = state.players.filter(p => p.isActive);
       if (active.length >= 2) {
-        document.getElementById('startHandBtn')?.classList.remove('hidden');
-        document.getElementById('statusMessage').textContent = `${active.length} players ready — click Deal Cards!`;
+        startHandBtn?.classList.remove('hidden');
+        if (statusMessage) statusMessage.textContent = `${active.length} players ready — click Deal Cards!`;
       } else {
-        document.getElementById('startHandBtn')?.classList.add('hidden');
-        document.getElementById('statusMessage').textContent = `Waiting for players... (${active.length}/2 minimum)`;
+        startHandBtn?.classList.add('hidden');
+        if (statusMessage) statusMessage.textContent = `Waiting for players... (${active.length}/2 minimum)`;
       }
     }
   }

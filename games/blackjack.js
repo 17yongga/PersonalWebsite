@@ -1,10 +1,42 @@
 // Blackjack Game Module
 
+const BLACKJACK_DEAL_CADENCE_MS = 460;
+
+function buildCardPresentation({ acceptedStart, initialHydration, previousPlayerCount, previousDealerCount, playerCount, dealerCount, dealerRevealed }) {
+  if (initialHydration) return { player: [], dealer: [], revealDealer: false, completionMs: 0 };
+  if (acceptedStart) {
+    const player = Array.from({ length: playerCount }, (_, index) => ({ index, delayMs: index * BLACKJACK_DEAL_CADENCE_MS * 2 }));
+    const dealer = Array.from({ length: dealerCount }, (_, index) => ({ index, delayMs: (index * 2 + 1) * BLACKJACK_DEAL_CADENCE_MS }));
+    return {
+      player,
+      dealer,
+      revealDealer: false,
+      completionMs: Math.max(0, (playerCount + dealerCount - 1) * BLACKJACK_DEAL_CADENCE_MS + 760)
+    };
+  }
+
+  const revealDelay = dealerRevealed ? 0 : -1;
+  const player = Array.from({ length: Math.max(0, playerCount - previousPlayerCount) }, (_, offset) => ({
+    index: previousPlayerCount + offset,
+    delayMs: offset * BLACKJACK_DEAL_CADENCE_MS
+  }));
+  const dealerStart = revealDelay >= 0 ? BLACKJACK_DEAL_CADENCE_MS : 0;
+  const dealer = Array.from({ length: Math.max(0, dealerCount - previousDealerCount) }, (_, offset) => ({
+    index: previousDealerCount + offset,
+    delayMs: dealerStart + offset * BLACKJACK_DEAL_CADENCE_MS
+  }));
+  const lastDelay = Math.max(revealDelay, ...player.map(card => card.delayMs), ...dealer.map(card => card.delayMs), 0);
+  return { player, dealer, revealDealer: dealerRevealed, completionMs: lastDelay + (player.length || dealer.length || dealerRevealed ? 760 : 0) };
+}
+
 class BlackjackGame {
   constructor(casinoManager) {
     this.casino = casinoManager;
     this.deck = [];
     this.playerHand = [];
+    this.playerHands = [];
+    this.activeHandIndex = 0;
+    this.serverCapabilities = { canHit: false, canStand: false, canDouble: false, canSplit: false };
     this.dealerHand = [];
     this.gameOver = false;
     this.betAmount = 0;
@@ -15,54 +47,78 @@ class BlackjackGame {
     this.insuranceOffered = false;
     this.lastHideFirstStates = {};
     this.initialHandSize = 2; // Track initial hand size (2 cards)
+    this.soundHydrated = false;
+    this.soundAcceptedRoundId = null;
+    this.presentationTimer = null;
+    this.presentationGeneration = 0;
+    this.presentationInProgress = false;
+    this.stakeChips = [100];
+    this.boundKeyboardHandler = event => this.handleKeyboard(event);
     this.init();
   }
 
   init() {
     const gameView = document.getElementById('blackjackGame');
+    this.root = gameView;
     gameView.innerHTML = `
       <div class="blackjack-container">
-        <h2 class="game-title"><span class="game-title-mark" aria-hidden="true"></span><span>Blackjack</span></h2>
-        
+        <div class="blackjack-ambient" aria-hidden="true"></div>
+        <header class="blackjack-table-header">
+          <div>
+            <span class="blackjack-eyebrow">NEON 777 PRIVATE TABLE</span>
+            <h2 class="game-title"><span class="game-title-mark" aria-hidden="true"></span><span>Blackjack</span></h2>
+          </div>
+          <div class="blackjack-rules" aria-label="Table rules">
+            <span>BLACKJACK PAYS 3:2</span>
+            <span>DEALER STANDS ON 17</span>
+          </div>
+        </header>
+
         <div class="blackjack-table-shell">
-          <div class="betting-section">
-            <label>Place Your Bet:</label>
-            <div class="bet-input-group">
-              <input type="number" id="blackjackBet" min="1" max="${this.casino.credits}" value="100" step="10">
-              <div class="quick-bets">
-                <button class="quick-bet-btn" data-amount="50">50</button>
-                <button class="quick-bet-btn" data-amount="100">100</button>
-                <button class="quick-bet-btn" data-amount="250">250</button>
-                <button class="quick-bet-btn" data-amount="500">500</button>
+          <div class="betting-section blackjack-wager-rail">
+            <div class="blackjack-bet-heading">
+              <div><span class="blackjack-step">01</span><label for="blackjackBet">Choose your stake</label></div>
+              <span class="blackjack-minimum">MIN 1 CREDIT</span>
+            </div>
+            <div class="bet-input-group blackjack-stake-composer">
+              <div class="blackjack-bet-input-wrap">
+                <input type="number" id="blackjackBet" min="1" max="${this.casino.credits}" value="100" step="10" inputmode="numeric" aria-describedby="blackjackBetUnit">
+                <span id="blackjackBetUnit">CREDITS</span>
+              </div>
+              <div class="blackjack-chip-rack">
+                <span class="blackjack-chip-rack-label">Add chips</span>
+                <div class="quick-bets" role="group" aria-label="Casino chip values">
+                  <button type="button" class="quick-bet-btn casino-chip chip-50" data-amount="50" aria-pressed="false"><span>50</span></button>
+                  <button type="button" class="quick-bet-btn casino-chip chip-100" data-amount="100" aria-pressed="false"><span>100</span></button>
+                  <button type="button" class="quick-bet-btn casino-chip chip-250" data-amount="250" aria-pressed="false"><span>250</span></button>
+                  <button type="button" class="quick-bet-btn casino-chip chip-500" data-amount="500" aria-pressed="false"><span>500</span></button>
+                </div>
+              </div>
+              <div class="blackjack-stake-actions" aria-label="Stake controls">
+                <button type="button" id="blackjackUndoStake" class="blackjack-stake-action">Undo</button>
+                <button type="button" id="blackjackClearStake" class="blackjack-stake-action">Clear</button>
+                <button type="button" id="blackjackMaxStake" class="blackjack-stake-action">Max</button>
               </div>
             </div>
-            <button id="placeBetBtn" class="btn btn-primary">Place Bet</button>
+            <button type="button" id="placeBetBtn" class="btn btn-primary blackjack-deal-btn"><span>Deal cards</span><span aria-hidden="true">→</span></button>
           </div>
 
-          <div id="blackjackPreview" class="blackjack-predeal-table">
-            <div class="blackjack-preview-row">
-              <span class="blackjack-preview-label">Dealer</span>
-              <div class="blackjack-card-slots"><span></span><span></span></div>
-            </div>
-            <div class="blackjack-preview-row">
-              <span class="blackjack-preview-label">You</span>
-              <div class="blackjack-card-slots"><span></span><span></span></div>
-            </div>
-          </div>
-
-          <div id="gameArea" class="game-area hidden">
+          <div id="gameArea" class="game-area">
+            <div class="blackjack-table-insignia" aria-hidden="true"><span>777</span><small>BLACKJACK</small></div>
             <div class="dealer-section">
-              <h3>Dealer</h3>
-              <div class="score-display">Score: <span id="dealerScore">0</span></div>
+              <div class="blackjack-hand-heading"><h3>Dealer</h3><div class="score-display"><span class="score-label">HAND</span><span id="dealerScore">0</span></div></div>
               <div id="dealerCards" class="cards-container"></div>
             </div>
 
-            <div class="result-display" id="resultDisplay"></div>
+            <div class="result-display" id="resultDisplay" role="status" aria-live="polite"></div>
 
             <div class="player-section">
-              <h3>You</h3>
-              <div class="score-display">Score: <span id="playerScore">0</span></div>
-              <div id="playerCards" class="cards-container"></div>
+              <div id="playerHands" class="blackjack-player-hands">
+                <article class="blackjack-player-hand is-active" data-hand-index="0">
+                  <div class="blackjack-hand-heading"><h3>You</h3><span class="blackjack-hand-result" aria-hidden="true"></span><div class="score-display"><span class="score-label">HAND</span><span id="playerScore">0</span></div></div>
+                  <div id="playerCards" class="cards-container"></div>
+                </article>
+              </div>
             </div>
 
             <div id="insuranceSection" class="insurance-section hidden">
@@ -70,17 +126,18 @@ class BlackjackGame {
                 <p class="insurance-title">Dealer shows an Ace — take insurance?</p>
                 <p class="insurance-info">Costs half your bet. Pays 2:1 if dealer has blackjack.</p>
                 <div class="insurance-buttons">
-                  <button id="takeInsuranceBtn" class="btn btn-primary">Take Insurance</button>
-                  <button id="declineInsuranceBtn" class="btn btn-secondary">No Insurance</button>
+                  <button type="button" id="takeInsuranceBtn" class="btn btn-primary">Take insurance</button>
+                  <button type="button" id="declineInsuranceBtn" class="btn btn-secondary">No insurance</button>
                 </div>
               </div>
             </div>
 
             <div class="game-controls">
-              <button id="hitBtn" class="btn btn-primary">Hit</button>
-              <button id="standBtn" class="btn btn-secondary">Stand</button>
-              <button id="doubleDownBtn" class="btn btn-secondary hidden">Double Down</button>
-              <button id="newGameBtn" class="btn btn-secondary">New Game</button>
+              <button type="button" id="hitBtn" class="btn btn-primary"><span>Hit</span><kbd>H</kbd></button>
+              <button type="button" id="standBtn" class="btn btn-secondary"><span>Stand</span><kbd>S</kbd></button>
+              <button type="button" id="doubleDownBtn" class="btn btn-secondary hidden"><span>Double</span><kbd>D</kbd></button>
+              <button type="button" id="splitBtn" class="btn btn-secondary hidden"><span>Split</span><kbd>P</kbd></button>
+              <button type="button" id="newGameBtn" class="btn btn-secondary"><span>New round</span><kbd>N</kbd></button>
             </div>
           </div>
         </div>
@@ -88,52 +145,354 @@ class BlackjackGame {
     `;
 
     this.attachEventListeners();
+    this.updateGameControls();
+  }
+
+  getElement(id) {
+    return this.root?.querySelector(`#${id}`) || null;
   }
 
   attachEventListeners() {
     // Betting
-    document.getElementById('placeBetBtn')?.addEventListener('click', () => this.placeBet());
-    document.querySelectorAll('.quick-bet-btn').forEach(btn => {
+    this.getElement('placeBetBtn')?.addEventListener('click', () => this.placeBet());
+    this.root?.querySelectorAll('.quick-bet-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const amount = parseInt(btn.dataset.amount);
-        document.getElementById('blackjackBet').value = amount;
+        this.addStakeChip(amount);
       });
     });
+    this.getElement('blackjackUndoStake')?.addEventListener('click', () => this.undoStakeChip());
+    this.getElement('blackjackClearStake')?.addEventListener('click', () => this.clearStake());
+    this.getElement('blackjackMaxStake')?.addEventListener('click', () => this.setMaxStake());
+    this.getElement('blackjackBet')?.addEventListener('input', () => {
+      this.stakeChips = [];
+      this.syncSelectedChip();
+    });
+    this.syncSelectedChip();
 
     // Game controls
-    document.getElementById('hitBtn')?.addEventListener('click', () => this.hit());
-    document.getElementById('standBtn')?.addEventListener('click', () => this.stand());
-    document.getElementById('doubleDownBtn')?.addEventListener('click', () => this.doubleDown());
-    document.getElementById('newGameBtn')?.addEventListener('click', () => this.resetGame());
+    this.getElement('hitBtn')?.addEventListener('click', () => this.hit());
+    this.getElement('standBtn')?.addEventListener('click', () => this.stand());
+    this.getElement('doubleDownBtn')?.addEventListener('click', () => this.doubleDown());
+    this.getElement('splitBtn')?.addEventListener('click', () => this.split());
+    this.getElement('newGameBtn')?.addEventListener('click', () => this.resetGame());
     
     // Insurance controls
-    document.getElementById('takeInsuranceBtn')?.addEventListener('click', () => this.takeInsurance());
-    document.getElementById('declineInsuranceBtn')?.addEventListener('click', () => this.declineInsurance());
+    this.getElement('takeInsuranceBtn')?.addEventListener('click', () => this.takeInsurance());
+    this.getElement('declineInsuranceBtn')?.addEventListener('click', () => this.declineInsurance());
+    document.addEventListener('keydown', this.boundKeyboardHandler);
   }
 
-  placeBet() {
-    const betInput = document.getElementById('blackjackBet');
-    const amount = parseInt(betInput.value);
+  setStakeAmount(amount) {
+    const input = this.getElement('blackjackBet');
+    if (input) input.value = String(Math.max(0, Math.floor(amount)));
+    this.syncSelectedChip();
+  }
 
-    if (!amount || amount < 1) {
-      alert('Please enter a valid bet amount');
-      return;
+  addStakeChip(amount) {
+    const current = Number(this.getElement('blackjackBet')?.value) || 0;
+    if (current + amount > this.casino.credits) return this.showError('That chip would exceed your available credits.');
+    this.stakeChips.push(amount);
+    this.setStakeAmount(current + amount);
+    window.casinoSound?.play('chip', { game: 'blackjack' });
+  }
+
+  undoStakeChip() {
+    if (!this.stakeChips.length) return;
+    const removed = this.stakeChips.pop();
+    const current = Number(this.getElement('blackjackBet')?.value) || 0;
+    this.setStakeAmount(current - removed);
+    window.casinoSound?.play('betCancelled', { game: 'blackjack', volume: .55 });
+  }
+
+  clearStake() {
+    this.stakeChips = [];
+    this.setStakeAmount(0);
+  }
+
+  setMaxStake() {
+    this.stakeChips = [];
+    this.setStakeAmount(Math.max(0, Math.floor(this.casino.credits)));
+  }
+
+  syncSelectedChip() {
+    const counts = this.stakeChips.reduce((map, value) => map.set(value, (map.get(value) || 0) + 1), new Map());
+    this.root?.querySelectorAll('.quick-bet-btn').forEach(chip => {
+      const amount = Number(chip.dataset.amount);
+      const count = counts.get(amount) || 0;
+      const selected = count > 0;
+      chip.classList.toggle('is-selected', selected);
+      chip.setAttribute('aria-pressed', String(selected));
+      chip.dataset.count = count ? String(count) : '';
+      chip.setAttribute('aria-label', `${amount} credit chip${count ? `, ${count} allocated` : ''}`);
+    });
+  }
+
+  async placeBet() {
+    const betInput = this.getElement('blackjackBet');
+    const amount = Number(betInput?.value);
+    if (!Number.isSafeInteger(amount) || amount < 1) return this.showError('Enter a valid whole-number bet.');
+    if (amount > this.casino.credits) return this.showError('Insufficient credits.');
+    this.setBusy(true);
+    try {
+      const response = await this.casino.apiFetch('/api/games/blackjack/start', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bet: amount })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unable to start blackjack');
+      this.soundAcceptedRoundId = data.state?.roundId || null;
+      this.applyServerState(data.state, data.balance);
+    } catch (error) {
+      this.showError(error.message);
+    } finally {
+      this.setBusy(false);
+    }
+  }
+
+  setBusy(isBusy) {
+    ['placeBetBtn', 'hitBtn', 'standBtn', 'doubleDownBtn', 'splitBtn', 'takeInsuranceBtn', 'declineInsuranceBtn']
+      .forEach(id => { const button = this.getElement(id); if (button) button.disabled = isBusy; });
+    this.root?.querySelector('.blackjack-table-shell')?.classList.toggle('is-busy', isBusy);
+  }
+
+  showError(message) {
+    const result = this.getElement('resultDisplay');
+    if (result) {
+      result.textContent = message;
+      result.className = 'result-display lose';
+    }
+  }
+
+  async requestAction(action) {
+    if (!this.roundId || this.gameOver) return;
+    this.setBusy(true);
+    try {
+      const response = await this.casino.apiFetch('/api/games/blackjack/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roundId: this.roundId, action })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Blackjack action failed');
+      const actionEffect = {
+        hit: 'blackjackHit',
+        stand: 'blackjackStand',
+        double: 'blackjackDouble',
+        split: 'blackjackSplit'
+      }[action];
+      if (actionEffect) window.casinoSound?.play(actionEffect, { game: 'blackjack' });
+      this.applyServerState(data.state, data.balance);
+    } catch (error) {
+      this.showError(error.message);
+      window.casinoSound?.play('error', { game: 'blackjack' });
+    } finally {
+      this.setBusy(false);
+      this.updateGameControls();
+    }
+  }
+
+  applyServerState(state, balance) {
+    const previousRoundId = this.roundId;
+    const sameRound = previousRoundId === state.roundId;
+    const nextHands = Array.isArray(state.playerHands) && state.playerHands.length
+      ? state.playerHands
+      : [{ cards: state.playerHand || [], score: state.playerScore, bet: state.bet, active: !state.settled, result: state.result, payout: state.payout }];
+    const previousActiveIndex = sameRound ? this.activeHandIndex : 0;
+    const previousPlayerCount = sameRound ? (this.playerHands[previousActiveIndex]?.cards?.length || this.playerHand.length) : 0;
+    const previousDealerCount = sameRound ? this.dealerHand.length : 0;
+    const wasSettled = sameRound ? this.gameOver : false;
+    const acceptedStart = Boolean(state.roundId && this.soundAcceptedRoundId === state.roundId);
+    const initialHydration = !this.soundHydrated && !acceptedStart;
+    const activeHandIndex = Number.isSafeInteger(state.activeHandIndex) ? state.activeHandIndex : 0;
+    const activeCards = nextHands[activeHandIndex]?.cards || nextHands[0].cards;
+    const presentation = buildCardPresentation({
+      acceptedStart,
+      initialHydration,
+      previousPlayerCount,
+      previousDealerCount,
+      playerCount: activeCards.length,
+      dealerCount: state.dealerHand.length,
+      dealerRevealed: sameRound && !wasSettled && state.settled
+    });
+    this.soundHydrated = true;
+    if (acceptedStart) this.soundAcceptedRoundId = null;
+    this.roundId = state.roundId;
+    this.currentBet = state.bet;
+    this.insuranceBet = state.insuranceBet;
+    this.playerHands = nextHands;
+    this.activeHandIndex = activeHandIndex;
+    this.playerHand = activeCards;
+    this.dealerHand = state.dealerHand;
+    this.gameOver = state.settled;
+    this.hasDoubledDown = Boolean(nextHands[activeHandIndex]?.doubled);
+    this.insuranceOffered = state.phase === 'insurance';
+    this.serverCapabilities = {
+      canHit: state.canHit !== false,
+      canStand: state.canStand !== false,
+      canDouble: Boolean(state.canDouble),
+      canSplit: Boolean(state.canSplit)
+    };
+
+    this.root?.querySelector('.betting-section')?.classList.add('is-locked');
+    const betInput = this.getElement('blackjackBet');
+    betInput?.setAttribute('aria-readonly', 'true');
+    if (betInput) betInput.readOnly = true;
+    this.renderPlayerHands(nextHands, activeHandIndex, state.settled, presentation.player);
+    this.displayCards('dealerCards', this.dealerHand, !state.settled, presentation.dealer);
+
+    const sound = window.casinoSound;
+    if (sound && state.roundId) {
+      if (acceptedStart) sound.playOnce(`blackjack:${state.roundId}:wager`, 'wager', { game: 'blackjack' });
+      const dealtCards = [
+        ...presentation.player.map(card => ({ ...card, hand: `player-${activeHandIndex}` })),
+        ...presentation.dealer.map(card => ({ ...card, hand: 'dealer' }))
+      ].sort((a, b) => a.delayMs - b.delayMs);
+      dealtCards.forEach(card => {
+        sound.playOnce(`blackjack:${state.roundId}:deal:${card.hand}:${card.index}`, 'cardDeal', {
+          delay: card.delayMs / 1000,
+          cooldown: 0,
+          game: 'blackjack',
+          pan: card.hand === 'dealer' ? .18 : -.18
+        });
+      });
+      if (presentation.revealDealer) {
+        sound.playOnce(`blackjack:${state.roundId}:reveal`, 'cardFlip', { cooldown: 0, game: 'blackjack' });
+      }
+      if (state.settled && !wasSettled && !initialHydration) {
+        const totalStake = state.bet + (state.insuranceBet || 0);
+        const resultSound = state.payout > totalStake ? 'win' : state.payout === totalStake ? 'push' : 'lose';
+        sound.playOnce(`blackjack:${state.roundId}:result`, resultSound, {
+          delay: Math.max(.34, presentation.completionMs / 1000),
+          cooldown: 0,
+          game: 'blackjack'
+        });
+      }
     }
 
-    if (amount > this.casino.credits) {
-      alert('Insufficient credits');
-      return;
+    const insurance = this.getElement('insuranceSection');
+    insurance?.classList.toggle('hidden', state.phase !== 'insurance');
+    this.root?.querySelector('.blackjack-container')?.classList.toggle('insurance-active', state.phase === 'insurance');
+    this.root?.querySelector('.blackjack-table-shell')?.classList.toggle('has-split-hands', nextHands.length > 1);
+
+    const result = this.getElement('resultDisplay');
+    const revealPresentation = () => {
+      if (result) {
+        const totalStake = state.bet + (state.insuranceBet || 0);
+        const net = state.payout - totalStake;
+        const handResults = nextHands.map(hand => hand.result).filter(Boolean);
+        const mixedHands = new Set(handResults).size > 1;
+        const visualResult = mixedHands ? 'MIXED' : state.payout > totalStake ? 'WIN' : state.payout === totalStake ? 'PUSH' : 'LOSS';
+        const amount = net > 0 ? `+${net}` : net < 0 ? String(net) : 'EVEN';
+        result.textContent = state.settled ? `${visualResult} · ${amount} CREDITS` : '';
+        result.setAttribute('aria-label', state.settled ? `Round complete. ${visualResult}. Payout ${state.payout} credits.` : '');
+        result.className = `result-display ${state.settled ? (state.payout > totalStake ? 'win' : state.payout === totalStake ? 'tie' : 'lose') : ''}`;
+      }
+      this.renderPlayerHandResults(nextHands, state.settled);
+      this.getElement('dealerScore').textContent = state.settled ? String(state.dealerScore) : String(state.dealerScore || '?');
+      this.presentationInProgress = false;
+      this.root?.querySelector('.blackjack-table-shell')?.classList.remove('is-presenting');
+      this.updateGameControls();
+    };
+    clearTimeout(this.presentationTimer);
+    const generation = ++this.presentationGeneration;
+    this.presentationInProgress = presentation.completionMs > 0;
+    this.root?.querySelector('.blackjack-table-shell')?.classList.toggle('is-presenting', this.presentationInProgress);
+    if (this.presentationInProgress) {
+      if (result) result.textContent = '';
+      this.presentationTimer = setTimeout(() => {
+        if (generation === this.presentationGeneration) revealPresentation();
+      }, presentation.completionMs);
+    } else {
+      revealPresentation();
+    }
+    if (Number.isSafeInteger(balance)) this.casino.setCredits(balance);
+    this.updateGameControls();
+  }
+
+  renderPlayerHands(hands, activeHandIndex, settled, animatedCards = []) {
+    const host = this.getElement('playerHands');
+    if (!host) return;
+    if (host.children.length !== hands.length) {
+      host.replaceChildren();
+      hands.forEach((hand, index) => {
+        const article = document.createElement('article');
+        article.className = 'blackjack-player-hand';
+        article.dataset.handIndex = String(index);
+        const heading = document.createElement('div');
+        heading.className = 'blackjack-hand-heading';
+        const title = document.createElement('h3');
+        title.textContent = hands.length > 1 ? `Hand ${index + 1}` : 'You';
+        const badge = document.createElement('span');
+        badge.className = 'blackjack-hand-result';
+        badge.setAttribute('aria-hidden', 'true');
+        const score = document.createElement('div');
+        score.className = 'score-display';
+        score.innerHTML = `<span class="score-label">HAND</span><span id="${index ? `playerScore${index}` : 'playerScore'}">0</span>`;
+        const cards = document.createElement('div');
+        cards.id = index ? `playerCards${index}` : 'playerCards';
+        cards.className = 'cards-container';
+        heading.append(title, badge, score);
+        article.append(heading, cards);
+        host.appendChild(article);
+      });
     }
 
-    this.currentBet = amount;
-    this.casino.updateCredits(-amount);
-    this.startGame();
+    hands.forEach((hand, index) => {
+      const article = host.querySelector(`[data-hand-index="${index}"]`);
+      article?.classList.toggle('is-active', !settled && index === activeHandIndex);
+      const score = this.getElement(index ? `playerScore${index}` : 'playerScore');
+      if (score) score.textContent = String(hand.score ?? this.calculateScore(hand.cards || []));
+      this.displayCards(index ? `playerCards${index}` : 'playerCards', hand.cards || [], false,
+        index === activeHandIndex ? animatedCards : []);
+      const cards = this.getElement(index ? `playerCards${index}` : 'playerCards');
+      cards?.classList.toggle('is-crowded', (hand.cards?.length || 0) >= 4);
+      cards?.style.setProperty('--hand-size', String(hand.cards?.length || 0));
+    });
+    this.renderPlayerHandResults(hands, settled);
+  }
+
+  renderPlayerHandResults(hands, settled) {
+    let winnerCount = 0;
+    let loserCount = 0;
+    hands.forEach((hand, index) => {
+      const article = this.getElement('playerHands')?.querySelector(`[data-hand-index="${index}"]`);
+      if (!article) return;
+      const winner = settled && ['win', 'blackjack'].includes(hand.result);
+      const loser = settled && ['loss', 'bust', 'dealer_blackjack'].includes(hand.result);
+      const push = settled && hand.result === 'push';
+      if (winner) winnerCount += 1;
+      if (loser) loserCount += 1;
+      article.classList.toggle('is-winner', winner);
+      article.classList.toggle('is-loser', loser);
+      article.classList.toggle('is-push', push);
+      const badge = article.querySelector('.blackjack-hand-result');
+      if (badge) badge.textContent = winner ? (hand.result === 'blackjack' ? 'BLACKJACK' : 'WIN') : loser ? 'LOSS' : push ? 'PUSH' : '';
+    });
+    const dealer = this.root?.querySelector('.dealer-section');
+    const dealerWinner = settled && loserCount === hands.length;
+    const dealerLoser = settled && winnerCount === hands.length;
+    dealer?.classList.toggle('is-winner', dealerWinner);
+    dealer?.classList.toggle('is-loser', dealerLoser);
+  }
+
+  handleKeyboard(event) {
+    if (!this.root || this.root.classList.contains('hidden') || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) return;
+    const actions = {
+      h: () => this.getElement('hitBtn')?.click(),
+      s: () => this.getElement('standBtn')?.click(),
+      d: () => this.getElement('doubleDownBtn')?.click(),
+      p: () => this.getElement('splitBtn')?.click(),
+      n: () => this.getElement('newGameBtn')?.click()
+    };
+    const action = actions[event.key.toLowerCase()];
+    if (!action) return;
+    event.preventDefault();
+    action();
   }
 
   async startGame() {
-    document.querySelector('.blackjack-container .betting-section')?.classList.add('is-locked');
-    document.getElementById('blackjackPreview')?.classList.add('hidden');
-    document.getElementById('gameArea').classList.remove('hidden');
+    // Legacy local-deck method retained only for compatibility; production rounds are server-authoritative.
 
     this.createDeck();
     this.shuffleDeck();
@@ -142,8 +501,8 @@ class BlackjackGame {
     this.gameOver = false;
 
     // Clear card containers
-    document.getElementById('playerCards').innerHTML = '';
-    document.getElementById('dealerCards').innerHTML = '';
+    this.getElement('playerCards').innerHTML = '';
+    this.getElement('dealerCards').innerHTML = '';
     this.lastHideFirstStates = {}; // Reset states for new game
 
     // Deal initial cards with animation delay
@@ -291,263 +650,66 @@ class BlackjackGame {
   }
 
   showInsuranceOption() {
-    document.querySelector('.blackjack-container')?.classList.add('insurance-active');
-    document.getElementById('insuranceSection').classList.remove('hidden');
-    document.getElementById('hitBtn').disabled = true;
-    document.getElementById('standBtn').disabled = true;
-    document.getElementById('doubleDownBtn').classList.add('hidden');
+    this.root?.querySelector('.blackjack-container')?.classList.add('insurance-active');
+    this.getElement('insuranceSection').classList.remove('hidden');
+    this.getElement('hitBtn').disabled = true;
+    this.getElement('standBtn').disabled = true;
+    this.getElement('doubleDownBtn').classList.add('hidden');
   }
 
   async takeInsurance() {
-    if (this.hasTakenInsurance) return;
-    
-    this.insuranceBet = Math.floor(this.currentBet / 2);
-    if (this.insuranceBet > this.casino.credits) {
-      alert('Insufficient credits for insurance');
-      this.declineInsurance();
-      return;
-    }
-    
-    this.hasTakenInsurance = true;
-    this.casino.updateCredits(-this.insuranceBet);
-    document.getElementById('insuranceSection').classList.add('hidden');
-    document.querySelector('.blackjack-container')?.classList.remove('insurance-active');
-    
-    // Check if dealer has blackjack
-    const dealerScoreInfo = this.calculateScoreWithAces(this.dealerHand, true);
-    if (dealerScoreInfo.best === 21) {
-      // Dealer has blackjack - pay insurance
-      const insuranceWinnings = this.insuranceBet * 2;
-      this.casino.updateCredits(insuranceWinnings);
-      
-      // Reveal dealer's card
-      this.gameOver = true;
-      this.updateDisplay();
-      await this.delay(500);
-      
-      // Check if player also has blackjack (push)
-      const playerScoreInfo = this.calculateScoreWithAces(this.playerHand, true);
-      if (playerScoreInfo.best === 21) {
-        this.endGame('push'); // Both have blackjack - push
-      } else {
-        this.endGame('dealer_blackjack'); // Dealer wins with blackjack
-      }
-      return;
-    }
-    
-    // Dealer doesn't have blackjack - continue game
-    this.updateGameControls();
+    await this.requestAction('insurance');
   }
 
-  declineInsurance() {
-    this.hasTakenInsurance = false;
-    this.insuranceBet = 0;
-    document.getElementById('insuranceSection').classList.add('hidden');
-    document.querySelector('.blackjack-container')?.classList.remove('insurance-active');
-    
-    // Check if dealer has blackjack (even without insurance)
-    const dealerScoreInfo = this.calculateScoreWithAces(this.dealerHand, true);
-    if (dealerScoreInfo.best === 21) {
-      // Dealer has blackjack - reveal and end game
-      this.gameOver = true;
-      this.updateDisplay();
-      setTimeout(() => {
-        const playerScoreInfo = this.calculateScoreWithAces(this.playerHand, true);
-        if (playerScoreInfo.best === 21) {
-          this.endGame('push');
-        } else {
-          this.endGame('dealer_blackjack');
-        }
-      }, 500);
-      return;
-    }
-    
-    // Continue game
-    this.updateGameControls();
+  async declineInsurance() {
+    await this.requestAction('declineInsurance');
   }
 
   updateGameControls() {
-    // Show double down button only if:
-    // - Player has exactly 2 cards
-    // - Game is not over
-    // - Player hasn't already doubled down
-    const canDoubleDown = !this.gameOver && 
-                         !this.hasDoubledDown && 
-                         this.playerHand.length === 2 &&
-                         this.casino.credits >= this.currentBet;
-    
-    const doubleDownBtn = document.getElementById('doubleDownBtn');
-    if (doubleDownBtn) {
-      if (canDoubleDown) {
-        doubleDownBtn.classList.remove('hidden');
-      } else {
-        doubleDownBtn.classList.add('hidden');
-      }
+    const active = Boolean(this.roundId) && !this.gameOver && !this.insuranceOffered && !this.presentationInProgress;
+    const doubleDownBtn = this.getElement('doubleDownBtn');
+    doubleDownBtn?.classList.toggle('hidden', !active || !this.serverCapabilities.canDouble);
+    const splitBtn = this.getElement('splitBtn');
+    splitBtn?.classList.toggle('hidden', !active || !this.serverCapabilities.canSplit);
+    const hit = this.getElement('hitBtn');
+    const stand = this.getElement('standBtn');
+    const newGame = this.getElement('newGameBtn');
+    const placeBet = this.getElement('placeBetBtn');
+    hit?.classList.toggle('hidden', !active);
+    stand?.classList.toggle('hidden', !active);
+    if (hit) hit.disabled = !active || !this.serverCapabilities.canHit;
+    if (stand) stand.disabled = !active || !this.serverCapabilities.canStand;
+    if (doubleDownBtn) doubleDownBtn.disabled = !active || !this.serverCapabilities.canDouble;
+    if (splitBtn) splitBtn.disabled = !active || !this.serverCapabilities.canSplit;
+    newGame?.classList.toggle('hidden', !this.gameOver);
+    if (newGame) newGame.disabled = !this.gameOver || this.presentationInProgress;
+    if (placeBet) {
+      placeBet.disabled = Boolean(this.roundId);
+      placeBet.innerHTML = this.roundId
+        ? '<span>Round in play</span><span aria-hidden="true">●</span>'
+        : '<span>Deal cards</span><span aria-hidden="true">→</span>';
     }
-    
-    // Enable/disable hit and stand
-    document.getElementById('hitBtn').disabled = this.gameOver || this.hasDoubledDown;
-    document.getElementById('standBtn').disabled = this.gameOver || this.hasDoubledDown;
   }
 
   async hit() {
-    if (this.gameOver || this.hasDoubledDown) return;
-
-    this.dealCard(this.playerHand);
-    await this.delay(400); // Wait for card animation
-    this.updateDisplay();
-
-    // After hitting, hand is no longer initial (more than 2 cards)
-    const playerScoreInfo = this.calculateScoreWithAces(this.playerHand, false);
-    if (playerScoreInfo.best > 21) {
-      // Player busts - reveal dealer's first card before ending game
-      this.gameOver = true;
-      this.updateDisplay(); // Reveal dealer's card
-      await this.delay(500); // Brief delay to show revealed card
-      this.endGame('bust');
-    } else if (playerScoreInfo.best === 21) {
-      // Player gets 21 - reveal dealer's first card before ending game
-      this.gameOver = true;
-      this.updateDisplay(); // Reveal dealer's card
-      await this.delay(500); // Brief delay to show revealed card
-      this.endGame('blackjack');
-    } else {
-      // Update controls (hide double down after hitting)
-      this.updateGameControls();
-    }
+    await this.requestAction('hit');
   }
 
   async doubleDown() {
-    if (this.gameOver || this.hasDoubledDown || this.playerHand.length !== 2) return;
-    
-    // Check if player has enough credits
-    if (this.currentBet > this.casino.credits) {
-      alert('Insufficient credits to double down');
-      return;
-    }
-    
-    // Double the bet
-    this.casino.updateCredits(-this.currentBet);
-    this.currentBet *= 2;
-    this.hasDoubledDown = true;
-    
-    // Deal one card
-    this.dealCard(this.playerHand);
-    await this.delay(400);
-    this.updateDisplay();
-    
-    // Check if player busted after double down
-    const playerScoreInfo = this.calculateScoreWithAces(this.playerHand, false);
-    if (playerScoreInfo.best > 21) {
-      // Player busts - reveal dealer's first card before ending game
-      this.gameOver = true;
-      this.updateDisplay(); // Reveal dealer's card
-      await this.delay(500); // Brief delay to show revealed card
-      this.endGame('bust');
-      return;
-    }
-    
-    // If not busted, automatically stand after double down
-    await this.delay(500);
-    this.stand();
+    await this.requestAction('double');
+  }
+
+  async split() {
+    await this.requestAction('split');
   }
 
   async stand() {
-    if (this.gameOver) return;
-
-    // Player stands - now it's dealer's turn
-    // Reveal dealer's first card by setting gameOver to true
-    this.gameOver = true;
-    this.updateDisplay(); // This will reveal the dealer's first card
-    await this.delay(500);
-
-    // Dealer plays (draws cards until 17+)
-    while (this.calculateScoreWithAces(this.dealerHand, false).best < 17) {
-      this.dealCard(this.dealerHand);
-      await this.delay(400); // Wait for card animation
-      this.updateDisplay();
-    }
-
-    this.updateDisplay();
-    this.endGame('compare');
+    await this.requestAction('stand');
   }
 
-  endGame(reason) {
-    // gameOver is already set to true in stand(), but set it here for other cases (bust, blackjack)
-    this.gameOver = true;
-    // At end game, hands may have more than 2 cards, so don't use initial hand format
-    const playerScoreInfo = this.calculateScoreWithAces(this.playerHand, false);
-    const dealerScoreInfo = this.calculateScoreWithAces(this.dealerHand, false);
-    const playerScore = playerScoreInfo.best;
-    const dealerScore = dealerScoreInfo.best;
-    const resultDisplay = document.getElementById('resultDisplay');
-
-    let message = '';
-    let winnings = 0;
-
-    if (reason === 'dealer_blackjack') {
-      message = '😔 Dealer Blackjack! Dealer Wins';
-      winnings = 0; // Original bet already deducted, insurance already handled
-    } else if (reason === 'push') {
-      message = '🤝 Push! Both have Blackjack';
-      winnings = this.currentBet; // Return bet
-    } else if (reason === 'blackjack' && playerScore === 21 && this.playerHand.length === 2) {
-      message = '🎉 Blackjack! You Win!';
-      winnings = Math.floor(this.currentBet * 2.5); // 2.5x for blackjack
-    } else if (reason === 'bust') {
-      message = '💥 Bust! Dealer Wins';
-      winnings = 0;
-    } else if (dealerScore > 21) {
-      message = '🎉 Dealer Busts! You Win!';
-      winnings = this.currentBet * 2;
-    } else if (playerScore > dealerScore) {
-      message = '🎉 You Win!';
-      winnings = this.currentBet * 2;
-    } else if (playerScore < dealerScore) {
-      message = '😔 Dealer Wins';
-      winnings = 0;
-    } else {
-      message = '🤝 Push! It\'s a Tie';
-      winnings = this.currentBet; // Return bet
-    }
-
-    resultDisplay.textContent = message;
-    resultDisplay.className = 'result-display ' + (winnings > this.currentBet ? 'win' : winnings === 0 ? 'lose' : 'tie');
-
-    if (winnings > 0) {
-      this.casino.updateCredits(winnings);
-    }
-
-    // Record bet history and update stats
-    const resultLabel = winnings > this.currentBet ? 'Win' : winnings === this.currentBet ? 'Push' : 'Loss';
-    const won = winnings > this.currentBet;
-    const isBlackjack = reason === 'blackjack' && playerScore === 21 && this.playerHand.length === 2;
-    
-    this.casino.recordBet('blackjack', this.currentBet, resultLabel, winnings, null, message);
-    
-    // Send stats tracking to server (if not a push)
-    if (winnings !== this.currentBet && this.casino.socket) {
-      this.casino.socket.emit('gameResult', {
-        gameType: 'blackjack',
-        betAmount: this.currentBet,
-        won: won,
-        payout: winnings,
-        result: {
-          playerScore: playerScore,
-          dealerScore: dealerScore,
-          playerCards: this.playerHand.length,
-          dealerCards: this.dealerHand.length,
-          isBlackjack: isBlackjack,
-          reason: reason,
-          message: message
-        }
-      });
-    }
-
-    // Disable controls
-    document.getElementById('hitBtn').disabled = true;
-    document.getElementById('standBtn').disabled = true;
-    document.getElementById('doubleDownBtn').classList.add('hidden');
+  endGame() {
+    // Settlement is exclusively performed by the authoritative server API.
+    this.showError('This round must be completed through the game controls.');
   }
 
   updateDisplay() {
@@ -607,7 +769,7 @@ class BlackjackGame {
   }
   
   animateScoreChange(elementId, newScore) {
-    const scoreEl = document.getElementById(elementId);
+    const scoreEl = this.getElement(elementId);
     if (!scoreEl) return;
     
     scoreEl.style.transform = 'scale(1.2)';
@@ -619,129 +781,147 @@ class BlackjackGame {
     }, 200);
   }
 
-  displayCards(containerId, hand, hideFirst = false) {
-    const container = document.getElementById(containerId);
+  getCardPresentation(card) {
+    const ranks = { ace: 'A', king: 'K', queen: 'Q', jack: 'J' };
+    const suits = {
+      hearts: { symbol: '♥', name: 'hearts', color: 'red' },
+      diamonds: { symbol: '♦', name: 'diamonds', color: 'red' },
+      clubs: { symbol: '♣', name: 'clubs', color: 'black' },
+      spades: { symbol: '♠', name: 'spades', color: 'black' }
+    };
+    const rank = card ? (ranks[card.value] || String(card.value)) : '?';
+    const suit = card ? (suits[card.suit] || suits.spades) : suits.spades;
+    return { rank, suit, label: card ? `${rank} of ${suit.name}` : 'Hidden card' };
+  }
+
+  updateCardElement(cardEl, card, { hidden = false } = {}) {
+    const { rank, suit, label } = this.getCardPresentation(card);
+    cardEl.classList.toggle('is-red', suit.color === 'red');
+    cardEl.classList.toggle('is-black', suit.color !== 'red');
+    cardEl.dataset.cardLabel = label;
+    cardEl.setAttribute('aria-label', hidden ? "Dealer's hidden card" : label);
+    const front = cardEl.querySelector('.blackjack-card-front');
+    if (front) {
+      front.innerHTML = `<span class="blackjack-card-corner"><strong>${rank}</strong><i>${suit.symbol}</i></span><span class="blackjack-card-pip">${suit.symbol}</span><span class="blackjack-card-corner is-bottom"><strong>${rank}</strong><i>${suit.symbol}</i></span>`;
+    }
+  }
+
+  createCardElement(card, { hidden = false, reveal = false, animate = false, index = 0, delayMs = 0, hand = 'player' } = {}) {
+    const cardEl = document.createElement('div');
+    cardEl.className = `card blackjack-card${hidden ? ' is-hidden' : ''}${reveal ? ' is-revealing' : ''}${animate ? ' is-dealing' : ''}`;
+    cardEl.style.setProperty('--deal-index', String(index));
+    cardEl.style.setProperty('--deal-delay', `${delayMs}ms`);
+    cardEl.style.setProperty('--deal-direction', hand === 'dealer' ? '-1' : '1');
+    cardEl.setAttribute('role', 'img');
+
+    const inner = document.createElement('div');
+    inner.className = 'blackjack-card-inner';
+    const front = document.createElement('div');
+    front.className = 'blackjack-card-face blackjack-card-front';
+    const back = document.createElement('div');
+    back.className = 'blackjack-card-face blackjack-card-back';
+    back.innerHTML = '<span class="blackjack-card-back-grid"></span><span class="blackjack-card-monogram">777</span>';
+    inner.append(front, back);
+    cardEl.appendChild(inner);
+    this.updateCardElement(cardEl, card, { hidden });
+    return cardEl;
+  }
+
+  displayCards(containerId, hand, hideFirst = false, animatedCards = []) {
+    const container = this.getElement(containerId);
     if (!container) return;
-    
-    const currentCards = container.querySelectorAll('.card');
-    const currentCount = currentCards.length;
-    const containerKey = containerId + '_hideFirst';
-    
-    // Store the last hideFirst state for this container
-    if (!this.lastHideFirstStates) {
-      this.lastHideFirstStates = {};
-    }
-    
-    const lastHideFirstForContainer = this.lastHideFirstStates[containerKey];
-    
-    // Check if we need to re-render all cards:
-    // 1. hideFirst state changed (card reveal)
-    // 2. hand was reset (fewer cards)
-    // 3. initial state (no previous state recorded)
-    // 4. Adding cards when hideFirst is true (need to ensure first card stays hidden)
-    const hideFirstChanged = lastHideFirstForContainer !== undefined && hideFirst !== lastHideFirstForContainer;
+    const currentCount = container.querySelectorAll('.blackjack-card').length;
+    const containerKey = `${containerId}_hideFirst`;
+    const lastHidden = this.lastHideFirstStates?.[containerKey];
+    const hiddenChanged = lastHidden !== undefined && hideFirst !== lastHidden;
     const handReset = hand.length < currentCount;
-    const isInitialState = lastHideFirstForContainer === undefined;
-    // Force re-render when adding cards to dealer's hand while first card should be hidden
-    const addingCardsWithHiddenFirst = hand.length > currentCount && hideFirst && containerId === 'dealerCards';
-    
-    // Re-render all cards if hideFirst changed, hand reset, initial render, or adding cards when first should be hidden
-    if (hideFirstChanged || handReset || isInitialState || addingCardsWithHiddenFirst) {
-      // Re-render all cards to ensure correct state
-      container.innerHTML = '';
-      hand.forEach((card, index) => {
-        const cardEl = document.createElement('div');
-        cardEl.className = 'card';
-        
-        // Hide first card if hideFirst is true (dealer's first card before player stands)
-        if (hideFirst && index === 0) {
-          cardEl.className += ' card-back';
-          cardEl.textContent = '🂠';
-        } else {
-          const cardName = `${card.value}_of_${card.suit}`;
-          cardEl.style.backgroundImage = `url('blackjack/images/${cardName}.png')`;
-          cardEl.style.backgroundSize = 'cover';
-          cardEl.style.backgroundPosition = 'center';
-        }
-        
-        // Animate only if card is being revealed (was hidden, now visible)
-        const isReveal = hideFirstChanged && index === 0 && lastHideFirstForContainer === true && !hideFirst;
-        const shouldAnimate = isReveal || handReset || isInitialState || (addingCardsWithHiddenFirst && index > 0);
-        
-        if (shouldAnimate && !(hideFirst && index === 0)) {
-          // Don't animate the hidden card, just show it immediately
-          cardEl.style.opacity = '0';
-          cardEl.style.transform = 'translateY(-50px) scale(0.8)';
-          cardEl.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-        }
-        
-        container.appendChild(cardEl);
-        
-        // Trigger animation for visible cards only
-        if (shouldAnimate && !(hideFirst && index === 0)) {
-          setTimeout(() => {
-            cardEl.style.opacity = '1';
-            cardEl.style.transform = 'translateY(0) scale(1)';
-          }, index * 150);
-        }
-      });
-      this.lastHideFirstStates[containerKey] = hideFirst;
-    } else if (hand.length > currentCount) {
-      // Adding new card(s) - only animate the new ones, keep existing cards static
-      hand.slice(currentCount).forEach((card, relativeIndex) => {
-        const cardEl = document.createElement('div');
-        cardEl.className = 'card';
-        
-        // New cards are never hidden (hideFirst only applies to index 0)
-        const cardName = `${card.value}_of_${card.suit}`;
-        cardEl.style.backgroundImage = `url('blackjack/images/${cardName}.png')`;
-        cardEl.style.backgroundSize = 'cover';
-        cardEl.style.backgroundPosition = 'center';
-        
-        // Animate only the new card
-        cardEl.style.opacity = '0';
-        cardEl.style.transform = 'translateY(-50px) scale(0.8) rotate(10deg)';
-        cardEl.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-        
-        container.appendChild(cardEl);
-        
-        // Trigger animation for the new card only
-        setTimeout(() => {
-          cardEl.style.opacity = '1';
-          cardEl.style.transform = 'translateY(0) scale(1) rotate(0deg)';
-        }, relativeIndex * 150);
-      });
-      // Don't update hideFirst state when just adding cards
+    const dealer = containerId === 'dealerCards';
+    const animationByIndex = new Map(animatedCards.map(card => [card.index, card.delayMs]));
+
+    if (handReset) {
+      container.replaceChildren();
     }
-    // If hand.length === currentCount and hideFirst hasn't changed, do nothing (cards already displayed correctly)
+
+    if (hiddenChanged) {
+      const existingCard = container.querySelector('.blackjack-card');
+      if (existingCard) {
+        this.updateCardElement(existingCard, hand[0], { hidden: hideFirst });
+        existingCard.classList.toggle('is-hidden', hideFirst);
+        existingCard.classList.toggle('is-revealing', !hideFirst);
+        existingCard.setAttribute('aria-label', hideFirst ? "Dealer's hidden card" : existingCard.dataset.cardLabel || 'Dealer card');
+        if (!hideFirst) existingCard.addEventListener('animationend', () => existingCard.classList.remove('is-revealing'), { once: true });
+      }
+    }
+
+    const appendStart = handReset ? 0 : currentCount;
+    hand.slice(appendStart).forEach((card, relativeIndex) => {
+      const index = appendStart + relativeIndex;
+      const cardElement = this.createCardElement(card, {
+        hidden: hideFirst && index === 0,
+        animate: animationByIndex.has(index),
+        delayMs: animationByIndex.get(index) || 0,
+        index,
+        hand: dealer ? 'dealer' : 'player'
+      });
+      container.appendChild(cardElement);
+    });
+    container.classList.toggle('is-crowded', hand.length >= 4);
+    container.style.setProperty('--hand-size', String(hand.length));
+    this.lastHideFirstStates[containerKey] = hideFirst;
   }
 
   resetGame() {
+    if (this.roundId && !this.gameOver) {
+      this.showError('Finish the active round before starting a new one.');
+      return;
+    }
+    this.roundId = null;
     this.gameOver = false;
     this.currentBet = 0;
     this.insuranceBet = 0;
+    this.playerHand = [];
+    this.playerHands = [];
+    this.activeHandIndex = 0;
+    this.serverCapabilities = { canHit: false, canStand: false, canDouble: false, canSplit: false };
     this.hasDoubledDown = false;
     this.hasTakenInsurance = false;
     this.insuranceOffered = false;
     this.lastHideFirstStates = {};
-    this.initialHandSize = 2; // Reset initial hand size
-    document.querySelector('.blackjack-container .betting-section')?.classList.remove('is-locked');
-    document.getElementById('blackjackPreview')?.classList.remove('hidden');
-    document.getElementById('gameArea').classList.add('hidden');
-    document.getElementById('insuranceSection').classList.add('hidden');
-    document.querySelector('.blackjack-container')?.classList.remove('insurance-active');
-    const resultDisplay = document.getElementById('resultDisplay');
+    this.initialHandSize = 2;
+    clearTimeout(this.presentationTimer);
+    this.presentationGeneration += 1;
+    this.presentationInProgress = false;
+    this.root?.querySelector('.blackjack-table-shell')?.classList.remove('is-presenting', 'has-split-hands');
+    this.root?.querySelector('.betting-section')?.classList.remove('is-locked');
+    const betInput = this.getElement('blackjackBet');
+    betInput?.removeAttribute('aria-readonly');
+    if (betInput) betInput.readOnly = false;
+    const playerHands = this.getElement('playerHands');
+    if (playerHands) {
+      playerHands.innerHTML = '<article class="blackjack-player-hand is-active" data-hand-index="0"><div class="blackjack-hand-heading"><h3>You</h3><span class="blackjack-hand-result" aria-hidden="true"></span><div class="score-display"><span class="score-label">HAND</span><span id="playerScore">0</span></div></div><div id="playerCards" class="cards-container"></div></article>';
+    }
+    this.getElement('dealerCards')?.replaceChildren();
+    this.getElement('dealerScore').textContent = '0';
+    this.getElement('insuranceSection').classList.add('hidden');
+    this.root?.querySelector('.blackjack-container')?.classList.remove('insurance-active');
+    const resultDisplay = this.getElement('resultDisplay');
     if (resultDisplay) {
       resultDisplay.textContent = '';
-      resultDisplay.className = 'result-display'; // Reset className to remove win/lose/tie classes
+      resultDisplay.removeAttribute('aria-label');
+      resultDisplay.className = 'result-display';
     }
-    document.getElementById('hitBtn').disabled = false;
-    document.getElementById('standBtn').disabled = false;
-    document.getElementById('doubleDownBtn').classList.add('hidden');
+    this.getElement('hitBtn').disabled = true;
+    this.getElement('standBtn').disabled = true;
+    this.getElement('doubleDownBtn').classList.add('hidden');
+    this.getElement('splitBtn').classList.add('hidden');
+    this.root?.querySelector('.dealer-section')?.classList.remove('is-winner', 'is-loser');
+    this.updateGameControls();
   }
 
   destroy() {
-    // Cleanup if needed
+    document.removeEventListener('keydown', this.boundKeyboardHandler);
+    clearTimeout(this.presentationTimer);
+    this.presentationGeneration += 1;
   }
 }
 

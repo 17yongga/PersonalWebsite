@@ -3,12 +3,15 @@
 class CasinoManager {
   constructor() {
     this.username = '';
+    this.csrfToken = '';
+    this.email = null;
+    this.emailVerified = false;
     this.credits = 10000; // Starting credits
     this.currentGame = null;
     this.socket = null;
-    // Server URL - default to same origin, but can be overridden
-    // If server is on different port (e.g., 3001), set window.CASINO_SERVER_URL = 'http://localhost:3001'
-    this.serverUrl = window.CASINO_SERVER_URL || window.location.origin;
+    // Production frontend and API are separate origins; local development uses port 3001.
+    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    this.serverUrl = window.CASINO_SERVER_URL || (isLocal ? 'http://localhost:3001' : 'https://api.gary-yong.com');
     this._betPlacementInProgress = false; // Navigation guard flag
     this._lastBalanceFetchAt = null; // When we last fetched balance from API (avoids stale socket overwrite)
     this.init();
@@ -17,8 +20,10 @@ class CasinoManager {
   init() {
     // Check if player is already signed in (from session)
     const savedUsername = sessionStorage.getItem('casinoUsername');
-    if (savedUsername) {
+    const savedCsrfToken = sessionStorage.getItem('casinoCsrfToken');
+    if (savedUsername && savedCsrfToken) {
       this.username = savedUsername;
+      this.csrfToken = savedCsrfToken;
       this.restoreSessionAndConnect();
     } else {
       this.showSignInScreen();
@@ -27,26 +32,22 @@ class CasinoManager {
     // Auth tab switching
     document.getElementById('loginTab')?.addEventListener('click', () => this.showLoginForm());
     document.getElementById('registerTab')?.addEventListener('click', () => this.showRegisterForm());
+    document.querySelectorAll('.password-toggle').forEach(button => button.addEventListener('click', () => this.togglePassword(button)));
+    document.getElementById('forgotPasswordBtn')?.addEventListener('click', () => this.showRecoveryDialog());
 
-    // Login form
-    document.getElementById('loginBtn')?.addEventListener('click', () => this.login());
-    document.getElementById('loginUsername')?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.login();
-    });
-    document.getElementById('loginPassword')?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.login();
-    });
+    document.getElementById('floorNavBtn')?.addEventListener('click', () => this.backToLobby());
+    document.getElementById('continueLastGameBtn')?.addEventListener('click', () => this.continueLastGame());
+    document.getElementById('takeTourBtn')?.addEventListener('click', () => this.showTour());
+    document.getElementById('dailySpinBtn')?.addEventListener('click', () => this.doFreeSpin());
 
-    // Register form
-    document.getElementById('registerBtn')?.addEventListener('click', () => this.register());
-    document.getElementById('registerUsername')?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.register();
+    // Authentication forms
+    document.getElementById('loginFormElement')?.addEventListener('submit', event => {
+      event.preventDefault();
+      this.login();
     });
-    document.getElementById('registerPassword')?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.register();
-    });
-    document.getElementById('registerPasswordConfirm')?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.register();
+    document.getElementById('registerFormElement')?.addEventListener('submit', event => {
+      event.preventDefault();
+      this.register();
     });
 
     // Header actions
@@ -55,6 +56,7 @@ class CasinoManager {
     document.getElementById('leaderboardBtn')?.addEventListener('click', () => this.showLeaderboard());
     document.getElementById('achievementsBtn')?.addEventListener('click', () => this.showAchievements());
     document.getElementById('statsBtn')?.addEventListener('click', () => this.showStats());
+    document.getElementById('securityBtn')?.addEventListener('click', () => this.showSecurityDialog());
     document.getElementById('backToLobbyBtn')?.addEventListener('click', () => this.backToLobby());
     document.querySelector('.btn-add-credits')?.addEventListener('click', () => this.doFreeSpin());
 
@@ -80,6 +82,7 @@ class CasinoManager {
       { id: 'achievementsBtnMobile', action: () => this.showAchievements() },
       { id: 'statsBtnMobile', action: () => this.showStats() },
       { id: 'betHistoryBtnMobile', action: () => this.showBetHistory() },
+      { id: 'securityBtnMobile', action: () => this.showSecurityDialog() },
       { id: 'logoutBtnMobile', action: () => this.logout() }
     ];
     
@@ -166,7 +169,69 @@ class CasinoManager {
       });
     });
     
+    this.initDialogAccessibility();
+    this.handleAccountActionLink();
     console.log(`[Casino] Attached ${document.querySelectorAll('.play-btn').length} play button listeners`);
+  }
+
+  initDialogAccessibility() {
+    const selector = [
+      '.leaderboard-modal', '.achievements-modal', '.stats-modal', '.how-to-play-modal',
+      '.bet-history-modal', '.spin-modal-overlay', '.tour-overlay', '.poker-modal',
+      '.cs2-betslip-modal', '.credit-history-modal', '.account-modal'
+    ].join(',');
+    const isVisible = element => element && !element.classList.contains('hidden') && getComputedStyle(element).display !== 'none';
+    const visibleDialogs = () => [...document.querySelectorAll(selector)].filter(isVisible);
+    const focusable = dialog => [...dialog.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )].filter(element => element.getClientRects().length > 0);
+
+    const syncDialogs = () => {
+      const dialogs = visibleDialogs();
+      document.body.classList.toggle('casino-dialog-open', dialogs.length > 0);
+      dialogs.forEach(dialog => {
+        if (dialog.dataset.a11yDialogReady === 'true') return;
+        dialog.dataset.a11yDialogReady = 'true';
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
+        dialog.setAttribute('tabindex', '-1');
+        const title = dialog.querySelector('h1, h2, h3, .modal-title, .spin-modal-title, .tour-title');
+        if (title) {
+          if (!title.id) title.id = `casino-dialog-title-${crypto.randomUUID()}`;
+          dialog.setAttribute('aria-labelledby', title.id);
+        } else {
+          dialog.setAttribute('aria-label', 'Casino dialog');
+        }
+        this._dialogReturnFocus = document.activeElement;
+        requestAnimationFrame(() => (focusable(dialog)[0] || dialog).focus({ preventScroll: true }));
+      });
+    };
+
+    const observer = new MutationObserver(syncDialogs);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    document.addEventListener('keydown', event => {
+      const dialog = visibleDialogs().at(-1);
+      if (!dialog) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        const close = dialog.querySelector('[data-close], .modal-close, .close-modal, .close-btn, .spin-modal-close, .tour-close, .leaderboard-close, .achievements-close, .stats-close, .bet-history-close');
+        if (close) close.click(); else dialog.remove();
+        requestAnimationFrame(() => {
+          syncDialogs();
+          if (!visibleDialogs().length && this._dialogReturnFocus?.isConnected) this._dialogReturnFocus.focus();
+        });
+        return;
+      }
+      if (event.key === 'Tab') {
+        const items = focusable(dialog);
+        if (!items.length) { event.preventDefault(); dialog.focus(); return; }
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    });
+    syncDialogs();
   }
 
   setBottomNavActive(action) {
@@ -191,10 +256,222 @@ class CasinoManager {
     this.clearErrors();
   }
 
+  togglePassword(button) {
+    const input = document.getElementById(button.dataset.passwordTarget);
+    if (!input) return;
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    button.textContent = showing ? 'Show' : 'Hide';
+    button.setAttribute('aria-pressed', String(!showing));
+    button.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    input.focus({ preventScroll: true });
+  }
+
+  createAccountModal(title) {
+    document.querySelector('.account-modal')?.remove();
+    const overlay = document.createElement('div');
+    overlay.className = 'account-modal';
+    overlay.innerHTML = `<section class="account-modal-card"><button type="button" class="account-modal-close" data-close aria-label="Close">×</button><h2></h2><div class="account-modal-body"></div></section>`;
+    overlay.querySelector('h2').textContent = title;
+    const close = () => { overlay.remove(); document.body.classList.remove('account-modal-open'); };
+    overlay.querySelector('[data-close]').addEventListener('click', close);
+    overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
+    document.body.classList.add('account-modal-open');
+    document.body.appendChild(overlay);
+    return { overlay, body: overlay.querySelector('.account-modal-body'), close };
+  }
+
+  showRecoveryDialog(token = null) {
+    const modal = this.createAccountModal(token ? 'Choose a new password' : 'Reset your password');
+    if (token) {
+      modal.body.innerHTML = `<form class="account-form"><label>New password<input type="password" name="password" minlength="8" maxlength="128" autocomplete="new-password" required></label><label>Confirm password<input type="password" name="confirm" minlength="8" maxlength="128" autocomplete="new-password" required></label><button class="btn btn-primary" type="submit">Reset password</button><p class="account-form-status" role="status"></p></form>`;
+      const form = modal.body.querySelector('form');
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const status = form.querySelector('.account-form-status');
+        const password = form.elements.password.value;
+        if (password !== form.elements.confirm.value) { status.textContent = 'Passwords do not match.'; return; }
+        const response = await this.apiFetch('/api/account/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, password }) });
+        const data = await response.json();
+        status.textContent = data.message || data.error || 'Unable to reset password.';
+        if (response.ok) {
+          history.replaceState({}, '', location.pathname);
+          setTimeout(() => { modal.close(); this.showLoginForm(); }, 1200);
+        }
+      });
+      return;
+    }
+    modal.body.innerHTML = `<p>Enter the verified email associated with your account. The response is the same whether or not an account exists.</p><form class="account-form"><label>Email<input type="email" name="email" maxlength="254" autocomplete="email" required></label><button class="btn btn-primary" type="submit">Send reset link</button><p class="account-form-status" role="status"></p></form>`;
+    const form = modal.body.querySelector('form');
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const response = await this.apiFetch('/api/account/password-recovery', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: form.elements.email.value }) });
+      const data = await response.json();
+      form.querySelector('.account-form-status').textContent = data.message || 'If that verified email exists, a reset link has been sent.';
+    });
+  }
+
+  async handleAccountActionLink() {
+    const params = new URLSearchParams(location.search);
+    const recoveryToken = params.get('recoveryToken');
+    if (recoveryToken) { this.showRecoveryDialog(recoveryToken); return; }
+    const verificationToken = params.get('verifyEmailToken');
+    if (!verificationToken) return;
+    const modal = this.createAccountModal('Verify your email');
+    modal.body.innerHTML = '<p class="account-form-status" role="status">Verifying…</p>';
+    try {
+      const response = await this.apiFetch('/api/account/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: verificationToken }) });
+      const data = await response.json();
+      modal.body.querySelector('.account-form-status').textContent = response.ok ? 'Email verified. You can now use password recovery.' : (data.error || 'Verification failed.');
+      if (response.ok) { this.email = data.email; this.emailVerified = true; history.replaceState({}, '', location.pathname); }
+    } catch {
+      modal.body.querySelector('.account-form-status').textContent = 'Unable to verify the email right now.';
+    }
+  }
+
+  async fairnessBytes(seedHex, game, clientSeed, nonce, counter) {
+    const keyBytes = Uint8Array.from(seedHex.match(/.{2}/g) || [], byte => Number.parseInt(byte, 16));
+    const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    return new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${game}:${clientSeed}:${nonce}:${counter}`)));
+  }
+
+  async fairnessInt(proof, maxExclusive, counter = 0) {
+    const limit = Math.floor(0x100000000 / maxExclusive) * maxExclusive;
+    for (let block = counter; ; block += 1) {
+      const bytes = await this.fairnessBytes(proof.serverSeed, proof.game, proof.clientSeed, proof.nonce, block);
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      for (let offset = 0; offset <= bytes.length - 4; offset += 4) {
+        const value = view.getUint32(offset, false);
+        if (value < limit) return value % maxExclusive;
+      }
+    }
+  }
+
+  async verifyFairnessProof(proof) {
+    if (!proof?.serverSeed || !proof?.commitment || !proof?.result) return { valid: false, reason: 'Round is not revealed yet' };
+    const seed = Uint8Array.from(proof.serverSeed.match(/.{2}/g) || [], byte => Number.parseInt(byte, 16));
+    const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', seed))].map(byte => byte.toString(16).padStart(2, '0')).join('');
+    const verification = { commitmentValid: digest === proof.commitment, outcomeValid: false, game: proof.game };
+    if (!verification.commitmentValid) return verification;
+    const result = proof.result;
+    const same = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+    if (proof.game === 'roulette') {
+      verification.generated = await this.fairnessInt(proof, 15);
+      verification.outcomeValid = verification.generated === result.winningNumber;
+    } else if (proof.game === 'daily_bonus') {
+      verification.generated = await this.fairnessInt(proof, 8);
+      verification.outcomeValid = verification.generated === result.prizeIndex;
+    } else if (proof.game === 'coinflip') {
+      const value = await this.fairnessInt(proof, 2);
+      verification.generated = result.opponent === 'bot' ? (value === 0 ? 'Heads' : 'Tails') : (value === 1 ? 'Heads' : 'Tails');
+      verification.outcomeValid = verification.generated === result.coinResult;
+    } else if (proof.game === 'crash') {
+      const value = await this.fairnessInt(proof, 1_000_000);
+      const fraction = value / 1_000_000;
+      verification.generated = fraction >= 0.99 ? 1 : Math.max(1, Math.floor(100 * 0.99 / (1 - fraction)) / 100);
+      verification.outcomeValid = verification.generated === result.crashPoint;
+    } else if (proof.game === 'pachinko') {
+      const multipliers = {
+        low: [5,2.5,1.6,1.3,1.15,1.05,.95,.9,.85,.9,.95,1.05,1.15,1.3,1.6,2.5,5],
+        medium: [50,18,6,3,1.8,1.2,.9,.75,.6,.75,.9,1.2,1.8,3,6,18,50],
+        high: [220,55,18,7,2.6,1.25,.78,.48,.28,.48,.78,1.25,2.6,7,18,55,220]
+      };
+      let counter = 0;
+      const generated = [];
+      for (let drop = 0; drop < result.count; drop += 1) {
+        let slotIndex = 0;
+        for (let row = 0; row < 16; row += 1) slotIndex += await this.fairnessInt(proof, 2, counter++);
+        generated.push({ slotIndex, multiplier: multipliers[result.risk][slotIndex] });
+      }
+      verification.generated = generated;
+      verification.outcomeValid = same(generated, result.results);
+    } else if (proof.game === 'blackjack') {
+      const suits = ['hearts','diamonds','clubs','spades'];
+      const values = ['2','3','4','5','6','7','8','9','10','jack','queen','king','ace'];
+      const deck = suits.flatMap(suit => values.map(value => ({ suit, value })));
+      let counter = 0;
+      for (let index = deck.length - 1; index > 0; index -= 1) {
+        const swap = await this.fairnessInt(proof, index + 1, counter++);
+        [deck[index], deck[swap]] = [deck[swap], deck[index]];
+      }
+      const player = [deck.pop(), deck.pop()];
+      const dealer = [deck.pop(), deck.pop()];
+      while (player.length < result.playerHand.length) player.push(deck.pop());
+      while (dealer.length < result.dealerHand.length) dealer.push(deck.pop());
+      verification.generated = { playerHand: player, dealerHand: dealer };
+      verification.outcomeValid = same(player, result.playerHand) && same(dealer, result.dealerHand);
+    } else if (proof.game === 'poker') {
+      const suits = ['h','d','c','s'];
+      const ranks = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
+      const deck = suits.flatMap(suit => ranks.map(rank => rank + suit));
+      let counter = 0;
+      for (let index = deck.length - 1; index > 0; index -= 1) {
+        const swap = await this.fairnessInt(proof, index + 1, counter++);
+        [deck[index], deck[swap]] = [deck[swap], deck[index]];
+      }
+      verification.generated = { deckSha: 'derived locally' };
+      verification.outcomeValid = same(deck, result.deck);
+    } else {
+      verification.reason = 'Unsupported proof game';
+    }
+    return verification;
+  }
+
+  showSecurityDialog() {
+    const modal = this.createAccountModal('Account security and fairness');
+    const emailText = this.emailVerified ? `Verified email: ${this.email}` : (this.email ? `Verification pending: ${this.email}` : 'No verified recovery email');
+    modal.body.innerHTML = `<p class="account-email-status"></p><form class="account-form account-email-form"><label>Add or change recovery email<input type="email" name="email" maxlength="254" autocomplete="email" required></label><button class="btn btn-primary" type="submit">Send verification link</button><p class="account-form-status" role="status"></p></form><hr><h3>Verify a completed game</h3><p>Enter the round ID shown in a completed game result.</p><form class="account-form fairness-form"><label>Round ID<input type="text" name="roundId" maxlength="160" required></label><button class="btn btn-secondary" type="submit">Load proof</button><pre class="fairness-proof" aria-live="polite"></pre></form>`;
+    modal.body.querySelector('.account-email-status').textContent = emailText;
+    const emailForm = modal.body.querySelector('.account-email-form');
+    emailForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const response = await this.apiFetch('/api/account/email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: emailForm.elements.email.value }) });
+      const data = await response.json();
+      emailForm.querySelector('.account-form-status').textContent = data.message || data.error || 'Unable to send verification email.';
+      if (response.ok) { this.email = emailForm.elements.email.value.trim().toLowerCase(); this.emailVerified = false; }
+    });
+    const fairnessForm = modal.body.querySelector('.fairness-form');
+    fairnessForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const proof = fairnessForm.querySelector('.fairness-proof');
+      proof.textContent = 'Loading proof…';
+      try {
+        const response = await this.apiFetch(`/api/fairness/proof/${encodeURIComponent(fairnessForm.elements.roundId.value.trim())}`);
+        const data = await response.json();
+        if (!response.ok) {
+          proof.textContent = data.error || 'Proof not found.';
+          return;
+        }
+        const localVerification = await this.verifyFairnessProof(data.proof);
+        proof.textContent = JSON.stringify({
+          verified: localVerification.commitmentValid === true && localVerification.outcomeValid === true,
+          localVerification,
+          proof: data.proof
+        }, null, 2);
+      } catch (error) {
+        proof.textContent = `Verification failed: ${error.message}`;
+      }
+    });
+  }
+
   clearErrors() {
     document.getElementById('loginError')?.classList.add('hidden');
     document.getElementById('registerError')?.classList.add('hidden');
     document.getElementById('registerSuccess')?.classList.add('hidden');
+  }
+
+  async apiFetch(path, options = {}) {
+    const method = (options.method || 'GET').toUpperCase();
+    const headers = { ...(options.headers || {}) };
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method) && this.csrfToken) {
+      headers['X-CSRF-Token'] = this.csrfToken;
+    }
+    return fetch(`${this.serverUrl}${path}`, {
+      ...options,
+      method,
+      headers,
+      credentials: 'include'
+    });
   }
 
   async login() {
@@ -207,7 +484,7 @@ class CasinoManager {
     }
 
     try {
-      const response = await fetch(`${this.serverUrl}/api/login`, {
+      const response = await this.apiFetch('/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -225,7 +502,12 @@ class CasinoManager {
       // Success - save username and connect
       this.username = data.username;
       this.credits = data.credits;
+      this.csrfToken = data.csrfToken;
+      this.email = data.email || null;
+      this.emailVerified = Boolean(data.emailVerified);
       sessionStorage.setItem('casinoUsername', this.username);
+      sessionStorage.setItem('casinoCsrfToken', this.csrfToken);
+      this.updateContinueLastGame();
       this.clearErrors();
       this.connectToServer();
     } catch (error) {
@@ -236,21 +518,22 @@ class CasinoManager {
 
   async register() {
     const username = document.getElementById('registerUsername')?.value.trim();
+    const email = document.getElementById('registerEmail')?.value.trim().toLowerCase();
     const password = document.getElementById('registerPassword')?.value;
     const passwordConfirm = document.getElementById('registerPasswordConfirm')?.value;
 
-    if (!username || !password || !passwordConfirm) {
+    if (!username || !email || !password || !passwordConfirm) {
       this.showError('registerError', 'Please fill in all fields');
       return;
     }
 
-    if (username.length < 3 || username.length > 20) {
-      this.showError('registerError', 'Username must be between 3 and 20 characters');
+    if (!/^[A-Za-z0-9_-]{3,20}$/.test(username)) {
+      this.showError('registerError', 'Use 3–20 letters, numbers, underscores, or hyphens');
       return;
     }
 
-    if (password.length < 6) {
-      this.showError('registerError', 'Password must be at least 6 characters');
+    if (password.length < 8 || password.length > 128) {
+      this.showError('registerError', 'Password must be between 8 and 128 characters');
       return;
     }
 
@@ -260,12 +543,12 @@ class CasinoManager {
     }
 
     try {
-      const response = await fetch(`${this.serverUrl}/api/register`, {
+      const response = await this.apiFetch('/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, email, password })
       });
 
       const data = await response.json();
@@ -276,11 +559,12 @@ class CasinoManager {
       }
 
       // Success - show success message and switch to login
-      this.showSuccess('registerSuccess', 'Account created successfully! Please login.');
+      this.showSuccess('registerSuccess', data.message || 'Account created. Check your email to verify it, then log in.');
       setTimeout(() => {
         this.showLoginForm();
         document.getElementById('loginUsername').value = username;
         document.getElementById('registerUsername').value = '';
+        document.getElementById('registerEmail').value = '';
         document.getElementById('registerPassword').value = '';
         document.getElementById('registerPasswordConfirm').value = '';
       }, 1500);
@@ -307,25 +591,26 @@ class CasinoManager {
   }
 
   async restoreSessionAndConnect() {
-    // Fetch balance from API first to avoid stale socket overwrite (race: joinCasino can run before CS2 bet persists)
     try {
-      const res = await fetch(`${this.serverUrl}/api/cs2/balance?userId=${encodeURIComponent(this.username)}`);
+      const res = await this.apiFetch('/api/session');
       const data = await res.json();
-      if (data.success && typeof data.balance === 'number') {
-        this.credits = data.balance;
-        this._lastBalanceFetchAt = Date.now();
-        this.updateCreditsDisplay();
-        if (window.casinoDebugLogger) {
-          window.casinoDebugLogger.logBalanceUpdate(10000, this.credits, 'api', {
-            context: 'session restore',
-            source: 'GET /api/cs2/balance'
-          });
-        }
-      }
-    } catch (e) {
-      console.warn('[Casino] Balance fetch on session restore failed, using socket only:', e);
+      if (!res.ok || !data.success) throw new Error(data.error || 'Session expired');
+      this.username = data.username;
+      this.credits = data.credits;
+      this.csrfToken = data.csrfToken;
+      this.email = data.email || null;
+      this.emailVerified = Boolean(data.emailVerified);
+      sessionStorage.setItem('casinoUsername', this.username);
+      sessionStorage.setItem('casinoCsrfToken', this.csrfToken);
+      this.updateContinueLastGame();
+      this._lastBalanceFetchAt = Date.now();
+      this.updateCreditsDisplay();
+      this.connectToServer();
+    } catch (error) {
+      console.warn('[Casino] Session restore failed:', error.message);
+      this.clearSession();
+      this.showSignInScreen();
     }
-    this.connectToServer();
   }
 
   connectToServer() {
@@ -340,7 +625,10 @@ class CasinoManager {
 
     // Initialize socket connection
     if (!this.socket) {
-      this.socket = io(this.serverUrl);
+      this.socket = io(this.serverUrl, {
+        withCredentials: true,
+        auth: { csrfToken: this.csrfToken }
+      });
 
       this.socket.on('connect', () => {
         console.log('[Casino] Connected to server');
@@ -349,8 +637,10 @@ class CasinoManager {
             currentGame: this.currentGame
           });
         }
-        // Join casino with username
-        this.socket.emit('joinCasino', { username: this.username });
+        // Join using the authenticated Socket.IO session.
+        this.socket.emit('joinCasino', {}, (result) => {
+          if (result?.success) this.loadSidebarData();
+        });
       });
 
       this.socket.on('disconnect', (reason) => {
@@ -360,6 +650,16 @@ class CasinoManager {
             reason,
             currentGame: this.currentGame
           });
+        }
+      });
+
+      this.socket.on('sessionRevoked', ({ reason } = {}) => {
+        this.handleSessionRevoked(reason || 'expired');
+      });
+
+      this.socket.on('connect_error', (error) => {
+        if (/authentication required|session expired|revoked/i.test(error?.message || '')) {
+          this.handleSessionRevoked('expired');
         }
       });
 
@@ -373,43 +673,27 @@ class CasinoManager {
         }
         // Rejoin casino after reconnection
         if (this.username) {
-          this.socket.emit('joinCasino', { username: this.username });
+          this.socket.emit('joinCasino', {});
         }
       });
 
       this.socket.on('playerData', (data) => {
         const socketCredits = data.credits;
-        const now = Date.now();
         const oldBalance = this.credits;
-        
+        if (!Number.isFinite(socketCredits) || socketCredits < 0 || !Number.isSafeInteger(Math.round(socketCredits * 1000))) {
+          console.error('[Casino] Rejected invalid canonical balance payload');
+          return;
+        }
+
         console.log(`[Casino] playerData received: socket=${socketCredits}, current=${oldBalance}, game=${this.currentGame}`);
-        
+
         if (window.casinoDebugLogger) {
           window.casinoDebugLogger.logBalanceUpdate(oldBalance, socketCredits, 'socket', {
             currentGame: this.currentGame
           });
         }
-        
-        // Protect against stale playerData overwriting fresh client-side balances.
-        // This happens when: (a) CS2 REST bet just placed, (b) client-side game
-        // (blackjack/pachinko) just synced via syncBalance, or (c) socket reconnect
-        // sends stale joinCasino response.
-        const hasRecentManualUpdate = this._lastManualCreditUpdate && (now - this._lastManualCreditUpdate) < 3000;
-        const hasRecentCreditSync = this._lastCreditSync && (now - this._lastCreditSync) < 5000;
-        
-        if (hasRecentManualUpdate && socketCredits > this.credits) {
-          console.log('[Casino] Ignoring stale playerData after recent CS2 bet');
-          return;
-        }
-        
-        if (hasRecentCreditSync && socketCredits !== this.credits) {
-          // Client just synced balance — trust the local value over potentially stale server push
-          console.log('[Casino] Ignoring playerData — recent syncBalance in flight', {
-            local: this.credits, server: socketCredits
-          });
-          return;
-        }
-        
+
+        // The server is the only balance authority. Always render its committed value.
         this.credits = socketCredits;
         this.updateCreditsDisplay();
       });
@@ -434,11 +718,11 @@ class CasinoManager {
         this.updateAchievementBadge();
       });
     } else {
-      // Already connected, just join
-      this.socket.emit('joinCasino', { username: this.username });
+      // Already connected, rejoin without sending caller-controlled identity.
+      this.socket.emit('joinCasino', {});
     }
 
-    // CRITICAL FIX: Only show main screen if not already in a game
+    // Only show the main screen if not already in a game.
     // This prevents navigation away from games when socket reconnects
     if (!this.currentGame) {
       if (window.casinoDebugLogger) {
@@ -458,15 +742,37 @@ class CasinoManager {
     }
   }
 
-  logout() {
-    if (confirm('Are you sure you want to logout? Your balance will be saved.')) {
+  handleSessionRevoked(reason = 'expired') {
+    const socket = this.socket;
+    this.socket = null;
+    if (socket?.connected) socket.disconnect();
+    this.clearSession();
+    this.showSignInScreen();
+    this.showTemporaryError(reason === 'logout' ? 'Signed out.' : 'Your session expired. Please sign in again.');
+  }
+
+  clearSession() {
+    this.username = '';
+    this.csrfToken = '';
+    this.email = null;
+    this.emailVerified = false;
+    this.credits = 10000;
+    sessionStorage.removeItem('casinoUsername');
+    sessionStorage.removeItem('casinoCsrfToken');
+    this.updateContinueLastGame();
+  }
+
+  async logout() {
+    try {
+      if (this.csrfToken) await this.apiFetch('/api/logout', { method: 'POST' });
+    } catch (error) {
+      console.warn('[Casino] Logout request failed; clearing the local session:', error.message);
+    } finally {
       if (this.socket) {
         this.socket.disconnect();
         this.socket = null;
       }
-      this.username = '';
-      this.credits = 10000;
-      sessionStorage.removeItem('casinoUsername');
+      this.clearSession();
       this.showSignInScreen();
     }
   }
@@ -545,23 +851,63 @@ class CasinoManager {
   updateCreditsDisplay() {
     const creditsEl = document.getElementById('creditsAmount');
     if (creditsEl) {
-      creditsEl.textContent = this.formatCredits(this.credits);
+      creditsEl.textContent = this.formatBalance(this.credits);
     }
+  }
+
+  loadSidebarData() {
+    const leaderboard = document.getElementById('sidebarLeaderboard');
+    if (leaderboard && this.socket?.connected) {
+      this.socket.emit('getLeaderboard', { type: 'allTime' }, (players = []) => {
+        leaderboard.replaceChildren();
+        if (!players.length) {
+          const empty = document.createElement('div');
+          empty.className = 'sidebar-empty';
+          empty.textContent = 'No verified results yet.';
+          leaderboard.appendChild(empty);
+          return;
+        }
+        players.slice(0, 5).forEach((player, index) => {
+          const row = document.createElement('div'); row.className = 'lb-row';
+          const rank = document.createElement('span'); rank.className = 'lb-rank'; rank.textContent = String(index + 1);
+          const name = document.createElement('span'); name.className = 'lb-name'; name.textContent = String(player.username || 'Player');
+          const amount = document.createElement('span');
+          amount.className = `lb-amount ${Number(player.netPL) >= 0 ? 'lb-green' : 'lb-pink'}`;
+          amount.textContent = `${Number(player.netPL) >= 0 ? '+' : ''}${this.formatCredits(player.netPL || 0)}`;
+          row.append(rank, name, amount); leaderboard.appendChild(row);
+        });
+      });
+    }
+
+    if (this.socket?.connected) {
+      this.socket.emit('getAchievements', (data = {}) => {
+        const earned = Array.isArray(data.achievements) ? data.achievements.length : 0;
+        const available = Array.isArray(data.available) ? data.available.length : 18;
+        const count = document.querySelector('#sidebarBadges')?.closest('.sidebar-card')?.querySelector('.sidebar-card-sub');
+        if (count) count.textContent = `${earned} / ${available}`;
+      });
+    }
+  }
+
+  formatBalance(amount) {
+    const value = Number(amount);
+    return (Number.isFinite(value) ? value : 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   formatCredits(amount) {
-    return amount.toLocaleString();
+    const value = Number(amount);
+    return Math.round(Number.isFinite(value) ? value : 0).toLocaleString();
   }
 
-  updateCredits(amount) {
-    // For CLIENT-SIDE games only (blackjack, pachinko) — updates locally AND syncs to server
-    this.credits += amount;
-    if (this.credits < 0) this.credits = 0;
-    this.updateCreditsDisplay();
-    this._lastCreditSync = Date.now();
-    if (this.socket && this.socket.connected) {
-      this.socket.emit('syncBalance', { credits: this.credits });
-    }
+  escapeHTML(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, char => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    }[char]));
+  }
+
+  updateCredits() {
+    console.error('[Casino] Rejected client-authoritative balance mutation. Use a server game endpoint.');
+    return false;
   }
 
   updateCreditsLocal(amount) {
@@ -586,6 +932,38 @@ class CasinoManager {
     return this.socket;
   }
 
+  gameDefinitions() {
+    return {
+      blackjack: { label: 'Blackjack', viewId: 'blackjackGame', constructors: ['BlackjackGame'] },
+      coinflip: { label: 'Coin Flip', viewId: 'coinflipGame', constructors: ['CoinflipGame'] },
+      roulette: { label: 'Roulette', viewId: 'rouletteGame', constructors: ['RouletteGame'] },
+      cs2betting: { label: 'CS2 Betting', viewId: 'cs2BettingGame', constructors: ['CS2ModernBettingGame', 'CS2BettingGame'] },
+      poker: { label: 'Texas Hold’em', viewId: 'pokerGame', constructors: ['PokerGame'] },
+      crash: { label: 'Crash', viewId: 'crashGame', constructors: ['CrashGame'] },
+      pachinko: { label: 'Pachinko', viewId: 'pachinkoGame', constructors: ['PachinkoGame'] },
+      cases: { label: 'CS Cases', viewId: 'caseOpeningGame', constructors: ['CaseOpeningGame'] }
+    };
+  }
+
+  lastGameStorageKey() {
+    return this.username ? `neon777.lastGame.${this.username}` : null;
+  }
+
+  updateContinueLastGame() {
+    const button = document.getElementById('continueLastGameBtn');
+    const hint = document.getElementById('continueLastGameHint');
+    if (!button) return;
+    const key = this.lastGameStorageKey();
+    let game = null;
+    try { game = key ? localStorage.getItem(key) : null; } catch { game = null; }
+    const definition = this.gameDefinitions()[game];
+    const available = Boolean(definition && document.getElementById(definition.viewId) && definition.constructors.some(name => typeof window[name] === 'function'));
+    button.disabled = !available;
+    button.textContent = available ? `RETURN TO ${definition.label.toUpperCase()}` : 'CONTINUE LAST GAME';
+    if (hint) hint.textContent = available ? `Opens ${definition.label}. Active-round recovery depends on the game.` : 'Choose a game to enable Continue.';
+    if (game && !definition && key) try { localStorage.removeItem(key); } catch { /* ignore */ }
+  }
+
   startGame(gameName) {
     console.log(`[Casino] startGame called with: ${gameName}`);
     
@@ -597,15 +975,26 @@ class CasinoManager {
       });
     }
     
+    const definition = this.gameDefinitions()[gameName];
+    const gameView = definition ? document.getElementById(definition.viewId) : null;
+    const GameConstructor = definition?.constructors.map(name => window[name]).find(candidate => typeof candidate === 'function');
+    if (!definition || !gameView || !GameConstructor) {
+      console.error(`[Casino] Game is unavailable: ${gameName}`);
+      this._toast('That game is temporarily unavailable. Please choose another game.');
+      this.updateContinueLastGame();
+      return false;
+    }
+
     // Clear manual update flag when switching games to allow socket updates
     if (this.currentGame !== gameName) {
       this._lastManualCreditUpdate = null;
     }
 
     this.currentGame = gameName;
+    document.body.classList.toggle('casino-game-active', Boolean(gameName));
+    document.body.dataset.currentCasinoGame = gameName;
     this.setBottomNavActive(null);
-    // Persist last game so "Continue last game" on the hero can resume it.
-    try { localStorage.setItem('neon777.lastGame', gameName); } catch (e) { /* ignore storage errors */ }
+    // Last-game state is persisted only after successful initialization.
     
     const gameSelectionEl = document.getElementById('gameSelection');
     const gameContainerEl = document.getElementById('gameContainer');
@@ -636,89 +1025,28 @@ class CasinoManager {
       view.classList.add('hidden');
     });
 
-    // Show selected game (handle camelCase for cs2betting)
-    const gameViewId = gameName === 'cs2betting' ? 'cs2BettingGame' : `${gameName}Game`;
-    console.log(`[Casino] Looking for game view with ID: ${gameViewId}`);
-    const gameView = document.getElementById(gameViewId);
-    if (gameView) {
-      console.log(`[Casino] Game view found, showing: ${gameViewId}`);
-      console.log(`[Casino] Game view classes before: ${gameView.className}`);
-      gameView.classList.remove('hidden');
-      console.log(`[Casino] Game view classes after: ${gameView.className}`);
-      console.log(`[Casino] Game view is now hidden: ${gameView.classList.contains('hidden')}`);
-    } else {
-      console.error(`[Casino] Game view not found: ${gameViewId}`);
-      console.error(`[Casino] Available game views:`, Array.from(document.querySelectorAll('.game-view')).map(el => el.id));
-    }
+    console.log(`[Casino] Showing game view: ${definition.viewId}`);
+    gameView.classList.remove('hidden');
 
-    // Initialize game
-    setTimeout(() => {
-      try {
-        switch(gameName) {
-          case 'blackjack':
-            if (window.BlackjackGame) {
-              window.currentGameInstance = new window.BlackjackGame(this);
-            } else {
-              console.error(`[Casino] BlackjackGame class not found`);
-            }
-            break;
-          case 'coinflip':
-            if (window.CoinflipGame) {
-              window.currentGameInstance = new window.CoinflipGame(this);
-            } else {
-              console.error(`[Casino] CoinflipGame class not found`);
-            }
-            break;
-          case 'roulette':
-            if (window.RouletteGame) {
-              window.currentGameInstance = new window.RouletteGame(this);
-            } else {
-              console.error(`[Casino] RouletteGame class not found`);
-            }
-            break;
-          case 'cs2betting':
-            // Try modern version first, fallback to legacy
-            if (window.CS2ModernBettingGame) {
-              console.log('[Casino] Initializing CS2ModernBettingGame...');
-              window.currentGameInstance = new window.CS2ModernBettingGame(this);
-              console.log('[Casino] CS2ModernBettingGame initialized successfully');
-            } else if (window.CS2BettingGame) {
-              console.log('[Casino] Initializing CS2BettingGame (legacy)...');
-              window.currentGameInstance = new window.CS2BettingGame(this);
-              console.log('[Casino] CS2BettingGame (legacy) initialized successfully');
-            } else {
-              console.error('[Casino] No CS2BettingGame class found! Make sure cs2-betting-modern.js or cs2-betting-casino.js is loaded.');
-            }
-            break;
-          case 'poker':
-            if (window.PokerGame) {
-              window.currentGameInstance = new window.PokerGame(this);
-            } else {
-              console.error('[Casino] PokerGame class not found');
-            }
-            break;
-          case 'crash':
-            if (window.CrashGame) {
-              window.currentGameInstance = new window.CrashGame(this);
-            } else {
-              console.error('[Casino] CrashGame class not found');
-            }
-            break;
-          case 'pachinko':
-            if (window.PachinkoGame) {
-              window.currentGameInstance = new window.PachinkoGame(this);
-            } else {
-              console.error('[Casino] PachinkoGame class not found');
-            }
-            break;
-          default:
-            console.error(`[Casino] Unknown game: ${gameName}`);
-        }
-      } catch (error) {
-        console.error(`[Casino] Error initializing game ${gameName}:`, error);
-        alert(`Failed to load game: ${error.message}`);
-      }
-    }, 100);
+    try {
+      window.currentGameInstance = new GameConstructor(this);
+      const key = this.lastGameStorageKey();
+      if (key) localStorage.setItem(key, gameName);
+      try { localStorage.removeItem('neon777.lastGame'); } catch { /* discard legacy cross-account key */ }
+      this.updateContinueLastGame();
+      return true;
+    } catch (error) {
+      console.error(`[Casino] Error initializing game ${gameName}:`, error);
+      window.currentGameInstance = null;
+      this.currentGame = null;
+      gameView.classList.add('hidden');
+      gameContainerEl.classList.add('hidden');
+      gameSelectionEl.classList.remove('hidden');
+      document.body.classList.remove('casino-game-active');
+      delete document.body.dataset.currentCasinoGame;
+      this._toast('That game failed to load. Please try again.');
+      return false;
+    }
   }
 
   backToLobby() {
@@ -742,6 +1070,8 @@ class CasinoManager {
     document.getElementById('gameContainer').classList.add('hidden');
     document.getElementById('gameSelection').classList.remove('hidden');
     this.currentGame = null;
+    document.body.classList.remove('casino-game-active');
+    delete document.body.dataset.currentCasinoGame;
     this.setBottomNavActive('floor');
 
     if (window.currentGameInstance) {
@@ -751,22 +1081,8 @@ class CasinoManager {
   }
 
   // ========== NEON 777 — DAILY SPIN ==========
-  // Free daily-pull wheel. Awards credits, persists streak in localStorage.
+  // Availability and prizes are enforced by the server.
   doFreeSpin() {
-    const SPIN_KEY = 'neon777.lastSpin';
-    const STREAK_KEY = 'neon777.spinStreak';
-    const now = Date.now();
-    const last = parseInt(localStorage.getItem(SPIN_KEY) || '0', 10);
-    const DAY_MS = 24 * 60 * 60 * 1000;
-    const hoursSince = (now - last) / (60 * 60 * 1000);
-
-    // Gate: 1 spin per 20h window (so a "daily" feels forgiving)
-    if (last && hoursSince < 20) {
-      const hoursLeft = Math.ceil(20 - hoursSince);
-      this._showSpinModal({ locked: true, hoursLeft });
-      return;
-    }
-
     this._showSpinModal({ locked: false });
   }
 
@@ -780,7 +1096,7 @@ class CasinoManager {
       { label: '+50',     color: 'var(--cream)',       credits: 50 },
       { label: '+500',    color: 'var(--neon-pink)',   credits: 500 },
       { label: '+100',    color: 'var(--cream)',       credits: 100 },
-      { label: 'x2',      color: 'var(--neon-violet)', credits: 300 },
+      { label: '+300',    color: 'var(--neon-violet)', credits: 300 },
       { label: '+250',    color: 'var(--amber)',       credits: 250 },
       { label: 'JACKPOT', color: 'var(--neon-red)',    credits: 2500 },
     ];
@@ -806,10 +1122,12 @@ class CasinoManager {
           ` : `
             <div class="spin-wheel-wrap">
               <div class="spin-wheel-pointer"></div>
-              <div class="spin-wheel" id="spinWheel" style="background:conic-gradient(${gradient});">
-                ${prizes.map((p, i) => `
-                  <div class="spin-wheel-label" style="transform:translateX(-50%) rotate(${(i + 0.5) * seg}deg) translateY(0);">${p.label}</div>
-                `).join('')}
+              <div class="spin-wheel" id="spinWheel" style="background:conic-gradient(${gradient});" role="img" aria-label="Daily prize wheel">
+                <div class="spin-wheel-label-ring">
+                  ${prizes.map((p, i) => `
+                    <div class="spin-wheel-segment-label" style="--segment-angle:${(i + 0.5) * seg}deg"><span>${p.label}</span></div>
+                  `).join('')}
+                </div>
               </div>
               <div class="spin-wheel-hub">777</div>
             </div>
@@ -821,7 +1139,9 @@ class CasinoManager {
     `;
     document.body.appendChild(overlay);
 
-    const close = () => overlay.remove();
+    const spinTickTimers = [];
+    const clearSpinTicks = () => { while (spinTickTimers.length) clearTimeout(spinTickTimers.pop()); };
+    const close = () => { clearSpinTicks(); overlay.remove(); };
     overlay.querySelector('.spin-modal-close')?.addEventListener('click', close);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 
@@ -832,68 +1152,78 @@ class CasinoManager {
     const resultEl = overlay.querySelector('#spinPrizeResult');
     let spinning = false;
 
-    pullBtn.addEventListener('click', () => {
+    pullBtn.addEventListener('click', async () => {
       if (spinning) return;
       spinning = true;
       pullBtn.disabled = true;
       pullBtn.textContent = 'SPINNING…';
       resultEl.textContent = '';
 
-      const idx = Math.floor(Math.random() * prizes.length);
-      const prize = prizes[idx];
-      // Compute rotation so the pointer (at top) lands on this segment.
-      const baseTurns = 6;
-      const targetDeg = 360 - (idx * seg + seg / 2);
-      const finalDeg = baseTurns * 360 + targetDeg;
-      wheel.style.transition = 'transform 3.2s cubic-bezier(.2,.7,.15,1)';
-      wheel.style.transform = `rotate(${finalDeg}deg)`;
-
-      setTimeout(() => {
-        // Award credits — go through updateCredits so the server-backed flow stays intact.
-        if (typeof this.updateCredits === 'function') {
-          this.updateCredits(prize.credits);
-        } else {
-          this.credits = (this.credits || 0) + prize.credits;
-          this.updateCreditsDisplay?.();
-        }
-        // Persist streak + timestamp
-        const SPIN_KEY = 'neon777.lastSpin';
-        const STREAK_KEY = 'neon777.spinStreak';
-        const prevSpin = parseInt(localStorage.getItem(SPIN_KEY) || '0', 10);
-        const DAY_MS = 24 * 60 * 60 * 1000;
-        const within48h = prevSpin && (Date.now() - prevSpin) < (2 * DAY_MS);
-        const newStreak = within48h ? (parseInt(localStorage.getItem(STREAK_KEY) || '0', 10) + 1) : 1;
-        localStorage.setItem(SPIN_KEY, String(Date.now()));
-        localStorage.setItem(STREAK_KEY, String(newStreak));
-
-        // Reflect on the sidebar freepull streak bar if present
+      try {
+        const response = await this.apiFetch('/api/daily-bonus', { method: 'POST' });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Daily spin is unavailable');
+        const idx = data.prizeIndex;
+        const prize = prizes[idx];
+        // The award is authoritative as soon as the response succeeds. Keep the
+        // shell balance synchronized even if the modal is closed mid-animation.
+        this.setCredits(data.balance);
         const fill = document.querySelector('.freepull-streak-fill');
-        if (fill) fill.style.width = Math.min(100, (newStreak / 7) * 100) + '%';
+        if (fill) fill.style.width = Math.min(100, (data.streak / 7) * 100) + '%';
         const label = document.querySelector('.freepull-streak-label');
-        if (label) label.textContent = `Streak: ${newStreak} day${newStreak === 1 ? '' : 's'}`;
+        if (label) label.textContent = `Streak: ${data.streak} day${data.streak === 1 ? '' : 's'}`;
+        const baseTurns = 6;
+        const targetDeg = 360 - (idx * seg + seg / 2);
+        wheel.style.transition = 'transform 3.2s cubic-bezier(.2,.7,.15,1)';
+        wheel.style.transform = `rotate(${baseTurns * 360 + targetDeg}deg)`;
+        const spinSoundKey = `daily-wheel:${data.balance}:${idx}`;
+        window.casinoSound?.playOnce(`${spinSoundKey}:spin`, 'wheelSpin', { game: 'lobby' });
+        let tickAt = 0;
+        for (let tick = 0; tick < 30; tick += 1) {
+          tickAt += 58 + tick * 3.2;
+          if (tickAt >= 3150) break;
+          spinTickTimers.push(setTimeout(() => {
+            if (overlay.isConnected) window.casinoSound?.play('wheelTick', { cooldown: 0, game: 'lobby' });
+          }, tickAt));
+        }
 
-        resultEl.innerHTML = `<span class="spin-result-prize" style="color:${prize.color};text-shadow:0 0 14px ${prize.color};">${prize.label}</span><span class="spin-result-sub">Added to your balance · +${prize.credits.toLocaleString()}</span>`;
-        pullBtn.textContent = 'COME BACK TOMORROW';
-        // Leave the button disabled after a successful spin
-      }, 3300);
+        const resultTimer = setTimeout(() => {
+          clearSpinTicks();
+          if (!overlay.isConnected) return;
+          const prizeText = document.createElement('span');
+          prizeText.className = 'spin-result-prize';
+          prizeText.textContent = prize.label;
+          const detail = document.createElement('span');
+          detail.className = 'spin-result-sub';
+          detail.textContent = `Added to your balance · +${this.formatCredits(data.prize)}`;
+          resultEl.replaceChildren(prizeText, detail);
+          pullBtn.textContent = 'COME BACK TOMORROW';
+          window.casinoSound?.playOnce(`${spinSoundKey}:result`, 'wheelResult', { game: 'lobby' });
+        }, 3300);
+        spinTickTimers.push(resultTimer);
+      } catch (error) {
+        clearSpinTicks();
+        spinning = false;
+        pullBtn.disabled = false;
+        pullBtn.textContent = 'TRY AGAIN';
+        resultEl.textContent = error.message;
+      }
     });
   }
 
   // ========== NEON 777 — CONTINUE LAST GAME ==========
   continueLastGame() {
-    const last = localStorage.getItem('neon777.lastGame');
-    if (!last) {
-      this._toast('No recent game — pick one below.');
-      return;
+    const key = this.lastGameStorageKey();
+    let last = null;
+    try { last = key ? localStorage.getItem(key) : null; } catch { last = null; }
+    const definition = this.gameDefinitions()[last];
+    if (!definition) {
+      if (key) try { localStorage.removeItem(key); } catch { /* ignore */ }
+      this.updateContinueLastGame();
+      this._toast('No available recent game — pick one below.');
+      return false;
     }
-    // Guard against stale game IDs that no longer map
-    const validGames = ['blackjack','coinflip','roulette','crash','pachinko','poker','cs2betting'];
-    if (!validGames.includes(last)) {
-      localStorage.removeItem('neon777.lastGame');
-      this._toast('No recent game — pick one below.');
-      return;
-    }
-    this.startGame(last);
+    return this.startGame(last);
   }
 
   // ========== NEON 777 — TOUR ==========
@@ -902,10 +1232,10 @@ class CasinoManager {
     if (existing) { existing.remove(); return; }
 
     const steps = [
-      { icon: '🎰', title: 'Seven tables', body: 'Blackjack, Roulette, Coinflip, Crash, Pachinko, Hold’em, and live CS2 odds. Pick your poison.' },
-      { icon: '💎', title: 'Your bankroll', body: 'You start with 10,000 credits. Balance sits in the top-right, and every hand writes to your ledger.' },
-      { icon: '🎡', title: 'Daily pull', body: 'Once a day, spin the wheel for free credits. Streaks give better odds — check the sidebar.' },
-      { icon: '🏆', title: 'Leaderboards', body: 'The top row runs nightly. Hit streaks, chase the jackpots, climb the rankings.' },
+      { icon: '🎰', title: 'Seven games', body: 'Blackjack, Roulette, Coinflip, Crash, Pachinko, Hold’em, and available CS2 match odds.' },
+      { icon: '💎', title: 'Virtual bankroll', body: 'You start with 10,000 virtual credits. Server-settled wagers and results are written to your history.' },
+      { icon: '🎡', title: 'Daily pull', body: 'Once per eligibility window, the server awards one free credit prize.' },
+      { icon: '🏆', title: 'Leaderboards', body: 'Verified game results determine the rankings.' },
     ];
 
     const overlay = document.createElement('div');
@@ -917,7 +1247,7 @@ class CasinoManager {
           <h2 class="tour-title">TAKE THE TOUR</h2>
           <button class="tour-close" aria-label="Close">&times;</button>
         </div>
-        <div class="tour-steps">
+        <div class="tour-steps" role="region" aria-label="Casino tour steps" tabindex="0">
           ${steps.map((s, i) => `
             <div class="tour-step">
               <div class="tour-step-icon" aria-hidden="true">${s.icon}</div>
@@ -960,10 +1290,8 @@ class CasinoManager {
 
   // ========== BET HISTORY ==========
 
-  recordBet(game, bet, result, payout, multiplier, details) {
-    if (this.socket && this.socket.connected) {
-      this.socket.emit('recordBet', { game, bet, result, payout, multiplier: multiplier || null, details: details || null });
-    }
+  recordBet() {
+    // Bet history is written only by authoritative server settlements.
   }
 
   getBetHistory(limit = 100) {
@@ -1011,7 +1339,7 @@ class CasinoManager {
       poker: 'Poker',
       cs2betting: 'CS2 Betting'
     };
-    return labels[game] || game || 'Unknown';
+    return labels[game] || 'Unknown';
   }
 
   _bhRenderList(history, filterMode) {
@@ -1041,9 +1369,9 @@ class CasinoManager {
       return `<div class="bh-row ${isWin ? 'win' : 'loss'}">
         <div class="bh-game-icon">${icon}</div>
         <div class="bh-game-name">${label}${mult}</div>
-        <div class="bh-bet">${(h.bet||0).toLocaleString()}</div>
+        <div class="bh-bet">${this.formatCredits(h.bet || 0)}</div>
         <div class="bh-result-badge ${isWin ? 'win' : 'loss'}">${isWin ? 'WIN' : 'LOSS'}</div>
-        <div class="bh-payout ${isWin ? 'profit' : 'loss'}" title="${fullTime}">${isWin ? '+' : ''}${net.toLocaleString()}</div>
+        <div class="bh-payout ${isWin ? 'profit' : 'loss'}" title="${fullTime}">${isWin ? '+' : ''}${this.formatCredits(net)}</div>
       </div>`;
     }).join('');
   }
@@ -1108,11 +1436,11 @@ class CasinoManager {
         <div class="bet-history-summary">
           <div class="bh-stat">
             <span class="bh-label">Wagered</span>
-            <span class="bh-value">${totalWagered.toLocaleString()}</span>
+            <span class="bh-value">${this.formatCredits(totalWagered)}</span>
           </div>
           <div class="bh-stat">
             <span class="bh-label">Net P/L</span>
-            <span class="bh-value ${netProfit >= 0 ? 'profit' : 'loss'}">${netProfit >= 0 ? '+' : ''}${netProfit.toLocaleString()}</span>
+            <span class="bh-value ${netProfit >= 0 ? 'profit' : 'loss'}">${netProfit >= 0 ? '+' : ''}${this.formatCredits(netProfit)}</span>
           </div>
           <div class="bh-stat">
             <span class="bh-label">Win Rate</span>
@@ -1129,7 +1457,7 @@ class CasinoManager {
           <button class="bh-filter" data-filter="win">WIN <span style="opacity:.6;font-size:10px">${wins}</span></button>
           <button class="bh-filter" data-filter="loss">LOSS <span style="opacity:.6;font-size:10px">${losses}</span></button>
         </div>
-        <div class="bet-history-list" id="bhList">
+        <div class="bet-history-list" id="bhList" role="region" aria-label="Bet history entries" tabindex="0">
           ${this._bhRenderList(history, 'all')}
         </div>
       </div>
@@ -1171,7 +1499,7 @@ class CasinoManager {
           <h2>${content.icon} How to Play — ${content.title}</h2>
           <button class="how-to-play-close" id="htpCloseBtn">✕</button>
         </div>
-        <div class="how-to-play-body">
+        <div class="how-to-play-body" tabindex="0" aria-label="Game instructions">
           ${content.body}
         </div>
       </div>
@@ -1475,7 +1803,7 @@ class CasinoManager {
           <button class="leaderboard-tab" data-type="thisWeek">This Week</button>
           <button class="leaderboard-tab" data-type="byGame">By Game</button>
         </div>
-        <div class="leaderboard-list" id="leaderboardList">
+        <div class="leaderboard-list" id="leaderboardList" role="region" aria-label="Leaderboard standings" tabindex="0">
           <div class="loading">Loading...</div>
         </div>
       </div>
@@ -1513,9 +1841,19 @@ class CasinoManager {
 
     list.innerHTML = '<div class="loading">Loading...</div>';
 
-    if (!this.socket) return;
+    const showError = () => {
+      list.innerHTML = '<div class="lb-empty" role="status">Leaderboard unavailable.<br><button type="button" class="btn btn-secondary lb-retry">Retry</button></div>';
+      list.querySelector('.lb-retry')?.addEventListener('click', () => this.loadLeaderboard(type));
+    };
+    if (!this.socket?.connected) { showError(); return; }
 
+    let settled = false;
+    const timeout = setTimeout(() => { if (!settled) { settled = true; showError(); } }, 5000);
     this.socket.emit('getLeaderboard', { type }, (leaderboard) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      if (!Array.isArray(leaderboard)) { showError(); return; }
       let html = '';
       
       if (leaderboard.length === 0) {
@@ -1530,15 +1868,15 @@ class CasinoManager {
             <div class="lb-row ${isCurrentUser ? 'current-user' : ''}">
               <div class="lb-rank" ${rank <= 3 ? `data-rank="${rank}"` : ''}>#${rank}</div>
               <div class="lb-player">
-                <div class="lb-username">${player.username}</div>
+                <div class="lb-username">${this.escapeHTML(player.username)}</div>
                 <div class="lb-stats">
                   <span class="lb-games">${player.gamesPlayed} games</span>
                   <span class="lb-winrate">${player.winRate}% win rate</span>
                 </div>
               </div>
               <div class="lb-profits">
-                <div class="lb-netpl ${netPLClass}">${player.netPL >= 0 ? '+' : ''}${player.netPL.toLocaleString()}</div>
-                <div class="lb-biggest">Best: ${player.biggestWin.toLocaleString()}</div>
+                <div class="lb-netpl ${netPLClass}">${player.netPL >= 0 ? '+' : ''}${this.formatCredits(player.netPL)}</div>
+                <div class="lb-biggest">Best: ${this.formatCredits(player.biggestWin)}</div>
               </div>
             </div>
           `;
@@ -1584,11 +1922,22 @@ class CasinoManager {
 
   async loadGameLeaderboard(game) {
     const gameBoard = document.getElementById('gameLeaderboard');
-    if (!gameBoard || !this.socket) return;
+    if (!gameBoard) return;
 
     gameBoard.innerHTML = '<div class="loading">Loading...</div>';
 
+    const showError = () => {
+      gameBoard.innerHTML = '<div class="lb-empty" role="status">Game leaderboard unavailable.<br><button type="button" class="btn btn-secondary lb-retry">Retry</button></div>';
+      gameBoard.querySelector('.lb-retry')?.addEventListener('click', () => this.loadGameLeaderboard(game));
+    };
+    if (!this.socket?.connected) { showError(); return; }
+    let settled = false;
+    const timeout = setTimeout(() => { if (!settled) { settled = true; showError(); } }, 5000);
     this.socket.emit('getGameLeaderboard', { game }, (leaderboard) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      if (!Array.isArray(leaderboard)) { showError(); return; }
       let html = '';
       
       if (leaderboard.length === 0) {
@@ -1602,15 +1951,15 @@ class CasinoManager {
             <div class="lb-row ${isCurrentUser ? 'current-user' : ''}">
               <div class="lb-rank" ${rank <= 3 ? `data-rank="${rank}"` : ''}>#${rank}</div>
               <div class="lb-player">
-                <div class="lb-username">${player.username}</div>
+                <div class="lb-username">${this.escapeHTML(player.username)}</div>
                 <div class="lb-stats">
                   <span class="lb-games">${player.played} played</span>
                   <span class="lb-winrate">${player.winRate}% win rate</span>
                 </div>
               </div>
               <div class="lb-score">
-                <div class="lb-value">${player.score.toLocaleString()}</div>
-                <div class="lb-metric">${player.metric}</div>
+                <div class="lb-value">${this.formatCredits(player.score)}</div>
+                <div class="lb-metric">${this.escapeHTML(player.metric)}</div>
               </div>
             </div>
           `;
@@ -1669,7 +2018,7 @@ class CasinoManager {
           <div class="ach-progress-text">${earnedCount}/${totalCount} Achievements</div>
         </div>
       </div>
-      <div class="achievements-grid">
+      <div class="achievements-grid" tabindex="0" aria-label="Achievements list">
     `;
 
     data.available.forEach(achievement => {
@@ -1689,8 +2038,8 @@ class CasinoManager {
     html += '</div>';
     list.innerHTML = html;
 
-    // Update badge
-    this.updateAchievementBadge(earnedCount);
+    // Opening the badges view marks every currently earned achievement as seen.
+    this.markAchievementsSeen(earnedCount);
   }
 
   async showStats() {
@@ -1707,7 +2056,7 @@ class CasinoManager {
           <h2>📊 My Stats</h2>
           <button class="stats-close" id="statsCloseBtn">✕</button>
         </div>
-        <div class="stats-body" id="statsBody">
+        <div class="stats-body" id="statsBody" role="region" aria-label="Player statistics" tabindex="0">
           <div class="loading">Loading...</div>
         </div>
       </div>
@@ -1742,7 +2091,7 @@ class CasinoManager {
           <div class="stat-label">Win Rate</div>
         </div>
         <div class="stat-card ${netPLClass}">
-          <div class="stat-value">${stats.netPL >= 0 ? '+' : ''}${stats.netPL.toLocaleString()}</div>
+          <div class="stat-value">${stats.netPL >= 0 ? '+' : ''}${this.formatCredits(stats.netPL)}</div>
           <div class="stat-label">Net P/L</div>
         </div>
         <div class="stat-card">
@@ -1757,7 +2106,7 @@ class CasinoManager {
           <div class="stats-grid">
             <div class="stat-row">
               <span class="stat-name">Biggest Win</span>
-              <span class="stat-val">${stats.biggestWin.toLocaleString()}</span>
+              <span class="stat-val">${this.formatCredits(stats.biggestWin)}</span>
             </div>
             <div class="stat-row">
               <span class="stat-name">Current Streak</span>
@@ -1783,12 +2132,12 @@ class CasinoManager {
             </div>
             <div class="stat-row">
               <span class="stat-name">Total Wagered</span>
-              <span class="stat-val">${stats.weeklyStats.totalWagered.toLocaleString()}</span>
+              <span class="stat-val">${this.formatCredits(stats.weeklyStats.totalWagered)}</span>
             </div>
             <div class="stat-row">
               <span class="stat-name">Net P/L</span>
               <span class="stat-val ${(stats.weeklyStats.totalWon - stats.weeklyStats.totalWagered) >= 0 ? 'profit' : 'loss'}">
-                ${(stats.weeklyStats.totalWon - stats.weeklyStats.totalWagered) >= 0 ? '+' : ''}${(stats.weeklyStats.totalWon - stats.weeklyStats.totalWagered).toLocaleString()}
+                ${(stats.weeklyStats.totalWon - stats.weeklyStats.totalWagered) >= 0 ? '+' : ''}${this.formatCredits(stats.weeklyStats.totalWon - stats.weeklyStats.totalWagered)}
               </span>
             </div>
           </div>
@@ -1847,11 +2196,11 @@ class CasinoManager {
 
     toast.innerHTML = `
       <div class="toast-content">
-        <div class="toast-icon">${achievement.icon}</div>
+        <div class="toast-icon">${this.escapeHTML(achievement.icon)}</div>
         <div class="toast-text">
           <div class="toast-title">Achievement Unlocked!</div>
-          <div class="toast-name">${achievement.name}</div>
-          <div class="toast-desc">${achievement.description}</div>
+          <div class="toast-name">${this.escapeHTML(achievement.name)}</div>
+          <div class="toast-desc">${this.escapeHTML(achievement.description)}</div>
         </div>
       </div>
     `;
@@ -1873,27 +2222,47 @@ class CasinoManager {
     });
   }
 
-  updateAchievementBadge(count = null) {
+  achievementSeenStorageKey() {
+    return `neon777:achievements-seen:${this.username || 'guest'}`;
+  }
+
+  getAchievementsSeenCount() {
+    try {
+      const value = Number(localStorage.getItem(this.achievementSeenStorageKey()));
+      return Number.isSafeInteger(value) && value >= 0 ? value : 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  markAchievementsSeen(earnedCount) {
+    const safeCount = Number.isSafeInteger(earnedCount) ? Math.max(0, earnedCount) : 0;
+    try { localStorage.setItem(this.achievementSeenStorageKey(), String(safeCount)); } catch (_) {}
+    this.renderAchievementBadge(0);
+  }
+
+  renderAchievementBadge(unreadCount) {
     const badge = document.getElementById('achievementBadge');
     const badgeMobile = document.getElementById('achievementBadgeMobile');
-    
     if (!badge) return;
+    badge.textContent = String(unreadCount);
+    if (badgeMobile) badgeMobile.textContent = String(unreadCount);
+    badge.classList.toggle('hidden', unreadCount === 0);
+    if (badgeMobile) badgeMobile.classList.toggle('hidden', unreadCount === 0);
+  }
+
+  updateAchievementBadge(count = null) {
+    const applyEarnedCount = earnedCount => {
+      const seenCount = this.getAchievementsSeenCount();
+      this.renderAchievementBadge(Math.max(0, earnedCount - seenCount));
+    };
 
     if (count !== null) {
-      badge.textContent = count;
-      if (badgeMobile) badgeMobile.textContent = count;
-      
-      badge.classList.toggle('hidden', count === 0);
-      if (badgeMobile) badgeMobile.classList.toggle('hidden', count === 0);
+      applyEarnedCount(count);
     } else if (this.socket) {
-      // Fetch current count
       this.socket.emit('getAchievements', (data) => {
         const earnedCount = data.available.filter(a => a.earned).length;
-        badge.textContent = earnedCount;
-        if (badgeMobile) badgeMobile.textContent = earnedCount;
-        
-        badge.classList.toggle('hidden', earnedCount === 0);
-        if (badgeMobile) badgeMobile.classList.toggle('hidden', earnedCount === 0);
+        applyEarnedCount(earnedCount);
       });
     }
   }
@@ -1951,15 +2320,16 @@ class CasinoManager {
 
 // Initialize casino when DOM is ready
 let casinoManager;
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    casinoManager = new CasinoManager();
-  });
-} else {
+function initializeCasinoManager() {
   casinoManager = new CasinoManager();
+  window.casinoManager = casinoManager;
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeCasinoManager, { once: true });
+} else {
+  initializeCasinoManager();
 }
 
-// Export for game modules
+// Export class for game modules
 window.CasinoManager = CasinoManager;
-window.casinoManager = casinoManager;
 

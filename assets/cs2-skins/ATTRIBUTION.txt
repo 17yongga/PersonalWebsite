@@ -1,0 +1,10 @@
+CS2 skin metadata and image attribution
+
+Metadata source: ByMykel/CSGO-API
+Image tracker: ByMykel/counter-strike-image-tracker
+Both source repositories are licensed under the MIT License.
+
+Copyright (c) 2023 ByMykel
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, subject to inclusion of the copyright and permission notice. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+Counter-Strike, weapon names, skin names, and imagery are trademarks and game assets of Valve Corporation. This project is not affiliated with or endorsed by Valve. Items shown are virtual site inventory with no Steam or cash value.

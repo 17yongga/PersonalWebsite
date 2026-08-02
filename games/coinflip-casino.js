@@ -11,7 +11,14 @@ class CoinflipGame {
     this.flipAnimationMs = 4600;
     this.isFlipAnimating = false;
     this.flipResultTimer = null;
+    this._destroyed = false;
     this.init();
+  }
+
+  escapeHTML(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, char => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    })[char]);
   }
 
   init() {
@@ -102,11 +109,13 @@ class CoinflipGame {
 
             <div class="coin-container">
               <div id="coin" class="coin">
-                <div class="coin-face coin-front">
-                  <span class="coin-text">H</span>
+                <div class="coin-face coin-front" data-side="heads" aria-label="Heads side">
+                  <span class="coin-monogram" aria-hidden="true">H</span>
+                  <span class="coin-side-name">HEADS</span>
                 </div>
-                <div class="coin-face coin-back">
-                  <span class="coin-text">T</span>
+                <div class="coin-face coin-back" data-side="tails" aria-label="Tails side">
+                  <span class="coin-monogram" aria-hidden="true">T</span>
+                  <span class="coin-side-name">TAILS</span>
                 </div>
               </div>
             </div>
@@ -226,6 +235,7 @@ class CoinflipGame {
     this.socket.removeAllListeners('availableRooms');
     this.socket.removeAllListeners('roomCreated');
     this.socket.removeAllListeners('joinedRoom');
+    this.socket.removeAllListeners('coinflipWagerAccepted');
     this.socket.removeAllListeners('opponentJoined');
     this.socket.removeAllListeners('playersUpdate');
     this.socket.removeAllListeners('coinFlipResult');
@@ -253,6 +263,7 @@ class CoinflipGame {
       this.isCreator = true;
       this.gameFinished = false;
       // Don't manually set credits - server sends playerData event with correct balance
+      window.casinoSound?.playOnce(`coinflip:${roomId}:creator-wager`, 'betPlaced', { game: 'coinflip' });
       this.showGameRoom(roomId, betAmount, choice);
     });
 
@@ -261,6 +272,10 @@ class CoinflipGame {
       this.isCreator = false;
       this.gameFinished = false;
       this.showConfirmation(roomId, betAmount, creatorChoice);
+    });
+
+    this.socket.on('coinflipWagerAccepted', ({ roomId }) => {
+      window.casinoSound?.playOnce(`coinflip:${roomId}:join-wager`, 'betPlaced', { game: 'coinflip' });
     });
 
     this.socket.on('opponentJoined', ({ opponentName }) => {
@@ -274,9 +289,10 @@ class CoinflipGame {
       this.updatePlayersDisplay(player1, player2, betAmount, creatorChoice);
     });
 
-    this.socket.on('coinFlipResult', ({ coinResult, results, betAmount, creatorChoice, choices }) => {
+    this.socket.on('coinFlipResult', ({ coinResult, results, betAmount, creatorChoice, choices, fairness }) => {
+      if (this._destroyed) return;
       this.gameFinished = true;
-      this.showCoinFlipResult(coinResult, results, choices);
+      this.showCoinFlipResult(coinResult, results, choices, fairness?.roundId);
       const playerId = this.socket.id;
       if (results[playerId]) {
         // Server records bet history and sends playerData with the authoritative balance.
@@ -304,6 +320,9 @@ class CoinflipGame {
     });
 
     this.socket.on('leftRoom', () => {
+      if (this.currentRoomId && !this.gameFinished) {
+        window.casinoSound?.playOnce(`coinflip:${this.currentRoomId}:refund`, 'betCancelled', { game: 'coinflip' });
+      }
       this.currentRoomId = null;
       this.isCreator = false;
       this.showRoomSelection();
@@ -315,11 +334,15 @@ class CoinflipGame {
     const indicatorEl = document.getElementById('statusIndicator');
     if (statusEl && indicatorEl) {
       // Keep connection status hidden - only show if there's an error
-      if (!connected && message.includes('failed') || message.includes('timeout') || message.includes('error')) {
+      if (!connected && (message.includes('failed') || message.includes('timeout') || message.includes('error'))) {
         statusEl.classList.remove('hidden');
-        statusEl.innerHTML = `<span id="statusIndicator">●</span> ${message}`;
+        statusEl.replaceChildren();
+        const indicator = document.createElement('span');
+        indicator.id = 'statusIndicator';
+        indicator.textContent = '●';
+        statusEl.append(indicator, document.createTextNode(` ${String(message || 'Connection error')}`));
         statusEl.style.color = '#ef4444';
-        indicatorEl.style.color = '#ef4444';
+        indicator.style.color = '#ef4444';
       } else {
         statusEl.classList.add('hidden');
       }
@@ -434,11 +457,6 @@ class CoinflipGame {
 
   createRoom() {
     try {
-      // Set navigation guard
-      if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
-        this.casino.setBetPlacementInProgress(true);
-      }
-
       const amount = parseInt(document.getElementById('createBetAmountInput').value);
       
       if (window.casinoDebugLogger) {
@@ -455,6 +473,12 @@ class CoinflipGame {
         }
         this.showTemporaryMessage(msg, 'error');
         return;
+      }
+
+      // Validation must finish before navigation is locked. Otherwise an
+      // invalid form submission can strand the player inside Coinflip.
+      if (this.casino && typeof this.casino.setBetPlacementInProgress === 'function') {
+        this.casino.setBetPlacementInProgress(true);
       }
 
       this.socket.emit('createRoom', { betAmount: amount, choice: this.createChoice });
@@ -655,10 +679,10 @@ class CoinflipGame {
         });
         roomItem.innerHTML = `
           <div class="room-item-info">
-            <h3>${room.roomId}</h3>
-            <p><strong>Creator:</strong> ${room.creatorName}</p>
+            <h3>${this.escapeHTML(room.roomId)}</h3>
+            <p><strong>Creator:</strong> ${this.escapeHTML(room.creatorName)}</p>
             <p><strong>Bet Amount:</strong> <span class="credit-amount">${room.betAmount.toLocaleString()}</span> credits</p>
-            <p><strong>Choice:</strong> ${room.creatorChoice}</p>
+            <p><strong>Choice:</strong> ${this.escapeHTML(room.creatorChoice)}</p>
           </div>
         `;
         roomItem.appendChild(joinBtn);
@@ -744,9 +768,11 @@ class CoinflipGame {
     }
   }
 
-  showCoinFlipResult(result, results, choices) {
-    if (this.isFlipAnimating) return;
+  showCoinFlipResult(result, results, choices, roundId = null) {
+    if (this._destroyed || this.isFlipAnimating) return;
     this.isFlipAnimating = true;
+    const soundKey = `coinflip:${roundId || this.currentRoomId || 'room'}:${result}`;
+    window.casinoSound?.playOnce(`${soundKey}:flip`, 'coinFlip', { game: 'coinflip' });
 
     document.getElementById('confirmationSection').classList.add('hidden');
     document.getElementById('gameStatus').classList.add('hidden');
@@ -759,14 +785,15 @@ class CoinflipGame {
     if (this.flipResultTimer) clearTimeout(this.flipResultTimer);
     coin.classList.remove('flipping-heads', 'flipping-tails', 'show-heads', 'show-tails');
     void coin.offsetWidth;
-    
-    if (result === 'Heads') {
-      coin.classList.add('flipping-heads');
-    } else {
-      coin.classList.add('flipping-tails');
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    if (!reducedMotion) {
+      if (result === 'Heads') coin.classList.add('flipping-heads');
+      else coin.classList.add('flipping-tails');
     }
 
     this.flipResultTimer = setTimeout(() => {
+      if (this._destroyed) return;
       coin.classList.remove('flipping-heads', 'flipping-tails');
       if (result === 'Heads') {
         coin.classList.add('show-heads');
@@ -785,11 +812,12 @@ class CoinflipGame {
         resultMessage.textContent = `😔 You Lost!`;
         resultMessage.className = 'result-message lose';
       }
+      window.casinoSound?.playOnce(`${soundKey}:result`, playerResult.won ? 'win' : 'lose', { game: 'coinflip' });
 
       document.getElementById('resultsSection').classList.remove('hidden');
       this.isFlipAnimating = false;
       this.flipResultTimer = null;
-    }, this.flipAnimationMs);
+    }, reducedMotion ? 0 : this.flipAnimationMs);
   }
 
   resetGameUI() {
@@ -806,6 +834,11 @@ class CoinflipGame {
   }
 
   destroy() {
+    this._destroyed = true;
+    if (this.flipResultTimer) {
+      clearTimeout(this.flipResultTimer);
+      this.flipResultTimer = null;
+    }
     // Clear connection timeout
     if (this.connectionTimeout) {
       clearTimeout(this.connectionTimeout);

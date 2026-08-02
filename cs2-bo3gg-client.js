@@ -153,11 +153,16 @@ function extractFromBetUpdates(match) {
   
   if (!t1 && !t2) return null;
   
+  const activeOdds = market => {
+    const value = Number(market?.coeff);
+    return market?.active === true && Number.isFinite(value) && value > 1 ? value : null;
+  };
+
   return {
     team1Name: t1?.name || null,
     team2Name: t2?.name || null,
-    team1Odds: t1?.coeff || null,
-    team2Odds: t2?.coeff || null,
+    team1Odds: activeOdds(t1),
+    team2Odds: activeOdds(t2),
     team1Logo: null, // bet_updates doesn't include logos
     team2Logo: null
   };
@@ -222,7 +227,7 @@ async function fetchUpcomingMatches(options = {}) {
     
     const data = await rateLimitedRequest('/matches', {
       'filter[matches.status][eq]': 'upcoming',
-      'filter[matches.game_version][eq]': 2,
+      'filter[matches.discipline_id][eq]': 1,
       'page[limit]': Math.min(limit, 50),
       'sort': 'start_date'
     });
@@ -314,7 +319,7 @@ async function fetchRecentResults(options = {}) {
     
     const data = await rateLimitedRequest('/matches', {
       'filter[matches.status][eq]': 'finished',
-      'filter[matches.game_version][eq]': 2,
+      'filter[matches.discipline_id][eq]': 1,
       'page[limit]': Math.min(limit, 50),
       'sort': '-end_date'
     });
@@ -366,10 +371,70 @@ async function fetchRecentResults(options = {}) {
   }
 }
 
+async function fetchCurrentMatches(options = {}) {
+  const limit = options.limit || 25;
+  try {
+    console.log('[bo3.gg] Fetching current CS2 matches and live odds...');
+    const data = await rateLimitedRequest('/matches', {
+      'filter[matches.status][eq]': 'current',
+      'filter[matches.discipline_id][eq]': 1,
+      'page[limit]': Math.min(limit, 50),
+      'sort': 'start_date'
+    });
+    if (!data?.results) return [];
+    const teamIds = new Set();
+    for (const match of data.results) {
+      if (match.team1_id) teamIds.add(match.team1_id);
+      if (match.team2_id) teamIds.add(match.team2_id);
+    }
+    if (teamIds.size) await fetchTeamsBatch([...teamIds]);
+    const tierNames = { s: 'S-Tier', a: 'A-Tier', b: 'B-Tier', c: 'C-Tier', d: 'D-Tier' };
+    const fetchedAt = new Date().toISOString();
+    const matches = [];
+    for (const match of data.results) {
+      const details = await resolveMatchDetails(match);
+      const hasRealOdds = Number.isFinite(details.team1Odds) && Number.isFinite(details.team2Odds);
+      matches.push({
+        id: `bo3gg_${match.id}`,
+        fixtureId: `bo3gg_${match.id}`,
+        homeTeam: details.team1Name,
+        awayTeam: details.team2Name,
+        participant1Name: details.team1Name,
+        participant2Name: details.team2Name,
+        team1Logo: details.team1Logo,
+        team2Logo: details.team2Logo,
+        tournamentId: match.tournament_id,
+        tournamentName: tierNames[match.tier] || 'CS2 Match',
+        commenceTime: match.start_date,
+        startTime: match.start_date,
+        status: 'live',
+        statusId: 1,
+        completed: false,
+        hasOdds: hasRealOdds,
+        odds: { team1: details.team1Odds, team2: details.team2Odds, draw: null },
+        source: 'bo3gg-current',
+        oddsUpdatedAt: fetchedAt,
+        lastUpdate: fetchedAt,
+        boType: match.bo_type,
+        tier: match.tier,
+        tierRank: match.tier_rank,
+        rating: match.rating
+      });
+    }
+    console.log(`[bo3.gg] Found ${matches.length} current CS2 matches (${matches.filter(match => match.hasOdds).length} with live odds)`);
+    return matches;
+  } catch (error) {
+    console.error('[bo3.gg] Error fetching current matches:', error.message);
+    return [];
+  }
+}
+
 module.exports = {
   fetchUpcomingMatches,
+  fetchCurrentMatches,
   fetchRecentResults,
   fetchTeamDetails,
   fetchTeamsBatch,
-  parseTeamNamesFromSlug
+  parseTeamNamesFromSlug,
+  extractFromBetUpdates
 };

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Blackjack Mobile QA</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../../casino.css">
+  <link rel="stylesheet" href="../../games/games.css">
+  <link rel="stylesheet" href="../../games/premium-games.css">
+  <style>
+    body { margin:0; min-height:100vh; background:#050b0b; color:#fff; font-family:Inter,system-ui,sans-serif; }
+    #blackjackGame { display:block!important; padding:12px 0 100px; }
+  </style>
+</head>
+<body>
+  <main id="blackjackGame"></main>
+  <script src="../../games/blackjack.js"></script>
+  <script>
+    const casino = {
+      credits: 10000,
+      setCredits(value) { this.credits = value; },
+      async apiFetch() { throw new Error('QA harness is read-only'); }
+    };
+    const game = new BlackjackGame(casino);
+    const cards = [
+      { value:'8', suit:'hearts' }, { value:'8', suit:'spades' }, { value:'2', suit:'clubs' },
+      { value:'3', suit:'diamonds' }, { value:'4', suit:'hearts' }, { value:'ace', suit:'clubs' },
+      { value:'2', suit:'spades' }
+    ];
+    const dealer = [
+      { value:'10', suit:'clubs' }, { value:'6', suit:'hearts' }, { value:'2', suit:'spades' },
+      { value:'ace', suit:'diamonds' }, { value:'ace', suit:'hearts' }, { value:'ace', suit:'spades' }
+    ];
+    const mode = new URLSearchParams(location.search).get('state') || 'wager';
+    if (mode === 'pair') {
+      game.applyServerState({
+        roundId:'qa-pair', baseBet:100, bet:100, insuranceBet:0, phase:'player', settled:false,
+        hasSplit:false, activeHandIndex:0, playerHand:cards.slice(0,2),
+        playerHands:[{ cards:cards.slice(0,2), score:16, bet:100, doubled:false, complete:false, result:null, payout:0, active:true }],
+        dealerHand:[null,{ value:'6', suit:'hearts' }], playerScore:16, dealerScore:6,
+        canHit:true, canStand:true, canDouble:true, canSplit:true, payout:0, result:null
+      }, 9900);
+    }
+    if (mode === 'long') {
+      game.applyServerState({
+        roundId:'qa-long', baseBet:100, bet:100, insuranceBet:0, phase:'settled', settled:true,
+        hasSplit:false, activeHandIndex:0, playerHand:cards,
+        playerHands:[{ cards, score:28, bet:100, doubled:false, complete:true, result:'bust', payout:0, active:false }],
+        dealerHand:dealer, playerScore:28, dealerScore:21,
+        canHit:false, canStand:false, canDouble:false, canSplit:false, payout:0, result:'bust'
+      }, 9900);
+    }
+    if (mode === 'split') {
+      const first = cards.slice(0,5);
+      const second = [{ value:'10', suit:'clubs' }, { value:'9', suit:'diamonds' }, { value:'ace', suit:'spades' }];
+      game.applyServerState({
+        roundId:'qa-split', baseBet:100, bet:200, insuranceBet:0, phase:'settled', settled:true,
+        hasSplit:true, activeHandIndex:1, playerHand:second,
+        playerHands:[
+          { cards:first, score:25, bet:100, doubled:false, complete:true, result:'bust', payout:0, active:false },
+          { cards:second, score:20, bet:100, doubled:false, complete:true, result:'win', payout:200, active:false }
+        ],
+        dealerHand:dealer.slice(0,3), playerScore:20, dealerScore:18,
+        canHit:false, canStand:false, canDouble:false, canSplit:false, payout:200, result:'split_push'
+      }, 10000);
+    }
+  </script>
+</body>
+</html>

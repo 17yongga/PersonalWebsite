@@ -1,0 +1,828 @@
+{
+  "legacy-dust": [
+    {
+      "officialId": "skin-8f578bc8c6ef",
+      "name": "P250 | Sand Dune",
+      "weapon": "P250",
+      "finish": "Sand Dune",
+      "category": "Pistols",
+      "officialRarity": "Consumer Grade",
+      "officialRarityColor": "#b0c3d9",
+      "paintIndex": "99",
+      "minFloat": 0.06,
+      "maxFloat": 0.8,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Dust 2 Collection"
+      ],
+      "stattrak": false,
+      "souvenir": true,
+      "team": "Both Teams",
+      "legacyModel": false,
+      "image": "/assets/cs2-skins/p250-sand-dune-8f578bc8c6ef.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-327df3bd25e9",
+      "name": "MP7 | Army Recon",
+      "weapon": "MP7",
+      "finish": "Army Recon",
+      "category": "SMGs",
+      "officialRarity": "Consumer Grade",
+      "officialRarityColor": "#b0c3d9",
+      "paintIndex": "245",
+      "minFloat": 0.06,
+      "maxFloat": 0.8,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Safehouse Collection"
+      ],
+      "stattrak": false,
+      "souvenir": true,
+      "team": "Both Teams",
+      "legacyModel": false,
+      "image": "/assets/cs2-skins/mp7-army-recon-327df3bd25e9.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-3901933d5e47",
+      "name": "USP-S | Cortex",
+      "weapon": "USP-S",
+      "finish": "Cortex",
+      "category": "Pistols",
+      "officialRarity": "Classified",
+      "officialRarityColor": "#d32ce6",
+      "paintIndex": "705",
+      "minFloat": 0,
+      "maxFloat": 1,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Clutch Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Counter-Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/usp-s-cortex-3901933d5e47.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-09205674e246",
+      "name": "AK-47 | Asiimov",
+      "weapon": "AK-47",
+      "finish": "Asiimov",
+      "category": "Rifles",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "801",
+      "minFloat": 0.05,
+      "maxFloat": 0.7,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Danger Zone Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/ak-47-asiimov-09205674e246.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-4f8d99d09ded",
+      "name": "AWP | Dragon Lore",
+      "weapon": "AWP",
+      "finish": "Dragon Lore",
+      "category": "Rifles",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "344",
+      "minFloat": 0,
+      "maxFloat": 0.7,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Cobblestone Collection"
+      ],
+      "stattrak": false,
+      "souvenir": true,
+      "team": "Both Teams",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/awp-dragon-lore-4f8d99d09ded.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    }
+  ],
+  "legacy-phoenix": [
+    {
+      "officialId": "skin-658a360aba4d",
+      "name": "Tec-9 | Groundwater",
+      "weapon": "Tec-9",
+      "finish": "Groundwater",
+      "category": "Pistols",
+      "officialRarity": "Consumer Grade",
+      "officialRarityColor": "#b0c3d9",
+      "paintIndex": "2",
+      "minFloat": 0.06,
+      "maxFloat": 0.8,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Italy Collection"
+      ],
+      "stattrak": false,
+      "souvenir": true,
+      "team": "Terrorist",
+      "legacyModel": false,
+      "image": "/assets/cs2-skins/tec-9-groundwater-658a360aba4d.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-3bc8c64a1ae8",
+      "name": "UMP-45 | Carbon Fiber",
+      "weapon": "UMP-45",
+      "finish": "Carbon Fiber",
+      "category": "SMGs",
+      "officialRarity": "Industrial Grade",
+      "officialRarityColor": "#5e98d9",
+      "paintIndex": "70",
+      "minFloat": 0,
+      "maxFloat": 0.12,
+      "wears": [
+        "Factory New",
+        "Minimal Wear"
+      ],
+      "collections": [
+        "The Bank Collection"
+      ],
+      "stattrak": false,
+      "souvenir": true,
+      "team": "Both Teams",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/ump-45-carbon-fiber-3bc8c64a1ae8.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-ca4eb6f53d0e",
+      "name": "M4A4 | Desolate Space",
+      "weapon": "M4A4",
+      "finish": "Desolate Space",
+      "category": "Rifles",
+      "officialRarity": "Classified",
+      "officialRarityColor": "#d32ce6",
+      "paintIndex": "588",
+      "minFloat": 0,
+      "maxFloat": 1,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Gamma Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Counter-Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/m4a4-desolate-space-ca4eb6f53d0e.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-32a30647e564",
+      "name": "Desert Eagle | Printstream",
+      "weapon": "Desert Eagle",
+      "finish": "Printstream",
+      "category": "Pistols",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "962",
+      "minFloat": 0,
+      "maxFloat": 0.8,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Fracture Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Both Teams",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/desert-eagle-printstream-32a30647e564.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-8aacf99e7f2f",
+      "name": "M4A4 | Howl",
+      "weapon": "M4A4",
+      "finish": "Howl",
+      "category": "Rifles",
+      "officialRarity": "Contraband",
+      "officialRarityColor": "#e4ae39",
+      "paintIndex": "309",
+      "minFloat": 0,
+      "maxFloat": 0.4,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn"
+      ],
+      "collections": [],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Counter-Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/m4a4-howl-8aacf99e7f2f.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    }
+  ],
+  "cs2-pulse": [
+    {
+      "officialId": "skin-528001b964c3",
+      "name": "MAC-10 | Candy Apple",
+      "weapon": "MAC-10",
+      "finish": "Candy Apple",
+      "category": "SMGs",
+      "officialRarity": "Industrial Grade",
+      "officialRarityColor": "#5e98d9",
+      "paintIndex": "3",
+      "minFloat": 0,
+      "maxFloat": 0.3,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested"
+      ],
+      "collections": [
+        "The Train Collection"
+      ],
+      "stattrak": false,
+      "souvenir": true,
+      "team": "Terrorist",
+      "legacyModel": false,
+      "image": "/assets/cs2-skins/mac-10-candy-apple-528001b964c3.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-df168db99441",
+      "name": "Five-SeveN | Boost Protocol",
+      "weapon": "Five-SeveN",
+      "finish": "Boost Protocol",
+      "category": "Pistols",
+      "officialRarity": "Restricted",
+      "officialRarityColor": "#8847ff",
+      "paintIndex": "1093",
+      "minFloat": 0,
+      "maxFloat": 0.41,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn"
+      ],
+      "collections": [
+        "The Operation Riptide Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Counter-Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/five-seven-boost-protocol-df168db99441.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-69f2e17b78f2",
+      "name": "Galil AR | Chromatic Aberration",
+      "weapon": "Galil AR",
+      "finish": "Chromatic Aberration",
+      "category": "Rifles",
+      "officialRarity": "Classified",
+      "officialRarityColor": "#d32ce6",
+      "paintIndex": "1038",
+      "minFloat": 0,
+      "maxFloat": 1,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Snakebite Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/galil-ar-chromatic-aberration-69f2e17b78f2.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-8e45a15cf7f5",
+      "name": "M4A1-S | Printstream",
+      "weapon": "M4A1-S",
+      "finish": "Printstream",
+      "category": "Rifles",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "984",
+      "minFloat": 0,
+      "maxFloat": 0.8,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Operation Broken Fang Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Counter-Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/m4a1-s-printstream-8e45a15cf7f5.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-c1ae7186f829",
+      "name": "★ Sport Gloves | Vice",
+      "weapon": "Sport Gloves",
+      "finish": "Vice",
+      "category": "Gloves",
+      "officialRarity": "Extraordinary",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "10048",
+      "minFloat": 0.06,
+      "maxFloat": 0.8,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [],
+      "stattrak": false,
+      "souvenir": false,
+      "team": "Both Teams",
+      "legacyModel": false,
+      "image": "/assets/cs2-skins/sport-gloves-vice-c1ae7186f829.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    }
+  ],
+  "cs2-quantum": [
+    {
+      "officialId": "skin-df49957ef56b",
+      "name": "MP7 | Cirrus",
+      "weapon": "MP7",
+      "finish": "Cirrus",
+      "category": "SMGs",
+      "officialRarity": "Mil-Spec Grade",
+      "officialRarityColor": "#4b69ff",
+      "paintIndex": "627",
+      "minFloat": 0,
+      "maxFloat": 0.75,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Glove Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Both Teams",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/mp7-cirrus-df49957ef56b.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-6e390882e9a0",
+      "name": "Glock-18 | Vogue",
+      "weapon": "Glock-18",
+      "finish": "Vogue",
+      "category": "Pistols",
+      "officialRarity": "Classified",
+      "officialRarityColor": "#d32ce6",
+      "paintIndex": "963",
+      "minFloat": 0,
+      "maxFloat": 0.75,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Fracture Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/glock-18-vogue-6e390882e9a0.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-be37abed2b4d",
+      "name": "USP-S | Printstream",
+      "weapon": "USP-S",
+      "finish": "Printstream",
+      "category": "Pistols",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "1142",
+      "minFloat": 0,
+      "maxFloat": 0.85,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Recoil Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Counter-Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/usp-s-printstream-be37abed2b4d.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-74e670c4b279",
+      "name": "AK-47 | Neon Rider",
+      "weapon": "AK-47",
+      "finish": "Neon Rider",
+      "category": "Rifles",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "707",
+      "minFloat": 0,
+      "maxFloat": 0.8,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Horizon Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/ak-47-neon-rider-74e670c4b279.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-c5c8a3b9df72",
+      "name": "★ Butterfly Knife | Doppler",
+      "weapon": "Butterfly Knife",
+      "finish": "Doppler",
+      "category": "Knives",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "618",
+      "minFloat": 0,
+      "maxFloat": 0.08,
+      "wears": [
+        "Factory New",
+        "Minimal Wear"
+      ],
+      "collections": [],
+      "stattrak": true,
+      "souvenir": false,
+      "team": "Both Teams",
+      "legacyModel": false,
+      "image": "/assets/cs2-skins/butterfly-knife-doppler-c5c8a3b9df72.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    }
+  ],
+  "cs2-spectrum": [
+    {
+      "officialId": "skin-7f5e06a2c68c",
+      "name": "Nova | Sand Dune",
+      "weapon": "Nova",
+      "finish": "Sand Dune",
+      "category": "Heavy",
+      "officialRarity": "Consumer Grade",
+      "officialRarityColor": "#b0c3d9",
+      "paintIndex": "99",
+      "minFloat": 0.06,
+      "maxFloat": 0.8,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Italy Collection"
+      ],
+      "stattrak": false,
+      "souvenir": true,
+      "team": "Both Teams",
+      "legacyModel": false,
+      "image": "/assets/cs2-skins/nova-sand-dune-7f5e06a2c68c.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-bc677a3996cc",
+      "name": "Tec-9 | Isaac",
+      "weapon": "Tec-9",
+      "finish": "Isaac",
+      "category": "Pistols",
+      "officialRarity": "Mil-Spec Grade",
+      "officialRarityColor": "#4b69ff",
+      "paintIndex": "303",
+      "minFloat": 0,
+      "maxFloat": 1,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Huntsman Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/tec-9-isaac-bc677a3996cc.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-1aba3ea9ecc5",
+      "name": "M4A4 | Temukau",
+      "weapon": "M4A4",
+      "finish": "Temukau",
+      "category": "Rifles",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "1228",
+      "minFloat": 0,
+      "maxFloat": 0.8,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Revolution Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Counter-Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/m4a4-temukau-1aba3ea9ecc5.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-b986a2456e28",
+      "name": "AWP | Chrome Cannon",
+      "weapon": "AWP",
+      "finish": "Chrome Cannon",
+      "category": "Rifles",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "1170",
+      "minFloat": 0,
+      "maxFloat": 1,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Kilowatt Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Both Teams",
+      "legacyModel": false,
+      "image": "/assets/cs2-skins/awp-chrome-cannon-b986a2456e28.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-85ba0d17a1f9",
+      "name": "★ Huntsman Knife | Fade",
+      "weapon": "Huntsman Knife",
+      "finish": "Fade",
+      "category": "Knives",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "38",
+      "minFloat": 0,
+      "maxFloat": 0.08,
+      "wears": [
+        "Factory New",
+        "Minimal Wear"
+      ],
+      "collections": [],
+      "stattrak": true,
+      "souvenir": false,
+      "team": "Both Teams",
+      "legacyModel": false,
+      "image": "/assets/cs2-skins/huntsman-knife-fade-85ba0d17a1f9.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    }
+  ],
+  "cs2-reactor": [
+    {
+      "officialId": "skin-0fd1ba0e61e0",
+      "name": "MAG-7 | Monster Call",
+      "weapon": "MAG-7",
+      "finish": "Monster Call",
+      "category": "Heavy",
+      "officialRarity": "Restricted",
+      "officialRarityColor": "#8847ff",
+      "paintIndex": "961",
+      "minFloat": 0,
+      "maxFloat": 1,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Fracture Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Counter-Terrorist",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/mag-7-monster-call-0fd1ba0e61e0.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-a79b5b4ad623",
+      "name": "Desert Eagle | Mecha Industries",
+      "weapon": "Desert Eagle",
+      "finish": "Mecha Industries",
+      "category": "Pistols",
+      "officialRarity": "Classified",
+      "officialRarityColor": "#d32ce6",
+      "paintIndex": "805",
+      "minFloat": 0,
+      "maxFloat": 0.6,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Danger Zone Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Both Teams",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/desert-eagle-mecha-industries-a79b5b4ad623.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-82dc98e09ba6",
+      "name": "AK-47 | Inheritance",
+      "weapon": "AK-47",
+      "finish": "Inheritance",
+      "category": "Rifles",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "1171",
+      "minFloat": 0,
+      "maxFloat": 0.797346,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Kilowatt Collection"
+      ],
+      "stattrak": true,
+      "souvenir": true,
+      "team": "Terrorist",
+      "legacyModel": false,
+      "image": "/assets/cs2-skins/ak-47-inheritance-82dc98e09ba6.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-2b99573c887b",
+      "name": "AWP | Gungnir",
+      "weapon": "AWP",
+      "finish": "Gungnir",
+      "category": "Rifles",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "756",
+      "minFloat": 0,
+      "maxFloat": 0.6,
+      "wears": [
+        "Factory New",
+        "Minimal Wear",
+        "Field-Tested",
+        "Well-Worn",
+        "Battle-Scarred"
+      ],
+      "collections": [
+        "The Norse Collection"
+      ],
+      "stattrak": false,
+      "souvenir": true,
+      "team": "Both Teams",
+      "legacyModel": true,
+      "image": "/assets/cs2-skins/awp-gungnir-2b99573c887b.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    },
+    {
+      "officialId": "skin-61b68868699d",
+      "name": "★ M9 Bayonet | Doppler",
+      "weapon": "M9 Bayonet",
+      "finish": "Doppler",
+      "category": "Knives",
+      "officialRarity": "Covert",
+      "officialRarityColor": "#eb4b4b",
+      "paintIndex": "419",
+      "minFloat": 0,
+      "maxFloat": 0.08,
+      "wears": [
+        "Factory New",
+        "Minimal Wear"
+      ],
+      "collections": [],
+      "stattrak": true,
+      "souvenir": false,
+      "team": "Both Teams",
+      "legacyModel": false,
+      "image": "/assets/cs2-skins/m9-bayonet-doppler-61b68868699d.png",
+      "source": "ByMykel/CSGO-API + Valve Steam CDN"
+    }
+  ]
+}

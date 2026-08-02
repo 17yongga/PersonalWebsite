@@ -4,6 +4,30 @@ const { Server } = require("socket.io");
 const path = require("path");
 const fs = require("fs").promises;
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+const {
+  SessionStore,
+  createCorsMiddleware,
+  createRateLimiter,
+  createRequireAdmin,
+  createRequireAuth,
+  getRequestSession,
+  parseAllowedOrigins,
+  parseCookies,
+  sanitizeText,
+  secureRandomInt,
+  serializeExpiredSessionCookie,
+  serializeSessionCookie,
+  setSecurityHeaders,
+  validateUsername
+} = require("./casino-security");
+const { AtomicJsonStore, KeyedLock } = require("./casino-persistence");
+const { BlackjackService, generatePachinkoResult } = require("./casino-games-authoritative");
+const { CasinoLedger, IdempotencyConflictError, assertCasinoDatabaseIdentity } = require("./casino-ledger");
+const { FairRng, FAIR_GAMES } = require('./casino-fairness');
+const { createCasinoMailer } = require('./casino-email');
+const { CaseGameService } = require('./casino-cases');
+const { getCS2BettingAvailability } = require('./cs2-market-availability');
 
 // CS2 bo3.gg API Client - Primary data source for matches and odds
 let cs2Bo3ggClient = null;
@@ -34,39 +58,66 @@ try {
 }
 
 const app = express();
+app.set("trust proxy", 1);
+const allowedOrigins = parseAllowedOrigins();
+const sessionStore = new SessionStore();
+const requireAuth = createRequireAuth(sessionStore);
+const requireAdmin = createRequireAdmin();
+const authRateLimit = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10 });
+const apiMutationRateLimit = createRateLimiter({ windowMs: 60 * 1000, max: 60 });
+const socketActionBuckets = new Map();
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
+    origin(origin, callback) {
+      callback(null, !origin || allowedOrigins.has(origin));
+    },
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
-// CORS middleware for Express REST API
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  
-  // Handle preflight requests
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
+app.disable('x-powered-by');
+app.use(setSecurityHeaders);
+app.use(createCorsMiddleware(allowedOrigins));
+app.use(express.json({ limit: "32kb", strict: true, type: "application/json" }));
 
-// Serve static files
-app.use(express.static("."));
-app.use(express.json());
+const sessionPruneTimer = setInterval(() => sessionStore.prune(), 15 * 60 * 1000);
+sessionPruneTimer.unref?.();
 
 // Initial credits for new players
 const INITIAL_CREDITS = 10000;
 
 // User data file path
-const USERS_FILE = path.join(__dirname, "casino-users.json");
+const DATA_DIR = process.env.CASINO_DATA_DIR ? path.resolve(process.env.CASINO_DATA_DIR) : __dirname;
+const USERS_FILE = path.join(DATA_DIR, "casino-users.json");
 
 // Bet history file path
-const BET_HISTORY_FILE = path.join(__dirname, "data", "bet-history.json");
+const BET_HISTORY_FILE = path.join(DATA_DIR, "data", "bet-history.json");
+const BALANCE_LEDGER_FILE = path.join(DATA_DIR, "data", "balance-ledger.json");
+const CASINO_DB_FILE = process.env.CASINO_DB_PATH
+  ? path.resolve(process.env.CASINO_DB_PATH)
+  : path.join(DATA_DIR, "data", "casino.sqlite");
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.CASINO_DB_PATH || !process.env.CASINO_EXPECTED_DB_PATH) {
+    throw new Error('Production requires explicit CASINO_DB_PATH and CASINO_EXPECTED_DB_PATH');
+  }
+  const expectedDbPath = path.resolve(process.env.CASINO_EXPECTED_DB_PATH);
+  if (CASINO_DB_FILE !== expectedDbPath) {
+    throw new Error(`Casino database path mismatch: configured ${CASINO_DB_FILE}, expected ${expectedDbPath}`);
+  }
+  assertCasinoDatabaseIdentity(CASINO_DB_FILE);
+}
+const usersStore = new AtomicJsonStore(USERS_FILE);
+const betHistoryStore = new AtomicJsonStore(BET_HISTORY_FILE);
+const balanceLedgerStore = new AtomicJsonStore(BALANCE_LEDGER_FILE);
+const userMutationLocks = new KeyedLock();
+const usersWriteLock = new KeyedLock();
+const casinoLedger = new CasinoLedger({ dbPath: CASINO_DB_FILE });
+const fairRng = new FairRng({ db: casinoLedger.db });
+const caseGameService = new CaseGameService({ ledger: casinoLedger, fairRng });
+const casinoMailer = createCasinoMailer();
 
 // Player data: { socketId: { username, credits, roomId, userId } }
 const players = {};
@@ -89,25 +140,35 @@ function parseNonNegativeNumber(value) {
 // Load users from file
 async function loadUsers() {
   try {
-    const data = await fs.readFile(USERS_FILE, "utf8");
-    return JSON.parse(data);
+    return await usersStore.read({});
   } catch (error) {
-    if (error.code === "ENOENT") {
-      // File doesn't exist, create empty users object
-      await saveUsers({});
-      return {};
-    }
     throw error;
   }
 }
 
 // Save users to file
 async function saveUsers(users) {
-  await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2), "utf8");
+  await usersWriteLock.run('users-file', () => usersStore.write(users));
 }
 
 // Get users object
 let users = {};
+const projectionRepairState = { pending: false, lastErrorAt: null };
+
+async function saveUsersProjection() {
+  try {
+    await saveUsers(users);
+    projectionRepairState.pending = false;
+    projectionRepairState.lastErrorAt = null;
+    return true;
+  } catch (error) {
+    projectionRepairState.pending = true;
+    projectionRepairState.lastErrorAt = new Date().toISOString();
+    console.error('[Casino Ledger] JSON projection write failed; SQLite remains canonical and repair is pending:', error);
+    return false;
+  }
+}
+
 let usersLoadedPromise = loadUsers().then(data => {
   users = data;
   console.log(`Loaded ${Object.keys(users).length} users from file`);
@@ -164,34 +225,125 @@ let usersLoadedPromise = loadUsers().then(data => {
   
   return data;
 }).catch(err => {
-  console.error("Error loading users:", err);
-  users = {};
-  return {};
+  console.error("Error loading users; refusing to start with empty state:", err);
+  throw err;
+});
+
+const ledgerReadyPromise = usersLoadedPromise.then(async () => {
+  // Legacy JSON occasionally contains IEEE-754 residue around an exact
+  // milli-credit. Normalize only that bounded residue before strict ledger
+  // reconciliation; genuine excess precision still fails closed in toMilli().
+  for (const user of Object.values(users)) {
+    const value = Number(user?.credits);
+    const normalized = Math.round(value * 1000) / 1000;
+    if (Number.isFinite(value) && Math.abs(value - normalized) <= 1e-7) user.credits = normalized;
+  }
+  casinoLedger.importAccounts(users);
+  const recovered = casinoLedger.recoverActiveEscrows({ reason: 'startup_recovery', preserveGames: ['cs2betting', 'case_battle'] });
+  const recoveredBattles = caseGameService.recoverPendingBattles();
+  const balances = casinoLedger.listBalances();
+  let projectionChanged = recovered.length > 0 || recoveredBattles.length > 0;
+  for (const [userId, balance] of Object.entries(balances)) {
+    if (!users[userId]) continue;
+    if (users[userId].credits !== balance) projectionChanged = true;
+    users[userId].credits = balance;
+  }
+  if (projectionChanged) await saveUsersProjection();
+  if (recovered.length) console.warn(`[Casino Ledger] Refunded ${recovered.length} active escrow(s) during startup recovery`);
+  if (recoveredBattles.length) console.warn(`[Casino Cases] Settled ${recoveredBattles.length} occupied battle(s) during startup recovery`);
+  if (casinoLedger.integrityCheck() !== 'ok') throw new Error('Casino SQLite integrity check failed');
+  console.log(`[Casino Ledger] Ready at ${CASINO_DB_FILE} with ${Object.keys(balances).length} account(s)`);
 });
 
 // Per-user balance lock: ensures joinCasino reads after in-flight REST (CS2 bet) updates
 // Fixes race where user places CS2 bet -> navigates -> joinCasino sends stale balance
-const userBalanceLocks = {};
-
 function acquireUserBalanceLock(userId) {
-  const tail = userBalanceLocks[userId] || Promise.resolve();
-  return tail;
+  return userMutationLocks.wait(userId);
 }
 
 function runWithUserBalanceLock(userId, fn) {
-  const prev = userBalanceLocks[userId] || Promise.resolve();
-  const next = prev.then(() => fn());
-  userBalanceLocks[userId] = next;
-  return next;
+  return userMutationLocks.run(userId, fn);
 }
 
-// Save user balance
-async function saveUserBalance(userId, credits) {
-  if (users[userId]) {
+function disconnectUserSockets(username, reason) {
+  for (const connectedSocket of io.sockets.sockets.values()) {
+    if (connectedSocket.auth?.username !== username) continue;
+    connectedSocket.emit('sessionRevoked', { reason });
+    connectedSocket.disconnect(true);
+  }
+}
+
+async function projectCommittedBalance(userId, credits) {
+  if (!users[userId]) throw new Error('User projection not found');
+  await usersWriteLock.run('users-file', async () => {
     users[userId].credits = credits;
     users[userId].lastPlayed = new Date().toISOString();
-    await saveUsers(users);
+    try {
+      await usersStore.write(users);
+      projectionRepairState.pending = false;
+      projectionRepairState.lastErrorAt = null;
+    } catch (error) {
+      projectionRepairState.pending = true;
+      projectionRepairState.lastErrorAt = new Date().toISOString();
+      console.error('[Casino Ledger] JSON projection write failed; committed SQLite balance remains authoritative:', error);
+    }
+  });
+  for (const [connectedSocketId, connectedPlayer] of Object.entries(players)) {
+    if (connectedPlayer.userId !== userId) continue;
+    connectedPlayer.credits = credits;
+    io.to(connectedSocketId).emit('playerData', { username: connectedPlayer.username, credits });
   }
+}
+
+async function commitCreditChange(userId, delta, context) {
+  if (!context?.idempotencyKey || !context?.game || !context?.action) {
+    throw new Error('Durable credit mutation context is required');
+  }
+  const committed = casinoLedger.change({
+    userId,
+    delta,
+    idempotencyKey: context.idempotencyKey,
+    game: context.game,
+    action: context.action,
+    referenceId: context.referenceId || null,
+    response: context.response || null,
+    metadata: context.metadata || null
+  });
+  await projectCommittedBalance(userId, committed.balance);
+  return committed;
+}
+
+async function reserveCredits(userId, { game, referenceId, stake, metadata = null }) {
+  const result = casinoLedger.reserve({
+    userId,
+    game,
+    referenceId,
+    stake,
+    idempotencyKey: `${game}:${referenceId}:${userId}:reserve`,
+    metadata
+  });
+  await projectCommittedBalance(userId, result.balance);
+  return result;
+}
+
+async function finishEscrows(items) {
+  const results = casinoLedger.settleMany(items.map(item => ({
+    escrowId: item.escrowId,
+    payout: item.payout,
+    idempotencyKey: item.idempotencyKey,
+    action: item.action || 'settle',
+    response: item.response || null,
+    metadata: item.metadata || null
+  })));
+  const balances = new Map();
+  for (const result of results) balances.set(result.escrow.userId, result.balance);
+  for (const [userId, balance] of balances) await projectCommittedBalance(userId, balance);
+  return results;
+}
+
+async function finishEscrow(item) {
+  const [result] = await finishEscrows([item]);
+  return result;
 }
 
 // ========== BET HISTORY ==========
@@ -199,24 +351,20 @@ let betHistory = {}; // { username: [ { game, bet, result, payout, multiplier, t
 
 async function loadBetHistory() {
   try {
-    const dataDir = path.join(__dirname, "data");
-    await fs.mkdir(dataDir, { recursive: true }).catch(() => {});
-    const data = await fs.readFile(BET_HISTORY_FILE, "utf8");
-    betHistory = JSON.parse(data);
+    betHistory = await betHistoryStore.read({});
     console.log(`Loaded bet history: ${Object.keys(betHistory).length} users`);
   } catch (error) {
     if (error.code === "ENOENT") betHistory = {};
-    else console.error("Error loading bet history:", error);
+    else {
+      console.error("Error loading bet history:", error);
+      throw error;
+    }
   }
 }
 
 async function saveBetHistory() {
   try {
-    const dataDir = path.join(__dirname, "data");
-    await fs.mkdir(dataDir, { recursive: true }).catch(() => {});
-    const tempFile = BET_HISTORY_FILE + '.tmp';
-    await fs.writeFile(tempFile, JSON.stringify(betHistory, null, 2), "utf8");
-    await fs.rename(tempFile, BET_HISTORY_FILE);
+    await betHistoryStore.write(betHistory);
   } catch (error) {
     console.error("Error saving bet history:", error);
   }
@@ -233,7 +381,7 @@ function addBetRecord(username, record) {
   saveBetHistory().catch(err => console.error("Error saving bet history:", err));
 }
 
-loadBetHistory().catch(err => console.error("Error loading bet history:", err));
+const betHistoryLoadedPromise = loadBetHistory();
 
 // ========== ACHIEVEMENT SYSTEM ==========
 const ACHIEVEMENTS = {
@@ -386,45 +534,15 @@ function findSocketByUserId(targetUserId) {
   return null;
 }
 
-// Helper function: Sync credit balance between users and players objects
-async function syncUserCredits(userId, newCredits) {
-  try {
-    // Update persistent storage
-    if (users[userId]) {
-      users[userId].credits = newCredits;
-      await saveUserBalance(userId, newCredits);
-    }
-    
-    // Update real-time state if user is connected via WebSocket
-    const socketId = findSocketByUserId(userId);
-    if (socketId && players[socketId]) {
-      players[socketId].credits = newCredits;
-      
-      // Emit real-time update to the connected user
-      io.to(socketId).emit("playerData", {
-        username: players[socketId].username,
-        credits: players[socketId].credits
-      });
-      
-      console.log(`[CS2 Balance] Synced credits for user ${userId}: ${newCredits} (socket: ${socketId})`);
-    } else {
-      console.log(`[CS2 Balance] Updated credits for user ${userId}: ${newCredits} (offline)`);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error(`[CS2 Balance] Error syncing credits for user ${userId}:`, error);
-    return false;
-  }
-}
-
 // Roulette game state
 let rouletteState = {
-  currentBets: {}, // { socketId: { color: 'red'|'black'|'green', amount: number } }
+  currentBets: Object.create(null), // { socketId: { color: 'red'|'black'|'green', amount: number } }
   spinning: false,
   lastResult: null,
   spinTimer: null,
   nextSpinTime: null,
+  roundId: null,
+  commitment: null,
   history: [] // Array of last 50 results: { number, color, timestamp }
 };
 
@@ -432,25 +550,27 @@ let rouletteState = {
 // NOTE: All coinflip server logic is consolidated here in casino-server.js
 // The separate coinflip/server.js file is not used - this is the single source of truth
 // Room data: { roomId: { creatorId, betAmount, creatorChoice, players: [socketId1, socketId2], confirmed: false, gameState: 'waiting'|'confirmed'|'flipping'|'finished', coinResult: null, botId: string } }
-const coinflipRooms = {};
-let coinflipRoomCounter = 1;
+const coinflipRooms = Object.create(null);
 
 // ========== CRASH GAME STATE ==========
 let crashState = {
   phase: 'waiting', // waiting, betting, running, crashed
   multiplier: 1.00,
   crashPoint: null,
-  bets: {}, // { socketId: { username, amount, cashedOut, cashoutMultiplier } }
+  bets: Object.create(null), // { socketId: { username, amount, cashedOut, cashoutMultiplier } }
   history: [], // last 30 crash points
   startTime: null,
   bettingTimer: null,
   gameTimer: null,
-  tickInterval: null
+  tickInterval: null,
+  roundId: null,
+  commitment: null,
+  fairContext: null
 };
 
-function generateCrashPoint() {
+function generateCrashPoint(randomFraction = crypto.randomBytes(6).readUIntBE(0, 6) / 0x1000000000000) {
   // House edge ~1%. Formula: max(1.0, floor(100 * 0.99 / (1 - r)) / 100)
-  const r = Math.random();
+  const r = randomFraction;
   if (r >= 0.99) return 1.00; // instant crash 1% of the time
   return Math.max(1.00, Math.floor(100 * 0.99 / (1 - r)) / 100);
 }
@@ -459,10 +579,13 @@ function startCrashBetting() {
   crashState.phase = 'betting';
   crashState.multiplier = 1.00;
   crashState.crashPoint = null;
-  crashState.bets = {};
+  crashState.bets = Object.create(null);
   crashState.startTime = null;
+  crashState.roundId = `crash_${crypto.randomUUID()}`;
+  crashState.commitment = fairRng.current('crash').commitment;
+  crashState.fairContext = null;
 
-  io.emit('crashBettingStart', { timeLeft: 10 });
+  io.emit('crashBettingStart', { timeLeft: 10, roundId: crashState.roundId, commitment: crashState.commitment });
 
   let timeLeft = 10;
   if (crashState.bettingTimer) clearInterval(crashState.bettingTimer);
@@ -480,7 +603,8 @@ function startCrashBetting() {
 function startCrashRound() {
   crashState.phase = 'running';
   crashState.multiplier = 1.00;
-  crashState.crashPoint = generateCrashPoint();
+  crashState.fairContext = fairRng.consume('crash', crashState.roundId, 'neon777-public');
+  crashState.crashPoint = generateCrashPoint(fairRng.int(crashState.fairContext, 1_000_000) / 1_000_000);
   crashState.startTime = Date.now();
 
   console.log(`[Crash] Round starting, crash point: ${crashState.crashPoint}x`);
@@ -495,14 +619,14 @@ function startCrashRound() {
 
   // Tick every 50ms
   if (crashState.tickInterval) clearInterval(crashState.tickInterval);
-  crashState.tickInterval = setInterval(() => {
+  crashState.tickInterval = setInterval(async () => {
     const elapsed = (Date.now() - crashState.startTime) / 1000;
     crashState.multiplier = Math.max(1.00, parseFloat((Math.exp(0.06 * elapsed)).toFixed(2)));
 
     // Check auto-cashouts
     for (const [sid, bet] of Object.entries(crashState.bets)) {
       if (!bet.cashedOut && bet.autoCashout > 0 && crashState.multiplier >= bet.autoCashout) {
-        processCrashCashout(sid);
+        await processCrashCashout(sid);
       }
     }
 
@@ -518,9 +642,23 @@ function startCrashRound() {
 
       console.log(`[Crash] Crashed at ${crashState.crashPoint}x`);
 
+      for (const [sid, bet] of Object.entries(crashState.bets)) {
+        if (bet.cashedOut) continue;
+        try {
+          await finishEscrow({ escrowId: bet.escrowId, payout: 0,
+            idempotencyKey: `crash:${crashState.roundId}:${bet.userId}:settle`,
+            metadata: { crashPoint: crashState.crashPoint } });
+          bet.cashedOut = true;
+        } catch (error) {
+          console.error('[Crash] Failed to settle losing wager:', error);
+          io.to(sid).emit('error', 'Settlement persistence failed; contact support');
+        }
+      }
+      const proof = fairRng.reveal(crashState.roundId, { crashPoint: crashState.crashPoint });
       io.emit('crashResult', {
         crashPoint: crashState.crashPoint,
-        history: crashState.history
+        history: crashState.history,
+        fairness: proof
       });
 
       // Next round after 5 seconds
@@ -532,27 +670,26 @@ function startCrashRound() {
   }, 50);
 }
 
-function processCrashCashout(socketId) {
+async function processCrashCashout(socketId) {
   const bet = crashState.bets[socketId];
   if (!bet || bet.cashedOut) return;
-  
+
   bet.cashedOut = true;
   bet.cashoutMultiplier = crashState.multiplier;
   const winnings = Math.floor(bet.amount * crashState.multiplier);
 
-  // Credit the player
   if (players[socketId]) {
-    players[socketId].credits += winnings;
-    const userId = players[socketId].userId;
-    if (userId) {
-      saveUserBalance(userId, players[socketId].credits).catch(err => {
-        console.error("[Crash] Error saving balance:", err);
-      });
+    try {
+      await finishEscrow({ escrowId: bet.escrowId, payout: winnings,
+        idempotencyKey: `crash:${crashState.roundId}:${bet.userId}:settle`,
+        metadata: { multiplier: crashState.multiplier } });
+    } catch (error) {
+      bet.cashedOut = false;
+      bet.cashoutMultiplier = null;
+      console.error("[Crash] Failed to persist cashout:", error);
+      io.to(socketId).emit("error", "Unable to persist cashout; retry before the round ends");
+      return;
     }
-    io.to(socketId).emit("playerData", {
-      username: players[socketId].username,
-      credits: players[socketId].credits
-    });
   }
 
   io.emit('crashCashedOut', {
@@ -571,16 +708,16 @@ setTimeout(() => startCrashBetting(), 5000);
 
 // ========== POKER STATE ==========
 const pokerEngine = require('./poker-engine');
-const pokerTables = {}; // { tableId: PokerTableState }
-let pokerTableCounter = 1;
+const pokerTables = Object.create(null); // { tableId: PokerTableState }
 
 // ========== CS2 BETTING STATE ==========
 // CS2 betting data file path - moved to data/ subdirectory to reduce Live Server file watching
-const CS2_BETTING_FILE = path.join(__dirname, "data", "cs2-betting-data.json");
+const CS2_BETTING_FILE = path.join(DATA_DIR, "data", "cs2-betting-data.json");
+const cs2BettingStore = new AtomicJsonStore(CS2_BETTING_FILE);
 // CS2 team rankings file path
 const CS2_TEAM_RANKINGS_FILE = path.join(__dirname, "cs2-team-rankings.json");
 // CS2 API cache file path
-const CS2_API_CACHE_FILE = path.join(__dirname, "cs2-api-cache.json");
+const CS2_API_CACHE_FILE = path.join(DATA_DIR, "data", "cs2-api-cache.json");
 
 // CS2 betting state
 let cs2BettingState = {
@@ -599,8 +736,7 @@ let cs2TeamRankings = {
 // Load CS2 betting data from file
 async function loadCS2BettingData() {
   try {
-    const data = await fs.readFile(CS2_BETTING_FILE, "utf8");
-    cs2BettingState = JSON.parse(data);
+    cs2BettingState = await cs2BettingStore.read();
     console.log(`Loaded CS2 betting data: ${Object.keys(cs2BettingState.events).length} events, ${Object.keys(cs2BettingState.bets).length} bets`);
   } catch (error) {
     if (error.code === "ENOENT") {
@@ -609,6 +745,7 @@ async function loadCS2BettingData() {
       console.log("Created new CS2 betting data file");
     } else {
       console.error("Error loading CS2 betting data:", error);
+      throw error;
     }
   }
 }
@@ -616,32 +753,13 @@ async function loadCS2BettingData() {
 // Save CS2 betting data to file
 // Uses atomic writes (write to temp file, then rename) to reduce file watcher triggers
 async function saveCS2BettingData() {
-  try {
-    // Ensure data directory exists
-    const dataDir = path.join(__dirname, "data");
-    try {
-      await fs.mkdir(dataDir, { recursive: true });
-    } catch (mkdirError) {
-      // Directory might already exist, ignore error
-    }
-    
-    const tempFile = CS2_BETTING_FILE + '.tmp';
-    await fs.writeFile(tempFile, JSON.stringify(cs2BettingState, null, 2), "utf8");
-    await fs.rename(tempFile, CS2_BETTING_FILE);
-  } catch (error) {
-    console.error("Error saving CS2 betting data:", error);
-    // Clean up temp file if rename failed
-    try {
-      await fs.unlink(CS2_BETTING_FILE + '.tmp');
-    } catch (unlinkError) {
-      // Ignore cleanup errors
-    }
-  }
+  await cs2BettingStore.write(cs2BettingState);
 }
 
 // Initialize CS2 betting data on startup
-loadCS2BettingData().catch(err => {
+const cs2StateLoadedPromise = loadCS2BettingData().catch(err => {
   console.error("Error initializing CS2 betting data:", err);
+  throw err;
 });
 
 // CS2 API Cache: { matches: { data: [], timestamp: "ISO" }, odds: { [eventId]: { data: {}, timestamp: "ISO" } } }
@@ -1092,8 +1210,10 @@ function startRouletteTimer() {
 }
 
 function updateNextSpinTime() {
+  rouletteState.roundId = `roulette_${crypto.randomUUID()}`;
+  rouletteState.commitment = fairRng.current('roulette').commitment;
   rouletteState.nextSpinTime = Date.now() + 15000; // 15 seconds - time for players to place bets
-  io.emit('nextSpinTime', { time: rouletteState.nextSpinTime });
+  io.emit('nextSpinTime', { time: rouletteState.nextSpinTime, roundId: rouletteState.roundId, commitment: rouletteState.commitment });
 }
 
 function spinRoulette() {
@@ -1101,8 +1221,9 @@ function spinRoulette() {
 
   rouletteState.spinning = true;
   
-  // Pick random number
-  const winningNumber = Math.floor(Math.random() * 15); // 0-14
+  const roundId = rouletteState.roundId || `roulette_${crypto.randomUUID()}`;
+  const fair = fairRng.consume('roulette', roundId, 'neon777-public');
+  const winningNumber = fairRng.int(fair, 15);
   const winningColor = rouletteNumbers[winningNumber].color;
 
   // Emit spin start
@@ -1113,12 +1234,12 @@ function spinRoulette() {
   });
 
   // After 2 seconds (animation), calculate results
-  setTimeout(() => {
+  setTimeout(async () => {
     const results = {};
     const totalPayout = 0;
 
     // Calculate winnings for each player
-    Object.keys(rouletteState.currentBets).forEach(socketId => {
+    for (const socketId of Object.keys(rouletteState.currentBets)) {
       const bet = rouletteState.currentBets[socketId];
       const won = bet.color === winningColor;
       
@@ -1130,15 +1251,21 @@ function spinRoulette() {
         }
         const winnings = bet.amount * multiplier;
         if (players[socketId]) {
-          players[socketId].credits += winnings;
-          
-          // Save balance and update stats
           const userId = players[socketId].userId;
           if (userId) {
-            saveUserBalance(userId, players[socketId].credits).catch(err => {
-              console.error("Error saving balance:", err);
-            });
-            
+            try {
+              await finishEscrow({
+                escrowId: bet.escrowId,
+                payout: winnings,
+                idempotencyKey: `roulette:${roundId}:${userId}:settle`,
+                metadata: { winningNumber, winningColor }
+              });
+            } catch (error) {
+              console.error("[Roulette] Failed to persist payout:", error);
+              io.to(socketId).emit("error", "Payout persistence failed; contact support");
+              continue;
+            }
+
             // Update stats and check achievements (winner)
             updateUserStats(userId, 'roulette', bet.amount, true, winnings, { number: winningNumber, color: winningColor });
             const newAchievements = checkAchievements(userId, 'roulette', bet.amount, true, { number: winningNumber, color: winningColor });
@@ -1170,6 +1297,18 @@ function spinRoulette() {
         if (players[socketId]) {
           const userId = players[socketId].userId;
           if (userId) {
+            try {
+              await finishEscrow({
+                escrowId: bet.escrowId,
+                payout: 0,
+                idempotencyKey: `roulette:${roundId}:${userId}:settle`,
+                metadata: { winningNumber, winningColor }
+              });
+            } catch (error) {
+              console.error('[Roulette] Failed to persist losing settlement:', error);
+              io.to(socketId).emit('error', 'Settlement persistence failed; contact support');
+              continue;
+            }
             // Update stats and check achievements (loser)
             updateUserStats(userId, 'roulette', bet.amount, false, 0, { number: winningNumber, color: winningColor });
             const newAchievements = checkAchievements(userId, 'roulette', bet.amount, false, { number: winningNumber, color: winningColor });
@@ -1197,23 +1336,11 @@ function spinRoulette() {
           };
         }
       }
-    });
+    }
 
-    // Emit results
-    io.emit('rouletteSpinResult', {
-      winningNumber,
-      winningColor,
-      results,
-      bets: getBetsSnapshot(),
-      history: rouletteState.history
-    });
-
-    // Clear bets and reset
-    rouletteState.currentBets = {};
-    rouletteState.lastResult = { number: winningNumber, color: winningColor };
-    rouletteState.spinning = false;
-    
-    // Add to history (keep last 50)
+    // Commit the authoritative result to history before publishing it. Clients
+    // must receive a self-consistent settlement payload whose first history
+    // entry is the spin being announced.
     rouletteState.history.unshift({
       number: winningNumber,
       color: winningColor,
@@ -1223,15 +1350,25 @@ function spinRoulette() {
       rouletteState.history.pop();
     }
 
+    const proof = fairRng.reveal(roundId, { winningNumber, winningColor });
+    io.emit('rouletteSpinResult', {
+      winningNumber,
+      winningColor,
+      results,
+      bets: getBetsSnapshot(),
+      history: rouletteState.history,
+      fairness: proof
+    });
+
+    // Clear bets and reset
+    rouletteState.currentBets = Object.create(null);
+    rouletteState.lastResult = { number: winningNumber, color: winningColor };
+    rouletteState.spinning = false;
     // Wait for animation to complete and result to be displayed before starting timer
     // Animation takes ~4-6 seconds, then we show the result
     // So we wait ~6 seconds before starting the countdown
     setTimeout(() => {
-      // Calculate next spin time: 15 seconds from now (after result is displayed)
-      const timeUntilNextSpin = 15000; // 15 seconds
-      rouletteState.nextSpinTime = Date.now() + timeUntilNextSpin;
-      io.emit('nextSpinTime', { time: rouletteState.nextSpinTime });
-      
+      updateNextSpinTime();
       // Schedule next spin
       startRouletteTimer();
     }, 6000); // Wait 6 seconds for animation + result display
@@ -1241,39 +1378,74 @@ function spinRoulette() {
 function getBetsSnapshot() {
   const snapshot = {};
   Object.keys(rouletteState.currentBets).forEach(socketId => {
-    if (players[socketId]) {
+    const bet = rouletteState.currentBets[socketId];
+    const playerName = bet.username || players[socketId]?.username;
+    if (playerName) {
       snapshot[socketId] = {
-        playerName: players[socketId].username,
-        color: rouletteState.currentBets[socketId].color,
-        amount: rouletteState.currentBets[socketId].amount
+        playerName,
+        color: bet.color,
+        amount: bet.amount
       };
     }
   });
   return snapshot;
 }
 
+function getRouletteStatePayload() {
+  return {
+    spinning: rouletteState.spinning,
+    lastResult: rouletteState.lastResult,
+    currentBets: getBetsSnapshot(),
+    nextSpinTime: rouletteState.nextSpinTime,
+    roundId: rouletteState.roundId,
+    commitment: rouletteState.commitment,
+    history: rouletteState.history
+  };
+}
+
+function findRouletteBetByUser(userId) {
+  for (const [socketId, bet] of Object.entries(rouletteState.currentBets)) {
+    if (bet.userId === userId) return { socketId, bet };
+  }
+  return null;
+}
+
+function validateRouletteRequestId(value) {
+  const requestId = sanitizeText(value, 80);
+  return /^[A-Za-z0-9_-]{8,80}$/.test(requestId) ? requestId : null;
+}
+
 // Authentication endpoints
-app.post("/api/register", async (req, res) => {
+app.post("/api/register", authRateLimit, async (req, res) => {
+  let pendingUsername = null;
+  let ledgerAccountCreated = false;
+  let userPersisted = false;
   try {
     // Ensure users are loaded before processing registration
     await usersLoadedPromise;
     
-    const { username, password } = req.body;
+    const { username, password, email } = req.body || {};
 
-    if (!username || !password) {
-      return res.status(400).json({ error: "Username and password are required" });
+    if (!username || !password || !email) {
+      return res.status(400).json({ error: "Username, email, and password are required" });
     }
 
-    if (username.length < 3 || username.length > 20) {
-      return res.status(400).json({ error: "Username must be between 3 and 20 characters" });
+    const usernameValidation = validateUsername(username);
+    if (!usernameValidation.valid) {
+      return res.status(400).json({ error: usernameValidation.error });
     }
+    const normalizedUsername = usernameValidation.normalized;
+    pendingUsername = normalizedUsername;
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters" });
+    if (typeof password !== "string" || password.length < 8 || password.length > 128) {
+      return res.status(400).json({ error: "Password must be between 8 and 128 characters" });
     }
-
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) || normalizedEmail.length > 254) {
+      return res.status(400).json({ error: 'Enter a valid email address' });
+    }
     // Check if user already exists
-    if (users[username]) {
+    if (users[normalizedUsername]) {
       return res.status(400).json({ error: "Username already exists" });
     }
 
@@ -1281,8 +1453,8 @@ app.post("/api/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create new user
-    users[username] = {
-      username,
+    const newUser = {
+      username: normalizedUsername,
       password: hashedPassword,
       credits: INITIAL_CREDITS,
       createdAt: new Date().toISOString(),
@@ -1316,54 +1488,81 @@ app.post("/api/register", async (req, res) => {
       }
     };
 
+    casinoLedger.importAccounts({ [normalizedUsername]: newUser });
+    ledgerAccountCreated = true;
+    if (casinoMailer.configured) {
+      const verificationToken = casinoLedger.createVerificationToken(normalizedUsername, normalizedEmail);
+      await casinoMailer.sendVerification(normalizedEmail, verificationToken);
+    }
+    users[normalizedUsername] = newUser;
     await saveUsers(users);
+    userPersisted = true;
 
     res.json({ 
       success: true, 
-      message: "Account created successfully",
-      credits: INITIAL_CREDITS
+      message: casinoMailer.configured
+        ? "Account created. Check your email to verify it."
+        : "Account created. Email verification and password recovery are currently unavailable.",
+      credits: INITIAL_CREDITS,
+      emailVerificationRequired: casinoMailer.configured,
+      emailDeliveryAvailable: casinoMailer.configured
     });
   } catch (error) {
     console.error("Registration error:", error);
+    if (pendingUsername && !userPersisted) {
+      delete users[pendingUsername];
+      if (ledgerAccountCreated) {
+        try { casinoLedger.rollbackEmptyAccount(pendingUsername); } catch (rollbackError) { console.error('[Registration] Ledger rollback failed:', rollbackError); }
+      }
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-app.post("/api/login", async (req, res) => {
+app.post("/api/login", authRateLimit, async (req, res) => {
   try {
     // Ensure users are loaded before processing login
     await usersLoadedPromise;
     
-    const { username, password } = req.body;
+    const { username, password } = req.body || {};
 
-    if (!username || !password) {
+    if (typeof username !== "string" || typeof password !== "string" || !username.trim() || !password) {
       return res.status(400).json({ error: "Username and password are required" });
     }
+    const normalizedUsername = username.trim().slice(0, 64);
 
-    // Check if user exists
-    const user = users[username];
+    // Existing accounts remain login-compatible; new registrations use the stricter allowlist.
+    const user = users[normalizedUsername];
     if (!user) {
-      console.log(`Login attempt failed: user '${username}' not found. Available users: ${Object.keys(users).join(', ')}`);
+      console.warn("Login attempt failed for an unknown username");
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
     // Verify password
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
-      console.log(`Login attempt failed: invalid password for user '${username}'`);
+      console.warn("Login attempt failed due to invalid credentials");
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
-    console.log(`Login successful for user '${username}'`);
+    console.log(`Login successful for user '${sanitizeText(user.username, 20)}'`);
 
     // Update last played
     user.lastPlayed = new Date().toISOString();
     await saveUsers(users);
 
+    const session = sessionStore.create(user.username);
+    const secureCookie = process.env.NODE_ENV === "production" || req.secure || req.headers["x-forwarded-proto"] === "https";
+    res.setHeader("Set-Cookie", serializeSessionCookie(session.sessionId, { secure: secureCookie, ttlMs: sessionStore.ttlMs }));
+    const account = casinoLedger.account(user.username);
     res.json({ 
       success: true, 
       username: user.username,
-      credits: user.credits
+      credits: user.credits,
+      csrfToken: session.csrfToken,
+      expiresAt: session.expiresAt,
+      email: account?.email || null,
+      emailVerified: Boolean(account?.emailVerified)
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -1371,7 +1570,508 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+app.get('/api/fairness/current/:game', (req, res) => {
+  const game = sanitizeText(req.params.game, 40);
+  if (!FAIR_GAMES.has(game)) return res.status(404).json({ error: 'Unsupported fair game' });
+  res.json({ success: true, ...fairRng.current(game) });
+});
+
+app.get('/api/fairness/proof/:roundId', (req, res) => {
+  const roundId = sanitizeText(req.params.roundId, 160);
+  if (!roundId) return res.status(400).json({ error: 'Invalid round ID' });
+  const proof = fairRng.getProof(roundId);
+  if (!proof) return res.status(404).json({ error: 'Fairness proof not found' });
+  res.json({ success: true, proof });
+});
+
+function sendCaseApiError(res, error) {
+  const status = error?.statusCode || (error instanceof RangeError || error instanceof TypeError ? 400 : (/insufficient|already|cannot|not open|not found|no longer/i.test(error?.message || '') ? 400 : 500));
+  if (status >= 500) console.error('[Cases] Request failed:', error);
+  return res.status(status).json({ success: false, error: status >= 500 ? 'Case service request failed' : error.message, code: error?.code });
+}
+
+app.get('/api/cases/catalog', (_req, res) => {
+  res.json({ success: true, cases: caseGameService.catalog(), disclosure: { currency: 'virtual credits', expectedReturn: 0.95, realSkins: false } });
+});
+
+app.post('/api/cases/prepare', requireAuth, apiMutationRateLimit, (req, res) => {
+  try {
+    const prepared = caseGameService.prepare({
+      userId: req.auth.username,
+      game: sanitizeText(req.body?.game, 40),
+      requestId: sanitizeText(req.body?.requestId, 80),
+      clientSeed: sanitizeText(req.body?.clientSeed || 'neon777', 128)
+    });
+    res.json({ success: true, prepared });
+  } catch (error) { sendCaseApiError(res, error); }
+});
+
+app.post('/api/cases/open', requireAuth, apiMutationRateLimit, async (req, res) => {
+  try {
+    const userId = req.auth.username;
+    const opened = caseGameService.open({
+      userId,
+      caseId: sanitizeText(req.body?.caseId, 80),
+      count: Number(req.body?.count),
+      requestId: sanitizeText(req.body?.requestId, 80),
+      fairRoundId: sanitizeText(req.body?.fairRoundId, 160),
+      clientSeed: sanitizeText(req.body?.clientSeed || 'neon777', 128)
+    });
+    await projectCommittedBalance(userId, opened.balance);
+    res.json({ success: true, ...opened });
+  } catch (error) { sendCaseApiError(res, error); }
+});
+
+app.get('/api/cases/inventory', requireAuth, (req, res) => {
+  try { res.json({ success: true, items: caseGameService.inventory(req.auth.username, { includeSold: req.query.includeSold === '1' }) }); }
+  catch (error) { sendCaseApiError(res, error); }
+});
+
+app.post('/api/cases/inventory/:inventoryId/sell', requireAuth, apiMutationRateLimit, async (req, res) => {
+  try {
+    const userId = req.auth.username;
+    const sold = caseGameService.sell({
+      userId,
+      inventoryId: sanitizeText(req.params.inventoryId, 160),
+      requestId: sanitizeText(req.body?.requestId, 80)
+    });
+    await projectCommittedBalance(userId, sold.balance);
+    res.json({ success: true, ...sold });
+  } catch (error) { sendCaseApiError(res, error); }
+});
+
+app.get('/api/cases/battles', requireAuth, (_req, res) => {
+  try { res.json({ success: true, battles: caseGameService.listBattles() }); }
+  catch (error) { sendCaseApiError(res, error); }
+});
+
+app.get('/api/cases/battles/:battleId', requireAuth, (req, res) => {
+  try { res.json({ success: true, battle: caseGameService.getBattle(sanitizeText(req.params.battleId, 160)) }); }
+  catch (error) { sendCaseApiError(res, error); }
+});
+
+app.post('/api/cases/battles', requireAuth, apiMutationRateLimit, async (req, res) => {
+  try {
+    const userId = req.auth.username;
+    const battle = caseGameService.createBattle({
+      userId,
+      opponent: sanitizeText(req.body?.opponent || 'human', 20),
+      caseIds: req.body?.caseIds,
+      requestId: sanitizeText(req.body?.requestId, 80),
+      fairRoundId: sanitizeText(req.body?.fairRoundId, 160),
+      clientSeed: sanitizeText(req.body?.clientSeed || 'neon777', 128)
+    });
+    await projectCommittedBalance(userId, casinoLedger.balance(userId));
+    io.emit('caseBattlesUpdated', { battleId: battle.battleId, status: battle.status });
+    res.json({ success: true, battle, balance: casinoLedger.balance(userId) });
+  } catch (error) { sendCaseApiError(res, error); }
+});
+
+app.post('/api/cases/battles/:battleId/join', requireAuth, apiMutationRateLimit, async (req, res) => {
+  try {
+    const userId = req.auth.username;
+    const battle = caseGameService.joinBattle({
+      userId,
+      battleId: sanitizeText(req.params.battleId, 160),
+      requestId: sanitizeText(req.body?.requestId, 80),
+      clientSeed: sanitizeText(req.body?.clientSeed || 'neon777', 128)
+    });
+    await projectCommittedBalance(userId, casinoLedger.balance(userId));
+    io.emit('caseBattlesUpdated', { battleId: battle.battleId, status: battle.status });
+    res.json({ success: true, battle, balance: casinoLedger.balance(userId) });
+  } catch (error) { sendCaseApiError(res, error); }
+});
+
+app.post('/api/cases/battles/:battleId/cancel', requireAuth, apiMutationRateLimit, async (req, res) => {
+  try {
+    const userId = req.auth.username;
+    const battle = caseGameService.cancelBattle({
+      userId,
+      battleId: sanitizeText(req.params.battleId, 160),
+      requestId: sanitizeText(req.body?.requestId, 80)
+    });
+    await projectCommittedBalance(userId, casinoLedger.balance(userId));
+    io.emit('caseBattlesUpdated', { battleId: battle.battleId, status: battle.status });
+    res.json({ success: true, battle, balance: casinoLedger.balance(userId) });
+  } catch (error) { sendCaseApiError(res, error); }
+});
+
+app.post('/api/account/email', requireAuth, apiMutationRateLimit, async (req, res) => {
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return res.status(400).json({ error: 'Enter a valid email address' });
+  if (!casinoMailer.configured) return res.status(503).json({ error: 'Email delivery is temporarily unavailable' });
+  try {
+    const token = casinoLedger.createVerificationToken(req.auth.username, email);
+    await casinoMailer.sendVerification(email, token);
+    res.status(202).json({ success: true, message: 'Verification email sent' });
+  } catch (error) {
+    console.error('[Account] Unable to send verification email:', error);
+    res.status(503).json({ error: 'Unable to send verification email' });
+  }
+});
+
+app.post('/api/account/verify-email', authRateLimit, (req, res) => {
+  try {
+    const verified = casinoLedger.consumeVerificationToken(req.body?.token);
+    if (!verified) return res.status(400).json({ error: 'Verification link is invalid or expired' });
+    res.json({ success: true, email: verified.email });
+  } catch (error) {
+    console.error('[Account] Email verification failed:', error);
+    res.status(409).json({ error: 'That email is already assigned to another account' });
+  }
+});
+
+app.post('/api/account/password-recovery', authRateLimit, async (req, res) => {
+  const generic = { success: true, message: 'If that verified email exists, a reset link has been sent' };
+  const account = casinoLedger.accountByEmail(req.body?.email);
+  if (!account || !casinoMailer.configured) return res.status(202).json(generic);
+  try {
+    const token = casinoLedger.createRecoveryToken(account.user_id);
+    await casinoMailer.sendRecovery(account.email, token);
+  } catch (error) {
+    console.error('[Account] Password recovery delivery failed:', error);
+  }
+  res.status(202).json(generic);
+});
+
+app.post('/api/account/reset-password', authRateLimit, async (req, res) => {
+  const password = req.body?.password;
+  if (typeof password !== 'string' || password.length < 8 || password.length > 128) return res.status(400).json({ error: 'Password must be between 8 and 128 characters' });
+  const token = req.body?.token;
+  const userId = casinoLedger.consumeRecoveryToken(token);
+  if (!userId || !users[userId]) return res.status(400).json({ error: 'Reset link is invalid or expired' });
+  const previousPassword = users[userId].password;
+  try {
+    users[userId].password = await bcrypt.hash(password, 10);
+    await saveUsers(users);
+  } catch (error) {
+    users[userId].password = previousPassword;
+    casinoLedger.restoreRecoveryToken(token, userId);
+    console.error('[Account] Password reset persistence failed:', error);
+    return res.status(503).json({ error: 'Unable to reset password right now' });
+  }
+  sessionStore.revokeUser(userId);
+  disconnectUserSockets(userId, 'password_reset');
+  res.json({ success: true, message: 'Password reset successfully' });
+});
+
+app.get("/api/session", requireAuth, async (req, res) => {
+  await usersLoadedPromise;
+  const user = users[req.auth.username];
+  if (!user) {
+    sessionStore.revoke(req.auth.sessionId);
+    return res.status(401).json({ error: "Session user no longer exists" });
+  }
+  const account = casinoLedger.account(user.username);
+  res.json({
+    success: true,
+    username: user.username,
+    credits: user.credits,
+    csrfToken: req.auth.session.csrfToken,
+    expiresAt: req.auth.session.expiresAt,
+    email: account?.email || null,
+    emailVerified: Boolean(account?.emailVerified)
+  });
+});
+
+app.post("/api/logout", requireAuth, (req, res) => {
+  const sessionId = req.auth.sessionId;
+  sessionStore.revoke(sessionId);
+  for (const connectedSocket of io.sockets.sockets.values()) {
+    if (connectedSocket.auth?.sessionId === sessionId) {
+      connectedSocket.emit("sessionRevoked", { reason: "logout" });
+      connectedSocket.disconnect(true);
+    }
+  }
+  const secureCookie = process.env.NODE_ENV === "production" || req.secure || req.headers["x-forwarded-proto"] === "https";
+  res.setHeader("Set-Cookie", serializeExpiredSessionCookie({ secure: secureCookie }));
+  res.json({ success: true });
+});
+
+const blackjackService = new BlackjackService();
+const processedBlackjackRounds = new Set();
+const pachinkoRequests = new Map();
+const DAILY_BONUS_PRIZES = [100, 250, 50, 500, 100, 300, 250, 2500];
+
+function notifyAuthenticatedUser(username, event, payload) {
+  const socketId = findSocketByUserId(username);
+  if (socketId) io.to(socketId).emit(event, payload);
+}
+
+function publicUsername(username) {
+  const safe = sanitizeText(username, 20).replace(/[<>&"'`]/g, '');
+  return safe || 'Player';
+}
+
+function sanitizePublicData(value, depth = 0) {
+  if (depth > 8) return null;
+  if (typeof value === 'string') return sanitizeText(value, 300).replace(/[<>&"'`]/g, '');
+  if (Array.isArray(value)) return value.slice(0, 500).map(item => sanitizePublicData(item, depth + 1));
+  if (value && typeof value === 'object') {
+    const safe = {};
+    for (const [key, item] of Object.entries(value)) {
+      if (['__proto__', 'prototype', 'constructor'].includes(key)) continue;
+      safe[key] = sanitizePublicData(item, depth + 1);
+    }
+    return safe;
+  }
+  return value;
+}
+
+async function finalizeBlackjackState(username, state) {
+  if (!state.settled || processedBlackjackRounds.has(state.roundId)) return;
+  processedBlackjackRounds.add(state.roundId);
+  const totalStake = state.bet + (state.insuranceBet || 0);
+  const won = state.payout > totalStake;
+  const resultLabel = state.payout === totalStake ? 'Push' : won ? 'Win' : 'Loss';
+  addBetRecord(username, {
+    game: 'blackjack', bet: state.bet, result: resultLabel, payout: state.payout,
+    details: {
+      result: sanitizeText(state.result, 40),
+      hands: Array.isArray(state.playerHands) ? state.playerHands.map(hand => ({
+        score: hand.score, bet: hand.bet, payout: hand.payout, result: sanitizeText(hand.result, 40)
+      })) : []
+    }
+  });
+  updateUserStats(username, 'blackjack', state.bet, won, state.payout, {
+    playerScore: state.playerScore, playerScores: state.playerHands?.map(hand => hand.score), dealerScore: state.dealerScore,
+    isBlackjack: state.result === 'blackjack', reason: state.result
+  });
+  const achievements = checkAchievements(username, 'blackjack', state.bet, won, {
+    isBlackjack: state.result === 'blackjack'
+  });
+  if (achievements.length) notifyAuthenticatedUser(username, 'achievementUnlocked', achievements.map(id => ACHIEVEMENTS[id]));
+}
+
+async function settleBlackjackLedger(username, round, state) {
+  const escrowIds = Array.isArray(round.escrowIds) ? round.escrowIds : [];
+  if (!escrowIds.length) throw new Error('Blackjack escrow is missing');
+  await finishEscrows(escrowIds.map((escrowId, index) => ({
+    escrowId,
+    payout: index === 0 ? state.payout : 0,
+    idempotencyKey: `blackjack:${state.roundId}:${escrowId}:settle`,
+    metadata: { result: state.result, payout: state.payout, handResults: state.handResults }
+  })));
+  const proof = fairRng.reveal(state.roundId, {
+    result: state.result,
+    payout: state.payout,
+    playerHand: state.playerHand,
+    playerHands: state.playerHands,
+    dealerHand: state.dealerHand
+  });
+  casinoLedger.saveRound({ roundId: state.roundId, game: 'blackjack', state, status: 'settled',
+    commitment: proof.commitment, seedId: proof.commitment, nonce: proof.nonce });
+  await finalizeBlackjackState(username, state);
+  return proof;
+}
+
+app.post("/api/games/blackjack/start", requireAuth, apiMutationRateLimit, async (req, res) => {
+  const username = req.auth.username;
+  const bet = Number(req.body?.bet);
+  const clientSeed = sanitizeText(req.body?.clientSeed || username, 80).replace(/[^A-Za-z0-9:_.-]/g, '') || username;
+  if (!Number.isSafeInteger(bet) || bet < 1) return res.status(400).json({ error: "Invalid bet" });
+  try {
+    const response = await runWithUserBalanceLock(username, async () => {
+      if (!users[username]) return { status: 404, error: "User not found" };
+      if (casinoLedger.balance(username) < bet) return { status: 400, error: "Insufficient credits" };
+      const roundId = `blackjack_${crypto.randomUUID()}`;
+      const fair = fairRng.consume('blackjack', roundId, clientSeed);
+      let randomCounter = 0;
+      const state = blackjackService.start(username, bet, {
+        roundId,
+        randomInt: max => fairRng.int(fair, max, randomCounter++)
+      });
+      const round = blackjackService.rounds.get(username);
+      try {
+        const reserved = await reserveCredits(username, { game: 'blackjack', referenceId: roundId, stake: bet,
+          metadata: { commitment: fair.commitment, clientSeed, nonce: fair.nonce } });
+        round.escrowIds = [reserved.escrow.escrowId];
+        round.fairContext = fair;
+      } catch (error) {
+        blackjackService.rounds.delete(username);
+        throw error;
+      }
+      let proof = { commitment: fair.commitment, clientSeed, nonce: fair.nonce, nextCommitment: fair.nextCommitment };
+      if (state.settled) proof = await settleBlackjackLedger(username, round, state);
+      else casinoLedger.saveRound({ roundId, game: 'blackjack', state, commitment: fair.commitment, seedId: fair.commitment, nonce: fair.nonce });
+      return { status: 200, state, balance: casinoLedger.balance(username), fairness: proof };
+    });
+    if (response.error) return res.status(response.status).json({ error: response.error });
+    res.json({ success: true, ...response });
+  } catch (error) {
+    const status = /already active/.test(error.message) ? 409 : 400;
+    res.status(status).json({ error: error.message });
+  }
+});
+
+app.post("/api/games/blackjack/action", requireAuth, apiMutationRateLimit, async (req, res) => {
+  const username = req.auth.username;
+  const roundId = sanitizeText(req.body?.roundId, 80);
+  const action = sanitizeText(req.body?.action, 30);
+  if (!roundId || !['hit', 'stand', 'double', 'split', 'insurance', 'declineInsurance'].includes(action)) {
+    return res.status(400).json({ error: "Invalid blackjack action" });
+  }
+  try {
+    const response = await runWithUserBalanceLock(username, async () => {
+      if (!users[username]) return { status: 404, error: "User not found" };
+      const current = blackjackService.rounds.get(username);
+      if (!current || current.id !== roundId) return { status: 404, error: "Blackjack round not found" };
+      if (current.settled) {
+        return { status: 200, state: blackjackService.publicState(current), balance: casinoLedger.balance(username), fairness: fairRng.getProof(roundId) };
+      }
+      const activeHand = current.playerHands?.[current.activeHandIndex];
+      const extraDebit = action === 'double' ? activeHand?.bet || 0
+        : action === 'split' ? current.baseBet
+          : action === 'insurance' ? Math.floor(current.baseBet / 2) : 0;
+      if (extraDebit > casinoLedger.balance(username)) return { status: 400, error: "Insufficient credits" };
+      let extraEscrow = null;
+      if (extraDebit > 0) {
+        const handIndex = Number.isSafeInteger(current.activeHandIndex) ? current.activeHandIndex : 0;
+        const referenceId = `${roundId}:${action}:hand-${handIndex}`;
+        extraEscrow = await reserveCredits(username, {
+          game: 'blackjack', referenceId, stake: extraDebit, metadata: { roundId, action, handIndex }
+        });
+        current.escrowIds.push(extraEscrow.escrow.escrowId);
+      }
+      try {
+        const state = blackjackService.action(username, roundId, action);
+        let proof = { commitment: current.fairContext.commitment, clientSeed: current.fairContext.clientSeed,
+          nonce: current.fairContext.nonce, nextCommitment: current.fairContext.nextCommitment };
+        if (state.settled) proof = await settleBlackjackLedger(username, current, state);
+        else casinoLedger.saveRound({ roundId, game: 'blackjack', state, commitment: proof.commitment, seedId: proof.commitment, nonce: proof.nonce });
+        return { status: 200, state, balance: casinoLedger.balance(username), fairness: proof };
+      } catch (error) {
+        if (extraEscrow) {
+          await finishEscrow({ escrowId: extraEscrow.escrow.escrowId, payout: extraDebit,
+            idempotencyKey: `blackjack:${roundId}:${action}:rollback`, action: 'refund', metadata: { reason: 'action_failed' } });
+          current.escrowIds = current.escrowIds.filter(id => id !== extraEscrow.escrow.escrowId);
+        }
+        throw error;
+      }
+    });
+    if (response.error) return res.status(response.status).json({ error: response.error });
+    res.json({ success: true, ...response });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post("/api/games/pachinko/drop", requireAuth, apiMutationRateLimit, async (req, res) => {
+  const username = req.auth.username;
+  const risk = sanitizeText(req.body?.risk, 10);
+  const bet = Number(req.body?.bet);
+  const count = Number(req.body?.count);
+  const requestId = sanitizeText(req.body?.requestId, 80);
+  const clientSeed = sanitizeText(req.body?.clientSeed || username, 80).replace(/[^A-Za-z0-9:_.-]/g, '') || username;
+  if (!['low', 'medium', 'high'].includes(risk) || !Number.isSafeInteger(bet) || bet < 1 ||
+      !Number.isSafeInteger(count) || count < 1 || count > 10 || !/^[A-Za-z0-9_-]{8,80}$/.test(requestId)) {
+    return res.status(400).json({ error: "Invalid pachinko request" });
+  }
+  const idempotencyKey = `pachinko:${username}:${requestId}`;
+  const totalBet = bet * count;
+  if (!Number.isSafeInteger(totalBet)) return res.status(400).json({ error: "Invalid total bet" });
+  try {
+    const response = await runWithUserBalanceLock(username, async () => {
+      const prior = casinoLedger.lookup(idempotencyKey);
+      if (prior) {
+        await projectCommittedBalance(username, prior.balance);
+        return prior.response;
+      }
+      if (!users[username]) return { status: 404, error: "User not found" };
+      if (casinoLedger.balance(username) < totalBet) return { status: 400, error: "Insufficient credits" };
+      const fairRoundId = `pachinko_${username}_${requestId}`;
+      const fair = fairRng.consume('pachinko', fairRoundId, clientSeed);
+      let counter = 0;
+      const results = Array.from({ length: count }, () => generatePachinkoResult(risk, max => fairRng.int(fair, max, counter++)));
+      const payout = results.reduce((sum, result) => sum + Math.floor(bet * result.multiplier), 0);
+      const proof = fairRng.reveal(fairRoundId, { risk, count, results, totalBet, payout });
+      const committed = casinoLedger.change({
+        userId: username, delta: payout - totalBet, idempotencyKey, game: 'pachinko', action: 'settle', referenceId: requestId,
+        response: ({ balanceAfter }) => ({ success: true, results, totalBet, payout, balance: balanceAfter, fairness: proof }),
+        metadata: { risk, count, commitment: proof.commitment }
+      });
+      await projectCommittedBalance(username, committed.balance);
+      const won = payout >= totalBet;
+      addBetRecord(username, { game: 'pachinko', bet: totalBet, result: won ? 'Win' : 'Loss', payout, details: { risk, count } });
+      updateUserStats(username, 'pachinko', totalBet, won, payout, { risk, count });
+      const achievements = checkAchievements(username, 'pachinko', totalBet, won, { risk });
+      if (achievements.length) notifyAuthenticatedUser(username, 'achievementUnlocked', achievements.map(id => ACHIEVEMENTS[id]));
+      return committed.response;
+    });
+    if (response.error) return res.status(response.status).json({ error: response.error });
+    res.json(response);
+  } catch (error) {
+    console.error('[Pachinko] Settlement failed:', error);
+    res.status(500).json({ error: "Pachinko settlement failed" });
+  }
+});
+
+app.post("/api/daily-bonus", requireAuth, apiMutationRateLimit, async (req, res) => {
+  const username = req.auth.username;
+  const DAY_MS = 20 * 60 * 60 * 1000;
+  const response = await runWithUserBalanceLock(username, async () => {
+    const user = users[username];
+    if (!user) return { status: 404, error: "User not found" };
+    const now = Date.now();
+    const last = Date.parse(user.lastDailyBonusAt || 0) || 0;
+    if (last && now - last < DAY_MS) {
+      return { status: 429, error: "Daily bonus is not ready", retryAt: last + DAY_MS };
+    }
+    const roundId = `daily_bonus_${username}_${now}`;
+    const fair = fairRng.consume('daily_bonus', roundId, username);
+    const prizeIndex = fairRng.int(fair, DAILY_BONUS_PRIZES.length);
+    const prize = DAILY_BONUS_PRIZES[prizeIndex];
+    const streak = last && now - last < 48 * 60 * 60 * 1000 ? Math.min(365, Number(user.dailyBonusStreak || 0) + 1) : 1;
+    const proof = fairRng.reveal(roundId, { prizeIndex, prize, streak });
+    const committed = casinoLedger.change({
+      userId: username, delta: prize, idempotencyKey: `daily_bonus:${username}:${last || 'first'}`,
+      game: 'daily_bonus', action: 'award', referenceId: roundId,
+      response: ({ balanceAfter }) => ({ success: true, prizeIndex, prize, streak, balance: balanceAfter, nextAt: now + DAY_MS, fairness: proof })
+    });
+    user.dailyBonusStreak = streak;
+    user.lastDailyBonusAt = new Date(now).toISOString();
+    await projectCommittedBalance(username, committed.balance);
+    addBetRecord(username, { game: 'daily_bonus', bet: 0, result: 'Bonus', payout: prize, details: { prizeIndex, streak } });
+    return committed.response;
+  });
+  if (response.error) return res.status(response.status).json(response);
+  res.json(response);
+});
+
+io.use((socket, next) => {
+  const auth = getRequestSession(socket.request, sessionStore);
+  const csrfToken = socket.handshake.auth?.csrfToken;
+  if (!auth || !sessionStore.verifyCsrf(auth.session, csrfToken)) {
+    return next(new Error("Authentication required"));
+  }
+  socket.auth = {
+    sessionId: auth.sessionId,
+    username: auth.session.username
+  };
+  next();
+});
+
 io.on("connection", (socket) => {
+  socket.use(([eventName], next) => {
+    const currentSession = sessionStore.get(socket.auth?.sessionId);
+    if (!currentSession || currentSession.username !== socket.auth?.username) {
+      const error = new Error("Session expired or revoked");
+      next(error);
+      socket.emit("sessionRevoked", { reason: "expired" });
+      socket.disconnect(true);
+      return;
+    }
+    const now = Date.now();
+    const key = `${socket.id}:${eventName}`;
+    const bucket = socketActionBuckets.get(key);
+    if (!bucket || bucket.resetAt <= now) {
+      socketActionBuckets.set(key, { count: 1, resetAt: now + 60_000 });
+      return next();
+    }
+    bucket.count += 1;
+    if (bucket.count > 60) return next(new Error("Action rate limit exceeded"));
+    next();
+  });
   console.log(`Player connected: ${socket.id}`);
 
   // Test connection handler (for debugging)
@@ -1380,32 +2080,21 @@ io.on("connection", (socket) => {
   });
 
   // Send current roulette state
-  socket.emit('rouletteState', {
-    spinning: rouletteState.spinning,
-    lastResult: rouletteState.lastResult,
-    currentBets: getBetsSnapshot(),
-    nextSpinTime: rouletteState.nextSpinTime,
-    history: rouletteState.history
-  });
+  socket.emit('rouletteState', getRouletteStatePayload());
 
-  socket.on("joinCasino", async ({ username }) => {
-    if (!username || username.trim() === "") {
-      socket.emit("error", "Please provide a valid username");
-      return;
-    }
-
-    const uname = username.trim();
-
-    // Check if user exists
+  socket.on("joinCasino", async (_payload = {}, callback) => {
+    await usersLoadedPromise;
+    const uname = socket.auth.username;
     const user = users[uname];
     if (!user) {
-      socket.emit("error", "User not found. Please register first.");
+      socket.emit("error", "Authenticated user not found.");
+      if (callback) callback({ success: false, error: "User not found" });
       return;
     }
 
-    // Wait for any in-flight balance updates (e.g. CS2 bet) before reading
+    // Wait for any in-flight balance updates before reading.
     await acquireUserBalanceLock(uname);
-    const credits = users[uname] ? users[uname].credits : user.credits;
+    const credits = users[uname].credits;
 
     players[socket.id] = {
       username: uname,
@@ -1420,146 +2109,170 @@ io.on("connection", (socket) => {
       username: players[socket.id].username,
       credits: players[socket.id].credits
     });
+    if (callback) callback({ success: true });
 
     // Send current roulette state
-    socket.emit('rouletteState', {
-      spinning: rouletteState.spinning,
-      lastResult: rouletteState.lastResult,
-      currentBets: getBetsSnapshot(),
-      nextSpinTime: rouletteState.nextSpinTime,
-      history: rouletteState.history
-    });
+    socket.emit('rouletteState', getRouletteStatePayload());
   });
 
-  socket.on("placeRouletteBet", ({ color, amount }) => {
-    if (!players[socket.id]) {
-      socket.emit("error", "Please join the casino first");
-      return;
-    }
+  const handleSetRouletteBet = async (payload = {}, callback) => {
+    const respond = result => {
+      if (typeof callback === 'function') callback(result);
+      else if (!result.success) socket.emit('error', result.error);
+    };
+    const player = players[socket.id];
+    if (!player) return respond({ success: false, error: 'Please join the casino first' });
+    const color = sanitizeText(payload.color, 12);
+    const amount = parsePositiveInteger(payload.amount);
+    const requestId = validateRouletteRequestId(payload.requestId);
+    const requestedRoundId = sanitizeText(payload.roundId, 160);
+    if (!['red', 'black', 'green'].includes(color)) return respond({ success: false, error: 'Invalid color. Choose red, black, or green' });
+    if (amount === null) return respond({ success: false, error: 'Invalid bet amount' });
+    if (!requestId) return respond({ success: false, error: 'Invalid request ID' });
+    if (!requestedRoundId || requestedRoundId !== rouletteState.roundId) return respond({ success: false, error: 'Roulette round changed. Please try again.' });
 
-    if (rouletteState.spinning) {
-      socket.emit("error", "Cannot place bets while wheel is spinning");
-      return;
-    }
+    const userId = player.userId;
+    try {
+      const result = await runWithUserBalanceLock(userId, async () => {
+        if (rouletteState.spinning || requestedRoundId !== rouletteState.roundId) {
+          return { success: false, error: 'Betting is closed for this round' };
+        }
+        const mutationKey = `roulette:${requestedRoundId}:${userId}:${requestId}:set`;
+        const replay = casinoLedger.lookup(mutationKey);
+        if (replay?.response) {
+          if (replay.response.bet?.color !== color || replay.response.bet?.amount !== amount) {
+            return { success: false, error: 'Request ID was already used for a different bet' };
+          }
+          return { ...replay.response, replayed: true };
+        }
 
-    // Check if player already has a bet
-    if (rouletteState.currentBets[socket.id]) {
-      socket.emit("error", "You can only place one bet per round. Please clear your current bet first.");
-      return;
-    }
+        const existing = findRouletteBetByUser(userId);
+        const action = existing ? (existing.bet.color === color && existing.bet.amount === amount ? 'unchanged' : 'replaced') : 'placed';
+        const publicBet = { color, amount };
+        const responseFactory = ({ balanceAfter }) => ({ success: true, action, bet: publicBet, balance: balanceAfter, roundId: requestedRoundId, requestId });
+        let committed;
+        let escrow;
 
-    if (color !== 'red' && color !== 'black' && color !== 'green') {
-      socket.emit("error", "Invalid color. Choose red, black, or green");
-      return;
-    }
+        if (action === 'unchanged') {
+          committed = casinoLedger.change({
+            userId, delta: 0, idempotencyKey: mutationKey, game: 'roulette', action: 'set_noop',
+            referenceId: existing.bet.referenceId, response: responseFactory,
+            metadata: { roundId: requestedRoundId, color, amount, requestId }
+          });
+          escrow = { escrowId: existing.bet.escrowId };
+        } else {
+          const referenceId = `${requestedRoundId}:${userId}:${requestId}`;
+          const reservation = {
+            userId, game: 'roulette', referenceId, stake: amount, idempotencyKey: mutationKey,
+            metadata: { roundId: requestedRoundId, color, amount, requestId }, response: responseFactory
+          };
+          if (existing) {
+            committed = casinoLedger.replaceEscrow({
+              oldEscrowId: existing.bet.escrowId,
+              refundIdempotencyKey: `${mutationKey}:refund`,
+              refundMetadata: { reason: 'replace', roundId: requestedRoundId, requestId, nextColor: color },
+              reservation
+            });
+            escrow = committed.reservation.escrow;
+          } else {
+            committed = casinoLedger.reserve(reservation);
+            escrow = committed.escrow;
+          }
+          if (existing) delete rouletteState.currentBets[existing.socketId];
+          rouletteState.currentBets[socket.id] = {
+            color, amount, userId, username: player.username, requestId,
+            referenceId, escrowId: escrow.escrowId
+          };
+        }
 
-    const betAmount = parsePositiveInteger(amount);
-    if (betAmount === null) {
-      socket.emit("error", "Invalid bet amount");
-      return;
-    }
-
-    if (betAmount > players[socket.id].credits) {
-      socket.emit("error", "Insufficient credits");
-      return;
-    }
-
-    // Deduct credits
-    players[socket.id].credits -= betAmount;
-    
-    // Save balance to file
-    const userId = players[socket.id].userId;
-    if (userId) {
-      saveUserBalance(userId, players[socket.id].credits).catch(err => {
-        console.error("Error saving balance:", err);
+        const balance = committed.balance;
+        await projectCommittedBalance(userId, balance);
+        const response = action === 'unchanged' ? committed.response
+          : (existing ? committed.reservation.response : committed.response);
+        return { ...response, replayed: Boolean(committed.replayed) };
       });
+      respond(result);
+      if (result.success && !result.replayed) io.emit('rouletteBetsUpdate', { bets: getBetsSnapshot(), roundId: rouletteState.roundId });
+    } catch (error) {
+      console.error('[Roulette] Failed to set bet:', error);
+      respond({ success: false, error: /resulting balance|Insufficient/i.test(error.message) ? 'Insufficient credits' : 'Unable to set bet' });
     }
+  };
 
-    // Place bet
-    rouletteState.currentBets[socket.id] = { color, amount: betAmount };
+  socket.on('setRouletteBet', handleSetRouletteBet);
+  socket.on('placeRouletteBet', (payload = {}, callback) => handleSetRouletteBet({
+    ...payload,
+    roundId: rouletteState.roundId,
+    requestId: validateRouletteRequestId(payload.requestId) || `legacy_${crypto.randomUUID().replaceAll('-', '')}`
+  }, callback));
 
-    // Update player data
-    socket.emit("playerData", {
-      username: players[socket.id].username,
-      credits: players[socket.id].credits
-    });
-
-    // Broadcast updated bets to all players
-    io.emit('rouletteBetsUpdate', {
-      bets: getBetsSnapshot()
-    });
-  });
-
-  socket.on("clearRouletteBet", () => {
-    if (!players[socket.id]) {
-      return;
-    }
-
-    if (rouletteState.spinning) {
-      socket.emit("error", "Cannot clear bets while wheel is spinning");
-      return;
-    }
-
-    if (rouletteState.currentBets[socket.id]) {
-      const bet = rouletteState.currentBets[socket.id];
-      // Refund credits
-      players[socket.id].credits += bet.amount;
-      
-      // Save balance to file
-      const userId = players[socket.id].userId;
-      if (userId) {
-        saveUserBalance(userId, players[socket.id].credits).catch(err => {
-          console.error("Error saving balance:", err);
-        });
-      }
-      
-      delete rouletteState.currentBets[socket.id];
-
-      // Update player data
-      socket.emit("playerData", {
-        username: players[socket.id].username,
-        credits: players[socket.id].credits
+  socket.on('clearRouletteBet', async (payload = {}, callback) => {
+    if (typeof payload === 'function') { callback = payload; payload = {}; }
+    const respond = result => {
+      if (typeof callback === 'function') callback(result);
+      else if (!result.success) socket.emit('error', result.error);
+    };
+    const player = players[socket.id];
+    if (!player) return respond({ success: false, error: 'Please join the casino first' });
+    const requestId = validateRouletteRequestId(payload.requestId) || `legacy_${crypto.randomUUID().replaceAll('-', '')}`;
+    const requestedRoundId = sanitizeText(payload.roundId || rouletteState.roundId, 160);
+    const userId = player.userId;
+    try {
+      const result = await runWithUserBalanceLock(userId, async () => {
+        if (rouletteState.spinning || requestedRoundId !== rouletteState.roundId) {
+          return { success: false, error: 'Betting is closed for this round' };
+        }
+        const mutationKey = `roulette:${requestedRoundId}:${userId}:${requestId}:clear`;
+        const replay = casinoLedger.lookup(mutationKey);
+        if (replay?.response) return { ...replay.response, replayed: true };
+        const existing = findRouletteBetByUser(userId);
+        const responseFactory = ({ balanceAfter }) => ({ success: true, action: existing ? 'cleared' : 'unchanged', bet: null, balance: balanceAfter, roundId: requestedRoundId, requestId });
+        let committed;
+        if (existing) {
+          committed = casinoLedger.refund({
+            escrowId: existing.bet.escrowId,
+            idempotencyKey: mutationKey,
+            response: responseFactory,
+            metadata: { reason: 'player_clear', roundId: requestedRoundId, requestId }
+          });
+          delete rouletteState.currentBets[existing.socketId];
+        } else {
+          committed = casinoLedger.change({
+            userId, delta: 0, idempotencyKey: mutationKey, game: 'roulette', action: 'clear_noop',
+            referenceId: requestedRoundId, response: responseFactory,
+            metadata: { roundId: requestedRoundId, requestId }
+          });
+        }
+        await projectCommittedBalance(userId, committed.balance);
+        return { ...committed.response, replayed: Boolean(committed.replayed) };
       });
-
-      // Broadcast updated bets
-      io.emit('rouletteBetsUpdate', {
-        bets: getBetsSnapshot()
-      });
+      respond(result);
+      if (result.success && !result.replayed) io.emit('rouletteBetsUpdate', { bets: getBetsSnapshot(), roundId: rouletteState.roundId });
+    } catch (error) {
+      console.error('[Roulette] Failed to clear bet:', error);
+      respond({ success: false, error: 'Unable to clear bet' });
     }
   });
 
   // ========== COINFLIP GAME HANDLERS ==========
   
-  socket.on("joinGame", (playerName, initialCredits) => {
-    if (!playerName || playerName.trim() === "") {
-      socket.emit("error", "Please enter a valid name");
+  socket.on("joinGame", async () => {
+    const playerName = socket.auth.username;
+    await acquireUserBalanceLock(playerName);
+    const user = users[playerName];
+    if (!user) {
+      socket.emit("error", "Authenticated user not found");
       return;
     }
 
-    // Check if player already exists in our players object
-    const existingPlayer = Object.values(players).find(p => p.username === playerName.trim());
-    let playerCredits = INITIAL_CREDITS;
-    
-    if (existingPlayer) {
-      // Player already exists - use their credits
-      playerCredits = existingPlayer.credits;
-    } else if (initialCredits !== undefined && initialCredits !== null) {
-      // Use provided initial credits (from casino)
-      playerCredits = parseInt(initialCredits) || INITIAL_CREDITS;
-    }
-
-    // Initialize or update player data if not already set
     if (!players[socket.id]) {
       players[socket.id] = {
-        username: playerName.trim(),
-        credits: playerCredits,
+        username: playerName,
+        credits: user.credits,
         roomId: null,
-        userId: playerName.trim() // Use username as userId for coinflip
+        userId: playerName
       };
-      socketToUser[socket.id] = playerName.trim();
-    } else {
-      // Update credits if different
-      players[socket.id].credits = playerCredits;
+      socketToUser[socket.id] = playerName;
     }
 
     socket.emit("playerData", {
@@ -1571,9 +2284,13 @@ io.on("connection", (socket) => {
     emitAvailableCoinflipRooms(socket);
   });
 
-  socket.on("createRoom", ({ betAmount, choice }) => {
+  socket.on("createRoom", async ({ betAmount, choice }) => {
     if (!players[socket.id]) {
       socket.emit("error", "Please join the game first");
+      return;
+    }
+    if (players[socket.id].roomId) {
+      socket.emit("error", "Leave your current room before creating another");
       return;
     }
 
@@ -1583,7 +2300,7 @@ io.on("connection", (socket) => {
       return;
     }
 
-    if (betAmountNum > players[socket.id].credits) {
+    if (betAmountNum > users[players[socket.id].userId].credits) {
       socket.emit("error", "Insufficient credits");
       return;
     }
@@ -1593,23 +2310,25 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Deduct credits from creator
-    players[socket.id].credits -= betAmountNum;
-    
-    // Save balance
-    const userId = players[socket.id].userId;
-    if (userId && users[userId]) {
-      saveUserBalance(userId, players[socket.id].credits).catch(err => {
-        console.error("Error saving balance:", err);
-      });
+    const roomId = `room-${crypto.randomUUID()}`;
+    const creatorUserId = players[socket.id].userId;
+    const creatorReference = `${roomId}:creator:${creatorUserId}`;
+    players[socket.id].roomId = 'pending';
+    let creatorEscrow;
+    try {
+      creatorEscrow = await reserveCredits(creatorUserId, { game: 'coinflip', referenceId: creatorReference,
+        stake: betAmountNum, metadata: { roomId, choice, role: 'creator' } });
+    } catch (error) {
+      players[socket.id].roomId = null;
+      console.error("[Coinflip] Failed to persist creator bet:", error);
+      socket.emit("error", "Unable to create room");
+      return;
     }
 
-    const roomId = `room-${String(coinflipRoomCounter).padStart(3, '0')}`;
-    coinflipRoomCounter++;
-    
     socket.join(roomId);
     players[socket.id].roomId = roomId;
-    
+    const fairRoundId = `coinflip_${crypto.randomUUID()}`;
+    const fairContext = fairRng.consume('coinflip', fairRoundId, creatorUserId);
     coinflipRooms[roomId] = {
       creatorId: socket.id,
       betAmount: betAmountNum,
@@ -1617,7 +2336,12 @@ io.on("connection", (socket) => {
       players: [socket.id],
       confirmed: false,
       gameState: 'waiting',
-      coinResult: null
+      coinResult: null,
+      fairRoundId,
+      fairContext,
+      commitment: fairContext.commitment,
+      escrows: { [socket.id]: creatorEscrow.escrow.escrowId },
+      references: { [socket.id]: creatorReference }
     };
 
     socket.emit("roomCreated", { 
@@ -1641,9 +2365,16 @@ io.on("connection", (socket) => {
       return;
     }
 
-    const room = coinflipRooms[roomId];
+    const safeRoomId = typeof roomId === 'string' && /^room-\d{3,}$/.test(roomId) ? roomId : null;
+    const room = safeRoomId && Object.prototype.hasOwnProperty.call(coinflipRooms, safeRoomId)
+      ? coinflipRooms[safeRoomId]
+      : null;
     if (!room) {
       socket.emit("error", "Room not found");
+      return;
+    }
+    if (room.players.includes(socket.id)) {
+      socket.emit("error", "You are already in this room");
       return;
     }
 
@@ -1684,40 +2415,48 @@ io.on("connection", (socket) => {
     emitAvailableCoinflipRooms();
   });
 
-  socket.on("confirmParticipation", ({ roomId }) => {
+  socket.on("confirmParticipation", async ({ roomId }) => {
     const room = coinflipRooms[roomId];
     if (!room || !room.players.includes(socket.id)) {
       socket.emit("error", "You are not in this room");
       return;
     }
 
-    if (room.gameState !== 'waiting') {
+    if (room.gameState !== 'waiting' || room.confirmed) {
       socket.emit("error", "Game already started");
       return;
     }
+    if (socket.id === room.creatorId || room.players.length !== 2) {
+      socket.emit("error", "Only the joined opponent can confirm participation");
+      return;
+    }
 
-    // Deduct credits from the joiner (they match the creator's bet)
-    if (socket.id !== room.creatorId) {
-      if (players[socket.id].credits < room.betAmount) {
-        socket.emit("error", "Insufficient credits");
-        return;
-      }
-      players[socket.id].credits -= room.betAmount;
-      
-      // Save balance
-      const userId = players[socket.id].userId;
-      if (userId && users[userId]) {
-        saveUserBalance(userId, players[socket.id].credits).catch(err => {
-          console.error("Error saving balance:", err);
-        });
-      }
+    room.gameState = 'settling';
+    const userId = players[socket.id].userId;
+    if (users[userId].credits < room.betAmount) {
+      room.gameState = 'waiting';
+      socket.emit("error", "Insufficient credits");
+      return;
+    }
+    try {
+      const joinerReference = `${roomId}:joiner:${userId}`;
+      const reserved = await reserveCredits(userId, { game: 'coinflip', referenceId: joinerReference,
+        stake: room.betAmount, metadata: { roomId, role: 'joiner' } });
+      room.escrows[socket.id] = reserved.escrow.escrowId;
+      room.references[socket.id] = joinerReference;
+    } catch (error) {
+      room.gameState = 'waiting';
+      console.error("[Coinflip] Failed to persist opponent bet:", error);
+      socket.emit("error", "Unable to confirm participation");
+      return;
     }
 
     room.confirmed = true;
     room.gameState = 'flipping';
+    socket.emit('coinflipWagerAccepted', { roomId });
 
     // Perform coin flip
-    const coinResult = Math.random() > 0.5 ? 'Heads' : 'Tails';
+    const coinResult = fairRng.int(room.fairContext, 2) === 1 ? 'Heads' : 'Tails';
     room.coinResult = coinResult;
 
     // Calculate winnings
@@ -1731,33 +2470,35 @@ io.on("connection", (socket) => {
     if (room.creatorChoice === coinResult) {
       // Creator wins - gets both bets
       const winnings = room.betAmount * 2;
-      players[creatorId].credits += winnings;
-      
-      // Save creator balance and update stats
-      const creatorUserId = players[creatorId].userId;
-      if (creatorUserId && users[creatorUserId]) {
-        saveUserBalance(creatorUserId, players[creatorId].credits).catch(err => {
-          console.error("Error saving balance:", err);
-        });
-        
-        // Update stats and check achievements for creator (winner)
-        updateUserStats(creatorUserId, 'coinflip', room.betAmount, true, winnings, { result: coinResult });
-        const newAchievements = checkAchievements(creatorUserId, 'coinflip', room.betAmount, true, { result: coinResult });
-        
-        // Emit achievement notifications to creator
-        if (newAchievements.length > 0) {
-          io.to(creatorId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
-        }
-        
-        // Add bet record for creator
-        addBetRecord(players[creatorId].username, {
-          game: 'coinflip',
-          bet: room.betAmount,
-          result: `Won: ${coinResult}`,
-          payout: winnings,
-          multiplier: 2.0
-        });
+      try {
+        await finishEscrows([
+          { escrowId: room.escrows[creatorId], payout: winnings, idempotencyKey: `coinflip:${room.fairRoundId}:${players[creatorId].userId}:settle`, metadata: { coinResult } },
+          { escrowId: room.escrows[joinerId], payout: 0, idempotencyKey: `coinflip:${room.fairRoundId}:${players[joinerId].userId}:settle`, metadata: { coinResult } }
+        ]);
+      } catch (error) {
+        console.error("[Coinflip] Failed to persist creator payout:", error);
+        io.to(roomId).emit("error", "Settlement persistence failed; contact support");
+        return;
       }
+
+      // Update creator stats
+      const creatorUserId = players[creatorId].userId;
+      updateUserStats(creatorUserId, 'coinflip', room.betAmount, true, winnings, { result: coinResult });
+      const newAchievements = checkAchievements(creatorUserId, 'coinflip', room.betAmount, true, { result: coinResult });
+
+      // Emit achievement notifications to creator
+      if (newAchievements.length > 0) {
+        io.to(creatorId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+      }
+
+      // Add bet record for creator
+      addBetRecord(players[creatorId].username, {
+        game: 'coinflip',
+        bet: room.betAmount,
+        result: `Won: ${coinResult}`,
+        payout: winnings,
+        multiplier: 2.0
+      });
       
       // Update stats for joiner (loser)
       const joinerUserId = players[joinerId].userId;
@@ -1795,33 +2536,35 @@ io.on("connection", (socket) => {
     } else {
       // Joiner wins - gets both bets
       const winnings = room.betAmount * 2;
-      players[joinerId].credits += winnings;
-      
-      // Save joiner balance and update stats
-      const joinerUserId = players[joinerId].userId;
-      if (joinerUserId && users[joinerUserId]) {
-        saveUserBalance(joinerUserId, players[joinerId].credits).catch(err => {
-          console.error("Error saving balance:", err);
-        });
-        
-        // Update stats and check achievements for joiner (winner)
-        updateUserStats(joinerUserId, 'coinflip', room.betAmount, true, winnings, { result: coinResult });
-        const newAchievements = checkAchievements(joinerUserId, 'coinflip', room.betAmount, true, { result: coinResult });
-        
-        // Emit achievement notifications to joiner
-        if (newAchievements.length > 0) {
-          io.to(joinerId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
-        }
-        
-        // Add bet record for joiner
-        addBetRecord(players[joinerId].username, {
-          game: 'coinflip',
-          bet: room.betAmount,
-          result: `Won: ${coinResult}`,
-          payout: winnings,
-          multiplier: 2.0
-        });
+      try {
+        await finishEscrows([
+          { escrowId: room.escrows[joinerId], payout: winnings, idempotencyKey: `coinflip:${room.fairRoundId}:${players[joinerId].userId}:settle`, metadata: { coinResult } },
+          { escrowId: room.escrows[creatorId], payout: 0, idempotencyKey: `coinflip:${room.fairRoundId}:${players[creatorId].userId}:settle`, metadata: { coinResult } }
+        ]);
+      } catch (error) {
+        console.error("[Coinflip] Failed to persist opponent payout:", error);
+        io.to(roomId).emit("error", "Settlement persistence failed; contact support");
+        return;
       }
+
+      // Update stats and check achievements for joiner (winner)
+      const joinerUserId = players[joinerId].userId;
+      updateUserStats(joinerUserId, 'coinflip', room.betAmount, true, winnings, { result: coinResult });
+      const newAchievements = checkAchievements(joinerUserId, 'coinflip', room.betAmount, true, { result: coinResult });
+
+      // Emit achievement notifications to joiner
+      if (newAchievements.length > 0) {
+        io.to(joinerId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+      }
+
+      // Add bet record for joiner
+      addBetRecord(players[joinerId].username, {
+        game: 'coinflip',
+        bet: room.betAmount,
+        result: `Won: ${coinResult}`,
+        payout: winnings,
+        multiplier: 2.0
+      });
       
       // Update stats for creator (loser)
       const creatorUserId = players[creatorId].userId;
@@ -1864,24 +2607,29 @@ io.on("connection", (socket) => {
       [joinerId]: joinerChoice
     };
 
-    // Emit results
+    const proof = fairRng.reveal(room.fairRoundId, { coinResult, creatorChoice: room.creatorChoice });
     io.to(roomId).emit("coinFlipResult", {
       coinResult: coinResult,
       results: results,
       betAmount: room.betAmount,
       creatorChoice: room.creatorChoice,
-      choices: room.choices
+      choices: room.choices,
+      fairness: proof
     });
 
     room.gameState = 'finished';
   });
 
-  socket.on("leaveRoom", () => {
+  socket.on("leaveRoom", async () => {
     if (players[socket.id] && players[socket.id].roomId) {
       const roomId = players[socket.id].roomId;
       const room = coinflipRooms[roomId];
       
       if (room) {
+        if (room.confirmed && room.gameState !== 'finished') {
+          socket.emit("error", "Cannot leave while a coinflip is settling");
+          return;
+        }
         const isCreator = socket.id === room.creatorId;
         socket.leave(roomId);
         room.players = room.players.filter(id => id !== socket.id);
@@ -1889,14 +2637,13 @@ io.on("connection", (socket) => {
         if (isCreator) {
           // Creator is leaving - refund their bet and delete room
           if (!room.confirmed) {
-            players[socket.id].credits += room.betAmount;
-            
-            // Save balance
-            const userId = players[socket.id].userId;
-            if (userId && users[userId]) {
-              saveUserBalance(userId, players[socket.id].credits).catch(err => {
-                console.error("Error saving balance:", err);
-              });
+            try {
+              await finishEscrow({ escrowId: room.escrows[socket.id], payout: room.betAmount,
+                idempotencyKey: `coinflip:${room.references[socket.id]}:refund`, action: 'refund', metadata: { reason: 'leave_room' } });
+            } catch (error) {
+              console.error("[Coinflip] Failed to persist room refund:", error);
+              socket.emit("error", "Unable to leave room; refund was not persisted");
+              return;
             }
           }
           delete coinflipRooms[roomId];
@@ -1987,8 +2734,8 @@ io.on("connection", (socket) => {
     });
 
     // Start the coin flip immediately
-    setTimeout(() => {
-      const coinResult = Math.random() < 0.5 ? 'Heads' : 'Tails';
+    setTimeout(async () => {
+      const coinResult = fairRng.int(room.fairContext, 2) === 0 ? 'Heads' : 'Tails';
       room.coinResult = coinResult;
       room.gameState = 'finished';
 
@@ -1999,14 +2746,18 @@ io.on("connection", (socket) => {
       if (coinResult === room.creatorChoice) {
         // Creator wins - gets both bets
         const winnings = room.betAmount * 2;
-        players[creatorId].credits += winnings;
-        
+        try {
+          await finishEscrow({ escrowId: room.escrows[creatorId], payout: winnings,
+            idempotencyKey: `coinflip:${room.fairRoundId}:${players[creatorId].userId}:settle`, metadata: { coinResult, opponent: 'bot' } });
+        } catch (error) {
+          console.error("[Coinflip] Failed to persist bot-game payout:", error);
+          io.to(creatorId).emit("error", "Settlement persistence failed; contact support");
+          return;
+        }
+
         const creatorUserId = players[creatorId].userId;
         if (creatorUserId && users[creatorUserId]) {
-          saveUserBalance(creatorUserId, players[creatorId].credits).catch(err => {
-            console.error("Error saving balance:", err);
-          });
-          
+
           // Update stats and check achievements for creator (winner)
           updateUserStats(creatorUserId, 'coinflip', room.betAmount, true, winnings, { result: coinResult });
           const newAchievements = checkAchievements(creatorUserId, 'coinflip', room.betAmount, true, { result: coinResult });
@@ -2041,6 +2792,14 @@ io.on("connection", (socket) => {
       } else {
         // Bot wins - creator loses their bet
         const creatorUserId = players[creatorId].userId;
+        try {
+          await finishEscrow({ escrowId: room.escrows[creatorId], payout: 0,
+            idempotencyKey: `coinflip:${room.fairRoundId}:${creatorUserId}:settle`, metadata: { coinResult, opponent: 'bot' } });
+        } catch (error) {
+          console.error('[Coinflip] Failed to persist bot-game loss:', error);
+          io.to(creatorId).emit('error', 'Settlement persistence failed; contact support');
+          return;
+        }
         if (creatorUserId && users[creatorUserId]) {
           // Update stats and check achievements for creator (loser)
           updateUserStats(creatorUserId, 'coinflip', room.betAmount, false, 0, { result: coinResult });
@@ -2081,6 +2840,7 @@ io.on("connection", (socket) => {
         [botId]: results[botId]
       };
       
+      const proof = fairRng.reveal(room.fairRoundId, { coinResult, creatorChoice: room.creatorChoice, opponent: 'bot' });
       io.to(roomId).emit("coinFlipResult", {
         coinResult,
         results: resultsForClient,
@@ -2089,7 +2849,8 @@ io.on("connection", (socket) => {
         choices: {
           [creatorId]: room.creatorChoice,
           [botId]: botChoice
-        }
+        },
+        fairness: proof
       });
 
       // Clean up bot after a delay
@@ -2130,7 +2891,7 @@ io.on("connection", (socket) => {
       return;
     }
 
-    const tableId = `poker_${pokerTableCounter++}`;
+    const tableId = `poker_${crypto.randomUUID()}`;
     pokerTables[tableId] = {
       tableId,
       tableName: (tableName || 'Poker Table').slice(0, 30),
@@ -2142,6 +2903,7 @@ io.on("connection", (socket) => {
       isPrivate: !!isPrivate,
       seats: [null, null, null, null, null, null], // 6 seats
       players: [], // { socketId, username, seat, chips, isActive, isSittingOut }
+      pendingJoinSockets: new Set(),
       gameState: 'waiting', // waiting, dealing, betting, showdown
       currentHand: null,
       dealerPosition: 0,
@@ -2155,7 +2917,7 @@ io.on("connection", (socket) => {
     io.emit("pokerTablesUpdate", getPokerTablesListForLobby());
   });
 
-  socket.on("joinPokerTable", ({ tableId, buyIn, seat }) => {
+  socket.on("joinPokerTable", async ({ tableId, buyIn, seat }) => {
     if (!players[socket.id]) {
       socket.emit("error", "Please join the casino first");
       return;
@@ -2174,6 +2936,10 @@ io.on("connection", (socket) => {
       socket.emit("pokerTableState", getPokerTableStateForClient(tableId, socket.id));
       return;
     }
+    if (table.pendingJoinSockets.has(socket.id)) {
+      socket.emit("error", "Table join is already in progress");
+      return;
+    }
 
     const buyInAmount = parsePositiveInteger(buyIn);
     if (buyInAmount === null || buyInAmount < table.minBuyIn || buyInAmount > table.maxBuyIn) {
@@ -2181,7 +2947,7 @@ io.on("connection", (socket) => {
       return;
     }
 
-    if (players[socket.id].credits < buyInAmount) {
+    if (users[players[socket.id].userId].credits < buyInAmount) {
       socket.emit("error", "Insufficient credits for buy-in");
       return;
     }
@@ -2199,24 +2965,32 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Deduct buy-in from casino credits
-    players[socket.id].credits -= buyInAmount;
+    const seatReservation = { pending: true, socketId: socket.id };
+    table.seats[seatIndex] = seatReservation;
+    table.pendingJoinSockets.add(socket.id);
     const userId = players[socket.id].userId;
-    if (userId) {
-      saveUserBalance(userId, players[socket.id].credits).catch(err => {
-        console.error("[Poker] Error saving balance:", err);
-      });
+    const pokerReference = `${tableId}:${userId}:${crypto.randomUUID()}`;
+    let pokerEscrow;
+    try {
+      pokerEscrow = await reserveCredits(userId, { game: 'poker', referenceId: pokerReference,
+        stake: buyInAmount, metadata: { tableId, seat: seatIndex } });
+    } catch (error) {
+      table.pendingJoinSockets.delete(socket.id);
+      if (table.seats[seatIndex] === seatReservation) table.seats[seatIndex] = null;
+      console.error("[Poker] Failed to persist buy-in:", error);
+      socket.emit("error", "Unable to join table");
+      return;
     }
-    socket.emit("playerData", {
-      username: players[socket.id].username,
-      credits: players[socket.id].credits
-    });
+    table.pendingJoinSockets.delete(socket.id);
 
     const playerEntry = {
       socketId: socket.id,
       username: players[socket.id].username,
       seat: seatIndex,
       chips: buyInAmount,
+      escrowId: pokerEscrow.escrow.escrowId,
+      escrowReference: pokerReference,
+      userId,
       isActive: true,
       isSittingOut: false
     };
@@ -2232,8 +3006,8 @@ io.on("connection", (socket) => {
     io.emit("pokerTablesUpdate", getPokerTablesListForLobby());
   });
 
-  socket.on("leavePokerTable", ({ tableId }) => {
-    handlePokerPlayerLeave(socket.id, tableId);
+  socket.on("leavePokerTable", async ({ tableId }) => {
+    await handlePokerPlayerLeave(socket.id, tableId);
   });
 
   socket.on("startPokerHand", ({ tableId }) => {
@@ -2283,11 +3057,11 @@ io.on("connection", (socket) => {
     const table = pokerTables[tableId];
     if (!table) return;
 
-    const msg = message.trim().slice(0, 200);
+    const msg = sanitizeText(message, 200);
     if (!msg) return;
 
     io.to(tableId).emit("pokerChatMessage", {
-      username: players[socket.id].username,
+      username: publicUsername(players[socket.id].username),
       message: msg,
       timestamp: Date.now()
     });
@@ -2297,53 +3071,19 @@ io.on("connection", (socket) => {
 
   // ========== CRASH SOCKET HANDLERS ==========
 
-  // ========== BALANCE SYNC (client-side games: blackjack, pachinko) ==========
-  socket.on("syncBalance", async ({ credits }) => {
-    if (!players[socket.id]) return;
-    const creditAmount = Math.max(0, credits);
-    players[socket.id].credits = creditAmount;
-    const userId = players[socket.id].userId;
-    if (userId) {
-      // Use balance lock to prevent joinCasino from reading stale data mid-sync
-      await runWithUserBalanceLock(userId, async () => {
-        await saveUserBalance(userId, creditAmount);
-      });
-    }
+  // Legacy client-authoritative mutation events are intentionally rejected.
+  socket.on("syncBalance", () => {
+    const player = players[socket.id];
+    if (player) socket.emit("playerData", { username: player.username, credits: users[player.userId]?.credits ?? player.credits });
+    socket.emit("mutationRejected", { event: "syncBalance", reason: "Balance is server-authoritative" });
   });
 
-  // ========== GAME RESULT (for client-side games stats tracking) ==========
-  socket.on("gameResult", ({ gameType, betAmount, won, payout, result = {} }) => {
-    if (!players[socket.id]) return;
-    
-    const userId = players[socket.id].userId;
-    if (!userId || !users[userId]) return;
-
-    if (typeof gameType !== 'string' || !users[userId].stats?.gameStats?.[gameType]) return;
-    if (!Number.isSafeInteger(Number(betAmount)) || Number(betAmount) < 1) return;
-    if (!Number.isFinite(Number(payout)) || Number(payout) < 0) return;
-
-    try {
-      // Update stats and check achievements
-      updateUserStats(userId, gameType, Number(betAmount), !!won, Number(payout), result);
-      const newAchievements = checkAchievements(userId, gameType, Number(betAmount), !!won, result);
-      
-      // Emit achievement notifications
-      if (newAchievements.length > 0) {
-        socket.emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
-      }
-    } catch (error) {
-      console.error(`Error tracking stats for ${gameType}:`, error);
-    }
+  socket.on("gameResult", () => {
+    socket.emit("mutationRejected", { event: "gameResult", reason: "Game results are server-authoritative" });
   });
 
-  // ========== BET HISTORY ==========
-  socket.on("recordBet", ({ game, bet, result, payout, multiplier, details }) => {
-    if (!players[socket.id]) return;
-    const betAmount = Number(bet) || 0;
-    const payoutAmount = Number(payout) || 0;
-    if (betAmount < 0 || payoutAmount < 0) return;
-    const username = players[socket.id].username;
-    addBetRecord(username, { game, bet: betAmount, result, payout: payoutAmount, multiplier: multiplier || null, details: details || null });
+  socket.on("recordBet", () => {
+    socket.emit("mutationRejected", { event: "recordBet", reason: "Bet history is server-authoritative" });
   });
 
   socket.on("getBetHistory", ({ limit }, callback) => {
@@ -2359,6 +3099,7 @@ io.on("connection", (socket) => {
   // Leaderboard socket events
   socket.on("getLeaderboard", ({ type = 'allTime' }, callback) => {
     if (!callback) return;
+    if (!['allTime', 'thisWeek'].includes(type)) type = 'allTime';
     
     try {
       const leaderboard = [];
@@ -2376,7 +3117,7 @@ io.on("connection", (socket) => {
         const netPL = stats.totalWon - stats.totalWagered;
         
         leaderboard.push({
-          username: userData.username,
+          username: publicUsername(userData.username),
           netPL,
           totalWagered: stats.totalWagered,
           totalWon: stats.totalWon,
@@ -2398,6 +3139,9 @@ io.on("connection", (socket) => {
 
   socket.on("getGameLeaderboard", ({ game }, callback) => {
     if (!callback) return;
+    if (!['blackjack', 'crash', 'poker', 'roulette', 'coinflip', 'pachinko', 'cs2betting'].includes(game)) {
+      return callback([]);
+    }
     
     try {
       const leaderboard = [];
@@ -2431,7 +3175,7 @@ io.on("connection", (socket) => {
         }
         
         leaderboard.push({
-          username: userData.username,
+          username: publicUsername(userData.username),
           score,
           metric,
           played: gameStats.played,
@@ -2542,7 +3286,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("placeCrashBet", ({ amount, autoCashout }) => {
+  socket.on("placeCrashBet", async ({ amount, autoCashout }) => {
     if (!players[socket.id]) {
       socket.emit("crashBetPlaced", { success: false, error: "Not logged in" });
       return;
@@ -2557,27 +3301,33 @@ io.on("connection", (socket) => {
     }
     const betAmount = parsePositiveInteger(amount);
     const safeAutoCashout = parseNonNegativeNumber(autoCashout);
-    if (betAmount === null || betAmount > players[socket.id].credits) {
+    if (betAmount === null || betAmount > users[players[socket.id].userId].credits) {
       socket.emit("crashBetPlaced", { success: false, error: "Invalid bet amount" });
       return;
     }
 
-    // Deduct credits
-    players[socket.id].credits -= betAmount;
     const userId = players[socket.id].userId;
-    if (userId) {
-      saveUserBalance(userId, players[socket.id].credits).catch(err => {
-        console.error("[Crash] Error saving balance after bet:", err);
-      });
-    }
-
+    const referenceId = `${crashState.roundId}:${userId}`;
     crashState.bets[socket.id] = {
       username: players[socket.id].username,
+      userId,
+      referenceId,
       amount: betAmount,
       autoCashout: safeAutoCashout,
       cashedOut: false,
       cashoutMultiplier: null
     };
+    try {
+      const reserved = await reserveCredits(userId, { game: 'crash', referenceId, stake: betAmount,
+        metadata: { roundId: crashState.roundId, autoCashout: safeAutoCashout } });
+      if (reserved.replayed) throw new IdempotencyConflictError('This account already placed a Crash wager for the round');
+      crashState.bets[socket.id].escrowId = reserved.escrow.escrowId;
+    } catch (error) {
+      delete crashState.bets[socket.id];
+      console.error("[Crash] Failed to persist bet:", error);
+      socket.emit("crashBetPlaced", { success: false, error: "Unable to place bet" });
+      return;
+    }
 
     socket.emit("crashBetPlaced", { success: true, amount: betAmount });
     socket.emit("playerData", {
@@ -2597,69 +3347,86 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", async () => {
     console.log(`Player disconnected: ${socket.id}`);
-    
-    // Save balance before disconnecting
-    if (players[socket.id] && players[socket.id].userId) {
-      await saveUserBalance(players[socket.id].userId, players[socket.id].credits);
-    }
-    
-    // Handle coinflip room cleanup
-    if (players[socket.id] && players[socket.id].roomId) {
-      const roomId = players[socket.id].roomId;
-      const room = coinflipRooms[roomId];
-      
-      if (room) {
-        socket.leave(roomId);
-        room.players = room.players.filter(id => id !== socket.id);
-        
-        // Refund creator's bet if they disconnect before confirmation
-        if (socket.id === room.creatorId && !room.confirmed) {
-          players[socket.id].credits += room.betAmount;
-        }
+    const player = players[socket.id];
+    let retainForSettlement = false;
 
+    if (player?.roomId) {
+      const roomId = player.roomId;
+      const room = coinflipRooms[roomId];
+      if (room?.confirmed && room.gameState !== 'finished') {
+        retainForSettlement = true;
+      } else if (room) {
         const isCreator = socket.id === room.creatorId;
-        
-        if (room.players.length === 0) {
-          delete coinflipRooms[roomId];
-        } else if (!isCreator) {
-          // Joiner disconnected
-          if (room.gameState === 'finished') {
-            // Game already finished - don't reset
+        if (isCreator && !room.confirmed) {
+          try {
+            await finishEscrow({ escrowId: room.escrows[socket.id], payout: room.betAmount,
+              idempotencyKey: `coinflip:${room.references[socket.id]}:refund`, action: 'refund', metadata: { reason: 'disconnect' } });
+          } catch (error) {
+            console.error("[Coinflip] Failed to persist disconnect refund:", error);
+            retainForSettlement = true;
+          }
+        }
+        if (!retainForSettlement) {
+          socket.leave(roomId);
+          room.players = room.players.filter(id => id !== socket.id);
+          if (isCreator || room.players.length === 0) {
+            delete coinflipRooms[roomId];
           } else {
-            // Game hasn't finished - reset room state
-            room.gameState = 'waiting';
-            room.confirmed = false;
+            io.to(room.players[0]).emit("opponentLeft");
           }
-          const remainingPlayerId = room.players[0];
-          io.to(remainingPlayerId).emit("opponentLeft");
-        } else {
-          // Creator disconnected - refund bet if not confirmed
-          if (!room.confirmed) {
-            players[socket.id].credits += room.betAmount;
-          }
-          delete coinflipRooms[roomId];
+          player.roomId = null;
         }
       }
     }
-    
-    // Handle poker table cleanup on disconnect
+
     for (const tableId of Object.keys(pokerTables)) {
       const table = pokerTables[tableId];
       if (table.players.find(p => p.socketId === socket.id)) {
-        handlePokerPlayerLeave(socket.id, tableId);
+        await handlePokerPlayerLeave(socket.id, tableId);
       }
     }
 
-    // Remove player's bet if they disconnect
-    if (rouletteState.currentBets[socket.id]) {
-      delete rouletteState.currentBets[socket.id];
-      io.emit('rouletteBetsUpdate', {
-        bets: getBetsSnapshot()
-      });
+    const rouletteBet = rouletteState.currentBets[socket.id];
+    if (rouletteBet) {
+      const alternateSocketId = Object.keys(players).find(socketId =>
+        socketId !== socket.id && players[socketId]?.userId === player?.userId && io.sockets.sockets.get(socketId)?.connected
+      );
+      if (alternateSocketId) {
+        delete rouletteState.currentBets[socket.id];
+        rouletteBet.socketId = alternateSocketId;
+        rouletteState.currentBets[alternateSocketId] = rouletteBet;
+        io.emit('rouletteBetsUpdate', { bets: getBetsSnapshot(), roundId: rouletteState.roundId });
+      } else if (rouletteState.spinning) {
+        retainForSettlement = true;
+      } else {
+        delete rouletteState.currentBets[socket.id];
+        try {
+          await finishEscrow({ escrowId: rouletteBet.escrowId, payout: rouletteBet.amount,
+            idempotencyKey: `roulette:${rouletteBet.referenceId}:refund`, action: 'refund', metadata: { reason: 'disconnect' } });
+        } catch (error) {
+          rouletteState.currentBets[socket.id] = rouletteBet;
+          retainForSettlement = true;
+          console.error("[Roulette] Failed to persist disconnect refund:", error);
+        }
+        io.emit('rouletteBetsUpdate', { bets: getBetsSnapshot(), roundId: rouletteState.roundId });
+      }
     }
 
-    delete socketToUser[socket.id];
-    delete players[socket.id];
+    if (crashState.bets[socket.id] && !crashState.bets[socket.id].cashedOut) {
+      retainForSettlement = true;
+    }
+
+    if (retainForSettlement) {
+      setTimeout(() => {
+        delete socketToUser[socket.id];
+        delete players[socket.id];
+        delete crashState.bets[socket.id];
+        delete rouletteState.currentBets[socket.id];
+      }, 120000).unref?.();
+    } else {
+      delete socketToUser[socket.id];
+      delete players[socket.id];
+    }
     emitAvailableCoinflipRooms();
   });
 });
@@ -2739,18 +3506,22 @@ app.get("/api/cs2/events", async (req, res) => {
       return true;
     });
     
-    // Sort chronologically (next upcoming match first - earliest scheduled time)
-    eventsArray.sort((a, b) => {
+    const publicEvents = eventsArray.map(event => ({ ...event, ...getCS2BettingAvailability(event) }));
+    // Live markets first, then upcoming chronologically. Suspended live cards stay
+    // visible so the user understands the match exists while odds refresh.
+    publicEvents.sort((a, b) => {
+      const liveDiff = Number(b.status === 'live') - Number(a.status === 'live');
+      if (liveDiff) return liveDiff;
       const timeA = new Date(a.commenceTime || a.startTime || 0).getTime();
       const timeB = new Date(b.commenceTime || b.startTime || 0).getTime();
-      return timeA - timeB; // Ascending: earliest first (next match to happen at the top)
+      return timeA - timeB;
     });
     
-    console.log(`[CS2 API] Returning ${eventsArray.length} active events (${allEvents.length - uniqueEvents.length} duplicates removed)`);
+    console.log(`[CS2 API] Returning ${publicEvents.length} active events (${allEvents.length - uniqueEvents.length} duplicates removed)`);
     
     // Log first event structure for debugging
-    if (eventsArray.length > 0) {
-      const firstEvent = eventsArray[0];
+    if (publicEvents.length > 0) {
+      const firstEvent = publicEvents[0];
       console.log(`[CS2 API] Sample event structure:`, JSON.stringify({
         id: firstEvent.id,
         homeTeam: firstEvent.homeTeam,
@@ -2764,8 +3535,8 @@ app.get("/api/cs2/events", async (req, res) => {
     
     res.json({
       success: true,
-      events: eventsArray,
-      count: eventsArray.length,
+      events: sanitizePublicData(publicEvents),
+      count: publicEvents.length,
       lastSync: cs2BettingState.lastApiSync
     });
   } catch (error) {
@@ -2777,8 +3548,10 @@ app.get("/api/cs2/events", async (req, res) => {
 // GET /api/cs2/events/:eventId - Get specific event details
 app.get("/api/cs2/events/:eventId", async (req, res) => {
   try {
-    const eventId = req.params.eventId;
-    let event = cs2BettingState.events[eventId];
+    const eventId = sanitizeText(req.params.eventId, 128);
+    const event = Object.prototype.hasOwnProperty.call(cs2BettingState.events, eventId)
+      ? cs2BettingState.events[eventId]
+      : null;
     
     if (!event) {
       return res.status(404).json({ success: false, error: "Event not found" });
@@ -2788,7 +3561,7 @@ app.get("/api/cs2/events/:eventId", async (req, res) => {
     // API calls are restricted to: server start, refresh button, and daily updates
     // Just return the cached event data
     
-    res.json({ success: true, event });
+    res.json({ success: true, event: sanitizePublicData(event) });
   } catch (error) {
     console.error("Error fetching CS2 event:", error);
     res.status(500).json({ success: false, error: "Failed to fetch event" });
@@ -2800,8 +3573,10 @@ app.get("/api/cs2/events/:eventId", async (req, res) => {
 // API calls are restricted to: server start, refresh button, and daily updates
 app.get("/api/cs2/events/:eventId/odds", async (req, res) => {
   try {
-    const eventId = req.params.eventId;
-    let event = cs2BettingState.events[eventId];
+    const eventId = sanitizeText(req.params.eventId, 128);
+    const event = Object.prototype.hasOwnProperty.call(cs2BettingState.events, eventId)
+      ? cs2BettingState.events[eventId]
+      : null;
     
     if (!event) {
       return res.status(404).json({ success: false, error: "Event not found" });
@@ -2839,35 +3614,32 @@ app.get("/api/cs2/events/:eventId/odds", async (req, res) => {
 });
 
 // GET /api/cs2/bets - Get bets for a session/user
-app.get("/api/cs2/bets", async (req, res) => {
+app.get("/api/cs2/bets", requireAuth, async (req, res) => {
   try {
-    const userId = req.query.userId || req.query.sessionId;
-    
-    if (!userId) {
-      return res.status(400).json({ success: false, error: "userId or sessionId required" });
-    }
+    const userId = req.auth.username;
     
     // Filter bets by userId and enrich with team names from events
     const userBets = Object.values(cs2BettingState.bets)
       .filter(bet => bet.userId === userId)
       .map(bet => {
-        // Backfill team names from events if missing (legacy bets)
-        if (!bet.homeTeam || !bet.awayTeam) {
-          const event = cs2BettingState.events[bet.eventId];
+        const enriched = { ...bet };
+        // Backfill display names from cached events without mutating canonical wager state.
+        if (!enriched.homeTeam || !enriched.awayTeam) {
+          const event = cs2BettingState.events[enriched.eventId];
           if (event) {
-            bet.homeTeam = bet.homeTeam || event.homeTeam || event.participant1Name || 'Unknown';
-            bet.awayTeam = bet.awayTeam || event.awayTeam || event.participant2Name || 'Unknown';
-            bet.selectionName = bet.selectionName || 
-              (bet.selection === 'team1' ? bet.homeTeam :
-               bet.selection === 'team2' ? bet.awayTeam : 'Draw');
+            enriched.homeTeam = enriched.homeTeam || event.homeTeam || event.participant1Name || 'Unknown';
+            enriched.awayTeam = enriched.awayTeam || event.awayTeam || event.participant2Name || 'Unknown';
+            enriched.selectionName = enriched.selectionName ||
+              (enriched.selection === 'team1' ? enriched.homeTeam :
+               enriched.selection === 'team2' ? enriched.awayTeam : 'Draw');
           }
         }
-        return bet;
+        return enriched;
       });
     
     // Compute summary stats
-    const player = players[userId];
-    const currentBalance = player ? player.credits : 0;
+    const user = users[userId];
+    const currentBalance = user?.credits ?? 0;
     let totalWagered = 0;
     let totalWon = 0;
     let wins = 0;
@@ -2897,7 +3669,7 @@ app.get("/api/cs2/bets", async (req, res) => {
 
     res.json({
       success: true,
-      bets: transactions,
+      bets: sanitizePublicData(transactions),
       count: transactions.length,
       currentBalance,
       totalWagered,
@@ -2912,20 +3684,16 @@ app.get("/api/cs2/bets", async (req, res) => {
 });
 
 // GET /api/cs2/balance - Get credit balance for a session/user
-app.get("/api/cs2/balance", async (req, res) => {
+app.get("/api/cs2/balance", requireAuth, async (req, res) => {
   try {
-    const userId = req.query.userId || req.query.sessionId;
-    
-    if (!userId) {
-      return res.status(400).json({ success: false, error: "userId or sessionId required" });
-    }
+    const userId = req.auth.username;
     
     await acquireUserBalanceLock(userId);
     const user = users[userId];
     if (user) {
       res.json({ success: true, balance: user.credits ?? 0 });
     } else {
-      res.json({ success: true, balance: INITIAL_CREDITS });
+      res.status(404).json({ success: false, error: "User not found" });
     }
   } catch (error) {
     console.error("Error fetching CS2 balance:", error);
@@ -2934,15 +3702,17 @@ app.get("/api/cs2/balance", async (req, res) => {
 });
 
 // POST /api/cs2/bets - Place a new bet
-app.post("/api/cs2/bets", async (req, res) => {
+app.post("/api/cs2/bets", requireAuth, apiMutationRateLimit, async (req, res) => {
   try {
-    const { userId, eventId, selection, amount } = req.body;
+    const userId = req.auth.username;
+    const { eventId, selection, amount } = req.body || {};
+    const requestId = sanitizeText(req.body?.requestId, 80);
     
     // Validation
-    if (!userId || !eventId || !selection || !amount) {
+    if (!eventId || !selection || amount === undefined || amount === null || !/^[A-Za-z0-9_-]{8,80}$/.test(requestId)) {
       return res.status(400).json({ 
         success: false, 
-        error: "Missing required fields: userId, eventId, selection, amount" 
+        error: "Missing required fields: eventId, selection, amount"
       });
     }
     
@@ -2952,6 +3722,20 @@ app.post("/api/cs2/bets", async (req, res) => {
         error: "Invalid bet amount. Must be a whole number >= 1"
       });
     }
+
+    // Resolve an idempotent replay before re-validating mutable market state or
+    // current balance. The first accepted payload is permanently bound to the
+    // request identifier.
+    const betId = `bet_${crypto.createHash('sha256').update(`${userId}:${requestId}`).digest('hex').slice(0, 24)}`;
+    const priorBet = cs2BettingState.bets[betId];
+    if (priorBet) {
+      const samePayload = priorBet.userId === userId
+        && priorBet.eventId === sanitizeText(eventId, 160)
+        && priorBet.selection === selection
+        && priorBet.amount === amount;
+      if (!samePayload) return res.status(409).json({ success: false, error: 'Wager request identifier was already used for different inputs' });
+      return res.json({ success: true, bet: priorBet, newBalance: casinoLedger.balance(userId) });
+    }
     
     // Check if event exists and is open for betting
     const event = cs2BettingState.events[eventId];
@@ -2959,10 +3743,12 @@ app.post("/api/cs2/bets", async (req, res) => {
       return res.status(404).json({ success: false, error: "Event not found" });
     }
     
-    if (event.status !== 'scheduled') {
-      return res.status(400).json({ 
-        success: false, 
-        error: `Cannot place bet on event with status: ${event.status}` 
+    const availability = getCS2BettingAvailability(event);
+    if (availability.bettingStatus !== 'open') {
+      return res.status(400).json({
+        success: false,
+        error: availability.reason || `Cannot place bet on event with status: ${event.status}`,
+        bettingStatus: availability.bettingStatus
       });
     }
     
@@ -2974,75 +3760,81 @@ app.post("/api/cs2/bets", async (req, res) => {
       });
     }
     
-    // Get user balance (use existing casino user system)
-    let user = users[userId];
+    // Get authenticated user balance.
+    const user = users[userId];
     if (!user) {
-      // Create new user with initial credits
-      user = {
-        username: userId,
-        credits: INITIAL_CREDITS,
-        created: new Date().toISOString()
-      };
-      users[userId] = user;
-      await saveUsers(users);
+      return res.status(404).json({ success: false, error: "User not found" });
     }
     
-    // Check sufficient credits
-    if (user.credits < amount) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Insufficient credits", 
-        balance: user.credits 
-      });
-    }
-    
-    // Get odds for the selection
-    const odds = event.odds && event.odds[selection];
-    if (!odds || odds <= 0) {
+    // Get odds for the selection before entering the balance lock.
+    const odds = Number(event.odds && event.odds[selection]);
+    if (!Number.isFinite(odds) || odds <= 1 || odds > 100) {
       return res.status(400).json({ 
         success: false, 
         error: `Odds not available for selection: ${selection}` 
       });
     }
-    
-    // Deduct credits (CS2 BALANCE FIX - sync both users and players objects)
-    const newCredits = user.credits - amount;
-    const syncSuccess = await syncUserCredits(userId, newCredits);
-    if (!syncSuccess) {
-      return res.status(500).json({ success: false, error: "Failed to update balance" });
-    }
-    
-    // Create bet record with team names stored for display even after event ends
-    const betId = `bet_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    const homeTeam = event.homeTeam || event.participant1Name || 'Team 1';
-    const awayTeam = event.awayTeam || event.participant2Name || 'Team 2';
-    const selectionName = selection === 'team1' ? homeTeam :
-                          selection === 'team2' ? awayTeam : 'Draw';
-    
-    const bet = {
-      id: betId,
-      userId: userId,
-      eventId: eventId,
-      selection: selection,
-      selectionName: selectionName,  // Store selection name for display
-      homeTeam: homeTeam,            // Store team names for display
-      awayTeam: awayTeam,
-      amount: amount,
-      odds: odds,
-      potentialPayout: amount * odds,
-      status: 'pending',
-      placedAt: new Date().toISOString(),
-      settledAt: null
-    };
 
-    cs2BettingState.bets[betId] = bet;
-    await saveCS2BettingData();
+    const placement = await runWithUserBalanceLock(userId, async () => {
+      const existingBet = cs2BettingState.bets[betId];
+      if (existingBet) {
+        const samePayload = existingBet.userId === userId
+          && existingBet.eventId === sanitizeText(eventId, 160)
+          && existingBet.selection === selection
+          && existingBet.amount === amount;
+        return samePayload
+          ? { status: 200, bet: existingBet, newBalance: casinoLedger.balance(userId) }
+          : { status: 409, error: 'Wager request identifier was already used for different inputs' };
+      }
+      const lockedUser = users[userId];
+      if (!lockedUser) return { status: 404, error: "User not found" };
+      if (!Number.isSafeInteger(lockedUser.credits) || lockedUser.credits < amount) {
+        return { status: 400, error: "Insufficient credits", balance: lockedUser.credits };
+      }
 
-    res.json({
-      success: true,
-      bet: bet,
-      newBalance: users[userId].credits
+
+      const homeTeam = sanitizeText(event.homeTeam || event.participant1Name || 'Team 1', 80);
+      const awayTeam = sanitizeText(event.awayTeam || event.participant2Name || 'Team 2', 80);
+      const selectionName = selection === 'team1' ? homeTeam : selection === 'team2' ? awayTeam : 'Draw';
+      const bet = {
+        id: betId,
+        userId,
+        eventId: sanitizeText(eventId, 160),
+        selection,
+        selectionName,
+        homeTeam,
+        awayTeam,
+        amount,
+        odds,
+        oddsSource: event.oddsSource || null,
+        oddsUpdatedAt: event.oddsUpdatedAt || event.lastUpdate || null,
+        eventStatusAtPlacement: event.status,
+        potentialPayout: Math.round(amount * odds),
+        status: 'pending',
+        placedAt: new Date().toISOString(),
+        settledAt: null
+      };
+
+      const reserved = await reserveCredits(userId, { game: 'cs2betting', referenceId: betId, stake: amount,
+        metadata: { eventId, selection, odds, oddsSource: event.oddsSource || null, oddsUpdatedAt: event.oddsUpdatedAt || event.lastUpdate || null, eventStatus: event.status, requestId } });
+      bet.escrowId = reserved.escrow.escrowId;
+      cs2BettingState.bets[betId] = bet;
+      try {
+        await saveCS2BettingData();
+      } catch (error) {
+        delete cs2BettingState.bets[betId];
+        await finishEscrow({ escrowId: bet.escrowId, payout: amount,
+          idempotencyKey: `cs2:${betId}:save-failure-refund`, action: 'refund', metadata: { reason: 'state_save_failed' } });
+        throw error;
+      }
+      return { status: 200, bet, newBalance: reserved.balance };
     });
+
+    if (placement.error) {
+      return res.status(placement.status).json({ success: false, error: placement.error, balance: placement.balance });
+    }
+
+    res.json({ success: true, bet: placement.bet, newBalance: placement.newBalance });
   } catch (error) {
     console.error("Error placing CS2 bet:", error);
     res.status(500).json({ success: false, error: "Failed to place bet" });
@@ -3050,7 +3842,8 @@ app.post("/api/cs2/bets", async (req, res) => {
 });
 
 // Sync CS2 events/odds from API (used by scheduled tasks and manual sync)
-async function syncCS2Events() {
+async function syncCS2Events(options = {}) {
+  const { forceRefresh = false } = options;
   if (!cs2Bo3ggClient) {
     console.warn("[CS2 Sync] bo3.gg client not available, skipping sync");
     return;
@@ -3058,18 +3851,23 @@ async function syncCS2Events() {
 
   try {
     // Check cache first
-    let matches = getCachedMatches();
+    let matches = forceRefresh ? null : getCachedMatches();
 
     if (matches) {
       console.log(`[CS2 Sync] Using cached matches (${matches.length} matches)`);
     } else {
-      console.log("Syncing CS2 events from bo3.gg...");
+      console.log(forceRefresh ? "[CS2 Sync] Force refresh requested — fetching fresh bo3.gg matches" : "Syncing CS2 events from bo3.gg...");
 
-      // Fetch upcoming matches from bo3.gg
+      // Fetch upcoming and currently running matches. Current matches are
+      // queried separately because bo3.gg excludes them from the upcoming feed.
       try {
-        matches = await cs2Bo3ggClient.fetchUpcomingMatches({ limit: 50 });
-        if (matches && matches.length > 0) {
-          console.log(`[CS2 Sync] bo3.gg returned ${matches.length} matches`);
+        const upcomingMatches = await cs2Bo3ggClient.fetchUpcomingMatches({ limit: 50 });
+        const currentMatches = typeof cs2Bo3ggClient.fetchCurrentMatches === 'function'
+          ? await cs2Bo3ggClient.fetchCurrentMatches({ limit: 25 })
+          : [];
+        matches = [...(currentMatches || []), ...(upcomingMatches || [])];
+        if (matches.length > 0) {
+          console.log(`[CS2 Sync] bo3.gg returned ${currentMatches.length} live and ${upcomingMatches.length} upcoming matches`);
         }
       } catch (bo3Error) {
         console.warn(`[CS2 Sync] bo3.gg fetch failed: ${bo3Error.message}`);
@@ -3086,23 +3884,26 @@ async function syncCS2Events() {
             const hltvMatches = await cs2ResultFetcher.getUpcomingMatches();
             if (hltvMatches && hltvMatches.length > 0) {
               console.log(`[CS2 Sync] HLTV returned ${hltvMatches.length} upcoming matches`);
-              matches = hltvMatches.map(m => ({
-                id: `hltv_${m.hltvId || Date.now()}_${Math.random().toString(36).substr(2,6)}`,
-                fixtureId: `hltv_${m.hltvId || Date.now()}_${Math.random().toString(36).substr(2,6)}`,
-                homeTeam: m.team1,
-                awayTeam: m.team2,
-                participant1Name: m.team1,
-                participant2Name: m.team2,
-                tournamentName: m.event || 'CS2 Tournament',
-                commenceTime: m.time ? new Date(m.time).toISOString() : new Date(Date.now() + 3600000).toISOString(),
-                startTime: m.time ? new Date(m.time).toISOString() : new Date(Date.now() + 3600000).toISOString(),
-                status: 'scheduled',
-                statusId: 0,
-                completed: false,
-                hasOdds: false,
-                odds: { team1: null, team2: null, draw: null },
-                source: 'hltv'
-              }));
+              matches = hltvMatches.map(m => {
+                const generatedId = `hltv_${m.hltvId || Date.now()}_${crypto.randomUUID().slice(0, 6)}`;
+                return {
+                  id: generatedId,
+                  fixtureId: generatedId,
+                  homeTeam: m.team1,
+                  awayTeam: m.team2,
+                  participant1Name: m.team1,
+                  participant2Name: m.team2,
+                  tournamentName: m.event || 'CS2 Tournament',
+                  commenceTime: m.time ? new Date(m.time).toISOString() : new Date(Date.now() + 3600000).toISOString(),
+                  startTime: m.time ? new Date(m.time).toISOString() : new Date(Date.now() + 3600000).toISOString(),
+                  status: 'scheduled',
+                  statusId: 0,
+                  completed: false,
+                  hasOdds: false,
+                  odds: { team1: null, team2: null, draw: null },
+                  source: 'hltv'
+                };
+              });
             }
           } catch (hltvError) {
             console.warn(`[CS2 Sync] HLTV scraper also failed: ${hltvError.message}`);
@@ -3174,7 +3975,7 @@ async function syncCS2Events() {
       const atLeastOneInTop250 = team1Ranking !== null || team2Ranking !== null;
       const matchHasOdds = match.hasOdds && match.odds && match.odds.team1 && match.odds.team2;
 
-      if (!bothInTop250 && !(matchHasOdds || atLeastOneInTop250)) {
+      if (!bothInTop250 && !(matchHasOdds || atLeastOneInTop250) && match.source !== 'bo3gg-current') {
         filteredCount++;
         console.log(`[CS2 Sync] Filtering out match: ${matchTeam1} vs ${matchTeam2} (team1 rank: ${team1Ranking?.rank || 'N/A'}, team2 rank: ${team2Ranking?.rank || 'N/A'}, hasOdds: ${matchHasOdds})`);
         continue;
@@ -3206,6 +4007,17 @@ async function syncCS2Events() {
       } else if (match.statusId === 1 || finalStatus === 'live') {
         finalStatus = 'live';
         finalCompleted = false;
+      } else if (startTimeObj && startTimeObj <= now) {
+        // bo3.gg often keeps in-progress matches as "upcoming" while betting lines remain active.
+        // Treat recently-started matches as live so the frontend exposes them as live bettable cards.
+        const hoursSinceStart = (now - startTimeObj) / (1000 * 60 * 60);
+        if (hoursSinceStart <= 4) {
+          finalStatus = 'live';
+          finalCompleted = false;
+        } else {
+          finalStatus = 'finished';
+          finalCompleted = true;
+        }
       } else if (!finalStatus) {
         // Default to scheduled if no status provided
         finalStatus = 'scheduled';
@@ -3214,13 +4026,10 @@ async function syncCS2Events() {
       
       // Prefer fresh odds from the match source (e.g. bo3.gg bet_updates with real bookmaker odds)
       // over stale existing event odds (which may be ranking-based estimates)
-      const matchHasBookmakerOdds = match.hasOdds && match.odds && match.odds.team1 && match.odds.team2;
-      let existingOdds;
-      if (matchHasBookmakerOdds) {
-        existingOdds = match.odds; // Use fresh bookmaker odds from bo3.gg
-      } else {
-        existingOdds = existingEvent?.odds || match.odds || { team1: null, team2: null, draw: null };
-      }
+      const matchHasBookmakerOdds = match.hasOdds && Number(match.odds?.team1) > 1 && Number(match.odds?.team2) > 1;
+      const existingOdds = matchHasBookmakerOdds
+        ? { team1: Number(match.odds.team1), team2: Number(match.odds.team2), draw: null }
+        : { team1: null, team2: null, draw: null };
       
       // Check if existing event should be removed (both teams in top 250 but no odds)
       if (existingEvent && (finalStatus === 'scheduled' || finalStatus === 'live')) {
@@ -3235,64 +4044,31 @@ async function syncCS2Events() {
         }
       }
       
-      // Validate and correct odds based on team rankings
-      const team1Name = match.homeTeam || match.participant1Name || 'Team 1';
-      const team2Name = match.awayTeam || match.participant2Name || 'Team 2';
-      if (existingOdds.team1 && existingOdds.team2) {
-        existingOdds = validateAndCorrectOdds(existingOdds, team1Name, team2Name);
-      }
+      // Bookmaker odds remain attached to the provider's team ordering. Never
+      // swap or synthesize them from rankings; unavailable markets stay visible
+      // but suspended.
       
-      const needsOdds = (!existingOdds.team1 || !existingOdds.team2) && 
-                        (finalStatus === 'scheduled' || finalStatus === 'live') &&
-                        match.hasOdds !== false;
-      
-      // If no real bookmaker odds, try ranking-based fallback
-      const hasRealOdds = (existingOdds.team1 && existingOdds.team2 &&
-                         existingOdds.team1 !== 2.0 && existingOdds.team2 !== 2.0) ||
-                         matchHasBookmakerOdds;
-
-      if (!hasRealOdds && (finalStatus === 'scheduled' || finalStatus === 'live')) {
-        if (team1Ranking !== null && team2Ranking !== null) {
-          // Both teams in rankings - calculate odds from rankings
-          const rank1 = team1Ranking ? team1Ranking.rank : 999;
-          const rank2 = team2Ranking ? team2Ranking.rank : 999;
-          const rankDiff = Math.abs(rank1 - rank2);
-
-          let favoriteOdds, underdogOdds;
-          if (rankDiff <= 5) {
-            favoriteOdds = 1.85; underdogOdds = 1.95;
-          } else if (rankDiff <= 20) {
-            favoriteOdds = 1.55; underdogOdds = 2.35;
-          } else if (rankDiff <= 50) {
-            favoriteOdds = 1.35; underdogOdds = 3.00;
-          } else if (rankDiff <= 100) {
-            favoriteOdds = 1.20; underdogOdds = 4.00;
-          } else {
-            favoriteOdds = 1.10; underdogOdds = 6.00;
-          }
-
-          existingOdds = {
-            team1: rank1 <= rank2 ? favoriteOdds : underdogOdds,
-            team2: rank1 <= rank2 ? underdogOdds : favoriteOdds,
-            draw: null
-          };
-          console.log(`[CS2 Sync] ✓ Using ranking-based odds for ${team1Name} (rank ${rank1}) vs ${team2Name} (rank ${rank2}): ${existingOdds.team1}/${existingOdds.team2}`);
-        } else if (atLeastOneInTop250) {
-          // At least one team is ranked - use lenient odds
-          const rank1 = team1Ranking ? team1Ranking.rank : 999;
-          const rank2 = team2Ranking ? team2Ranking.rank : 999;
-          existingOdds = {
-            team1: rank1 < rank2 ? 1.40 : 2.75,
-            team2: rank1 < rank2 ? 2.75 : 1.40,
-            draw: null
-          };
-          console.log(`[CS2 Sync] ✓ Using fallback odds for ${team1Name} vs ${team2Name}: ${existingOdds.team1}/${existingOdds.team2}`);
-        } else {
-          // No odds available - skip this match
-          console.log(`[CS2 Sync] ⚠ Skipping match ${team1Name} vs ${team2Name} - no odds available`);
-          filteredCount++;
-          continue;
+      const previousOdds = existingEvent?.odds || null;
+      const getOddsMovement = (previous, current) => {
+        if (!previous || !current || typeof previous !== 'number' || typeof current !== 'number') {
+          return 'same';
         }
+        if (current > previous) return 'up';
+        if (current < previous) return 'down';
+        return 'same';
+      };
+      const oddsMovement = {
+        team1: getOddsMovement(previousOdds?.team1, existingOdds?.team1),
+        team2: getOddsMovement(previousOdds?.team2, existingOdds?.team2),
+        previousTeam1: previousOdds?.team1 || null,
+        previousTeam2: previousOdds?.team2 || null,
+        changedAt: previousOdds && (
+          previousOdds.team1 !== existingOdds?.team1 || previousOdds.team2 !== existingOdds?.team2
+        ) ? new Date().toISOString() : (existingEvent?.oddsMovement?.changedAt || null)
+      };
+
+      if (!matchHasBookmakerOdds && (finalStatus === 'scheduled' || finalStatus === 'live')) {
+        console.log(`[CS2 Sync] Keeping ${matchTeam1} vs ${matchTeam2} visible with betting suspended: bookmaker odds unavailable`);
       }
 
       // Map to internal event format
@@ -3314,10 +4090,15 @@ async function syncCS2Events() {
         team1Logo: match.team1Logo || existingEvent?.team1Logo || null,
         team2Logo: match.team2Logo || existingEvent?.team2Logo || null,
         odds: existingOdds,
+        oddsMovement,
+        oddsSource: matchHasBookmakerOdds
+          ? (match.source === 'bo3gg-current' ? 'bo3gg-live' : 'bo3gg-prematch')
+          : null,
+        oddsUpdatedAt: matchHasBookmakerOdds ? (match.oddsUpdatedAt || new Date().toISOString()) : null,
         status: finalStatus,
         statusId: match.statusId || (finalStatus === 'live' ? 1 : (finalStatus === 'finished' ? 2 : 0)),
         completed: finalCompleted,
-        hasOdds: match.hasOdds !== false,
+        hasOdds: matchHasBookmakerOdds,
         lastUpdate: match.lastUpdate || match.updatedAt || new Date().toISOString()
       };
       
@@ -3332,16 +4113,39 @@ async function syncCS2Events() {
         newCount++;
       }
     }
-    
+
     // NOTE: Odds fetching is now handled separately:
     // - On server start (initial sync)
     // - When refresh button is clicked
-    // - Once per day (daily check)
-    // We don't fetch odds automatically during sync to avoid excessive API calls
+    // - Recurring live monitor syncs
+    // We don't fetch per-event odds automatically during user clicks to avoid excessive API calls.
+
+    // Mark existing cached events as live/finished based on time even when bo3.gg no longer
+    // returns them in the upcoming feed. This prevents stale "scheduled" cards for matches
+    // that already started, and makes currently active matches visible as LIVE.
+    const now = new Date();
+    let statusAdjustedCount = 0;
+    for (const event of Object.values(cs2BettingState.events)) {
+      const eventTime = event.startTime ? new Date(event.startTime) :
+                        (event.commenceTime ? new Date(event.commenceTime) : null);
+      if (!eventTime || Number.isNaN(eventTime.getTime()) || event.status === 'finished') continue;
+      if (eventTime <= now) {
+        const hoursSinceStart = (now - eventTime) / (1000 * 60 * 60);
+        const nextStatus = hoursSinceStart <= 4 ? 'live' : 'finished';
+        if (event.status !== nextStatus) {
+          event.status = nextStatus;
+          event.statusId = nextStatus === 'live' ? 1 : 2;
+          event.completed = nextStatus === 'finished';
+          statusAdjustedCount++;
+        }
+      }
+    }
+    if (statusAdjustedCount > 0) {
+      console.log(`[CS2 Sync] Time-adjusted ${statusAdjustedCount} cached event statuses`);
+    }
     
     // CLEANUP: Remove old/completed matches
     let removedCount = 0;
-    const now = new Date();
     const sixHoursAgo = new Date(now.getTime() - (6 * 60 * 60 * 1000)); // 6 hours ago
     
     const eventIds = Object.keys(cs2BettingState.events);
@@ -3519,15 +4323,15 @@ async function settleCS2Bets() {
         if (!winner) {
           // No result available, check if event was cancelled
           if (event.status === 'cancelled') {
-            // Void bet - return stake
-            bet.status = 'void';
-            bet.result = 'void';
-            
-            // Return credits to user (CS2 BALANCE FIX)
             const user = users[bet.userId];
             if (user) {
-              const newCredits = user.credits + bet.amount;
-              await syncUserCredits(bet.userId, newCredits);
+              await runWithUserBalanceLock(bet.userId, async () => {
+                if (bet.status !== 'pending') return;
+                await finishEscrow({ escrowId: bet.escrowId, payout: bet.amount,
+                  idempotencyKey: `cs2:${bet.id}:void`, action: 'refund', metadata: { eventId: bet.eventId } });
+                bet.status = 'void';
+                bet.result = 'void';
+              });
             }
           }
           // Otherwise, keep as pending (event might be in progress)
@@ -3540,17 +4344,17 @@ async function settleCS2Bets() {
                        (bet.selection === 'draw' && winner === 'draw');
         
         if (betWon) {
-          // Bet won - pay out
-          bet.status = 'won';
-          bet.result = 'win';
           const payout = bet.potentialPayout;
-          
           const user = users[bet.userId];
           if (user) {
-            // CS2 BALANCE FIX - sync payout to both users and players objects
-            const newCredits = user.credits + payout;
-            await syncUserCredits(bet.userId, newCredits);
-            
+            await runWithUserBalanceLock(bet.userId, async () => {
+              if (bet.status !== 'pending') return;
+              await finishEscrow({ escrowId: bet.escrowId, payout,
+                idempotencyKey: `cs2:${bet.id}:settle`, metadata: { eventId: bet.eventId, winner } });
+              bet.status = 'won';
+              bet.result = 'win';
+            });
+
             // Track stats and achievements
             updateUserStats(bet.userId, 'cs2betting', bet.amount, true, payout, { 
               selection: bet.selection,
@@ -3577,9 +4381,13 @@ async function settleCS2Bets() {
           if (users[bet.userId]) addBetRecord(users[bet.userId].username, { game: 'cs2betting', bet: bet.amount, result: 'Win', payout: payout, multiplier: parseFloat(bet.odds) || null, details: bet.eventName || '' });
           wonCount++;
         } else {
-          // Bet lost
-          bet.status = 'lost';
-          bet.result = 'loss';
+          await runWithUserBalanceLock(bet.userId, async () => {
+            if (bet.status !== 'pending') return;
+            await finishEscrow({ escrowId: bet.escrowId, payout: 0,
+              idempotencyKey: `cs2:${bet.id}:settle`, metadata: { eventId: bet.eventId, winner } });
+            bet.status = 'lost';
+            bet.result = 'loss';
+          });
           
           // Track stats for losing bet too
           updateUserStats(bet.userId, 'cs2betting', bet.amount, false, 0, { 
@@ -3606,6 +4414,7 @@ async function settleCS2Bets() {
           lostCount++;
         }
         
+        if (bet.status === 'pending') continue;
         bet.settledAt = new Date().toISOString();
         cs2BettingState.bets[bet.id] = bet;
         settledCount++;
@@ -3655,10 +4464,10 @@ function shouldRunSettlementCheck() {
  */
 // POST /api/cs2/admin/sync - Force refresh of events from bo3.gg
 // This is called when refresh button is clicked on CS2 betting page
-app.post("/api/cs2/admin/sync", async (req, res) => {
+app.post("/api/cs2/admin/sync", requireAdmin, apiMutationRateLimit, async (req, res) => {
   try {
     console.log("[CS2 Sync] Manual refresh triggered via API");
-    const result = await syncCS2Events();
+    const result = await syncCS2Events({ forceRefresh: true });
 
     if (result) {
       res.json({
@@ -3680,10 +4489,10 @@ app.post("/api/cs2/admin/sync", async (req, res) => {
 });
 
 // GET /api/cs2/sync - Same as POST but for GET requests (for refresh button)
-app.get("/api/cs2/sync", async (req, res) => {
+app.get("/api/cs2/sync", requireAdmin, apiMutationRateLimit, async (req, res) => {
   try {
     console.log("[CS2 Sync] Manual refresh triggered via GET API");
-    const result = await syncCS2Events();
+    const result = await syncCS2Events({ forceRefresh: true });
 
     if (result) {
       res.json({
@@ -3705,7 +4514,7 @@ app.get("/api/cs2/sync", async (req, res) => {
 });
 
 // POST /api/cs2/admin/settle - Manually trigger bet settlement (bypasses daily limit)
-app.post("/api/cs2/admin/settle", async (req, res) => {
+app.post("/api/cs2/admin/settle", requireAdmin, apiMutationRateLimit, async (req, res) => {
   try {
     console.log("[CS2 Settlement] Manual settlement triggered via API");
     const result = await settleCS2Bets();
@@ -3735,7 +4544,10 @@ app.get("/health", (req, res) => {
     status: "OK", 
     timestamp: new Date().toISOString(),
     server: "casino-server",
-    cs2: cs2Bo3ggClient ? "bo3gg:ok" : "bo3gg:missing"
+    cs2: cs2Bo3ggClient ? "bo3gg:ok" : "bo3gg:missing",
+    projection: projectionRepairState.pending
+      ? { status: 'repair-pending', lastErrorAt: projectionRepairState.lastErrorAt }
+      : { status: 'ok' }
   });
 });
 
@@ -3775,14 +4587,15 @@ function startCS2ScheduledTasks() {
       timezone: "UTC"
     });
 
-    // Schedule daily event sync (runs once per day at 2 AM UTC)
-    cs2SyncInterval = cron.schedule("0 2 * * *", async () => {
-      console.log("[CS2 Events] Daily event sync starting...");
-      const result = await syncCS2Events();
+    // Keep live CS2 lines fresh. bo3.gg is free/no-key, so a 15-minute monitor is safe
+    // and avoids stale match lists during active tournament windows.
+    cs2SyncInterval = cron.schedule("*/15 * * * *", async () => {
+      console.log("[CS2 Events] 15-minute live odds sync starting...");
+      const result = await syncCS2Events({ forceRefresh: true });
       if (result) {
-        console.log(`[CS2 Events] Daily sync complete: ${result.newCount} new, ${result.updatedCount} updated, ${result.filteredCount} filtered`);
+        console.log(`[CS2 Events] Live odds sync complete: ${result.newCount} new, ${result.updatedCount} updated, ${result.filteredCount} filtered`);
       } else {
-        console.log("[CS2 Events] Daily sync failed");
+        console.log("[CS2 Events] Live odds sync failed");
       }
     }, {
       scheduled: true,
@@ -3790,19 +4603,19 @@ function startCS2ScheduledTasks() {
     });
 
     console.log("CS2 scheduled tasks started using node-cron:");
-    console.log(`  - Event sync: Daily at 2 AM UTC (bo3.gg)`);
+    console.log(`  - Event/live odds sync: every 15 minutes (bo3.gg)`);
     console.log(`  - Settlement check: every 2 hours`);
   } else {
     // Fallback to setInterval
 
-    // Sync match data every 2 hours
+    // Sync match/live odds data every 15 minutes
     cs2SyncInterval = setInterval(async () => {
-      console.log("[CS2 Events] Scheduled 2-hour sync starting...");
-      const result = await syncCS2Events();
+      console.log("[CS2 Events] Scheduled 15-minute live odds sync starting...");
+      const result = await syncCS2Events({ forceRefresh: true });
       if (result) {
         console.log(`[CS2 Events] Sync complete: ${result.newCount} new, ${result.updatedCount} updated, ${result.removedCount} removed`);
       }
-    }, 2 * 60 * 60 * 1000);
+    }, 15 * 60 * 1000);
 
     // Health watchdog: check every 30 minutes if there are enough upcoming matches
     setInterval(async () => {
@@ -3814,7 +4627,7 @@ function startCS2ScheduledTasks() {
       }).length;
       if (upcomingCount < 3) {
         console.log(`[CS2 Watchdog] Only ${upcomingCount} upcoming matches — forcing re-sync`);
-        await syncCS2Events();
+        await syncCS2Events({ forceRefresh: true });
       }
     }, 30 * 60 * 1000);
 
@@ -3833,13 +4646,17 @@ function startCS2ScheduledTasks() {
     }, 30 * 60 * 1000);
 
     console.log("CS2 scheduled tasks started using setInterval:");
-    console.log(`  - Event sync: every 2 hours (bo3.gg)`);
+    console.log(`  - Event/live odds sync: every 15 minutes (bo3.gg)`);
     console.log(`  - Settlement check: every 30 minutes`);
   }
 }
 
 // Stop scheduled tasks (for graceful shutdown)
 function stopCS2ScheduledTasks() {
+  if (cs2StartupTimer) {
+    clearTimeout(cs2StartupTimer);
+    cs2StartupTimer = null;
+  }
   if (cs2SyncInterval) {
     if (cron && cs2SyncInterval.stop) {
       cs2SyncInterval.stop();
@@ -3861,22 +4678,30 @@ function stopCS2ScheduledTasks() {
   console.log("CS2 scheduled tasks stopped");
 }
 
-startCS2ScheduledTasks();
+let cs2StartupTimer = null;
+const cs2TasksDisabled = process.env.CS2_SYNC_DISABLED === '1';
 
-// On-startup tasks (10s delay to allow full initialization)
-setTimeout(async () => {
-  console.log("[CS2 Settlement] Performing initial settlement check on server start...");
-  await settleCS2Bets();
+if (cs2TasksDisabled) {
+  console.log('[CS2 Tasks] Scheduled sync and settlement disabled by environment');
+} else {
+  startCS2ScheduledTasks();
 
-  if (cs2Bo3ggClient) {
-    if (!cs2ApiCache || Object.keys(cs2ApiCache.odds || {}).length === 0 && !cs2ApiCache.matches?.data) {
-      console.log("[CS2 Sync] Waiting for cache to load...");
-      await loadCS2ApiCache();
+  // On-startup tasks (10s delay to allow full initialization)
+  cs2StartupTimer = setTimeout(async () => {
+    console.log("[CS2 Settlement] Performing initial settlement check on server start...");
+    await settleCS2Bets();
+
+    if (cs2Bo3ggClient) {
+      if (!cs2ApiCache || Object.keys(cs2ApiCache.odds || {}).length === 0 && !cs2ApiCache.matches?.data) {
+        console.log("[CS2 Sync] Waiting for cache to load...");
+        await loadCS2ApiCache();
+      }
+      console.log("[CS2 Sync] Performing initial sync on server start...");
+      await syncCS2Events();
     }
-    console.log("[CS2 Sync] Performing initial sync on server start...");
-    await syncCS2Events();
-  }
-}, 10000);
+  }, 10000);
+  cs2StartupTimer.unref?.();
+}
 
 // ========== END CS2 BETTING SCHEDULED TASKS ==========
 
@@ -3971,7 +4796,7 @@ function broadcastPokerTableState(tableId) {
   }
 }
 
-function handlePokerPlayerLeave(socketId, tableId) {
+async function handlePokerPlayerLeave(socketId, tableId) {
   const table = pokerTables[tableId];
   if (!table) return;
 
@@ -3981,18 +4806,15 @@ function handlePokerPlayerLeave(socketId, tableId) {
   const player = table.players[playerIndex];
   
   // Return remaining chips to casino credits
-  if (player.chips > 0 && players[socketId]) {
-    players[socketId].credits += player.chips;
-    const userId = players[socketId].userId;
-    if (userId) {
-      saveUserBalance(userId, players[socketId].credits).catch(err => {
-        console.error("[Poker] Error saving balance on leave:", err);
-      });
+  if (players[socketId] && player.escrowId) {
+    try {
+      await finishEscrow({ escrowId: player.escrowId, payout: player.chips,
+        idempotencyKey: `poker:${player.escrowReference}:settle`, metadata: { tableId, reason: 'player_leave' } });
+    } catch (error) {
+      console.error("[Poker] Failed to persist returned chips:", error);
+      io.to(socketId).emit("error", "Unable to leave table; chips were not transferred");
+      return;
     }
-    io.to(socketId).emit("playerData", {
-      username: players[socketId].username,
-      credits: players[socketId].credits
-    });
     console.log(`[Poker] ${player.username} left ${tableId}, returned ${player.chips} chips`);
   }
 
@@ -4071,8 +4893,10 @@ function startPokerHand(tableId) {
     bbPos = (table.dealerPosition + 2) % activePlayers.length;
   }
 
-  // Create and shuffle deck
-  const deck = pokerEngine.shuffleDeck(pokerEngine.createDeck());
+  const fairRoundId = `poker_${crypto.randomUUID()}`;
+  const fairContext = fairRng.consume('poker', fairRoundId, `${tableId}:${table.handNumber}`);
+  let shuffleCounter = 0;
+  const deck = pokerEngine.shuffleDeck(pokerEngine.createDeck(), max => fairRng.int(fairContext, max, shuffleCounter++));
   let deckIndex = 0;
 
   // Build hand players
@@ -4126,6 +4950,8 @@ function startPokerHand(tableId) {
   const pot = sbAmount + bbAmount;
 
   table.currentHand = {
+    fairRoundId,
+    fairnessCommitment: fairContext.commitment,
     deck,
     deckIndex,
     players: handPlayers,
@@ -4572,13 +5398,24 @@ function resolvePokerHand(tableId) {
   
   broadcastPokerTableState(tableId);
 
-  // Save balances
+  // Persist each player's current chip claim for deterministic restart recovery.
+  const recoveryClaims = [];
   for (const p of hand.players) {
     const seatP = table.players.find(tp => tp.socketId === p.socketId);
-    if (seatP) seatP.chips = p.chips;
-    
-    // Sync credits back (we'll do this when they leave, not every hand)
+    if (seatP) {
+      seatP.chips = p.chips;
+      if (seatP.escrowId) recoveryClaims.push({ escrowId: seatP.escrowId, payout: p.chips });
+    }
   }
+  if (recoveryClaims.length) casinoLedger.updateRecoveryPayouts(recoveryClaims);
+  const pokerProof = fairRng.reveal(hand.fairRoundId, {
+    tableId,
+    handNumber: table.handNumber,
+    deck: hand.deck,
+    communityCards: hand.communityCards,
+    winners: hand.winners
+  });
+  io.to(tableId).emit('pokerFairnessProof', pokerProof);
 
   // Schedule next hand
   table.nextHandTimer = setTimeout(() => {
@@ -4637,13 +5474,22 @@ function clearPokerActionTimer(tableId) {
 // ========== END POKER HELPER FUNCTIONS ==========
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Casino Server running on http://0.0.0.0:${PORT}`);
-  console.log(`  - Roulette game available`);
-  console.log(`  - Coinflip game available`);
-  if (cs2Bo3ggClient) {
-    console.log(`  - CS2 Betting available (REST API: /api/cs2/*, data: bo3.gg)`);
-  }
+
+async function startServer() {
+  await Promise.all([ledgerReadyPromise, betHistoryLoadedPromise, cs2StateLoadedPromise]);
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Casino Server running on http://0.0.0.0:${PORT}`);
+    console.log(`  - Roulette game available`);
+    console.log(`  - Coinflip game available`);
+    if (cs2Bo3ggClient) {
+      console.log(`  - CS2 Betting available (REST API: /api/cs2/*, data: bo3.gg)`);
+    }
+  });
+}
+
+startServer().catch(error => {
+  console.error('Casino server failed to start:', error);
+  process.exit(1);
 });
 
 // Graceful shutdown handling
@@ -4651,6 +5497,7 @@ process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully...');
   stopCS2ScheduledTasks();
   server.close(() => {
+    casinoLedger.close();
     console.log('Server closed');
     process.exit(0);
   });
@@ -4660,6 +5507,7 @@ process.on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully...');
   stopCS2ScheduledTasks();
   server.close(() => {
+    casinoLedger.close();
     console.log('Server closed');
     process.exit(0);
   });

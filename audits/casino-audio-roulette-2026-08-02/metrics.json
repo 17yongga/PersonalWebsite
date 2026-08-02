@@ -1,0 +1,48 @@
+{
+  "activeMetrics": {
+    "roundId": "roulette_qa_round",
+    "activeText": "BLACK — 250 credits",
+    "blackSelected": true,
+    "redSelected": false,
+    "horizontalOverflow": false,
+    "effects": [
+      "betPlaced",
+      "chip",
+      "betReplaced"
+    ],
+    "emittedEvents": [
+      "joinCasino",
+      "setRouletteBet",
+      "setRouletteBet"
+    ]
+  },
+  "lifecycle": {
+    "initialContexts": 1,
+    "recreatedContexts": 2,
+    "unknown": false,
+    "diagnosticsLength": 1,
+    "lastFailure": "unknown-effect",
+    "acceptedCount": 1,
+    "replacedCount": 1,
+    "cancelledCount": 1,
+    "errorCount": 1,
+    "listenerCountsBeforeDestroy": {
+      "rouletteState": 1,
+      "rouletteBetsUpdate": 1,
+      "rouletteSpinStart": 1,
+      "rouletteSpinResult": 1,
+      "nextSpinTime": 1
+    },
+    "listenerCountsAfterDestroy": {
+      "rouletteState": 0,
+      "rouletteBetsUpdate": 0,
+      "rouletteSpinStart": 0,
+      "rouletteSpinResult": 0,
+      "nextSpinTime": 0
+    },
+    "timerCleared": true
+  },
+  "problems": [],
+  "failures": [],
+  "pass": true
+}

@@ -223,14 +223,14 @@
    ============================================ */
 .cs2-container {
   width: 100%;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0 var(--cs2-space-md);
 }
 
 .cs2-betting-layout {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 400px);
   gap: var(--cs2-space-xl);
   padding: var(--cs2-space-xl) 0;
 }
@@ -383,7 +383,7 @@
   font-weight: 900;
   color: var(--cs2-accent);
   letter-spacing: -0.5px;
-  text-shadow: 0 0 16px rgba(0, 212, 170, 0.5), 0 0 40px rgba(0, 212, 170, 0.2);
+  text-shadow: var(--glow-text-signature);
   position: relative;
   z-index: 1;
 }
@@ -502,6 +502,11 @@
 
 .cs2-tournament-header {
   display: flex;
+  width: 100%;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   align-items: center;
   gap: var(--cs2-space-md);
   padding: 20px var(--cs2-space-xl);
@@ -599,7 +604,7 @@
   color: var(--cs2-tier-s);
   border: 2px solid rgba(var(--cs2-tier-s-rgb), 0.6);
   box-shadow: 0 0 20px rgba(var(--cs2-tier-s-rgb), 0.3), inset 0 0 8px rgba(var(--cs2-tier-s-rgb), 0.1);
-  text-shadow: 0 0 10px rgba(var(--cs2-tier-s-rgb), 0.6);
+  text-shadow: var(--glow-text-active);
   animation: tier-s-glow 2.5s ease-in-out infinite alternate;
 }
 
@@ -613,7 +618,7 @@
   color: var(--cs2-tier-a);
   border: 2px solid rgba(var(--cs2-tier-a-rgb), 0.5);
   box-shadow: 0 0 20px rgba(var(--cs2-tier-a-rgb), 0.25), inset 0 0 8px rgba(var(--cs2-tier-a-rgb), 0.1);
-  text-shadow: 0 0 8px rgba(var(--cs2-tier-a-rgb), 0.5);
+  text-shadow: var(--glow-text-subtle);
 }
 
 .cs2-tier-badge.tier-b {
@@ -793,7 +798,7 @@
   font-family: var(--cs2-font-mono);
   letter-spacing: 0.5px;
   border: 1px solid rgba(var(--cs2-primary-rgb), 0.25);
-  text-shadow: 0 0 10px rgba(var(--cs2-primary-rgb), 0.4);
+  text-shadow: var(--glow-text-active);
   box-shadow: 0 0 16px rgba(var(--cs2-primary-rgb), 0.1);
 }
 
@@ -807,7 +812,7 @@
   color: #ff6b7d;
   border-color: rgba(255, 71, 87, 0.4);
   animation: live-pulse 1.5s ease-in-out infinite;
-  text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+  text-shadow: var(--glow-text-semantic);
   font-weight: 900;
   letter-spacing: 2px;
 }
@@ -827,7 +832,7 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   border: 1.5px solid rgba(108, 92, 231, 0.35);
-  text-shadow: 0 0 8px rgba(108, 92, 231, 0.3);
+  text-shadow: var(--glow-text-subtle);
 }
 
 .match-status-badge {
@@ -846,7 +851,7 @@
   color: var(--cs2-info-light);
   border: 1px solid rgba(33, 150, 243, 0.35);
   box-shadow: 0 0 16px rgba(33, 150, 243, 0.18);
-  text-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
+  text-shadow: var(--glow-text-subtle);
   animation: upcoming-glow 3s ease-in-out infinite alternate;
 }
 
@@ -945,6 +950,9 @@
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   letter-spacing: -0.5px;
 }
+
+.team-acronym-circle.logo-fallback { display: none; }
+.team-acronym-circle.logo-fallback.is-visible { display: flex; }
 
 .cs2-event-card:hover .team-acronym-circle {
   transform: scale(1.1);
@@ -1069,6 +1077,70 @@
   margin-bottom: 6px;
 }
 
+.odds-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.odds-movement {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-family: var(--cs2-font-family);
+  font-weight: 900;
+  vertical-align: middle;
+}
+
+.odds-movement.up {
+  color: #38f58f;
+  background: rgba(56, 245, 143, 0.15);
+  box-shadow: 0 0 12px rgba(56, 245, 143, 0.25);
+}
+
+.odds-movement.down {
+  color: #ff6474;
+  background: rgba(255, 100, 116, 0.14);
+  box-shadow: 0 0 12px rgba(255, 100, 116, 0.22);
+}
+
+.odds-movement-note {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--cs2-font-family);
+  font-size: 0.58rem;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: rgba(255, 255, 255, 0.58);
+  text-transform: uppercase;
+}
+
+.odds-pill.odds-up {
+  animation: oddsMoveUpPulse 1.2s ease-out;
+}
+
+.odds-pill.odds-down {
+  animation: oddsMoveDownPulse 1.2s ease-out;
+}
+
+@keyframes oddsMoveUpPulse {
+  0% { box-shadow: 0 0 0 rgba(56, 245, 143, 0); }
+  40% { box-shadow: 0 0 24px rgba(56, 245, 143, 0.32); }
+  100% { box-shadow: inherit; }
+}
+
+@keyframes oddsMoveDownPulse {
+  0% { box-shadow: 0 0 0 rgba(255, 100, 116, 0); }
+  40% { box-shadow: 0 0 24px rgba(255, 100, 116, 0.28); }
+  100% { box-shadow: inherit; }
+}
+
 .odds-pill:hover:not(.disabled) {
   transform: translateY(-3px) scale(1.02);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
@@ -1083,7 +1155,7 @@
   background: linear-gradient(145deg, rgba(0, 200, 83, 0.18), rgba(0, 200, 83, 0.06));
   border-color: rgba(0, 200, 83, 0.4);
   color: #2ecc71;
-  text-shadow: 0 0 12px rgba(0, 200, 83, 0.35);
+  text-shadow: var(--glow-text-semantic);
   box-shadow: 0 2px 12px rgba(0, 200, 83, 0.12), inset 0 1px 0 rgba(0, 200, 83, 0.08);
 }
 
@@ -1107,14 +1179,14 @@
   background: linear-gradient(145deg, rgba(0, 200, 83, 0.25), rgba(0, 200, 83, 0.1));
   border-color: rgba(0, 200, 83, 0.55);
   box-shadow: 0 8px 28px rgba(0, 200, 83, 0.25), 0 0 20px rgba(0, 200, 83, 0.1);
-  text-shadow: 0 0 14px rgba(0, 200, 83, 0.5);
+  text-shadow: var(--glow-text-semantic);
 }
 
 .odds-pill.underdog {
   background: linear-gradient(145deg, rgba(255, 152, 0, 0.18), rgba(255, 152, 0, 0.06));
   border-color: rgba(255, 152, 0, 0.4);
   color: #ffb347;
-  text-shadow: 0 0 12px rgba(255, 152, 0, 0.35);
+  text-shadow: var(--glow-text-semantic);
   box-shadow: 0 2px 12px rgba(255, 152, 0, 0.12), inset 0 1px 0 rgba(255, 152, 0, 0.08);
 }
 
@@ -1138,7 +1210,7 @@
   background: linear-gradient(145deg, rgba(255, 152, 0, 0.25), rgba(255, 152, 0, 0.1));
   border-color: rgba(255, 152, 0, 0.55);
   box-shadow: 0 8px 28px rgba(255, 152, 0, 0.25), 0 0 20px rgba(255, 152, 0, 0.1);
-  text-shadow: 0 0 14px rgba(255, 152, 0, 0.5);
+  text-shadow: var(--glow-text-semantic);
 }
 
 .odds-pill.disabled {
@@ -1570,7 +1642,7 @@
   font-weight: 900;
   color: var(--cs2-primary-light);
   font-family: var(--cs2-font-mono);
-  text-shadow: 0 0 10px rgba(var(--cs2-primary-rgb), 0.3);
+  text-shadow: var(--glow-text-subtle);
 }
 
 /* Bet Controls */
@@ -1735,7 +1807,7 @@
 
 .payout-info .total-payout .payout-value {
   font-size: 1.5rem;
-  text-shadow: 0 0 16px rgba(0, 200, 83, 0.5), 0 0 40px rgba(0, 200, 83, 0.2);
+  text-shadow: var(--glow-text-semantic);
 }
 
 /* Bet Actions */
@@ -3461,4 +3533,553 @@
   transition: opacity 0.35s ease, backdrop-filter 0.35s ease !important;
   backdrop-filter: blur(6px) saturate(120%) !important;
   -webkit-backdrop-filter: blur(6px) saturate(120%) !important;
+}
+
+/* ============================================
+   Mobile CS2 UX density pass — May 2026
+   Tightens the whole betting flow without changing desktop.
+   ============================================ */
+@media (max-width: 768px) {
+  .cs2-betting-container {
+    min-height: auto;
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+    line-height: 1.35;
+  }
+
+  .cs2-betting-container::before {
+    opacity: 0.22;
+  }
+
+  .cs2-container {
+    padding: 0 6px;
+  }
+
+  .cs2-header {
+    position: static;
+    padding: 8px 0;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  .cs2-header-content {
+    gap: 8px;
+    align-items: center;
+  }
+
+  .cs2-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 6px;
+    font-size: clamp(1rem, 4.5vw, 1.25rem);
+    line-height: 1.1;
+    letter-spacing: -0.2px;
+  }
+
+  .cs2-title-icon {
+    font-size: 1.15rem;
+  }
+
+  .cs2-header-stats {
+    flex: 0 0 auto;
+    gap: 6px;
+  }
+
+  .cs2-header-balance {
+    padding: 6px 9px;
+    gap: 4px;
+    border-radius: 12px;
+  }
+
+  .cs2-header-balance .balance-label,
+  .cs2-header-balance .balance-currency,
+  .cs2-header-quick-stats {
+    display: none;
+  }
+
+  .cs2-header-balance .balance-value {
+    font-size: 0.98rem;
+    letter-spacing: -0.3px;
+  }
+
+  .credit-history-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    font-size: 0 !important;
+  }
+
+  .credit-history-btn span {
+    font-size: 1rem;
+  }
+
+  .cs2-disclaimer {
+    display: none;
+  }
+
+  .cs2-betting-layout {
+    padding: 8px 0 0;
+    gap: 8px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cs2-events-panel,
+  .cs2-sidebar-panel {
+    border-radius: 14px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.34) !important;
+  }
+
+  .cs2-events-panel {
+    order: 1;
+  }
+
+  .cs2-sidebar-panel {
+    order: 2;
+    max-height: none;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .events-panel-header {
+    padding: 10px 12px;
+    gap: 8px;
+    position: sticky;
+    top: 0;
+    z-index: 12;
+  }
+
+  .events-panel-header h3 {
+    font-size: 1rem;
+    line-height: 1.1;
+  }
+
+  .cs2-refresh-btn {
+    min-height: 34px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    letter-spacing: 0.25px;
+  }
+
+  .cs2-tournament-section + .cs2-tournament-section {
+    margin-top: 2px;
+  }
+
+  .cs2-tournament-header {
+    gap: 8px;
+    padding: 10px 12px;
+    position: relative;
+  }
+
+  .cs2-tier-badge,
+  .cs2-tournament-icon {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 9px;
+    font-size: 0.82rem;
+    border-width: 1px;
+    box-shadow: none;
+    animation: none;
+  }
+
+  .cs2-tournament-logo-area,
+  .cs2-tournament-count {
+    display: none;
+  }
+
+  .cs2-tournament-name {
+    font-size: 0.86rem;
+    line-height: 1.15;
+    letter-spacing: -0.1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cs2-tournament-events {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .cs2-event-card {
+    padding: 10px 10px 12px !important;
+    border-radius: 14px;
+    border-left-width: 2px !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+  }
+
+  .cs2-event-card:hover {
+    transform: none;
+  }
+
+  .event-card-header {
+    margin-bottom: 8px;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  .match-time-countdown {
+    padding: 5px 9px;
+    font-size: 0.72rem;
+    gap: 4px;
+    letter-spacing: 0;
+    box-shadow: none;
+  }
+
+  .match-status-badge {
+    padding: 4px 8px;
+    font-size: 0.58rem;
+    letter-spacing: 0.25px;
+    box-shadow: none !important;
+    animation: none !important;
+  }
+
+  .event-card-teams {
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 0;
+  }
+
+  .team-side {
+    gap: 5px;
+  }
+
+  .team-logo-large,
+  .team-acronym-circle {
+    width: 44px !important;
+    height: 44px !important;
+    padding: 6px;
+    font-size: 0.82rem;
+    border-width: 1px;
+    box-shadow: none;
+  }
+
+  .team-side .team-name {
+    max-width: 112px;
+    font-size: 0.78rem;
+    line-height: 1.15;
+  }
+
+  .vs-divider {
+    width: 28px;
+    height: 28px;
+    font-size: 0.52rem;
+    letter-spacing: 1px;
+  }
+
+  .vs-divider::before,
+  .vs-divider::after,
+  .event-card-separator {
+    display: none;
+  }
+
+  .event-card-odds {
+    gap: 8px;
+    margin-top: 0;
+  }
+
+  .odds-pill {
+    min-height: 48px;
+    padding: 7px 8px 8px !important;
+    border-width: 1px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+  }
+
+  .odds-pill:hover:not(.disabled) {
+    transform: none;
+  }
+
+  .odds-pill.favorite::after,
+  .odds-pill.underdog::after {
+    display: none;
+  }
+
+  .odds-pill .odds-team-label {
+    margin-bottom: 2px;
+    font-size: 0.58rem;
+    line-height: 1.05;
+    letter-spacing: 0.25px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .odds-value-display,
+  .odds-value {
+    font-size: 1.04rem;
+    line-height: 1.05;
+  }
+
+  .odds-movement {
+    width: 14px;
+    height: 14px;
+    margin-left: 3px;
+    font-size: 0.62rem;
+  }
+
+  .odds-movement-note {
+    display: none;
+  }
+
+  .my-bets-header,
+  .bets-tabs,
+  .cs2-my-bets .empty-state {
+    display: none;
+  }
+
+  .cs2-my-bets {
+    max-height: 220px;
+    padding: 8px;
+  }
+
+  .cs2-bet-card {
+    margin-bottom: 8px;
+    padding: 10px 10px 10px 12px;
+    border-radius: 12px;
+  }
+
+  .cs2-sidebar-panel:has(.cs2-bet-card)::before {
+    content: 'My bets';
+    display: block;
+    padding: 9px 12px 2px;
+    color: var(--cs2-text-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .cs2-betslip-modal-overlay {
+    background: rgba(0, 0, 0, 0.78) !important;
+  }
+
+  .cs2-betslip-modal {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .cs2-betslip-modal-content {
+    max-height: min(82vh, 690px) !important;
+    margin-bottom: 0 !important;
+    border-radius: 18px 18px 0 0 !important;
+    overflow: hidden;
+  }
+
+  .betslip-modal-header {
+    padding: 10px 14px;
+  }
+
+  .betslip-modal-header h3 {
+    font-size: 1rem;
+  }
+
+  .close-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .betslip-selection {
+    padding: 10px 14px;
+  }
+
+  .selection-match {
+    margin-bottom: 8px;
+  }
+
+  .match-tournament {
+    max-width: 100%;
+    margin-bottom: 6px;
+    padding: 3px 7px;
+    font-size: 0.6rem;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .match-teams {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 6px;
+    font-size: 0.82rem;
+    text-align: left;
+    overflow: hidden;
+  }
+
+  .match-teams span:not(.vs-text) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .vs-text {
+    order: 0;
+    flex: 0 0 auto;
+  }
+
+  .selection-outcome {
+    padding: 10px;
+    border-radius: 12px;
+    gap: 8px;
+  }
+
+  .outcome-label {
+    font-size: 0.72rem;
+  }
+
+  .outcome-value {
+    font-size: 1rem;
+    text-align: right;
+  }
+
+  .cs2-bet-controls {
+    padding: 10px 14px max(14px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+
+  .bet-input-group {
+    margin-bottom: 10px;
+  }
+
+  .bet-input-group label {
+    margin-bottom: 6px;
+    font-size: 0.76rem;
+  }
+
+  .bet-amount-input {
+    padding: 11px 12px;
+    border-radius: 12px;
+    font-size: 1rem;
+  }
+
+  .quick-bets {
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .quick-bet-btn {
+    min-height: 38px;
+    aspect-ratio: auto;
+    padding: 8px 6px;
+    border-radius: 12px;
+    border-width: 1px;
+    font-size: 0.75rem;
+  }
+
+  .potential-payout {
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+  }
+
+  .payout-info {
+    gap: 6px;
+    font-size: 0.78rem;
+  }
+
+  .payout-info .total-payout {
+    padding-top: 7px;
+    font-size: 0.9rem;
+  }
+
+  .payout-info .total-payout .payout-value {
+    font-size: 1.02rem;
+    text-shadow: none;
+  }
+
+  .betslip-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    gap: 8px;
+    margin: 0 -14px max(-14px, calc(-1 * env(safe-area-inset-bottom))) !important;
+    padding: 10px 14px max(14px, env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(12, 16, 22, 0.72), rgba(12, 16, 22, 0.98) 35%);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .betslip-actions .btn {
+    min-height: 44px;
+    padding: 12px 14px;
+    border-radius: 12px;
+  }
+
+  .betslip-actions .btn-secondary {
+    flex: 0 0 92px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cs2-container {
+    padding: 0 4px;
+  }
+
+  .cs2-title span:last-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .events-panel-header,
+  .cs2-tournament-header {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .cs2-tournament-events {
+    padding: 7px;
+  }
+
+  .cs2-event-card {
+    padding: 9px !important;
+  }
+
+  .team-logo-large,
+  .team-acronym-circle {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .team-side .team-name {
+    max-width: 96px;
+    font-size: 0.74rem;
+  }
+
+  .cs2-header-stats {
+    display: none;
+  }
+
+  .cs2-header {
+    padding: 6px 0;
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .cs2-title {
+    width: 100%;
+    justify-content: center;
+    font-size: clamp(1rem, 4.2vw, 1.18rem);
+  }
+
+  .cs2-events-panel,
+  .cs2-tournament-section,
+  .cs2-event-card {
+    width: 100%;
+  }
+
+  .events-panel-header {
+    min-height: 0;
+  }
+
+  .cs2-betting-container {
+    padding-bottom: calc(116px + env(safe-area-inset-bottom));
+  }
+
+  .odds-pill {
+    min-height: 46px;
+  }
 }

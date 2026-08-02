@@ -1,0 +1,1186 @@
+[
+  {
+    "width": 390,
+    "state": "wager",
+    "errors": [],
+    "metrics": {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "documentWidth": 390,
+      "shell": {
+        "left": 0,
+        "top": 91.6875,
+        "right": 390,
+        "bottom": 967.484375,
+        "width": 390,
+        "height": 875.796875
+      },
+      "gameArea": {
+        "left": 1,
+        "top": 430.484375,
+        "right": 389,
+        "bottom": 966.484375,
+        "width": 388,
+        "height": 536
+      },
+      "chips": [
+        {
+          "left": 40.25,
+          "top": 240.484375,
+          "right": 84.25,
+          "bottom": 284.484375,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "left": 127.26895141601562,
+          "top": 234.00332641601562,
+          "right": 174.23104858398438,
+          "bottom": 280.9654235839844,
+          "width": 46.96209716796875,
+          "height": 46.96209716796875
+        },
+        {
+          "left": 217.25,
+          "top": 240.484375,
+          "right": 261.25,
+          "bottom": 284.484375,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "left": 305.75,
+          "top": 240.484375,
+          "right": 349.75,
+          "bottom": 284.484375,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "visibleControls": [],
+      "cards": [],
+      "cardsInsideShell": true,
+      "controlsEqual": true,
+      "chipsCircular": true,
+      "scoreTextShadow": "rgba(245, 201, 106, 0.22) 0px 0px 4px",
+      "hands": [
+        {
+          "classes": "blackjack-player-hand is-active",
+          "badge": ""
+        }
+      ],
+      "dealerClasses": "dealer-section",
+      "result": ""
+    }
+  },
+  {
+    "width": 390,
+    "state": "pair",
+    "errors": [],
+    "metrics": {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "documentWidth": 390,
+      "shell": {
+        "left": 0,
+        "top": 91.6875,
+        "right": 390,
+        "bottom": 1057.375,
+        "width": 390,
+        "height": 965.6875
+      },
+      "gameArea": {
+        "left": 1,
+        "top": 430.484375,
+        "right": 389,
+        "bottom": 1056.375,
+        "width": 388,
+        "height": 625.890625
+      },
+      "chips": [
+        {
+          "left": 40.25,
+          "top": 240.484375,
+          "right": 84.25,
+          "bottom": 284.484375,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "left": 127.26895141601562,
+          "top": 234.00332641601562,
+          "right": 174.23104858398438,
+          "bottom": 280.9654235839844,
+          "width": 46.96209716796875,
+          "height": 46.96209716796875
+        },
+        {
+          "left": 217.25,
+          "top": 240.484375,
+          "right": 261.25,
+          "bottom": 284.484375,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "left": 305.75,
+          "top": 240.484375,
+          "right": 349.75,
+          "bottom": 284.484375,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "visibleControls": [
+        {
+          "id": "hitBtn",
+          "left": 20,
+          "top": 813.375,
+          "right": 191,
+          "bottom": 861.375,
+          "width": 171,
+          "height": 48
+        },
+        {
+          "id": "standBtn",
+          "left": 199,
+          "top": 803.375,
+          "right": 370,
+          "bottom": 851.375,
+          "width": 171,
+          "height": 48
+        },
+        {
+          "id": "doubleDownBtn",
+          "left": 20,
+          "top": 869.375,
+          "right": 191,
+          "bottom": 917.375,
+          "width": 171,
+          "height": 48
+        },
+        {
+          "id": "splitBtn",
+          "left": 199,
+          "top": 869.375,
+          "right": 370,
+          "bottom": 917.375,
+          "width": 171,
+          "height": 48
+        }
+      ],
+      "cards": [
+        {
+          "left": 133,
+          "top": 483.046875,
+          "right": 191.5,
+          "bottom": 564.9375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 188.5,
+          "top": 483.046875,
+          "right": 247,
+          "bottom": 564.9375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 133,
+          "top": 681.484375,
+          "right": 191.5,
+          "bottom": 763.375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 188.5,
+          "top": 681.484375,
+          "right": 247,
+          "bottom": 763.375,
+          "width": 58.5,
+          "height": 81.890625
+        }
+      ],
+      "cardsInsideShell": true,
+      "controlsEqual": true,
+      "chipsCircular": true,
+      "scoreTextShadow": "rgba(245, 201, 106, 0.22) 0px 0px 4px",
+      "hands": [
+        {
+          "classes": "blackjack-player-hand is-active",
+          "badge": ""
+        }
+      ],
+      "dealerClasses": "dealer-section",
+      "result": ""
+    }
+  },
+  {
+    "width": 390,
+    "state": "long",
+    "errors": [],
+    "metrics": {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "documentWidth": 390,
+      "shell": {
+        "left": 0,
+        "top": 91.6875,
+        "right": 390,
+        "bottom": 991.375,
+        "width": 390,
+        "height": 899.6875
+      },
+      "gameArea": {
+        "left": 1,
+        "top": 430.484375,
+        "right": 389,
+        "bottom": 990.375,
+        "width": 388,
+        "height": 559.890625
+      },
+      "chips": [
+        {
+          "left": 40.25,
+          "top": 240.484375,
+          "right": 84.25,
+          "bottom": 284.484375,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "left": 127.26895141601562,
+          "top": 234.00332641601562,
+          "right": 174.23104858398438,
+          "bottom": 280.9654235839844,
+          "width": 46.96209716796875,
+          "height": 46.96209716796875
+        },
+        {
+          "left": 217.25,
+          "top": 240.484375,
+          "right": 261.25,
+          "bottom": 284.484375,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "left": 305.75,
+          "top": 240.484375,
+          "right": 349.75,
+          "bottom": 284.484375,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "visibleControls": [
+        {
+          "id": "newGameBtn",
+          "left": 20,
+          "top": 803.375,
+          "right": 191,
+          "bottom": 851.375,
+          "width": 171,
+          "height": 48
+        }
+      ],
+      "cards": [
+        {
+          "left": 26,
+          "top": 483.046875,
+          "right": 84.5,
+          "bottom": 564.9375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 55.5,
+          "top": 483.046875,
+          "right": 114,
+          "bottom": 564.9375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 85,
+          "top": 483.046875,
+          "right": 143.5,
+          "bottom": 564.9375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 114.5,
+          "top": 483.046875,
+          "right": 173,
+          "bottom": 564.9375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 144,
+          "top": 483.046875,
+          "right": 202.5,
+          "bottom": 564.9375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 173.5,
+          "top": 483.046875,
+          "right": 232,
+          "bottom": 564.9375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 35,
+          "top": 681.484375,
+          "right": 93.5,
+          "bottom": 763.375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 64.5,
+          "top": 681.484375,
+          "right": 123,
+          "bottom": 763.375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 94,
+          "top": 681.484375,
+          "right": 152.5,
+          "bottom": 763.375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 123.5,
+          "top": 681.484375,
+          "right": 182,
+          "bottom": 763.375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 153,
+          "top": 681.484375,
+          "right": 211.5,
+          "bottom": 763.375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 182.5,
+          "top": 681.484375,
+          "right": 241,
+          "bottom": 763.375,
+          "width": 58.5,
+          "height": 81.890625
+        },
+        {
+          "left": 212,
+          "top": 681.484375,
+          "right": 270.5,
+          "bottom": 763.375,
+          "width": 58.5,
+          "height": 81.890625
+        }
+      ],
+      "cardsInsideShell": true,
+      "controlsEqual": true,
+      "chipsCircular": true,
+      "scoreTextShadow": "rgba(245, 201, 106, 0.22) 0px 0px 4px",
+      "hands": [
+        {
+          "classes": "blackjack-player-hand is-loser",
+          "badge": "LOSS"
+        }
+      ],
+      "dealerClasses": "dealer-section is-winner",
+      "result": "LOSS · -100 CREDITS"
+    }
+  },
+  {
+    "width": 390,
+    "state": "split",
+    "errors": [],
+    "metrics": {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "documentWidth": 390,
+      "shell": {
+        "left": 0,
+        "top": 91.6875,
+        "right": 390,
+        "bottom": 984.671875,
+        "width": 390,
+        "height": 892.984375
+      },
+      "gameArea": {
+        "left": 1,
+        "top": 430.484375,
+        "right": 389,
+        "bottom": 983.671875,
+        "width": 388,
+        "height": 553.1875
+      },
+      "chips": [
+        {
+          "left": 40.25,
+          "top": 240.484375,
+          "right": 84.25,
+          "bottom": 284.484375,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "left": 127.26895141601562,
+          "top": 234.00332641601562,
+          "right": 174.23104858398438,
+          "bottom": 280.9654235839844,
+          "width": 46.96209716796875,
+          "height": 46.96209716796875
+        },
+        {
+          "left": 217.25,
+          "top": 240.484375,
+          "right": 261.25,
+          "bottom": 284.484375,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "left": 305.75,
+          "top": 240.484375,
+          "right": 349.75,
+          "bottom": 284.484375,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "visibleControls": [
+        {
+          "id": "newGameBtn",
+          "left": 20,
+          "top": 796.671875,
+          "right": 191,
+          "bottom": 844.671875,
+          "width": 171,
+          "height": 48
+        }
+      ],
+      "cards": [
+        {
+          "left": 133,
+          "top": 491.984375,
+          "right": 179,
+          "bottom": 555.984375,
+          "width": 46,
+          "height": 64
+        },
+        {
+          "left": 160,
+          "top": 491.984375,
+          "right": 206,
+          "bottom": 555.984375,
+          "width": 46,
+          "height": 64
+        },
+        {
+          "left": 187,
+          "top": 491.984375,
+          "right": 233,
+          "bottom": 555.984375,
+          "width": 46,
+          "height": 64
+        },
+        {
+          "left": 48,
+          "top": 691.171875,
+          "right": 94,
+          "bottom": 755.171875,
+          "width": 46,
+          "height": 64
+        },
+        {
+          "left": 65,
+          "top": 691.171875,
+          "right": 111,
+          "bottom": 755.171875,
+          "width": 46,
+          "height": 64
+        },
+        {
+          "left": 82,
+          "top": 691.171875,
+          "right": 128,
+          "bottom": 755.171875,
+          "width": 46,
+          "height": 64
+        },
+        {
+          "left": 99,
+          "top": 691.171875,
+          "right": 145,
+          "bottom": 755.171875,
+          "width": 46,
+          "height": 64
+        },
+        {
+          "left": 116,
+          "top": 691.171875,
+          "right": 162,
+          "bottom": 755.171875,
+          "width": 46,
+          "height": 64
+        },
+        {
+          "left": 235,
+          "top": 691.171875,
+          "right": 281,
+          "bottom": 755.171875,
+          "width": 46,
+          "height": 64
+        },
+        {
+          "left": 262,
+          "top": 691.171875,
+          "right": 308,
+          "bottom": 755.171875,
+          "width": 46,
+          "height": 64
+        },
+        {
+          "left": 289,
+          "top": 691.171875,
+          "right": 335,
+          "bottom": 755.171875,
+          "width": 46,
+          "height": 64
+        }
+      ],
+      "cardsInsideShell": true,
+      "controlsEqual": true,
+      "chipsCircular": true,
+      "scoreTextShadow": "rgba(245, 201, 106, 0.22) 0px 0px 4px",
+      "hands": [
+        {
+          "classes": "blackjack-player-hand is-loser",
+          "badge": "LOSS"
+        },
+        {
+          "classes": "blackjack-player-hand is-winner",
+          "badge": "WIN"
+        }
+      ],
+      "dealerClasses": "dealer-section",
+      "result": "MIXED · EVEN CREDITS"
+    }
+  },
+  {
+    "width": 1280,
+    "state": "wager",
+    "errors": [],
+    "metrics": {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "documentWidth": 1280,
+      "shell": {
+        "left": 150,
+        "top": 114.59375,
+        "right": 1130,
+        "bottom": 883.984375,
+        "width": 980,
+        "height": 769.390625
+      },
+      "gameArea": {
+        "left": 151,
+        "top": 282.984375,
+        "right": 1129,
+        "bottom": 882.984375,
+        "width": 978,
+        "height": 600
+      },
+      "chips": [
+        {
+          "left": 588.34375,
+          "top": 162.984375,
+          "right": 634.34375,
+          "bottom": 208.984375,
+          "width": 46,
+          "height": 46
+        },
+        {
+          "left": 640.79541015625,
+          "top": 156.43600463867188,
+          "right": 689.89208984375,
+          "bottom": 205.53274536132812,
+          "width": 49.0966796875,
+          "height": 49.09674072265625
+        },
+        {
+          "left": 696.34375,
+          "top": 162.984375,
+          "right": 742.34375,
+          "bottom": 208.984375,
+          "width": 46,
+          "height": 46
+        },
+        {
+          "left": 750.34375,
+          "top": 162.984375,
+          "right": 796.34375,
+          "bottom": 208.984375,
+          "width": 46,
+          "height": 46
+        }
+      ],
+      "visibleControls": [],
+      "cards": [],
+      "cardsInsideShell": true,
+      "controlsEqual": true,
+      "chipsCircular": true,
+      "scoreTextShadow": "rgba(245, 201, 106, 0.22) 0px 0px 4px",
+      "hands": [
+        {
+          "classes": "blackjack-player-hand is-active",
+          "badge": ""
+        }
+      ],
+      "dealerClasses": "dealer-section",
+      "result": ""
+    }
+  },
+  {
+    "width": 1280,
+    "state": "pair",
+    "errors": [],
+    "metrics": {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "documentWidth": 1280,
+      "shell": {
+        "left": 150,
+        "top": 114.59375,
+        "right": 1130,
+        "bottom": 1120.984375,
+        "width": 980,
+        "height": 1006.390625
+      },
+      "gameArea": {
+        "left": 151,
+        "top": 428.984375,
+        "right": 1129,
+        "bottom": 1119.984375,
+        "width": 978,
+        "height": 691
+      },
+      "chips": [
+        {
+          "left": 906,
+          "top": 220.984375,
+          "right": 952,
+          "bottom": 266.984375,
+          "width": 46,
+          "height": 46
+        },
+        {
+          "left": 958.45166015625,
+          "top": 214.43600463867188,
+          "right": 1007.54833984375,
+          "bottom": 263.5327453613281,
+          "width": 49.0966796875,
+          "height": 49.09674072265625
+        },
+        {
+          "left": 1014,
+          "top": 220.984375,
+          "right": 1060,
+          "bottom": 266.984375,
+          "width": 46,
+          "height": 46
+        },
+        {
+          "left": 1068,
+          "top": 220.984375,
+          "right": 1114,
+          "bottom": 266.984375,
+          "width": 46,
+          "height": 46
+        }
+      ],
+      "visibleControls": [
+        {
+          "id": "hitBtn",
+          "left": 182,
+          "top": 1026.984375,
+          "right": 403.5,
+          "bottom": 1076.984375,
+          "width": 221.5,
+          "height": 50
+        },
+        {
+          "id": "standBtn",
+          "left": 413.5,
+          "top": 1016.984375,
+          "right": 635,
+          "bottom": 1066.984375,
+          "width": 221.5,
+          "height": 50
+        },
+        {
+          "id": "doubleDownBtn",
+          "left": 645,
+          "top": 1016.984375,
+          "right": 866.5,
+          "bottom": 1066.984375,
+          "width": 221.5,
+          "height": 50
+        },
+        {
+          "id": "splitBtn",
+          "left": 876.5,
+          "top": 1016.984375,
+          "right": 1098,
+          "bottom": 1066.984375,
+          "width": 221.5,
+          "height": 50
+        }
+      ],
+      "cards": [
+        {
+          "left": 542,
+          "top": 523.984375,
+          "right": 646,
+          "bottom": 669.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 634,
+          "top": 523.984375,
+          "right": 738,
+          "bottom": 669.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 542,
+          "top": 807.984375,
+          "right": 646,
+          "bottom": 953.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 634,
+          "top": 807.984375,
+          "right": 738,
+          "bottom": 953.984375,
+          "width": 104,
+          "height": 146
+        }
+      ],
+      "cardsInsideShell": true,
+      "controlsEqual": true,
+      "chipsCircular": true,
+      "scoreTextShadow": "rgba(245, 201, 106, 0.22) 0px 0px 4px",
+      "hands": [
+        {
+          "classes": "blackjack-player-hand is-active",
+          "badge": ""
+        }
+      ],
+      "dealerClasses": "dealer-section",
+      "result": ""
+    }
+  },
+  {
+    "width": 1280,
+    "state": "long",
+    "errors": [],
+    "metrics": {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "documentWidth": 1280,
+      "shell": {
+        "left": 150,
+        "top": 114.59375,
+        "right": 1130,
+        "bottom": 1444.984375,
+        "width": 980,
+        "height": 1330.390625
+      },
+      "gameArea": {
+        "left": 151,
+        "top": 428.984375,
+        "right": 1129,
+        "bottom": 1443.984375,
+        "width": 978,
+        "height": 1015
+      },
+      "chips": [
+        {
+          "left": 906,
+          "top": 220.984375,
+          "right": 952,
+          "bottom": 266.984375,
+          "width": 46,
+          "height": 46
+        },
+        {
+          "left": 958.45166015625,
+          "top": 214.43600463867188,
+          "right": 1007.54833984375,
+          "bottom": 263.5327453613281,
+          "width": 49.0966796875,
+          "height": 49.09674072265625
+        },
+        {
+          "left": 1014,
+          "top": 220.984375,
+          "right": 1060,
+          "bottom": 266.984375,
+          "width": 46,
+          "height": 46
+        },
+        {
+          "left": 1068,
+          "top": 220.984375,
+          "right": 1114,
+          "bottom": 266.984375,
+          "width": 46,
+          "height": 46
+        }
+      ],
+      "visibleControls": [
+        {
+          "id": "newGameBtn",
+          "left": 182,
+          "top": 1350.984375,
+          "right": 403.5,
+          "bottom": 1400.984375,
+          "width": 221.5,
+          "height": 50
+        }
+      ],
+      "cards": [
+        {
+          "left": 542,
+          "top": 596.984375,
+          "right": 646,
+          "bottom": 742.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 622,
+          "top": 596.984375,
+          "right": 726,
+          "bottom": 742.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 702,
+          "top": 596.984375,
+          "right": 806,
+          "bottom": 742.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 782,
+          "top": 596.984375,
+          "right": 886,
+          "bottom": 742.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 862,
+          "top": 596.984375,
+          "right": 966,
+          "bottom": 742.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 942,
+          "top": 596.984375,
+          "right": 1046,
+          "bottom": 742.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 542,
+          "top": 995.984375,
+          "right": 646,
+          "bottom": 1141.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 622,
+          "top": 995.984375,
+          "right": 726,
+          "bottom": 1141.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 702,
+          "top": 995.984375,
+          "right": 806,
+          "bottom": 1141.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 782,
+          "top": 995.984375,
+          "right": 886,
+          "bottom": 1141.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 862,
+          "top": 995.984375,
+          "right": 966,
+          "bottom": 1141.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 942,
+          "top": 995.984375,
+          "right": 1046,
+          "bottom": 1141.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 518,
+          "top": 1141.984375,
+          "right": 622,
+          "bottom": 1287.984375,
+          "width": 104,
+          "height": 146
+        }
+      ],
+      "cardsInsideShell": true,
+      "controlsEqual": true,
+      "chipsCircular": true,
+      "scoreTextShadow": "rgba(245, 201, 106, 0.22) 0px 0px 4px",
+      "hands": [
+        {
+          "classes": "blackjack-player-hand is-loser",
+          "badge": "LOSS"
+        }
+      ],
+      "dealerClasses": "dealer-section is-winner",
+      "result": "LOSS · -100 CREDITS"
+    }
+  },
+  {
+    "width": 1280,
+    "state": "split",
+    "errors": [],
+    "metrics": {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "documentWidth": 1280,
+      "shell": {
+        "left": 150,
+        "top": 114.59375,
+        "right": 1130,
+        "bottom": 1444.984375,
+        "width": 980,
+        "height": 1330.390625
+      },
+      "gameArea": {
+        "left": 151,
+        "top": 428.984375,
+        "right": 1129,
+        "bottom": 1443.984375,
+        "width": 978,
+        "height": 1015
+      },
+      "chips": [
+        {
+          "left": 906,
+          "top": 220.984375,
+          "right": 952,
+          "bottom": 266.984375,
+          "width": 46,
+          "height": 46
+        },
+        {
+          "left": 958.45166015625,
+          "top": 214.43600463867188,
+          "right": 1007.54833984375,
+          "bottom": 263.5327453613281,
+          "width": 49.0966796875,
+          "height": 49.09674072265625
+        },
+        {
+          "left": 1014,
+          "top": 220.984375,
+          "right": 1060,
+          "bottom": 266.984375,
+          "width": 46,
+          "height": 46
+        },
+        {
+          "left": 1068,
+          "top": 220.984375,
+          "right": 1114,
+          "bottom": 266.984375,
+          "width": 46,
+          "height": 46
+        }
+      ],
+      "visibleControls": [
+        {
+          "id": "newGameBtn",
+          "left": 182,
+          "top": 1350.984375,
+          "right": 403.5,
+          "bottom": 1400.984375,
+          "width": 221.5,
+          "height": 50
+        }
+      ],
+      "cards": [
+        {
+          "left": 542,
+          "top": 596.984375,
+          "right": 646,
+          "bottom": 742.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 634,
+          "top": 596.984375,
+          "right": 738,
+          "bottom": 742.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 726,
+          "top": 596.984375,
+          "right": 830,
+          "bottom": 742.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 312.5,
+          "top": 995.984375,
+          "right": 416.5,
+          "bottom": 1141.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 392.5,
+          "top": 995.984375,
+          "right": 496.5,
+          "bottom": 1141.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 472.5,
+          "top": 995.984375,
+          "right": 576.5,
+          "bottom": 1141.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 288.5,
+          "top": 1141.984375,
+          "right": 392.5,
+          "bottom": 1287.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 368.5,
+          "top": 1141.984375,
+          "right": 472.5,
+          "bottom": 1287.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 771.5,
+          "top": 995.984375,
+          "right": 875.5,
+          "bottom": 1141.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 863.5,
+          "top": 995.984375,
+          "right": 967.5,
+          "bottom": 1141.984375,
+          "width": 104,
+          "height": 146
+        },
+        {
+          "left": 955.5,
+          "top": 995.984375,
+          "right": 1059.5,
+          "bottom": 1141.984375,
+          "width": 104,
+          "height": 146
+        }
+      ],
+      "cardsInsideShell": true,
+      "controlsEqual": true,
+      "chipsCircular": true,
+      "scoreTextShadow": "rgba(245, 201, 106, 0.22) 0px 0px 4px",
+      "hands": [
+        {
+          "classes": "blackjack-player-hand is-loser",
+          "badge": "LOSS"
+        },
+        {
+          "classes": "blackjack-player-hand is-winner",
+          "badge": "WIN"
+        }
+      ],
+      "dealerClasses": "dealer-section",
+      "result": "MIXED · EVEN CREDITS"
+    }
+  }
+]

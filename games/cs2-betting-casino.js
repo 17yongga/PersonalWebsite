@@ -39,6 +39,12 @@ class CS2BettingGame {
     this.init();
   }
 
+  escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, character => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    })[character]);
+  }
+
   init() {
     try {
       console.log('[CS2 Betting] Initializing game...');
@@ -65,6 +71,15 @@ class CS2BettingGame {
       }
       
       console.log('[CS2 Betting] Setting up UI...');
+      if (!gameView.dataset.logoErrorHandler) {
+        gameView.dataset.logoErrorHandler = 'true';
+        gameView.addEventListener('error', event => {
+          const image = event.target.closest?.('img.team-logo-large');
+          if (!image) return;
+          image.hidden = true;
+          image.nextElementSibling?.classList.add('is-visible');
+        }, true);
+      }
       gameView.innerHTML = `
         <div class="cs2-betting-container">
           <!-- Sticky Header Bar -->
@@ -78,7 +93,7 @@ class CS2BettingGame {
                 <div class="cs2-header-stats">
                   <div class="cs2-header-balance">
                     <span class="balance-label">Balance</span>
-                    <span id="cs2HeaderBalance" class="balance-value">${(this.casino.credits || 0).toLocaleString()}</span>
+                    <span id="cs2HeaderBalance" class="balance-value">${this.casino.formatBalance?.(this.casino.credits || 0) || Number(this.casino.credits || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     <span class="balance-currency">credits</span>
                   </div>
                   <button id="refreshEventsBtn" class="cs2-refresh-btn">
@@ -189,15 +204,21 @@ class CS2BettingGame {
       this._initialized = false; // Allow retry on error
       const gameView = document.getElementById('cs2BettingGame');
       if (gameView) {
-        gameView.innerHTML = `
-          <div class="cs2-betting-container">
-            <h2 class="game-title">🎮 CS2 Fantasy Betting</h2>
-            <div class="error-text">
-              <p>Error loading game: ${error.message}</p>
-              <p>Please refresh the page or contact support.</p>
-            </div>
-          </div>
-        `;
+        gameView.replaceChildren();
+        const container = document.createElement('div');
+        container.className = 'cs2-betting-container';
+        const title = document.createElement('h2');
+        title.className = 'game-title';
+        title.textContent = 'CS2 Fantasy Betting';
+        const errorText = document.createElement('div');
+        errorText.className = 'error-text';
+        const message = document.createElement('p');
+        message.textContent = `Error loading game: ${String(error?.message || 'Unknown error')}`;
+        const guidance = document.createElement('p');
+        guidance.textContent = 'Please refresh the page or contact support.';
+        errorText.append(message, guidance);
+        container.append(title, errorText);
+        gameView.appendChild(container);
       }
     }
   }
@@ -213,9 +234,7 @@ class CS2BettingGame {
     this.socket = this.casino.getSocket();
     
     if (!this.socket) {
-      // Fallback: create new socket connection
-      const serverUrl = window.CASINO_SERVER_URL || window.location.origin;
-      this.socket = io(serverUrl);
+      console.warn('[CS2 Frontend] Authenticated casino socket is unavailable');
     }
 
     // Socket.IO handlers for CS2 betting (if we add them later)
@@ -233,37 +252,27 @@ class CS2BettingGame {
     // Refresh events button - calls API to sync and update odds
     document.getElementById('refreshEventsBtn')?.addEventListener('click', async () => {
       try {
-        const serverUrl = window.CASINO_SERVER_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin);
+        const serverUrl = this.casino?.serverUrl || window.CASINO_SERVER_URL || window.location.origin;
         const refreshBtn = document.getElementById('refreshEventsBtn');
         if (refreshBtn) {
           refreshBtn.disabled = true;
           refreshBtn.textContent = '🔄 Refreshing...';
         }
         
-        console.log('[CS2 Frontend] Refresh button clicked - calling API sync...');
-        const response = await fetch(`${serverUrl}/api/cs2/sync`, { method: 'GET' });
-        const data = await response.json();
-        
-        if (data.success) {
-          console.log('[CS2 Frontend] Refresh successful:', data);
-          // Reload events after sync
-          await this.loadEvents();
-        } else {
-          console.error('[CS2 Frontend] Refresh failed:', data);
-          alert('Failed to refresh matches. Please try again later.');
-        }
-        
+        console.log('[CS2 Frontend] Refreshing cached events...');
+        await this.loadEvents();
+        this.showMessage?.('Events refreshed', 'success');
         if (refreshBtn) {
           refreshBtn.disabled = false;
-          refreshBtn.textContent = '🔄 Refresh';
+          refreshBtn.textContent = '↻ Refresh';
         }
       } catch (error) {
         console.error('[CS2 Frontend] Error refreshing:', error);
-        alert('Error refreshing matches. Please try again later.');
+        this.showMessage?.('Error refreshing matches. Please try again later.', 'error');
         const refreshBtn = document.getElementById('refreshEventsBtn');
         if (refreshBtn) {
           refreshBtn.disabled = false;
-          refreshBtn.textContent = '🔄 Refresh';
+          refreshBtn.textContent = '↻ Refresh';
         }
       }
     });
@@ -416,7 +425,7 @@ class CS2BettingGame {
   updateHeaderBalance() {
     const el = document.getElementById('cs2HeaderBalance');
     if (el) {
-      el.textContent = this.currentBalance.toLocaleString();
+      el.textContent = this.casino.formatBalance?.(this.currentBalance) || Number(this.currentBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       el.classList.add('updating');
       setTimeout(() => el.classList.remove('updating'), 500);
     }
@@ -489,9 +498,11 @@ class CS2BettingGame {
       console.error('[CS2 Frontend] Error loading events:', error);
       const eventsList = document.getElementById('cs2EventsList');
       if (eventsList) {
-        eventsList.innerHTML = 
-          '<p class="error-text">Error loading events. Check server connection.<br>' +
-          `Error: ${error.message}</p>`;
+        eventsList.replaceChildren();
+        const errorText = document.createElement('p');
+        errorText.className = 'error-text';
+        errorText.textContent = `Error loading events: ${String(error.message || 'Check server connection.')}`;
+        eventsList.appendChild(errorText);
       }
     }
   }
@@ -502,7 +513,7 @@ class CS2BettingGame {
       if (!userId) return;
 
       const serverUrl = window.CASINO_SERVER_URL || window.location.origin;
-      const response = await fetch(`${serverUrl}/api/cs2/bets?userId=${userId}`);
+      const response = await this.casino.apiFetch('/api/cs2/bets');
       const data = await response.json();
 
       if (data.success) {
@@ -677,6 +688,14 @@ class CS2BettingGame {
 
         const team1Odds = getDisplayOdds(event.odds?.team1);
         const team2Odds = getDisplayOdds(event.odds?.team2);
+        const team1Movement = event.oddsMovement?.team1 || 'same';
+        const team2Movement = event.oddsMovement?.team2 || 'same';
+        const movementIcon = (movement) => movement === 'up' ? '↗' : (movement === 'down' ? '↘' : '');
+        const movementLabel = (movement, previousOdds) => {
+          if (movement === 'same' || !previousOdds) return '';
+          const direction = movement === 'up' ? 'up from' : 'down from';
+          return ` <span class="odds-movement-note">${direction} ${Number(previousOdds).toFixed(2)}</span>`;
+        };
 
         if (!event.odds) event.odds = {};
         if (event.odds.team1 === null || event.odds.team1 === undefined) event.odds.team1 = 2.0;
@@ -700,9 +719,8 @@ class CS2BettingGame {
         // Team logo HTML helper
         const logoHtml = (logoUrl, safeName, acronym) => {
           if (logoUrl) {
-            return `<img src="${logoUrl}" alt="${safeName}" class="team-logo-large"
-                      onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="team-acronym-circle" style="display:none;">${acronym}</div>`;
+            return `<img src="${logoUrl}" alt="${safeName}" class="team-logo-large">
+                    <div class="team-acronym-circle logo-fallback">${acronym}</div>`;
           }
           return `<div class="team-acronym-circle">${acronym}</div>`;
         };
@@ -731,21 +749,25 @@ class CS2BettingGame {
               </div>
             </div>
             <div class="event-card-odds">
-              <button class="odds-pill ${homeClass} ${canBet ? '' : 'disabled'}"
+              <button class="odds-pill ${homeClass} odds-${team1Movement} ${canBet ? '' : 'disabled'}"
                       data-event-id="${event.id}"
                       data-selection="team1"
                       ${!canBet ? 'disabled' : ''}
                       aria-label="Bet on ${safeHomeTeam}"
                       type="button">
-                ${team1Odds.toFixed(2)}
+                <span class="odds-value">${team1Odds.toFixed(2)}</span>
+                ${movementIcon(team1Movement) ? `<span class="odds-movement ${team1Movement}" title="Odds moved ${team1Movement}">${movementIcon(team1Movement)}</span>` : ''}
+                ${movementLabel(team1Movement, event.oddsMovement?.previousTeam1)}
               </button>
-              <button class="odds-pill ${awayClass} ${canBet ? '' : 'disabled'}"
+              <button class="odds-pill ${awayClass} odds-${team2Movement} ${canBet ? '' : 'disabled'}"
                       data-event-id="${event.id}"
                       data-selection="team2"
                       ${!canBet ? 'disabled' : ''}
                       aria-label="Bet on ${safeAwayTeam}"
                       type="button">
-                ${team2Odds.toFixed(2)}
+                <span class="odds-value">${team2Odds.toFixed(2)}</span>
+                ${movementIcon(team2Movement) ? `<span class="odds-movement ${team2Movement}" title="Odds moved ${team2Movement}">${movementIcon(team2Movement)}</span>` : ''}
+                ${movementLabel(team2Movement, event.oddsMovement?.previousTeam2)}
               </button>
             </div>
           </div>
@@ -805,7 +827,7 @@ class CS2BettingGame {
     // Try to get cached odds from server (no API call)
     try {
       console.log(`[CS2 Frontend] Checking cached odds for event ${eventId}...`);
-      const serverUrl = window.CASINO_SERVER_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin);
+      const serverUrl = this.casino?.serverUrl || window.CASINO_SERVER_URL || window.location.origin;
       const response = await fetch(`${serverUrl}/api/cs2/events/${eventId}/odds`);
       
       if (response.ok) {
@@ -867,16 +889,16 @@ class CS2BettingGame {
     betSlip.innerHTML = `
       <div class="betslip-selection">
         <div class="selection-match">
-          <span class="match-tournament">🏆 ${event.tournamentName || 'Tournament'}</span>
+          <span class="match-tournament">🏆 ${this.escapeHtml(event.tournamentName || 'Tournament')}</span>
           <div class="match-teams">
-            <span>${event.homeTeam || 'Team 1'}</span>
+            <span>${this.escapeHtml(event.homeTeam || 'Team 1')}</span>
             <span class="vs-text">vs</span>
-            <span>${event.awayTeam || 'Team 2'}</span>
+            <span>${this.escapeHtml(event.awayTeam || 'Team 2')}</span>
           </div>
         </div>
         <div class="selection-outcome">
           <span class="outcome-label">Your Bet:</span>
-          <span class="outcome-value">${selectionName} @ ${odds.toFixed(2)}</span>
+          <span class="outcome-value">${this.escapeHtml(selectionName)} @ ${odds.toFixed(2)}</span>
         </div>
       </div>
     `;
@@ -896,8 +918,8 @@ class CS2BettingGame {
     payoutDiv.innerHTML = `
       <div class="payout-info">
         <div>Bet Amount: <strong>${this.betAmount} credits</strong></div>
-        <div>Potential Payout: <strong>${payout.toFixed(2)} credits</strong></div>
-        <div>Potential Profit: <strong>+${profit.toFixed(2)} credits</strong></div>
+        <div>Potential Payout: <strong>${this.casino.formatCredits?.(payout) || Math.round(payout).toLocaleString()} credits</strong></div>
+        <div>Potential Profit: <strong>+${this.casino.formatCredits?.(profit) || Math.round(profit).toLocaleString()} credits</strong></div>
       </div>
     `;
   }
@@ -988,14 +1010,15 @@ class CS2BettingGame {
         });
       }
 
-      const serverUrl = window.CASINO_SERVER_URL || window.location.origin;
-      const response = await fetch(`${serverUrl}/api/cs2/bets`, {
+      const requestId = this.pendingBetRequestId || (globalThis.crypto?.randomUUID?.() || `cs2_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`);
+      this.pendingBetRequestId = requestId;
+      const response = await this.casino.apiFetch('/api/cs2/bets', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userId: userId,
+          requestId,
           eventId: this.selectedEvent.id,
           selection: this.selectedOutcome,
           amount: this.betAmount
@@ -1003,6 +1026,7 @@ class CS2BettingGame {
       });
 
       const data = await response.json();
+      if (response.ok || response.status < 500) this.pendingBetRequestId = null;
 
       if (window.casinoDebugLogger) {
         window.casinoDebugLogger.logBetPlacement('cs2betting', this.betAmount, 'api_response', {

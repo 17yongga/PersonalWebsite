@@ -8,9 +8,10 @@
   <link rel="icon" type="image/png" href="/img/logo-dark.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.gary-yong.com wss://api.gary-yong.com http://localhost:3001 ws://localhost:3001; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>NEON 777 Casino</title>
-  <meta name="description" content="Play Blackjack, Coinflip, Roulette, Crash, Poker, Pachinko and CS2 Betting at NEON 777">
-  <link rel="stylesheet" href="casino.css?v=2026050323">
+  <meta name="description" content="Play Blackjack, Coinflip, Roulette, Crash, Poker, Pachinko, CS2 Betting and Counter-Strike cases at NEON 777">
+  <link rel="stylesheet" href="/releases/neon777-20260728-r3/casino.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
@@ -24,12 +25,12 @@
           <p class="neon-brand-tagline">The house is open. Pull up a stool and try your luck under the bulbs.</p>
           <div class="neon-brand-stats">
             <div class="neon-brand-stat">
-              <span class="neon-brand-stat-value">247</span>
-              <span class="neon-brand-stat-label">Floor tonight</span>
+              <span class="neon-brand-stat-value">8</span>
+              <span class="neon-brand-stat-label">Playable games</span>
             </div>
             <div class="neon-brand-stat">
-              <span class="neon-brand-stat-value">$1.2M</span>
-              <span class="neon-brand-stat-label">Paid out today</span>
+              <span class="neon-brand-stat-value">10K</span>
+              <span class="neon-brand-stat-label">Welcome credits</span>
             </div>
           </div>
         </div>
@@ -48,11 +49,15 @@
 
             <!-- Login Form -->
             <div id="loginForm" class="auth-form">
-              <form id="loginFormElement" onsubmit="return false;">
+              <form id="loginFormElement">
                 <div class="signin-form">
-                  <input type="text" id="loginUsername" placeholder="Username" maxlength="20" autocomplete="username">
-                  <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+                  <input type="text" id="loginUsername" aria-label="Username" placeholder="Username" maxlength="20" autocomplete="username">
+                  <div class="password-field">
+                    <input type="password" id="loginPassword" aria-label="Password" placeholder="Password" autocomplete="current-password">
+                    <button type="button" class="password-toggle" data-password-target="loginPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                  </div>
                   <button id="loginBtn" class="btn btn-primary">Login</button>
+                  <button type="button" id="forgotPasswordBtn" class="auth-link-btn">Forgot password?</button>
                 </div>
               </form>
               <p id="loginError" class="error-message hidden"></p>
@@ -60,11 +65,18 @@
 
             <!-- Register Form -->
             <div id="registerForm" class="auth-form hidden">
-              <form id="registerFormElement" onsubmit="return false;">
+              <form id="registerFormElement">
                 <div class="signin-form">
-                  <input type="text" id="registerUsername" placeholder="Username (3-20 characters)" maxlength="20" autocomplete="username">
-                  <input type="password" id="registerPassword" placeholder="Password (min 6 characters)" autocomplete="new-password">
-                  <input type="password" id="registerPasswordConfirm" placeholder="Confirm Password" autocomplete="new-password">
+                  <input type="text" id="registerUsername" aria-label="Username, 3 to 20 characters" placeholder="Username (3-20 characters)" maxlength="20" autocomplete="username">
+                  <input type="email" id="registerEmail" aria-label="Email address" placeholder="Email address" maxlength="254" autocomplete="email" required>
+                  <div class="password-field">
+                    <input type="password" id="registerPassword" aria-label="Password, minimum 8 characters" placeholder="Password (8+ characters)" autocomplete="new-password">
+                    <button type="button" class="password-toggle" data-password-target="registerPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                  </div>
+                  <div class="password-field">
+                    <input type="password" id="registerPasswordConfirm" aria-label="Confirm password" placeholder="Confirm Password" autocomplete="new-password">
+                    <button type="button" class="password-toggle" data-password-target="registerPasswordConfirm" aria-label="Show password" aria-pressed="false">Show</button>
+                  </div>
                   <button id="registerBtn" class="btn btn-primary">Create Account</button>
                 </div>
               </form>
@@ -90,7 +102,7 @@
           <div class="header-left">
             <span class="neon-logo-header">NEON <span class="logo-777">777</span></span>
             <nav class="header-nav">
-              <button class="header-nav-btn active" onclick="if(typeof casinoManager!=='undefined')casinoManager.backToLobby()">FLOOR</button>
+              <button class="header-nav-btn active" id="floorNavBtn">FLOOR</button>
               <button class="header-nav-btn" id="betHistoryBtn">HISTORY</button>
               <button class="header-nav-btn" id="leaderboardBtn">LEADERS</button>
               <button class="header-nav-btn" id="achievementsBtn">
@@ -98,12 +110,17 @@
                 <span id="achievementBadge" class="achievement-badge hidden">0</span>
               </button>
               <button class="header-nav-btn" id="statsBtn">STATS</button>
+              <button class="header-nav-btn" id="securityBtn">SECURITY</button>
             </nav>
           </div>
           <!-- Balance + Player -->
           <div class="header-right">
             <span id="creditsAmount" class="header-balance credit-amount">0</span>
             <button class="btn-add-credits">+ CREDITS</button>
+            <button id="soundToggle" class="sound-toggle" type="button" data-sound-toggle aria-pressed="false" aria-label="Sound effects off. Activate to turn on.">
+              <span data-sound-icon aria-hidden="true">🔇</span>
+              <span data-sound-label>Sound off</span>
+            </button>
             <div class="player-info">
               <span class="player-icon">👤</span>
               <span id="playerNameDisplay"></span>
@@ -119,6 +136,11 @@
               </button>
               <button id="statsBtnMobile" class="btn btn-secondary btn-small">📊 My Stats</button>
               <button id="betHistoryBtnMobile" class="btn btn-secondary btn-small">📈 History</button>
+              <button id="securityBtnMobile" class="btn btn-secondary btn-small">🔐 Account security</button>
+              <button id="soundToggleMobile" class="sound-toggle sound-toggle-mobile" type="button" data-sound-toggle aria-pressed="false" aria-label="Sound effects off. Activate to turn on.">
+                <span data-sound-icon aria-hidden="true">🔇</span>
+                <span data-sound-label>Sound off</span>
+              </button>
               <button id="logoutBtnMobile" class="btn btn-secondary btn-small">Logout</button>
             </div>
             <button id="logoutBtn" class="btn btn-secondary btn-small btn-logout">Logout</button>
@@ -133,15 +155,16 @@
         <div class="neon-hero">
           <div class="neon-hero-left">
             <div class="neon-hero-starburst" aria-hidden="true"></div>
-            <div class="neon-hero-headline">
+            <h1 class="neon-hero-headline">
               <span class="hero-line-amber">THE HOUSE</span>
               <span class="hero-line-pink">NEVER SLEEPS</span>
-            </div>
-            <p class="neon-hero-sub">Seven games. Live dealers. Real chips on the table. Tonight's pot is looking big.</p>
+            </h1>
+            <p class="neon-hero-sub">Eight games with virtual credits. Outcomes and balances are settled by the server.</p>
             <div class="neon-hero-ctas">
-              <button class="btn-hero-outline" onclick="if(typeof casinoManager!=='undefined' && casinoManager.continueLastGame)casinoManager.continueLastGame()">CONTINUE LAST GAME</button>
-              <button class="btn-hero-filled" onclick="if(typeof casinoManager!=='undefined')casinoManager.showTour ? casinoManager.showTour() : null">TAKE THE TOUR</button>
+              <button class="btn-hero-outline" id="continueLastGameBtn" disabled aria-describedby="continueLastGameHint">CONTINUE LAST GAME</button>
+              <button class="btn-hero-filled" id="takeTourBtn">TAKE THE TOUR</button>
             </div>
+            <p id="continueLastGameHint" class="hero-action-hint">Choose a game to enable Continue.</p>
           </div>
           <div class="neon-hero-right">
             <div class="hero-stats-panel">
@@ -175,14 +198,14 @@
         <!-- FLOOR LABEL + FILTER TABS -->
         <div class="lobby-section-header">
           <div class="lobby-section-meta">
-            <span class="lobby-floor-label">FLOOR · 7 GAMES</span>
+            <span class="lobby-floor-label">FLOOR · 8 GAMES</span>
             <h2 class="lobby-section-title">PICK YOUR POISON</h2>
           </div>
           <div class="lobby-filter-tabs">
             <button class="filter-tab active" data-filter="all">ALL</button>
             <button class="filter-tab" data-filter="cards">CARDS</button>
             <button class="filter-tab" data-filter="skill">SKILL</button>
-            <button class="filter-tab" data-filter="live">LIVE</button>
+            <button class="filter-tab" data-filter="live">REAL-TIME</button>
             <button class="filter-tab" data-filter="esports">ESPORTS</button>
           </div>
         </div>
@@ -216,7 +239,7 @@
               <!-- Roulette -->
               <div class="game-card" data-game="roulette" data-categories="live">
                 <div class="game-card-tags">
-                  <span class="game-tag live">LIVE</span>
+                  <span class="game-tag live">WHEEL</span>
                 </div>
                 <div class="game-card-text">
                   <h3 class="game-card-title game-title-pink">Roulette</h3>
@@ -290,12 +313,12 @@
               <!-- Texas Hold'em / Poker -->
               <div class="game-card" data-game="poker" data-categories="cards live">
                 <div class="game-card-tags">
-                  <span class="game-tag live">LIVE</span>
+                  <span class="game-tag live">MULTIPLAYER</span>
                   <span class="game-tag cards-tag">CARDS</span>
                 </div>
                 <div class="game-card-text">
                   <h3 class="game-card-title game-title-amber">Texas Hold'em</h3>
-                  <p class="game-card-desc">Up to 6 players. Real chips, real pressure. May the best hand win.</p>
+                  <p class="game-card-desc">Up to 6 players using virtual chips. May the best hand win.</p>
                 </div>
                 <div class="game-card-footer">
                   <div class="game-card-stats">
@@ -310,19 +333,38 @@
               <div class="game-card" data-game="cs2betting" data-categories="esports live">
                 <div class="game-card-tags">
                   <span class="game-tag esports">ESPORTS</span>
-                  <span class="game-tag live">LIVE</span>
+                  <span class="game-tag live">MATCH ODDS</span>
                 </div>
                 <div class="game-card-text">
                   <h3 class="game-card-title game-title-green">CS2 Betting</h3>
-                  <p class="game-card-desc">Bet on live Counter-Strike 2 matches with real-time odds from the pros.</p>
+                  <p class="game-card-desc">Use virtual credits on available Counter-Strike 2 match odds from public feeds.</p>
                 </div>
                 <div class="game-card-footer">
                   <div class="game-card-stats">
                     <span class="game-stat"><span class="stat-label">MIN</span> 50</span>
                     <span class="game-stat"><span class="stat-label">MAX</span> 10K</span>
-                    <span class="game-stat"><span class="stat-label">ODDS</span> REAL</span>
+                    <span class="game-stat"><span class="stat-label">SOURCE</span> FEED</span>
                   </div>
                   <button class="btn-play play-btn">PLAY →</button>
+                </div>
+              </div>
+              <!-- Counter-Strike Cases -->
+              <div class="game-card" data-game="cases" data-categories="esports live">
+                <div class="game-card-tags">
+                  <span class="game-tag new">NEW</span>
+                  <span class="game-tag esports">CASE BATTLES</span>
+                </div>
+                <div class="game-card-text">
+                  <h3 class="game-card-title game-title-green">CS Cases</h3>
+                  <p class="game-card-desc">Open original virtual cases or battle another player or NEON BOT. Winner takes every skin.</p>
+                </div>
+                <div class="game-card-footer">
+                  <div class="game-card-stats">
+                    <span class="game-stat"><span class="stat-label">MIN</span> 100</span>
+                    <span class="game-stat"><span class="stat-label">RTP</span> 95%</span>
+                    <span class="game-stat"><span class="stat-label">MODE</span> 1V1</span>
+                  </div>
+                  <button class="btn-play play-btn">OPEN →</button>
                 </div>
               </div>
             </div>
@@ -335,43 +377,34 @@
             <div class="sidebar-card sidebar-freepull">
               <div class="freepull-label">DAILY SPIN</div>
               <div class="freepull-heading">FREE PULL</div>
-              <p class="freepull-desc">Spin the wheel once per day for bonus credits, XP, or rare badges.</p>
+              <p class="freepull-desc">Spin once per day for server-awarded bonus credits.</p>
               <div class="freepull-streak">
                 <div class="freepull-streak-bar">
-                  <div class="freepull-streak-fill" style="width:57%"></div>
+                  <div class="freepull-streak-fill" style="width:0"></div>
                 </div>
-                <span class="freepull-streak-label">Streak: 4 days</span>
+                <span class="freepull-streak-label">Streak: 0 days</span>
               </div>
-              <button class="btn-spin" onclick="if(typeof casinoManager!=='undefined' && casinoManager.doFreeSpin)casinoManager.doFreeSpin()">SPIN THE WHEEL</button>
+              <button class="btn-spin" id="dailySpinBtn">SPIN THE WHEEL</button>
             </div>
 
             <!-- Leaderboard -->
             <div class="sidebar-card">
               <div class="sidebar-card-header">
                 <span class="sidebar-card-title">LEADERBOARD</span>
-                <span class="sidebar-card-sub">TODAY</span>
+                <span class="sidebar-card-sub">ALL TIME</span>
               </div>
               <div id="sidebarLeaderboard" class="sidebar-leaderboard">
-                <div class="lb-row"><span class="lb-rank">1</span><span class="lb-name">neon_nova</span><span class="lb-amount lb-green">+18,400</span></div>
-                <div class="lb-row"><span class="lb-rank">2</span><span class="lb-name">ace_spades</span><span class="lb-amount lb-green">+12,000</span></div>
-                <div class="lb-row"><span class="lb-rank">3</span><span class="lb-name">cherrybomb</span><span class="lb-amount lb-green">+9,200</span></div>
-                <div class="lb-row"><span class="lb-rank">4</span><span class="lb-name">high_roller</span><span class="lb-amount lb-pink">-3,100</span></div>
-                <div class="lb-row"><span class="lb-rank">5</span><span class="lb-name">lucky7s</span><span class="lb-amount lb-green">+8,800</span></div>
+                <div class="sidebar-empty">Loading verified player results…</div>
               </div>
             </div>
 
-            <!-- Floor Chat -->
+            <!-- Table chat availability -->
             <div class="sidebar-card sidebar-chat-card">
               <div class="sidebar-card-header">
-                <span class="sidebar-card-title">FLOOR CHAT</span>
-                <span class="sidebar-live-dot"></span>
+                <span class="sidebar-card-title">TABLE CHAT</span>
               </div>
               <div id="sidebarChat" class="sidebar-chat">
-                <div class="chat-msg"><span class="chat-user">neon_nova</span><span class="chat-text">just hit 8.2x on crash 🔥</span></div>
-                <div class="chat-msg"><span class="chat-user">ace_spades</span><span class="chat-text">natural blackjack two hands in a row wtf</span></div>
-                <div class="chat-msg"><span class="chat-user">phantom_bet</span><span class="chat-text">roulette is rigged, red 6 times straight</span></div>
-                <div class="chat-msg"><span class="chat-user">lucky7s</span><span class="chat-text">lmao the house always wins</span></div>
-                <div class="chat-msg"><span class="chat-user">cherrybomb</span><span class="chat-text">Texas hold'em room 3 has a whale, come watch</span></div>
+                <div class="sidebar-empty">Chat is available inside active poker tables.</div>
               </div>
             </div>
 
@@ -379,14 +412,14 @@
             <div class="sidebar-card">
               <div class="sidebar-card-header">
                 <span class="sidebar-card-title">BADGES</span>
-                <span class="sidebar-card-sub">5 / 18</span>
+                <span class="sidebar-card-sub">0 / 18</span>
               </div>
               <div id="sidebarBadges" class="sidebar-badges-grid">
-                <span class="badge-icon unlocked" title="First Win">⭐</span>
-                <span class="badge-icon unlocked" title="Hot Streak">🔥</span>
-                <span class="badge-icon unlocked" title="High Roller">💎</span>
-                <span class="badge-icon unlocked" title="Crash Master">🚀</span>
-                <span class="badge-icon unlocked" title="Card Shark">🃏</span>
+                <span class="badge-icon locked" title="Locked">⭐</span>
+                <span class="badge-icon locked" title="Locked">🔥</span>
+                <span class="badge-icon locked" title="Locked">💎</span>
+                <span class="badge-icon locked" title="Locked">🚀</span>
+                <span class="badge-icon locked" title="Locked">🃏</span>
                 <span class="badge-icon locked" title="???">🔒</span>
               </div>
               <button class="btn-open-chest" id="achievementsBtn2">OPEN CHEST →</button>
@@ -398,6 +431,7 @@
 
       <!-- Game Containers -->
       <div id="gameContainer" class="game-container hidden">
+        <h1 class="visually-hidden">NEON 777 casino game</h1>
         <div class="game-container-header">
           <button id="backToLobbyBtn" class="back-btn">
             <i class="fas fa-arrow-left"></i> Back to Lobby
@@ -411,163 +445,50 @@
         <div id="pokerGame" class="game-view hidden"></div>
         <div id="crashGame" class="game-view hidden"></div>
         <div id="pachinkoGame" class="game-view hidden"></div>
+        <div id="caseOpeningGame" class="game-view hidden"></div>
       </div>
     </div>
     <!-- Bottom Nav (mobile) -->
     <nav class="neon-bottom-nav">
       <div class="neon-bottom-nav-inner">
         <button class="neon-bottom-nav-item active" data-nav-action="floor"><span class="nav-icon">🎰</span>Floor</button>
-        <button class="neon-bottom-nav-item" data-nav-action="live"><span class="nav-icon">🔴</span>Live</button>
+        <button class="neon-bottom-nav-item" data-nav-action="live"><span class="nav-icon">◉</span>Real-time</button>
         <button class="neon-bottom-nav-item" data-nav-action="bets"><span class="nav-icon">📊</span>Bets</button>
         <button class="neon-bottom-nav-item" data-nav-action="me"><span class="nav-icon">👤</span>Me</button>
       </div>
     </nav>
 
-    <!-- Ticker Strip -->
-    <div class="neon-ticker">
-      <div class="neon-ticker-content">
-        <span>&#9670; neon_nova won <span class="ticker-amount">18,400</span> on Crash</span>
-        <span>&#9670; ace_of_spades hit Royal Flush &middot; <span class="ticker-amount">12,000</span></span>
-        <span>&#9670; cherrybomb <span class="ticker-amount">24,000</span> on Blackjack</span>
-        <span>&#9670; high_roller won <span class="ticker-amount">45,200</span> on Roulette</span>
-        <span>&#9670; lucky7s cashed out <span class="ticker-amount">8,800</span> at 4.4x Crash</span>
-        <span>&#9670; phantom_bet hit <span class="ticker-amount">31,000</span> on Pachinko</span>
-        <!-- duplicate for seamless loop -->
-        <span>&#9670; neon_nova won <span class="ticker-amount">18,400</span> on Crash</span>
-        <span>&#9670; ace_of_spades hit Royal Flush &middot; <span class="ticker-amount">12,000</span></span>
-        <span>&#9670; cherrybomb <span class="ticker-amount">24,000</span> on Blackjack</span>
-        <span>&#9670; high_roller won <span class="ticker-amount">45,200</span> on Roulette</span>
-        <span>&#9670; lucky7s cashed out <span class="ticker-amount">8,800</span> at 4.4x Crash</span>
-        <span>&#9670; phantom_bet hit <span class="ticker-amount">31,000</span> on Pachinko</span>
-      </div>
-    </div>
   </main>
 
-  <script>
-    // Auto-detect local vs production environment  
-    // For local development, use http://localhost:3001 (casino server port)
-    // For production, use https://api.gary-yong.com
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      window.CASINO_SERVER_URL = 'http://localhost:3001';
-    } else {
-      window.CASINO_SERVER_URL = 'https://api.gary-yong.com';
-    }
-  </script>
-  <script src="casino-debug-logger.js"></script>
-  <script src="main.js?v=202602051746"></script>
-  <script src="casino.js?v=2026050202"></script>
-  <link rel="stylesheet" href="games/games.css?v=2026050323">
-  <link rel="stylesheet" href="cs2-modern-betting-ui.css?v=202603132300">
-  <link rel="stylesheet" href="cs2-animations.css">
-  <link rel="stylesheet" href="neon777-cs2-theme.css?v=2026050212">
-  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-  <script src="games/blackjack.js?v=2026050323"></script>
-  <script src="games/coinflip-casino.js?v=2026050212"></script>
-  <script src="games/roulette-casino.js?v=2026050203"></script>
-  <script src="cs2-betting-modern.js?v=202602151247"></script>
-  <script src="games/cs2-betting-casino.js?v=2026050212"></script>
-  <script src="games/poker-casino.js?v=202603161600"></script>
-  <script src="games/crash-casino.js?v=202604220100"></script>
-  <script src="games/pachinko-casino.js?v=2026050212"></script>
+
+  <script src="/releases/neon777-20260728-r3/casino-debug-logger.js"></script>
+  <script src="/releases/neon777-20260728-r3/casino-sound.js"></script>
+  <script src="/releases/neon777-20260728-r3/main.js"></script>
+  <script src="/releases/neon777-20260728-r3/casino.js"></script>
+  <link rel="stylesheet" href="/releases/neon777-20260728-r3/games/games.css">
+  <link rel="stylesheet" href="/releases/neon777-20260728-r3/games/premium-games.css">
+  <link rel="stylesheet" href="/releases/neon777-20260728-r3/games/case-opening.css">
+  <link rel="stylesheet" href="/releases/neon777-20260728-r3/casino-sound.css">
+  <link rel="stylesheet" href="/releases/neon777-20260728-r3/cs2-modern-betting-ui.css">
+  <link rel="stylesheet" href="/releases/neon777-20260728-r3/cs2-animations.css">
+  <link rel="stylesheet" href="/releases/neon777-20260728-r3/neon777-cs2-theme.css">
+  <link rel="stylesheet" href="/releases/neon777-20260728-r3/cs2-desktop-workspace.css">
+  <script src="/releases/neon777-20260728-r3/vendor/socket.io.min.js"></script>
+  <script src="/releases/neon777-20260728-r3/games/blackjack.js"></script>
+  <script src="/releases/neon777-20260728-r3/games/coinflip-casino.js"></script>
+  <script src="/releases/neon777-20260728-r3/games/roulette-casino.js"></script>
+  <script src="/releases/neon777-20260728-r3/cs2-betting-modern.js"></script>
+  <script src="/releases/neon777-20260728-r3/games/cs2-betting-casino.js"></script>
+  <script src="/releases/neon777-20260728-r3/games/poker-casino.js"></script>
+  <script src="/releases/neon777-20260728-r3/games/crash-casino.js"></script>
+  <script src="/releases/neon777-20260728-r3/games/pachinko-casino.js"></script>
+  <script src="/releases/neon777-20260728-r3/games/case-opening-casino.js"></script>
   <!-- CS2 Team Rankings and Logos are loaded dynamically by cs2-betting-casino.js -->
 
 <!-- Modern UI Scripts - Auto-generated -->
-<script src="js/cs2-modern.js"></script>
+<script src="/releases/neon777-20260728-r3/js/cs2-modern.js"></script>
 
-<script>
-// ---- Lobby v3 enhancements ----
-
-// Sync hero balance with creditsAmount (observe DOM changes)
-(function() {
-  var creditsEl = document.getElementById('creditsAmount');
-  var heroBalEl = document.getElementById('heroBalance');
-  if (!creditsEl || !heroBalEl) return;
-  function syncBalance() {
-    var raw = creditsEl.textContent.replace(/[^0-9.]/g, '');
-    if (raw) heroBalEl.textContent = '$' + Number(raw).toLocaleString();
-  }
-  syncBalance();
-  var obs = new MutationObserver(syncBalance);
-  obs.observe(creditsEl, { childList: true, characterData: true, subtree: true });
-})();
-
-// Filter tabs for game cards
-(function() {
-  document.querySelectorAll('.filter-tab').forEach(function(tab) {
-    tab.addEventListener('click', function() {
-      document.querySelectorAll('.filter-tab').forEach(function(t) { t.classList.remove('active'); });
-      tab.classList.add('active');
-      var filter = tab.dataset.filter;
-      document.querySelectorAll('.lobby-games .game-card').forEach(function(card) {
-        if (filter === 'all') {
-          card.style.display = '';
-        } else {
-          var cats = (card.dataset.categories || '').toLowerCase();
-          card.style.display = cats.indexOf(filter) !== -1 ? '' : 'none';
-        }
-      });
-    });
-  });
-})();
-
-// Wire achievementsBtn2 -> achievementsBtn click
-(function() {
-  var btn2 = document.getElementById('achievementsBtn2');
-  var btn1 = document.getElementById('achievementsBtn');
-  if (btn2 && btn1) btn2.addEventListener('click', function() { btn1.click(); });
-})();
-
-// Light bulb decorations around game cards — appear on hover only
-(function() {
-  var ns = 'http://www.w3.org/2000/svg';
-  var gameColorMap = {
-    blackjack: 'amber', coinflip: 'amber', poker: 'amber',
-    roulette: 'pink', crash: 'pink',
-    pachinko: 'violet',
-    cs2betting: 'green'
-  };
-  function buildBulbsSvg(card) {
-    var w = card.offsetWidth, h = card.offsetHeight;
-    if (!w || !h) return null;
-    var r = 2.5, spacing = 14, circles = [], delay = 0;
-    for (var x = r * 2; x <= w - r; x += spacing)
-      circles.push('<circle cx="' + Math.round(x) + '" cy="' + r + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
-    for (var x = r * 2; x <= w - r; x += spacing)
-      circles.push('<circle cx="' + Math.round(x) + '" cy="' + (h - r) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
-    for (var y = spacing + r; y <= h - spacing; y += spacing)
-      circles.push('<circle cx="' + r + '" cy="' + Math.round(y) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
-    for (var y = spacing + r; y <= h - spacing; y += spacing)
-      circles.push('<circle cx="' + (w - r) + '" cy="' + Math.round(y) + '" r="' + r + '" style="animation-delay:' + ((delay++ * 0.11) % 3).toFixed(2) + 's"/>');
-    var svg = document.createElementNS(ns, 'svg');
-    svg.setAttribute('class', 'card-bulbs-svg');
-    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-    var color = gameColorMap[card.dataset.game] || 'amber';
-    if (color !== 'amber') svg.setAttribute('data-color', color);
-    svg.innerHTML = circles.join('');
-    return svg;
-  }
-  function attachHoverBulbs(card) {
-    card.addEventListener('mouseenter', function() {
-      if (!card.querySelector('.card-bulbs-svg')) {
-        var svg = buildBulbsSvg(card);
-        if (svg) card.appendChild(svg);
-      }
-    });
-    card.addEventListener('mouseleave', function() {
-      var svg = card.querySelector('.card-bulbs-svg');
-      if (svg) svg.remove();
-    });
-  }
-  function init() {
-    document.querySelectorAll('.lobby-games .game-card').forEach(attachHoverBulbs);
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
-</script>
+<script src="/releases/neon777-20260728-r3/casino-lobby.js"></script>
 </body>
 </html>
 

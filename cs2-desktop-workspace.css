@@ -1,0 +1,223 @@
+
+/* 2026 desktop workspace pass: discovery first, portfolio below. */
+.cs2-betting-layout {
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: start;
+}
+
+.cs2-my-bets-workspace {
+  min-width: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(18, 24, 34, 0.82), rgba(14, 19, 28, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--cs2-radius-xl);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.cs2-my-bets-workspace .my-bets-header {
+  justify-content: space-between;
+  gap: var(--cs2-space-xl);
+  padding: var(--cs2-space-xl) var(--cs2-space-2xl);
+}
+
+.workspace-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--cs2-primary-light);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.cs2-my-bets-workspace .my-bets-header h3 {
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+}
+
+.cs2-my-bets-workspace .bets-tabs {
+  width: min(300px, 42vw);
+  margin: 0;
+}
+
+.cs2-my-bets-workspace .cs2-my-bets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+  align-items: start;
+  gap: var(--cs2-space-lg);
+  max-height: none;
+  min-height: 150px;
+  padding: var(--cs2-space-xl) var(--cs2-space-2xl) var(--cs2-space-2xl);
+  overflow: visible;
+}
+
+.cs2-my-bets-workspace .cs2-bet-card {
+  height: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: var(--cs2-space-lg);
+}
+
+.cs2-my-bets-workspace .empty-state {
+  grid-column: 1 / -1;
+}
+
+.live-heading-dot,
+.cs2-live-dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--cs2-danger);
+  box-shadow: 0 0 0 5px rgba(255, 71, 87, 0.13), 0 0 16px rgba(255, 71, 87, 0.75);
+  animation: cs2-live-pulse 1.8s ease-in-out infinite;
+}
+
+.events-panel-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cs2-tournament-section.live-section {
+  border-color: rgba(255, 71, 87, 0.25);
+}
+
+.cs2-tournament-section.live-section .cs2-tournament-header {
+  background: linear-gradient(90deg, rgba(255, 71, 87, 0.14), rgba(18, 24, 36, 0.72));
+}
+
+.live-market-state {
+  grid-column: 1 / -1;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--cs2-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.live-market-state.open::before,
+.live-market-state.suspended::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cs2-success);
+}
+
+.live-market-state.suspended::before {
+  background: var(--cs2-warning);
+}
+
+.event-card-odds.suspended .odds-pill {
+  opacity: 0.58;
+}
+
+@keyframes cs2-live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.82); }
+}
+
+@media (min-width: 1100px) {
+  .cs2-tournament-events {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .cs2-event-card {
+    height: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .cs2-betting-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--cs2-space-lg) !important;
+  }
+
+  .cs2-events-panel {
+    order: 1 !important;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+  }
+
+  .cs2-my-bets-workspace {
+    order: 2 !important;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+  }
+
+  .cs2-events-list {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .cs2-header-content {
+    align-items: center !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    gap: 0 !important;
+  }
+
+  .cs2-header-stats,
+  .cs2-disclaimer {
+    display: none !important;
+  }
+
+  .credit-history-btn {
+    width: auto !important;
+    min-width: 92px !important;
+    padding-inline: 12px !important;
+    font-size: .72rem !important;
+  }
+
+  .team-name,
+  .odds-team-label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .events-panel-header {
+    align-items: center !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    gap: var(--cs2-space-sm) !important;
+    margin-bottom: var(--cs2-space-sm) !important;
+  }
+
+  .cs2-my-bets-workspace .my-bets-header {
+    display: flex !important;
+    align-items: stretch;
+    flex-direction: column;
+    padding: var(--cs2-space-lg);
+  }
+
+  .cs2-my-bets-workspace .bets-tabs {
+    display: flex !important;
+    width: 100%;
+  }
+
+  .cs2-my-bets-workspace .cs2-my-bets {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    max-height: none !important;
+    min-height: 150px;
+    padding: var(--cs2-space-lg);
+    overflow: visible !important;
+  }
+
+  .cs2-my-bets-workspace .cs2-my-bets .empty-state {
+    display: flex !important;
+    min-height: 118px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-heading-dot,
+  .cs2-live-dot { animation: none; }
+}

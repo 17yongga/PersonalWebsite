@@ -10,6 +10,8 @@ class CrashGame {
     this.multiplier = 1.00;
     this.myBet = null;
     this.myCashedOut = false;
+    this.cashoutPending = false;
+    this.cashoutRequestedMultiplier = null;
     this.autoCashout = 0;
     this.history = [];
     this.liveFeed = [];
@@ -17,8 +19,17 @@ class CrashGame {
     this.curvePoints = [];
     this.animFrame = null;
     this.startTime = 0;
+    this.lastCrashPulseAt = 0;
     this._destroyed = false;
     this._listeners = [];
+    this.resizeFrame = null;
+    this.boundResize = () => {
+      if (this.resizeFrame) return;
+      this.resizeFrame = requestAnimationFrame(() => {
+        this.resizeFrame = null;
+        if (!this._destroyed) this.resizeCanvas();
+      });
+    };
     this.init();
   }
 
@@ -28,39 +39,35 @@ class CrashGame {
       <div class="crash-container">
         <h2 class="game-title">🚀 Crash</h2>
         <div class="crash-layout">
-          <div class="crash-main">
-            <div class="crash-canvas-wrap">
-              <canvas id="crashCanvas" width="700" height="360"></canvas>
-              <div id="crashMultiplier" class="crash-multiplier">1.00x</div>
-              <div id="crashStatus" class="crash-status"></div>
-            </div>
-            <div id="crashHistory" class="crash-history"></div>
+          <div class="crash-canvas-wrap">
+            <canvas id="crashCanvas" width="700" height="360"></canvas>
+            <div id="crashMultiplier" class="crash-multiplier">1.00x</div>
+            <div id="crashStatus" class="crash-status"></div>
           </div>
-          <div class="crash-sidebar">
-            <div class="crash-bet-section">
-              <h3>Place Your Bet</h3>
-              <div class="crash-bet-group">
-                <label>Bet Amount</label>
-                <input type="number" id="crashBetAmount" value="100" min="1" step="10">
-                <div class="crash-quick-bets">
-                  <button class="cqb" data-amt="50">50</button>
-                  <button class="cqb" data-amt="100">100</button>
-                  <button class="cqb" data-amt="250">250</button>
-                  <button class="cqb" data-amt="500">500</button>
-                </div>
+          <div id="crashHistory" class="crash-history"></div>
+          <div class="crash-bet-section">
+            <h3>Place Your Bet</h3>
+            <div class="crash-bet-group">
+              <label for="crashBetAmount">Bet Amount</label>
+              <input type="number" id="crashBetAmount" value="100" min="1" step="10">
+              <div class="crash-quick-bets">
+                <button class="cqb" data-amt="50">50</button>
+                <button class="cqb" data-amt="100">100</button>
+                <button class="cqb" data-amt="250">250</button>
+                <button class="cqb" data-amt="500">500</button>
               </div>
-              <div class="crash-bet-group">
-                <label>Auto Cash-Out (0 = off)</label>
-                <input type="number" id="crashAutoCashout" value="0" min="0" step="0.1">
-              </div>
-              <button id="crashBetBtn" class="btn btn-primary btn-full">Place Bet</button>
-              <button id="crashCashoutBtn" class="btn btn-full crash-cashout-btn hidden">Cash Out</button>
-              <p id="crashBetStatus" class="crash-bet-status"></p>
             </div>
-            <div class="crash-feed-section">
-              <h3>Live Feed</h3>
-              <div id="crashFeed" class="crash-feed"></div>
+            <div class="crash-bet-group">
+              <label for="crashAutoCashout">Auto Cash-Out (0 = off)</label>
+              <input type="number" id="crashAutoCashout" value="0" min="0" step="0.1">
             </div>
+            <button id="crashBetBtn" class="btn btn-primary btn-full">Place Bet</button>
+            <button id="crashCashoutBtn" class="btn btn-full crash-cashout-btn hidden">Cash Out</button>
+            <p id="crashBetStatus" class="crash-bet-status"></p>
+          </div>
+          <div class="crash-feed-section">
+            <h3>Live Feed</h3>
+            <div id="crashFeed" class="crash-feed"></div>
           </div>
         </div>
       </div>
@@ -71,18 +78,19 @@ class CrashGame {
     this.attachEvents();
     this.connectSocket();
     this.resizeCanvas();
-    window.addEventListener('resize', () => this.resizeCanvas());
+    window.addEventListener('resize', this.boundResize, { passive: true });
   }
 
   resizeCanvas() {
     const wrap = this.canvas?.parentElement;
     if (!wrap || !this.canvas) return;
     
-    // Better mobile responsive sizing
+    // Fill the chart column instead of leaving a dead band at the right edge.
     const isMobile = window.innerWidth <= 768;
-    const w = isMobile ? Math.min(wrap.clientWidth - 20, 600) : Math.min(wrap.clientWidth, 700);
+    const availableW = Math.max(1, Math.floor(wrap.clientWidth));
+    const w = Math.min(availableW, 900);
     
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = w * dpr;
     this.canvas.height = Math.floor(w * 0.52) * dpr;
     this.canvas.style.width = w + 'px';
@@ -127,8 +135,11 @@ class CrashGame {
 
     this._on('crashTick', (data) => {
       if (this._destroyed) return;
+      const wasRunning = this.phase === 'running';
       this.multiplier = data.multiplier;
       this.phase = 'running';
+      if (!wasRunning) window.casinoSound?.playOnce(`crash:${this.soundRoundId || this.startTime}:launch`, 'crashStart', { game: 'crash' });
+      this.maybePlayCrashPulse();
       // Check auto-cashout
       if (this.myBet && !this.myCashedOut && this.autoCashout > 0 && this.multiplier >= this.autoCashout) {
         this.doCashout();
@@ -137,7 +148,7 @@ class CrashGame {
       // Update cashout button with live amount
       if (this.myBet && !this.myCashedOut) {
         const cashBtn = document.getElementById('crashCashoutBtn');
-        if (cashBtn && !cashBtn.classList.contains('hidden')) {
+        if (cashBtn && !cashBtn.classList.contains('hidden') && !this.cashoutPending) {
           const potentialWin = Math.floor(this.myBet * this.multiplier);
           cashBtn.textContent = `Cash Out $${potentialWin} (${this.multiplier.toFixed(2)}x)`;
         }
@@ -147,10 +158,14 @@ class CrashGame {
     this._on('crashResult', (data) => {
       if (this._destroyed) return;
       this.phase = 'crashed';
+      this.lastCrashPulseAt = 0;
       this.multiplier = data.crashPoint;
+      const soundRound = this.soundRoundId || this.startTime || data.crashPoint;
+      window.casinoSound?.playOnce(`crash:${soundRound}:impact`, 'crash', { game: 'crash' });
       this.history = data.history || this.history;
       // Check if I lost
       if (this.myBet && !this.myCashedOut) {
+        window.casinoSound?.playOnce(`crash:${soundRound}:loss`, 'lose', { delay: .16, game: 'crash' });
         this.setBetStatus(`💥 Crashed at ${data.crashPoint.toFixed(2)}x — You lost ${this.myBet}!`, 'loss');
         this.casino.recordBet('crash', this.myBet, 'Crashed', 0, data.crashPoint);
         
@@ -170,6 +185,8 @@ class CrashGame {
       }
       this.myBet = null;
       this.myCashedOut = false;
+      this.cashoutPending = false;
+      this.cashoutRequestedMultiplier = null;
       this.updateUI();
       this.renderHistory();
       this.drawFrame();
@@ -178,12 +195,16 @@ class CrashGame {
     this._on('crashBettingStart', (data) => {
       if (this._destroyed) return;
       this.phase = 'betting';
+      this.soundRoundId = String(data.roundId || data.startTime || Date.now());
       this.multiplier = 1.00;
+      this.lastCrashPulseAt = 0;
       this.bettingTimeLeft = data.timeLeft || 10;
       this.liveFeed = [];
       this.curvePoints = [];
       this.myBet = null;
       this.myCashedOut = false;
+      this.cashoutPending = false;
+      this.cashoutRequestedMultiplier = null;
       this.updateUI();
       this.drawFrame();
       this.startBettingCountdown(data.timeLeft || 10);
@@ -193,6 +214,7 @@ class CrashGame {
       if (this._destroyed) return;
       if (data.success) {
         this.myBet = data.amount;
+        window.casinoSound?.play('betPlaced', { game: 'crash' });
         // Server already deducted — only update display locally
         this.casino.updateCreditsLocal(-data.amount);
         this.setBetStatus(`Bet placed: ${data.amount} credits`, 'ok');
@@ -206,6 +228,10 @@ class CrashGame {
       if (this._destroyed) return;
       if (data.socketId === this.socket.id) {
         this.myCashedOut = true;
+        this.lastCrashPulseAt = 0;
+        this.cashoutPending = false;
+        this.cashoutRequestedMultiplier = null;
+        window.casinoSound?.playOnce(`crash:${this.soundRoundId || this.startTime}:cashout`, 'cashout', { game: 'crash' });
         const winnings = data.winnings;
         // Don't touch credits here — server's playerData event sets the correct absolute balance
         this.casino.recordBet('crash', data.amount, 'Cash Out', winnings, data.multiplier);
@@ -256,8 +282,32 @@ class CrashGame {
   }
 
   doCashout() {
-    if (!this.myBet || this.myCashedOut) return;
+    if (!this.myBet || this.myCashedOut || this.cashoutPending || this.phase !== 'running') return;
+    this.cashoutPending = true;
+    this.cashoutRequestedMultiplier = this.multiplier;
+    const cashBtn = document.getElementById('crashCashoutBtn');
+    if (cashBtn) {
+      cashBtn.disabled = true;
+      cashBtn.setAttribute('aria-busy', 'true');
+      cashBtn.textContent = `Locked at ${this.cashoutRequestedMultiplier.toFixed(2)}x`;
+    }
+    this.setBetStatus(`Cash-out locked at ${this.cashoutRequestedMultiplier.toFixed(2)}x · settling…`, 'pending');
     this.socket.emit('crashCashOut');
+  }
+
+  maybePlayCrashPulse(now = performance.now()) {
+    if (this.phase !== 'running' || this.myCashedOut || this._destroyed) return false;
+    const multiplier = Math.max(1, Number(this.multiplier || 1));
+    const interval = multiplier >= 10 ? 170
+      : multiplier >= 5 ? 240
+        : multiplier >= 3 ? 340
+          : multiplier >= 2 ? 480
+            : multiplier >= 1.5 ? 650
+              : 850;
+    if (now - this.lastCrashPulseAt < interval) return false;
+    this.lastCrashPulseAt = now;
+    const intensity = Math.max(0, Math.min(1, Math.log2(multiplier) / 4));
+    return Boolean(window.casinoSound?.play('crashPulse', { game: 'crash', intensity, cooldown: 0 }));
   }
 
   setBetStatus(msg, type) {
@@ -276,12 +326,21 @@ class CrashGame {
     } else if (this.phase === 'running' && this.myBet && !this.myCashedOut) {
       betBtn?.classList.add('hidden');
       cashBtn?.classList.remove('hidden');
-      // Update cashout button text with live amount
-      const potentialWin = Math.floor(this.myBet * this.multiplier);
-      cashBtn.textContent = `Cash Out $${potentialWin} (${this.multiplier.toFixed(2)}x)`;
+      cashBtn.disabled = this.cashoutPending;
+      cashBtn.setAttribute('aria-busy', String(this.cashoutPending));
+      if (this.cashoutPending) {
+        cashBtn.textContent = `Locked at ${(this.cashoutRequestedMultiplier || this.multiplier).toFixed(2)}x`;
+      } else {
+        const potentialWin = Math.floor(this.myBet * this.multiplier);
+        cashBtn.textContent = `Cash Out $${potentialWin} (${this.multiplier.toFixed(2)}x)`;
+      }
     } else {
       betBtn?.classList.add('hidden');
       cashBtn?.classList.add('hidden');
+      if (cashBtn) {
+        cashBtn.disabled = false;
+        cashBtn.removeAttribute('aria-busy');
+      }
     }
     this.updateMultiplierDisplay();
     this.updateStatusText();
@@ -461,9 +520,12 @@ class CrashGame {
 
   destroy() {
     this._destroyed = true;
+    this.lastCrashPulseAt = 0;
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
+    if (this.resizeFrame) cancelAnimationFrame(this.resizeFrame);
     if (this._bettingInterval) clearInterval(this._bettingInterval);
     if (this.socket) for (const {e, fn} of this._listeners) this.socket.off(e, fn);
+    window.removeEventListener('resize', this.boundResize);
     this._listeners = [];
   }
 }

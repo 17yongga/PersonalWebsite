@@ -2,6 +2,7 @@
 // Standalone module: hand evaluation, deck, side pots
 // Imported by casino-server.js
 
+const { randomInt } = require('node:crypto');
 const SUITS = ['h', 'd', 'c', 's'];
 const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
 const RANK_VALUES = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
@@ -44,10 +45,10 @@ function createDeck() {
   return deck;
 }
 
-function shuffleDeck(deck) {
+function shuffleDeck(deck, randomIntFn = randomInt) {
   const d = [...deck];
   for (let i = d.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = randomIntFn(i + 1);
     [d[i], d[j]] = [d[j], d[i]];
   }
   return d;

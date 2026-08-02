@@ -555,6 +555,8 @@ html[data-theme="light"] .btn-tails.selected {
   height: 100%;
   border-radius: 50%;
   display: flex;
+  flex-direction: column;
+  gap: 2px;
   align-items: center;
   justify-content: center;
   font-size: 5rem;
@@ -562,6 +564,20 @@ html[data-theme="light"] .btn-tails.selected {
   backface-visibility: hidden;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
   border: 6px solid rgba(255, 255, 255, 0.2);
+}
+
+.coin-monogram {
+  font-family: Georgia, serif;
+  font-size: clamp(3.5rem, 12vw, 6rem);
+  line-height: .82;
+  text-shadow: 0 2px rgba(255,255,255,.28), 0 -2px rgba(0,0,0,.18);
+}
+
+.coin-side-name {
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(.62rem, 2.4vw, .9rem);
+  font-weight: 900;
+  letter-spacing: .18em;
 }
 
 .coin-front {
@@ -577,11 +593,11 @@ html[data-theme="light"] .btn-tails.selected {
 }
 
 .coin.flipping-heads {
-  animation: coinFlipHeads 2s ease-in-out;
+  animation: coinFlipHeads 4.2s cubic-bezier(.14,.72,.12,1) both;
 }
 
 .coin.flipping-tails {
-  animation: coinFlipTails 2s ease-in-out;
+  animation: coinFlipTails 4.2s cubic-bezier(.14,.72,.12,1) both;
 }
 
 .coin.show-heads {
@@ -594,18 +610,16 @@ html[data-theme="light"] .btn-tails.selected {
 
 @keyframes coinFlipHeads {
   0% { transform: rotateY(0deg) scale(1); }
-  25% { transform: rotateY(90deg) scale(1.15); }
-  50% { transform: rotateY(180deg) scale(1.2); }
-  75% { transform: rotateY(270deg) scale(1.15); }
-  100% { transform: rotateY(360deg) scale(1); }
+  18% { transform: rotateY(720deg) scale(1.15); }
+  68% { transform: rotateY(1620deg) scale(1.08); }
+  100% { transform: rotateY(1800deg) scale(1); }
 }
 
 @keyframes coinFlipTails {
-  0% { transform: rotateY(180deg) scale(1); }
-  25% { transform: rotateY(270deg) scale(1.15); }
-  50% { transform: rotateY(360deg) scale(1.2); }
-  75% { transform: rotateY(450deg) scale(1.15); }
-  100% { transform: rotateY(540deg) scale(1); }
+  0% { transform: rotateY(0deg) scale(1); }
+  18% { transform: rotateY(720deg) scale(1.15); }
+  68% { transform: rotateY(1620deg) scale(1.08); }
+  100% { transform: rotateY(1980deg) scale(1); }
 }
 
 
@@ -673,16 +687,16 @@ html[data-theme="light"] .digital-roulette-display {
   font-weight: 700;
   letter-spacing: 3px;
   color: var(--color-primary);
-  text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+  text-shadow: var(--glow-text-signature);
   animation: glow 2s ease-in-out infinite alternate;
 }
 
 @keyframes glow {
   from {
-    text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+    text-shadow: var(--glow-text-signature);
   }
   to {
-    text-shadow: 0 0 30px rgba(56, 189, 248, 0.8), 0 0 40px rgba(56, 189, 248, 0.4);
+    text-shadow: var(--glow-text-signature);
   }
 }
 
@@ -713,9 +727,8 @@ html[data-theme="light"] .roulette-display {
 .roulette-display.spinning {
   border-color: var(--color-primary);
   box-shadow:
-    inset 0 0 30px rgba(0, 0, 0, 0.8),
-    0 0 60px rgba(56, 189, 248, 0.6),
-    0 0 100px rgba(56, 189, 248, 0.3);
+    inset 0 0 20px rgba(0,0,0,.7),
+    0 0 18px rgba(56,189,248,.22);
   will-change: opacity;
   animation: pulse-border 0.8s ease-in-out infinite;
 }
@@ -744,9 +757,8 @@ html[data-theme="light"] .roulette-display {
 .roulette-display.red {
   border-color: #dc2626;
   box-shadow: 
-    inset 0 0 30px rgba(0, 0, 0, 0.8),
-    0 0 60px rgba(220, 38, 38, 0.6),
-    0 0 100px rgba(220, 38, 38, 0.3);
+    inset 0 0 20px rgba(0,0,0,.7),
+    0 0 18px rgba(220,38,38,.22);
 }
 
 .roulette-display.black {
@@ -760,9 +772,8 @@ html[data-theme="light"] .roulette-display {
 .roulette-display.green {
   border-color: #22c55e;
   box-shadow: 
-    inset 0 0 30px rgba(0, 0, 0, 0.8),
-    0 0 60px rgba(34, 197, 94, 0.6),
-    0 0 100px rgba(34, 197, 94, 0.3);
+    inset 0 0 20px rgba(0,0,0,.7),
+    0 0 18px rgba(34,197,94,.22);
 }
 
 .number-display {
@@ -770,17 +781,14 @@ html[data-theme="light"] .roulette-display {
   font-weight: 900;
   font-family: 'Courier New', monospace;
   color: #ffffff;
-  text-shadow: 
-    0 0 20px rgba(255, 255, 255, 0.8),
-    0 0 40px rgba(255, 255, 255, 0.4),
-    0 4px 10px rgba(0, 0, 0, 0.8);
+  text-shadow: var(--glow-text-semantic), 0 4px 10px rgba(0,0,0,.8);
   line-height: 1;
   z-index: 2;
   transition: all 0.1s ease;
 }
 
 .roulette-display.spinning .number-display {
-  animation: number-flash 0.1s ease-in-out infinite;
+  animation: none;
 }
 
 @keyframes number-flash {
@@ -810,8 +818,8 @@ html[data-theme="light"] .roulette-display {
 .color-indicator.red {
   background: radial-gradient(circle, #dc2626, #991b1b);
   box-shadow: 
-    inset 0 0 20px rgba(0, 0, 0, 0.5),
-    0 0 40px rgba(220, 38, 38, 0.6);
+    inset 0 0 16px rgba(0,0,0,.5),
+    0 0 14px rgba(220,38,38,.22);
 }
 
 .color-indicator.black {
@@ -824,8 +832,8 @@ html[data-theme="light"] .roulette-display {
 .color-indicator.green {
   background: radial-gradient(circle, #22c55e, #16a34a);
   box-shadow: 
-    inset 0 0 20px rgba(0, 0, 0, 0.5),
-    0 0 40px rgba(34, 197, 94, 0.6);
+    inset 0 0 16px rgba(0,0,0,.5),
+    0 0 14px rgba(34,197,94,.22);
 }
 
 /* Legacy wheel styles for backward compatibility */
@@ -3929,7 +3937,8 @@ html[data-theme="light"] .poker-modal-content { background:rgba(255,255,255,.98)
 .poker-modal-body { padding:1.5rem; }
 .poker-modal-body .form-group { margin-bottom:1rem; }
 .poker-modal-body .form-group label { display:block; margin-bottom:.4rem; font-weight:600; font-size:.9rem; }
-.poker-modal-body .checkbox-group label { display:flex; align-items:center; gap:.5rem; }
+.poker-modal-body .checkbox-group label { display:flex; align-items:center; gap:.5rem; min-height:44px; cursor:pointer; }
+.poker-modal-body .checkbox-group input[type="checkbox"] { width:24px; height:24px; flex:0 0 24px; }
 .poker-modal-body input[type="text"],
 .poker-modal-body input[type="number"] { width:100%; padding:.65rem .85rem; border-radius:8px; border:2px solid rgba(148,163,184,.4); background:rgba(15,23,42,.8); color:var(--color-text); font-size:.95rem; box-sizing:border-box; }
 html[data-theme="light"] .poker-modal-body input[type="text"],
@@ -4254,8 +4263,8 @@ html[data-theme="light"] .poker-chat-input-row input { background:#fff; border-c
 .crash-main { min-width:0; }
 .crash-canvas-wrap { position:relative; background:#0a0e1a; border-radius:14px; border:2px solid rgba(56,189,248,.15); overflow:hidden; margin-bottom:.75rem; }
 .crash-canvas-wrap canvas { display:block; width:100%; }
-.crash-multiplier { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:3.5rem; font-weight:900; color:#22c55e; text-shadow:0 0 30px rgba(34,197,94,.5); pointer-events:none; font-family:'Georgia',serif; transition:color .3s; }
-.crash-multiplier.crashed { color:#ef4444; text-shadow:0 0 30px rgba(239,68,68,.6); animation:crashShake .4s ease; }
+.crash-multiplier { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:3.5rem; font-weight:900; color:#22c55e; text-shadow:var(--glow-text-semantic); pointer-events:none; font-family:'Georgia',serif; transition:color .3s; }
+.crash-multiplier.crashed { color:#ef4444; text-shadow:var(--glow-text-semantic); animation:crashShake .4s ease; }
 .crash-multiplier.running { color:#22c55e; }
 @keyframes crashShake { 0%,100%{transform:translate(-50%,-50%)} 25%{transform:translate(-48%,-52%)} 50%{transform:translate(-52%,-48%)} 75%{transform:translate(-50%,-50%) scale(1.05)} }
 .crash-status { position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:.95rem; font-weight:700; padding:.3rem 1rem; border-radius:8px; }
@@ -4404,12 +4413,12 @@ input[type="number"]:focus, input[type="text"]:focus, input[type="password"]:foc
 /* Win/Loss colors — Neon 777 amber wins, neon-pink losses */
 .win, .profit, .bh-value.profit {
   color: var(--amber) !important;
-  text-shadow: 0 0 8px rgba(255,181,77,.4);
+  text-shadow: var(--glow-text-subtle);
 }
 
 .loss, .bh-value.loss {
-  color: var(--neon-pink) !important;
-  text-shadow: 0 0 8px rgba(255,90,168,.4);
+  color: #ff9dcb !important;
+  text-shadow: var(--glow-text-subtle);
 }
 
 /* Credit amount styling consistency */
@@ -5793,7 +5802,7 @@ html[data-theme="light"] .rl-player-row {
 .score-display {
   color: var(--amber);
   font-family: var(--font-deco);
-  text-shadow: 0 0 10px rgba(255,181,77,.4);
+  text-shadow: var(--glow-text-active);
 }
 
 .game-controls .btn {
@@ -5837,7 +5846,7 @@ html[data-theme="light"] .rl-player-row {
 
 .game-result {
   font-family: var(--font-display);
-  text-shadow: 0 0 12px currentColor;
+  text-shadow: var(--glow-text-active);
 }
 
 .game-status-message {
@@ -5850,7 +5859,7 @@ html[data-theme="light"] .rl-player-row {
 .crash-multiplier {
   font-family: var(--font-display);
   color: var(--neon-pink);
-  text-shadow: 0 0 14px var(--neon-pink);
+  text-shadow: var(--glow-text-signature);
 }
 
 .crash-graph-area {
@@ -5888,14 +5897,14 @@ html[data-theme="light"] .rl-player-row {
   background: radial-gradient(circle at 35% 30%, #fff0c5 0%, var(--bulb) 40%, var(--amber-hot) 90%) !important;
   color: var(--bg) !important;
   border: 6px solid var(--amber) !important;
-  text-shadow: 0 0 8px rgba(255,181,77,.5);
+  text-shadow: var(--glow-text-subtle);
 }
 
 .coin-back {
   background: radial-gradient(circle at 35% 30%, #d1a5ff 0%, var(--neon-violet) 40%, #6d28d9 90%) !important;
   color: var(--cream) !important;
   border: 6px solid var(--neon-violet) !important;
-  text-shadow: 0 0 8px rgba(176,100,255,.5);
+  text-shadow: var(--glow-text-subtle);
 }
 
 /* ─── Roulette Wheel — Neon 777 palette ─── */
@@ -5965,7 +5974,7 @@ html[data-theme="light"] .rl-player-row {
   background: rgba(0,0,0,.55) !important;
   border: 1px solid rgba(255,181,77,.3);
   border-radius: 4px !important;
-  text-shadow: 0 0 6px rgba(255,181,77,.5);
+  text-shadow: var(--glow-text-subtle);
 }
 
 .pot-value {
@@ -6026,7 +6035,7 @@ html[data-theme="light"] .rl-player-row {
   border: 1px solid rgba(255,181,77,.3);
   border-radius: 2px !important;
   font-family: var(--font-mono);
-  text-shadow: 0 0 6px rgba(255,181,77,.5);
+  text-shadow: var(--glow-text-subtle);
 }
 
 /* Poker actions panel */
@@ -6047,7 +6056,7 @@ html[data-theme="light"] .rl-player-row {
   background: rgba(255,58,92,.1) !important;
   border-color: var(--neon-red) !important;
   color: var(--neon-red) !important;
-  text-shadow: 0 0 6px rgba(255,58,92,.4);
+  text-shadow: var(--glow-text-semantic);
 }
 .pa-fold:hover { background: rgba(255,58,92,.25) !important; }
 
@@ -6062,7 +6071,7 @@ html[data-theme="light"] .rl-player-row {
   background: rgba(255,233,181,.1) !important;
   border-color: var(--cream) !important;
   color: var(--cream) !important;
-  text-shadow: 0 0 6px rgba(255,233,181,.4);
+  text-shadow: var(--glow-text-subtle);
 }
 .pa-call:hover { background: rgba(255,233,181,.25) !important; }
 
@@ -6070,7 +6079,7 @@ html[data-theme="light"] .rl-player-row {
   background: rgba(255,181,77,.1) !important;
   border-color: var(--amber) !important;
   color: var(--amber) !important;
-  text-shadow: 0 0 6px rgba(255,181,77,.4);
+  text-shadow: var(--glow-text-subtle);
 }
 .pa-bet:hover, .pa-raise:hover { background: rgba(255,181,77,.25) !important; }
 
@@ -6078,7 +6087,7 @@ html[data-theme="light"] .rl-player-row {
   background: rgba(176,100,255,.1) !important;
   border-color: var(--neon-violet) !important;
   color: var(--neon-violet) !important;
-  text-shadow: 0 0 6px rgba(176,100,255,.4);
+  text-shadow: var(--glow-text-subtle);
 }
 .pa-allin:hover { background: rgba(176,100,255,.25) !important; }
 
@@ -6103,21 +6112,21 @@ html[data-theme="light"] .rl-player-row {
 .crash-canvas-wrap {
   border: 1px solid var(--neon-pink) !important;
   border-radius: 0 !important;
-  box-shadow: 0 0 40px rgba(255,90,168,.15);
+  box-shadow: 0 0 16px rgba(255,90,168,.1);
 }
 
 .crash-multiplier {
   font-family: var(--font-display) !important;
   color: var(--neon-pink) !important;
-  text-shadow: 0 0 20px var(--neon-pink), 0 0 40px rgba(255,90,168,.5) !important;
+  text-shadow: var(--glow-text-signature) !important;
 }
 .crash-multiplier.running {
   color: var(--neon-pink) !important;
-  text-shadow: 0 0 20px var(--neon-pink), 0 0 40px rgba(255,90,168,.5) !important;
+  text-shadow: var(--glow-text-signature) !important;
 }
 .crash-multiplier.crashed {
   color: var(--neon-red) !important;
-  text-shadow: 0 0 20px var(--neon-red), 0 0 40px rgba(255,58,92,.5) !important;
+  text-shadow: var(--glow-text-semantic) !important;
 }
 
 .crash-status.betting  { background: rgba(255,181,77,.18) !important; color: var(--amber) !important; border: 1px solid var(--amber); border-radius: 2px !important; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .12em; }
@@ -6162,12 +6171,12 @@ html[data-theme="light"] .rl-player-row {
 
 .feed-item { border-bottom: 1px solid var(--line) !important; font-family: var(--font-mono); color: var(--ink-muted); }
 .feed-mult { color: var(--amber) !important; font-family: var(--font-mono) !important; }
-.feed-win  { color: var(--amber) !important; text-shadow: 0 0 6px rgba(255,181,77,.4); }
+.feed-win  { color: var(--amber) !important; text-shadow: var(--glow-text-subtle); }
 
 /* ─── Pachinko — violet palette ─── */
 .pachinko-canvas-wrap {
   border: 1px solid var(--neon-violet) !important;
-  box-shadow: 0 0 40px rgba(176,100,255,.15);
+  box-shadow: 0 0 16px rgba(176,100,255,.1);
 }
 
 .pach-group { background: var(--surface) !important; border: 1px solid var(--line) !important; border-radius: 0 !important; }
@@ -6209,8 +6218,8 @@ html[data-theme="light"] .rl-player-row {
 
 .pach-results { background: var(--surface) !important; border: 1px solid var(--line) !important; border-radius: 0 !important; }
 .pach-result { border-radius: 0 !important; font-family: var(--font-mono) !important; }
-.pach-result.big-win { background: rgba(176,100,255,.15) !important; color: var(--neon-violet) !important; text-shadow: 0 0 6px rgba(176,100,255,.4); }
-.pach-result.win     { background: rgba(255,181,77,.1) !important; color: var(--amber) !important; text-shadow: 0 0 6px rgba(255,181,77,.4); }
+.pach-result.big-win { background: rgba(176,100,255,.15) !important; color: var(--neon-violet) !important; text-shadow: var(--glow-text-subtle); }
+.pach-result.win     { background: rgba(255,181,77,.1) !important; color: var(--amber) !important; text-shadow: var(--glow-text-subtle); }
 .pach-result.loss    { background: rgba(255,90,168,.1) !important; color: var(--neon-pink) !important; }
 
 /* ─── CS2 Betting — pink/amber ─── */
@@ -6222,14 +6231,14 @@ html[data-theme="light"] .rl-player-row {
   border-color: var(--amber) !important;
   color: var(--amber) !important;
   background: rgba(255,181,77,.08) !important;
-  text-shadow: 0 0 10px rgba(255,181,77,.5);
+  text-shadow: var(--glow-text-active);
   font-family: var(--font-display);
 }
 .result-display.lose {
   border-color: var(--neon-pink) !important;
   color: var(--neon-pink) !important;
   background: rgba(255,90,168,.08) !important;
-  text-shadow: 0 0 10px rgba(255,90,168,.5);
+  text-shadow: var(--glow-text-active);
   font-family: var(--font-display);
 }
 .result-display.tie {
@@ -6298,7 +6307,7 @@ html[data-theme="light"] .rl-player-row {
 
 .confirmation-section,
 .bet-setup-section {
-  box-shadow: 0 0 40px rgba(255,181,77,.12), 0 20px 60px rgba(0,0,0,.6) !important;
+  box-shadow: 0 0 16px rgba(255,181,77,.1), 0 16px 42px rgba(0,0,0,.55) !important;
 }
 
 /* Coinflip choice comparison display (confirmation modal) */
@@ -6312,14 +6321,14 @@ html[data-theme="light"] .rl-player-row {
   background: rgba(255,181,77,.12) !important;
   border-color: var(--amber) !important;
   color: var(--amber) !important;
-  text-shadow: 0 0 8px rgba(255,181,77,.5);
+  text-shadow: var(--glow-text-subtle);
 }
 
 .choice-display.tails {
   background: rgba(176,100,255,.12) !important;
   border-color: var(--neon-violet) !important;
   color: var(--neon-violet) !important;
-  text-shadow: 0 0 8px rgba(176,100,255,.5);
+  text-shadow: var(--glow-text-subtle);
 }
 
 /* Coinflip result message (win/lose) */
@@ -6333,14 +6342,14 @@ html[data-theme="light"] .rl-player-row {
   background: rgba(255,181,77,.12) !important;
   border: 2px solid var(--amber) !important;
   color: var(--amber) !important;
-  text-shadow: 0 0 10px rgba(255,181,77,.5);
+  text-shadow: var(--glow-text-active);
 }
 
 .result-message.lose {
   background: rgba(255,90,168,.12) !important;
   border: 2px solid var(--neon-pink) !important;
   color: var(--neon-pink) !important;
-  text-shadow: 0 0 10px rgba(255,90,168,.5);
+  text-shadow: var(--glow-text-active);
 }
 
 /* Connection status pill (coinflip multiplayer) */
@@ -6391,7 +6400,7 @@ html[data-theme="light"] .rl-player-row {
 /* Keep the roulette wheel number labels readable */
 .number-label {
   color: var(--cream) !important;
-  text-shadow: 1px 1px 3px rgba(0,0,0,.9), 0 0 6px rgba(255,181,77,.3);
+  text-shadow: 1px 1px 3px rgba(0,0,0,.9), var(--glow-text-subtle);
   font-family: var(--font-mono);
   font-weight: 700;
 }
@@ -6420,7 +6429,7 @@ html[data-theme="light"] .rl-player-row {
   line-height: 1 !important;
   letter-spacing: .04em;
   text-transform: uppercase;
-  text-shadow: 0 0 1px rgba(255,181,77,.55), 0 0 8px rgba(255,181,77,.28) !important;
+  text-shadow: var(--glow-text-signature) !important;
   border-radius: 0 !important;
 }
 
@@ -6480,6 +6489,7 @@ html[data-theme="light"] .rl-player-row {
 }
 
 .blackjack-container .betting-section.is-locked .quick-bets,
+.blackjack-container .betting-section.is-locked .blackjack-stake-actions,
 .blackjack-container .betting-section.is-locked #placeBetBtn {
   display: none !important;
 }
@@ -6824,6 +6834,7 @@ html[data-theme="light"] .rl-player-row {
   border-radius: 50% !important;
   overflow: hidden;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -7069,9 +7080,8 @@ html[data-theme="light"] .rl-player-row {
     width: 100%;
   }
 
-  /* Blackjack mobile table: keep active hands and action buttons visible without
-     forcing a long scroll. Hide the locked bet strip during a hand and compact
-     the card zones/buttons aggressively on real phones. */
+  /* Blackjack mobile table: keep the compact locked wager rail, active hands,
+     and action buttons in one continuous surface. */
   .blackjack-container {
     padding: 0 !important;
     max-width: 100% !important;
@@ -7094,7 +7104,8 @@ html[data-theme="light"] .rl-player-row {
   }
 
   .blackjack-container .betting-section.is-locked {
-    display: none !important;
+    display: grid !important;
+    padding: 9px 12px !important;
   }
 
   .blackjack-container .game-area {
