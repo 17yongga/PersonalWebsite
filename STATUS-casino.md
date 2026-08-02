@@ -1,7 +1,7 @@
 # Casino — STATUS.md
 > Updated: 2026-08-02
 
-## Immutable Review Candidate — `neon777-20260802-r45` (2026-08-02)
+## Live Coordinated Release — `neon777-20260802-r45` (2026-08-02)
 - **Coordinated scope:** the verified mobile Blackjack and server-authoritative split-hand work is packaged together with a self-healing shared Web Audio lifecycle, contextual authoritative-timed cues, impact-sensitive Pachinko peg audio, authoritative-tick-driven Crash rhythm, and atomic server-authoritative Roulette set/replace/clear.
 - **Audio lifecycle:** closed contexts are recreated; suspended/interrupted contexts recover from trusted gestures; muted, hidden, pre-unlock, and failed playback stays silent/retryable; `playOnce` keys commit only after scheduling succeeds; unknown effects fail explicitly; diagnostics, dedupe state, listeners, timers, and procedural noise allocation are bounded.
 - **Contextual cues:** Blackjack, Roulette, Crash, Pachinko, Coinflip, Poker, CS Cases, and shared UI hooks now distinguish local selection feedback from authoritative monetary acceptance. Pachinko peg strength/pan derives from genuine inward impact, and Crash cadence derives from authoritative multiplier ticks without an independent interval.
@@ -11,13 +11,16 @@
 - **Exact-package browser QA:** Roulette/audio QA passed at 390px and 1280px with Red → Black replacement, `BLACK — 250 credits`, readable active BLACK label, stale-round rejection, accepted/replaced/cancelled/rejected cue counts, AudioContext recreation, explicit unknown-effect failure, zero listener/timer leaks, zero console/resource errors, and zero horizontal overflow. Blackjack passed all **8/8** wager/pair/crowded/split views at 390px and 1280px; the mobile table origin stayed exactly `430.484375px`.
 - **Immutable package:** Linux x86_64 `r45` contains 6,282 manifested files with production dependencies installed before hashing, 199/199 source files byte-identical to the locally verified candidate, zero missing/extra files, symlinks, or writable package paths. Exact backend QA passed place → replace → replay → changed-payload rejection → clear and restart with final balance restored.
 - **Copied-production-data rehearsal:** the Linux candidate started and restarted healthy on an isolated copy. The copy and untouched production both remained at 39 accounts, one active escrow, `409,240.008` credits, and SQLite integrity `ok`. Live PM2 stayed online without restart; rehearsal port closed cleanly.
-- **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, and Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`.
-- **Deployment boundary:** review-ready, **not deployed**. Production remains frontend `r44` / backend `r35`; no live service restart, CloudFront invalidation, account mutation, escrow mutation, or wager occurred. Production promotion requires Gary's separate explicit approval. Subjective listening remains the human acceptance check after promotion; technical synthesis, scheduling, recovery, and cleanup are verified.
+- **Production deployment:** frontend and backend `r45` are live. The backend stable pointer resolves to `/home/ubuntu/casino-app/releases/neon777-20260802-r45/backend`; PM2 is online on the stable `current/casino-server.js` path and passed a second restart-persistence check. The frontend entry hash is `ff46091b6bb37456b53e123b0a2021dfb3c07271bb844e30dfccbc098cab1834`; CloudFront invalidation `I8TV5CQWIETNMMIYYZTPIOFJPR` completed.
+- **Live no-wager verification:** all **180/180** packaged frontend files matched production byte-for-byte. Login QA passed at 390px and 1280px with all 25 runtime references on `r45`, zero console/page/network/static-resource errors, zero overflow, sound still off by default, and clean visual review. Public health is 200 with projection `ok`; unauthenticated session is 401, unauthenticated Socket.IO is rejected, hostile-origin preflight is 403, SQLite integrity is `ok`, all nine unrelated PM2 processes stayed unchanged, and no new Casino error-log entry appeared after the final start.
+- **Production state preserved:** the final restart retained 39 accounts, one active escrow, and `409,340.008` credits exactly. No production wager or QA account was used. The higher balance than the earlier rehearsal snapshot existed before the final cutover and was preserved through deployment and restart.
+- **Rollback:** immediate frontend rollback is `r44`; backend rollback is `r35`. Owner-only pre-cutover and final snapshots, PM2 environment, hashes, and the previous release pointer are stored at `/home/ubuntu/casino-backups/pre-r45-20260802T190916Z`.
+- **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`, and live login captures `live-login-390.png` / `live-login-1280.png`. Subjective listening remains Gary's human acceptance check; technical synthesis, scheduling, recovery, cleanup, and live delivery are verified.
 
 ## What's Live
-- **Frontend:** https://gary-yong.com/casino.html (S3/CloudFront)
-- **API/Backend:** https://api.gary-yong.com (EC2, nginx → localhost:3001)
-- **Server:** EC2, PM2 process `casino-server`, port 3001, online
+- **Frontend:** `r45` at https://gary-yong.com/casino.html (S3/CloudFront)
+- **API/Backend:** `r45` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
+- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260802-r45/backend`
 
 ## Games (8 total)
 | Game | Type | Notes |
