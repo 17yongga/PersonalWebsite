@@ -3,10 +3,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
+const crypto = require('node:crypto');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const { io } = require('socket.io-client');
+const Database = require('better-sqlite3');
 
 async function waitForServer(url, child) {
   for (let i = 0; i < 80; i += 1) {
@@ -84,6 +86,14 @@ test('authenticated casino boundary and authoritative games', { timeout: 30000 }
   assert.match(cookie, /^casino_sid=/);
   const authHeaders = { cookie, 'x-csrf-token': login.csrfToken, 'content-type': 'application/json' };
 
+  const fixedPachinkoSeed = '11'.repeat(32);
+  const fairnessDb = new Database(path.join(dataDir, 'data', 'casino.sqlite'));
+  fairnessDb.prepare(`INSERT INTO fair_seeds(game,current_seed,current_commitment,nonce,updated_at)
+    VALUES ('pachinko',?,?,0,?) ON CONFLICT(game) DO UPDATE SET
+      current_seed=excluded.current_seed,current_commitment=excluded.current_commitment,nonce=0,updated_at=excluded.updated_at`)
+    .run(fixedPachinkoSeed, crypto.createHash('sha256').update(fixedPachinkoSeed, 'hex').digest('hex'), Date.now());
+  fairnessDb.close();
+
   response = await fetch(`${url}/api/session`, { headers: { cookie } });
   assert.equal(response.status, 200);
   assert.equal((await response.json()).username, 'Integration_User');
@@ -107,7 +117,10 @@ test('authenticated casino boundary and authoritative games', { timeout: 30000 }
   });
   assert.equal(response.status, 403);
 
-  const pachinkoBody = { risk: 'medium', bet: 10, count: 2, requestId: 'pachinko_request_123' };
+  const pachinkoBalanceBefore = (await (await fetch(`${url}/api/session`, { headers: { cookie } })).json()).credits;
+  const pachinkoBody = {
+    risk: 'high', bet: 1, count: 1, requestId: 'pachinko_request_123', clientSeed: 'fractional_4'
+  };
   const [pachinkoResponseA, pachinkoResponseB] = await Promise.all([
     fetch(`${url}/api/games/pachinko/drop`, { method: 'POST', headers: authHeaders, body: JSON.stringify(pachinkoBody) }),
     fetch(`${url}/api/games/pachinko/drop`, { method: 'POST', headers: authHeaders, body: JSON.stringify(pachinkoBody) })
@@ -116,10 +129,22 @@ test('authenticated casino boundary and authoritative games', { timeout: 30000 }
   const concurrentRetry = await pachinkoResponseB.json();
   assert.equal(pachinkoResponseA.status, 200, JSON.stringify(pachinko));
   assert.equal(pachinkoResponseB.status, 200, JSON.stringify(concurrentRetry));
-  assert.equal(pachinko.results.length, 2);
+  assert.deepEqual(pachinko.results, [{ slotIndex: 8, multiplier: 0.28, payout: 0.28 }]);
+  assert.equal(pachinko.payout, 0.28);
+  assert.equal(pachinko.totalBet, 1);
+  assert.equal(pachinko.balance, pachinkoBalanceBefore - 0.72);
   assert.deepEqual(concurrentRetry, pachinko, 'concurrent idempotent retry must settle once');
   response = await fetch(`${url}/api/games/pachinko/drop`, { method: 'POST', headers: authHeaders, body: JSON.stringify(pachinkoBody) });
   assert.deepEqual(await response.json(), pachinko, 'later idempotent retry must not settle twice');
+  response = await fetch(`${url}/api/session`, { headers: { cookie } });
+  assert.equal((await response.json()).credits, pachinko.balance, 'session refetch preserves the fractional committed balance');
+  const ledgerRead = new Database(path.join(dataDir, 'data', 'casino.sqlite'), { readonly: true });
+  const pachinkoTx = ledgerRead.prepare("SELECT delta,balance_before,balance_after,response_json FROM ledger_transactions WHERE idempotency_key=?")
+    .get('pachinko:Integration_User:pachinko_request_123');
+  ledgerRead.close();
+  assert.equal(pachinkoTx.delta, -720, 'ledger records the exact -0.720 credit net delta in milli-credits');
+  assert.equal(pachinkoTx.balance_after, pachinkoTx.balance_before - 720);
+  assert.equal(JSON.parse(pachinkoTx.response_json).payout, 0.28);
 
   response = await fetch(`${url}/api/games/blackjack/start`, {
     method: 'POST', headers: authHeaders, body: JSON.stringify({ bet: 25 })
@@ -300,7 +325,9 @@ test('authenticated casino boundary and authoritative games', { timeout: 30000 }
   pendingCaseBattleId = restartWaiting.battle.battleId;
 
   const users = JSON.parse(await fs.readFile(path.join(dataDir, 'casino-users.json'), 'utf8'));
-  assert.ok(Number.isSafeInteger(users.Integration_User.credits));
+  assert.ok(Number.isFinite(users.Integration_User.credits));
+  assert.ok(Math.abs(users.Integration_User.credits * 1000 - Math.round(users.Integration_User.credits * 1000)) < 1e-6,
+    'projected balance preserves at most three decimal places');
   const files = await fs.readdir(dataDir);
   assert.equal(files.some(file => file.includes('.tmp-')), false, `orphan temp files: ${files.join(', ')}\n${logs}`);
 

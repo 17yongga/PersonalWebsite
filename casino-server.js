@@ -22,7 +22,7 @@ const {
   validateUsername
 } = require("./casino-security");
 const { AtomicJsonStore, KeyedLock } = require("./casino-persistence");
-const { BlackjackService, generatePachinkoResult } = require("./casino-games-authoritative");
+const { BlackjackService, calculatePachinkoSettlement, generatePachinkoResult } = require("./casino-games-authoritative");
 const { CasinoLedger, IdempotencyConflictError, assertCasinoDatabaseIdentity } = require("./casino-ledger");
 const { FairRng, FAIR_GAMES } = require('./casino-fairness');
 const { createCasinoMailer } = require('./casino-email');
@@ -1982,8 +1982,8 @@ app.post("/api/games/pachinko/drop", requireAuth, apiMutationRateLimit, async (r
       const fairRoundId = `pachinko_${username}_${requestId}`;
       const fair = fairRng.consume('pachinko', fairRoundId, clientSeed);
       let counter = 0;
-      const results = Array.from({ length: count }, () => generatePachinkoResult(risk, max => fairRng.int(fair, max, counter++)));
-      const payout = results.reduce((sum, result) => sum + Math.floor(bet * result.multiplier), 0);
+      const rawResults = Array.from({ length: count }, () => generatePachinkoResult(risk, max => fairRng.int(fair, max, counter++)));
+      const { results, payout } = calculatePachinkoSettlement(bet, risk, rawResults);
       const proof = fairRng.reveal(fairRoundId, { risk, count, results, totalBet, payout });
       const committed = casinoLedger.change({
         userId: username, delta: payout - totalBet, idempotencyKey, game: 'pachinko', action: 'settle', referenceId: requestId,
@@ -3788,8 +3788,9 @@ app.post("/api/cs2/bets", requireAuth, apiMutationRateLimit, async (req, res) =>
       }
       const lockedUser = users[userId];
       if (!lockedUser) return { status: 404, error: "User not found" };
-      if (!Number.isSafeInteger(lockedUser.credits) || lockedUser.credits < amount) {
-        return { status: 400, error: "Insufficient credits", balance: lockedUser.credits };
+      const authoritativeBalance = casinoLedger.balance(userId);
+      if (authoritativeBalance < amount) {
+        return { status: 400, error: "Insufficient credits", balance: authoritativeBalance };
       }
 
 

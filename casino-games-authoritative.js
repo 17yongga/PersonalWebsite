@@ -243,6 +243,29 @@ class BlackjackService {
   }
 }
 
+function calculatePachinkoSettlement(bet, risk, rawResults) {
+  if (!Number.isSafeInteger(bet) || bet < 1) throw new RangeError('Pachinko bet must be a positive whole number');
+  const multipliers = PACHINKO_MULTIPLIERS[risk];
+  if (!multipliers) throw new RangeError('Invalid risk level');
+  if (!Array.isArray(rawResults) || rawResults.length < 1) throw new TypeError('Pachinko results are required');
+
+  let payoutMilli = 0;
+  const results = rawResults.map(result => {
+    const slotIndex = Number(result?.slotIndex);
+    const canonicalMultiplier = multipliers[slotIndex];
+    if (!Number.isSafeInteger(slotIndex) || canonicalMultiplier === undefined || result?.multiplier !== canonicalMultiplier) {
+      throw new RangeError('Pachinko result does not match the canonical multiplier table');
+    }
+    const ballPayoutMilli = Math.round(bet * canonicalMultiplier * 1000);
+    if (!Number.isSafeInteger(ballPayoutMilli) || ballPayoutMilli < 0) throw new RangeError('Pachinko payout exceeds the safe range');
+    payoutMilli += ballPayoutMilli;
+    if (!Number.isSafeInteger(payoutMilli)) throw new RangeError('Pachinko batch payout exceeds the safe range');
+    return { slotIndex, multiplier: canonicalMultiplier, payout: ballPayoutMilli / 1000 };
+  });
+
+  return { results, payout: payoutMilli / 1000 };
+}
+
 function generatePachinkoResult(risk, randomInt = crypto.randomInt) {
   const multipliers = PACHINKO_MULTIPLIERS[risk];
   if (!multipliers) throw new RangeError('Invalid risk level');
@@ -254,6 +277,7 @@ function generatePachinkoResult(risk, randomInt = crypto.randomInt) {
 module.exports = {
   BlackjackService,
   PACHINKO_MULTIPLIERS,
+  calculatePachinkoSettlement,
   createShuffledDeck,
   generatePachinkoResult,
   scoreHand

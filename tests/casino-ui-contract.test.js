@@ -129,5 +129,13 @@ test('mobile layout contract exposes overflow and contains controls, modals, and
   assert.match(pachinko, /syncSelectorState\(/);
   assert.match(pachinko, /aria-pressed/);
   assert.match(pachinko, /this\.root\.querySelectorAll/);
+  assert.match(pachinko, /const winnings = ball\.serverResult\?\.payout/);
+  assert.doesNotMatch(pachinko, /Math\.floor\(ball\.bet \* multiplier\)/);
   assert.match(premium, /\.pach-risk-btns,\.pach-ball-btns \{ display:grid; grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+});
+
+test('fractional Pachinko balances remain usable by other server-authoritative games', () => {
+  const server = read('casino-server.js');
+  assert.match(server, /const authoritativeBalance = casinoLedger\.balance\(userId\)/);
+  assert.doesNotMatch(server, /Number\.isSafeInteger\(lockedUser\.credits\)/);
 });

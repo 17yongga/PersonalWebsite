@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const {
   BlackjackService,
   PACHINKO_MULTIPLIERS,
+  calculatePachinkoSettlement,
   createShuffledDeck,
   generatePachinkoResult,
   scoreHand
@@ -142,4 +143,24 @@ test('pachinko server result uses 16-row binomial path and canonical multiplier 
   assert.deepEqual(right, { slotIndex: 16, multiplier: 220 });
   assert.equal(PACHINKO_MULTIPLIERS.low.length, 17);
   assert.throws(() => generatePachinkoResult('invalid'), /Invalid risk/);
+});
+
+test('pachinko settlement preserves every sub-1x payout in milli-credits', () => {
+  for (const [risk, multipliers] of Object.entries(PACHINKO_MULTIPLIERS)) {
+    multipliers.forEach((multiplier, slotIndex) => {
+      if (multiplier >= 1) return;
+      const settlement = calculatePachinkoSettlement(1, risk, [{ slotIndex, multiplier }]);
+      assert.equal(settlement.payout, multiplier, `${risk} ${multiplier}x must not floor to zero`);
+      assert.deepEqual(settlement.results[0], { slotIndex, multiplier, payout: multiplier });
+    });
+  }
+
+  const batch = calculatePachinkoSettlement(2, 'high', [
+    { slotIndex: 8, multiplier: 0.28 },
+    { slotIndex: 7, multiplier: 0.48 },
+    { slotIndex: 6, multiplier: 0.78 }
+  ]);
+  assert.equal(batch.payout, 3.08);
+  assert.deepEqual(batch.results.map(result => result.payout), [0.56, 0.96, 1.56]);
+  assert.throws(() => calculatePachinkoSettlement(1, 'high', [{ slotIndex: 8, multiplier: 220 }]), /canonical multiplier/);
 });

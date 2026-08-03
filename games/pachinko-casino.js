@@ -244,8 +244,18 @@ class PachinkoGame {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Unable to drop balls');
-      if (!Array.isArray(data.results) || data.results.length !== count ||
-          !Number.isFinite(data.balance) || !Number.isFinite(data.payout)) {
+      const resultPayoutMilli = Array.isArray(data.results)
+        ? data.results.reduce((sum, result) => sum + Math.round(Number(result?.payout) * 1000), 0)
+        : NaN;
+      const batchPayoutMilli = Math.round(Number(data.payout) * 1000);
+      const validResults = Array.isArray(data.results) && data.results.length === count && data.results.every(result => {
+        const slot = this.slots[result?.slotIndex];
+        const payoutMilli = Number(result?.payout) * 1000;
+        return slot && result.multiplier === slot.multiplier && Number.isFinite(result.payout) && result.payout >= 0 &&
+          Number.isSafeInteger(Math.round(payoutMilli)) && Math.abs(payoutMilli - Math.round(payoutMilli)) < 1e-6;
+      });
+      if (!validResults || !Number.isFinite(data.balance) || !Number.isFinite(data.payout) || data.payout < 0 ||
+          !Number.isSafeInteger(batchPayoutMilli) || resultPayoutMilli !== batchPayoutMilli) {
         throw new Error('Invalid Pachinko settlement response');
       }
       if (this._destroyed) {
@@ -569,7 +579,7 @@ class PachinkoGame {
     slot.glow = 1;
 
     const multiplier = ball.serverResult?.multiplier ?? slot.multiplier;
-    const winnings = Math.floor(ball.bet * multiplier);
+    const winnings = ball.serverResult?.payout;
     this.results.unshift({ multiplier, winnings, bet: ball.bet });
     const landingEffect = multiplier >= 10 ? 'pachinkoLandingJackpot'
       : multiplier >= 3 ? 'pachinkoLandingHigh'
