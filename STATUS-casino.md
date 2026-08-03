@@ -1,6 +1,12 @@
 # Casino — STATUS.md
 > Updated: 2026-08-03
 
+## Verified Blackjack Chip Interaction Candidate — `neon777-20260803-r55` (Awaiting Promotion Approval)
+- **Interaction repair:** wager chips are now direct stake selectors rather than additive shortcuts. Tapping 50, 100, 250, or 500 sets that exact wager, keeps exactly one chip selected, updates an explicit live `N credits selected` confirmation, and provides tactile pressed feedback. Manual entry, Undo/Clear/Max, and the server-authoritative Deal Cards request remain intact.
+- **Functional browser proof:** physical touch/click activation for all four chips, Enter and Space activation, one-active-chip semantics, selected-wager status, and the stubbed Deal payload were verified at 390px, 393px, and 1280px. A selected 250 chip produced exactly `{ bet: 250 }` through the existing `/api/games/blackjack/start` path without a real wager.
+- **Verification:** source suite passed **97/97**. Exact-package Blackjack passed **12/12**; core responsive matrix **72/72**; landscape/reduced motion **26/26**; lifecycle growth remained zero; Roulette/audio authority QA passed; and exact-package visual review found no blocker.
+- **Immutable package:** Linux x86_64 `r55` contains 6,282 manifested files with manifest SHA-256 `efce5f72297a8a491a044c9fdd5dbb85030be5eb535e776066d34070fd1f43ec`, zero symlinks/world-writable paths, valid native `better-sqlite3`, 25 `r55` entry references, and exact changed-source parity. Production remains on `r54` pending explicit promotion approval.
+
 ## Live Blackjack Starting-Screen Hotfix — `neon777-20260803-r54` (2026-08-03)
 - **Reported defect fixed:** real-phone evidence exposed a gap in the `r53` full-page QA: the mobile pre-deal table reserved the active Dealer, result, Player, insurance, and action rows before any cards existed. `r54` adds an explicit `is-wagering` presentation state, keeps the stake composer and Deal Cards action intact, and hides the empty active-round scaffolding until an authoritative round starts.
 - **Measured correction:** the 390/393px pre-deal game area fell from **536px to 112px**, the shell from about **884px to 460px**, and empty Dealer/Player/result/action rows from 126/191/36/18px to **0px**. The starting document now fits the 390×844 and 393×852 focused viewports; active, split, insurance, and settlement presentation is unchanged.
