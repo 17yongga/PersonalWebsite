@@ -205,6 +205,7 @@
 .pach-group input { min-height:44px!important; }
 .pach-quick .pqb,.pach-risk-btns .prb,.pach-ball-btns .pbb { min-height:44px; border-radius:12px; transition:transform .18s ease,background .18s ease,border-color .18s ease!important; }
 .pach-quick .pqb:hover,.pach-risk-btns .prb:hover,.pach-ball-btns .pbb:hover,.pach-risk-btns .prb.active,.pach-ball-btns .pbb.active { transform:translateY(-2px); border-color:rgba(216,180,254,.58)!important; box-shadow:0 9px 20px rgba(88,28,135,.2); }
+.pach-quick .pqb.active,.pach-risk-btns .prb.active,.pach-ball-btns .pbb.active { background:var(--amber)!important; border-color:var(--amber)!important; color:var(--bg)!important; box-shadow:0 0 0 2px rgba(255,181,77,.18),0 8px 18px rgba(255,181,77,.2)!important; }
 .pach-drop-btn { min-height:56px!important; border-radius:15px!important; background:linear-gradient(110deg,#7e22ce,#c084fc 55%,#6b21a8)!important; font-weight:900!important; box-shadow:0 14px 34px rgba(147,51,234,.25)!important; }
 .pach-result-item:first-child { animation:premium-result-in .34s cubic-bezier(.2,.8,.2,1) both; }
 
@@ -349,9 +350,15 @@
   .crash-bet-section,.crash-feed-section { padding:12px; }
 
   .pachinko-layout { grid-template-columns:minmax(0,1fr)!important; grid-template-areas:"controls" "board" "results"; gap:12px!important; }
-  .pachinko-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:10px; }
-  .pachinko-controls .pach-group:first-child,.pachinko-controls .pach-drop-btn { grid-column:1/-1; }
-  .pach-group { min-width:0; padding:10px; }
+  .pachinko-controls { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; padding:10px; }
+  .pach-group { min-width:0; padding:4px 2px 12px; border:0!important; border-bottom:1px solid rgba(255,255,255,.08)!important; border-radius:0!important; background:transparent!important; }
+  .pach-group:last-of-type { border-bottom:0!important; padding-bottom:4px; }
+  .pach-group label { margin-bottom:8px; }
+  .pach-quick { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; margin-top:8px; }
+  .pach-risk-btns,.pach-ball-btns { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+  .pach-quick .pqb,.pach-risk-btns .prb,.pach-ball-btns .pbb { width:100%; min-width:0; padding:8px 4px; }
+  .pach-quick .pqb.active,.pach-risk-btns .prb.active,.pach-ball-btns .pbb.active { transform:none; }
+  .pach-drop-btn { margin-top:2px; }
   .pachinko-canvas-wrap { width:100%; }
   .pachinko-canvas-wrap canvas { width:100%; height:auto; }
 

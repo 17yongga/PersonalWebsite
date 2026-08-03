@@ -10,6 +10,7 @@ const viewports = process.env.CASINO_QA_VIEWPORTS
   ? JSON.parse(process.env.CASINO_QA_VIEWPORTS)
   : [{ name: 'compact', width: 375, height: 667 }, { name: 'standard', width: 390, height: 844 }];
 const screens = (process.env.CASINO_QA_SCREENS || 'login,register,lobby,menu,tour,history,howto,blackjack,roulette,coinflip,coinflip-rooms,crash,pachinko,poker,poker-tables,cs2betting,cs2betting-populated,cases').split(',');
+const fixtureUsername = process.env.CASINO_QA_USERNAME || 'QA_MOBILE_USERNAME_WITH_LONG_TEXT';
 const games = new Set(['blackjack', 'roulette', 'coinflip', 'crash', 'pachinko', 'poker', 'cs2betting', 'cases']);
 const shotsDir = path.join(outputRoot, 'screenshots');
 fs.mkdirSync(shotsDir, { recursive: true });
@@ -89,7 +90,7 @@ async function prepare(page, screen) {
   });
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForFunction(() => window.casinoManager, { timeout: 15000 });
-  await page.evaluate(async ({ screen, catalog }) => {
+  await page.evaluate(async ({ screen, catalog, username }) => {
     const manager = window.casinoManager;
     const games = new Set(['blackjack', 'roulette', 'coinflip', 'crash', 'pachinko', 'poker', 'cs2betting', 'cases']);
     const listeners = new Map();
@@ -110,11 +111,13 @@ async function prepare(page, screen) {
       __listenerCount() { return [...listeners.values()].reduce((total, handlers) => total + handlers.length, 0); }
     };
     const response = payload => Promise.resolve({ ok: true, status: 200, json: async () => payload });
-    manager.username = 'QA_MOBILE_USERNAME_WITH_LONG_TEXT';
+    manager.username = username;
     manager.credits = 987654.32;
     manager.socket = socket;
     manager.getSocket = () => socket;
-    manager.apiFetch = async requestPath => {
+    window.__qaApiCalls = [];
+    manager.apiFetch = async (requestPath, options = {}) => {
+      window.__qaApiCalls.push({ requestPath: String(requestPath), method: options.method || 'GET' });
       if (String(requestPath).includes('/api/cases/catalog')) return response(catalog);
       if (String(requestPath).includes('/api/cases/battles')) return response({ success: true, battles: [] });
       if (String(requestPath).includes('/api/cases/inventory')) return response({ success: true, inventory: [] });
@@ -159,7 +162,7 @@ async function prepare(page, screen) {
     }
     const started = manager.startGame(game);
     if (!started) throw new Error(`Unable to start ${game}`);
-  }, { screen, catalog: fixtureCatalog() });
+  }, { screen, catalog: fixtureCatalog(), username: fixtureUsername });
 
   const game = screen.split('-')[0];
   if (games.has(game)) await new Promise(resolve => setTimeout(resolve, game === 'cases' || game === 'cs2betting' ? 700 : 450));
@@ -216,6 +219,26 @@ async function prepare(page, screen) {
   await new Promise(resolve => setTimeout(resolve, 400));
 }
 
+async function exercisePachinkoControls(page) {
+  await page.click('.pqb[data-a="250"]');
+  await page.$eval('#pachBet', input => {
+    input.value = '123';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await page.evaluate(() => {
+    window.__qaPachinkoManualState = {
+      input: document.getElementById('pachBet')?.value || null,
+      selectedQuick: [...document.querySelectorAll('.pqb.active')].map(button => button.textContent.trim()),
+      pressedQuick: [...document.querySelectorAll('.pqb[aria-pressed="true"]')].map(button => button.textContent.trim())
+    };
+  });
+  await page.click('.pqb[data-a="250"]');
+  await page.tap('.prb[data-r="low"]');
+  await page.focus('.pbb[data-n="3"]');
+  await page.keyboard.press('Space');
+  await new Promise(resolve => setTimeout(resolve, 80));
+}
+
 async function measure(page, screen) {
   return page.evaluate(screenName => {
     const visible = element => {
@@ -256,6 +279,26 @@ async function measure(page, screen) {
       return rect.left < navRect.right && rect.right > navRect.left && rect.top < navRect.bottom && rect.bottom > navRect.top;
     }).map(details).slice(0, 80) : [];
     const visibleRoot = document.querySelector('.game-view:not(.hidden), #gameSelection:not(.hidden), #loginSection:not(.hidden), #registerSection:not(.hidden)');
+    const pachinkoControls = screenName === 'pachinko' ? (() => {
+      const rows = selector => [...document.querySelectorAll(selector)].map(element => {
+        const rect = element.getBoundingClientRect();
+        return { top: +rect.top.toFixed(1), width: +rect.width.toFixed(1), height: +rect.height.toFixed(1) };
+      });
+      const selected = selector => [...document.querySelectorAll(selector)]
+        .filter(element => element.classList.contains('active'))
+        .map(element => element.textContent.trim());
+      const pressed = selector => [...document.querySelectorAll(selector)]
+        .filter(element => element.getAttribute('aria-pressed') === 'true')
+        .map(element => element.textContent.trim());
+      return {
+        quick: rows('.pqb'), risk: rows('.prb'), balls: rows('.pbb'),
+        input: document.getElementById('pachBet')?.value || null,
+        selected: { quick: selected('.pqb'), risk: selected('.prb'), balls: selected('.pbb') },
+        pressed: { quick: pressed('.pqb'), risk: pressed('.prb'), balls: pressed('.pbb') },
+        manualState: window.__qaPachinkoManualState || null,
+        apiCalls: window.__qaApiCalls || []
+      };
+    })() : null;
     return {
       screen: screenName,
       viewport: { width: innerWidth, height: innerHeight },
@@ -266,6 +309,7 @@ async function measure(page, screen) {
       clippedText,
       smallTargets,
       navOverlaps,
+      pachinkoControls,
       activeGame: document.body.dataset.currentCasinoGame || null,
       lifecycle: window.__qaLifecycle || null
     };
@@ -286,6 +330,7 @@ async function measure(page, screen) {
         page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text().slice(0, 500)); });
         page.on('pageerror', error => pageErrors.push(String(error).slice(0, 500)));
         await prepare(page, screen);
+        if (screen === 'pachinko') await exercisePachinkoControls(page);
         const metrics = await measure(page, screen);
         const screenshot = path.join(shotsDir, `${viewport.name}-${screen}.png`);
         await page.screenshot({ path: screenshot, fullPage: true });
@@ -317,6 +362,19 @@ async function measure(page, screen) {
   }));
   fs.writeFileSync(path.join(outputRoot, 'summary.json'), JSON.stringify(summary, null, 2));
   console.log(JSON.stringify(summary, null, 2));
+  const pachinkoFailures = results.filter(result => {
+    const controls = result.metrics.pachinkoControls;
+    if (!controls) return false;
+    const sameRow = items => items.length === 3 && Math.max(...items.map(item => item.top)) - Math.min(...items.map(item => item.top)) <= 2.1;
+    const validTargets = items => items.every(item => item.width >= 44 && item.height >= 44);
+    return !sameRow(controls.risk) || !sameRow(controls.balls) ||
+      !validTargets([...controls.quick, ...controls.risk, ...controls.balls]) ||
+      controls.input !== '250' ||
+      JSON.stringify(controls.manualState) !== JSON.stringify({ input: '123', selectedQuick: [], pressedQuick: [] }) ||
+      JSON.stringify(controls.selected) !== JSON.stringify({ quick: ['250'], risk: ['Low'], balls: ['3'] }) ||
+      JSON.stringify(controls.pressed) !== JSON.stringify({ quick: ['250'], risk: ['Low'], balls: ['3'] }) ||
+      controls.apiCalls.some(call => call.method !== 'GET');
+  });
   if (results.some(result =>
     result.metrics.overflowX ||
     result.metrics.viewportEscape.length ||
@@ -332,5 +390,5 @@ async function measure(page, screen) {
     )) ||
     result.consoleErrors.length ||
     result.pageErrors.length
-  )) process.exitCode = 1;
+  ) || pachinkoFailures.length) process.exitCode = 1;
 })().catch(error => { console.error(error); process.exit(1); });

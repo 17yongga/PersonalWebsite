@@ -72,7 +72,8 @@ test('game layout stylesheet encodes interaction-priority responsive areas', () 
   assert.match(premium, /@media \(max-width:768px\)[\s\S]*\.crash-layout[^}]*grid-template-areas:\s*"controls"\s*"chart"\s*"history"\s*"feed"/);
   assert.match(premium, /@media \(max-width:768px\)[\s\S]*\.rl-bet-panel\s*\{[^}]*order:\s*1/);
   assert.match(premium, /@media \(max-width:768px\)[\s\S]*\.rl-info-panel\s*\{[^}]*order:\s*2/);
-  assert.match(premium, /@media \(max-width:768px\)[\s\S]*\.pachinko-controls[^}]*grid-template-columns:\s*repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(premium, /@media \(max-width:768px\)[\s\S]*\.pachinko-controls[^}]*grid-template-columns:\s*minmax\(0,1fr\)/);
+  assert.match(premium, /\.pach-risk-btns,\.pach-ball-btns[^}]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(premium, /\.pach-results:empty\s*\{\s*display:none/);
   assert.match(crash, /class="crash-canvas-wrap"[\s\S]*class="crash-history"[\s\S]*class="crash-bet-section"[\s\S]*class="crash-feed-section"/);
 });

@@ -48,6 +48,7 @@ class PachinkoGame {
 
   init() {
     const gv = document.getElementById('pachinkoGame');
+    this.root = gv;
     gv.innerHTML = `
       <div class="pachinko-container">
         <h2 class="game-title">🔮 Pachinko</h2>
@@ -61,26 +62,26 @@ class PachinkoGame {
               <label for="pachBet">Bet Per Ball</label>
               <input type="number" id="pachBet" value="100" min="1" step="10">
               <div class="pach-quick">
-                <button class="pqb" data-a="50">50</button>
-                <button class="pqb" data-a="100">100</button>
-                <button class="pqb" data-a="250">250</button>
-                <button class="pqb" data-a="500">500</button>
+                <button type="button" class="pqb" data-a="50" aria-pressed="false">50</button>
+                <button type="button" class="pqb active" data-a="100" aria-pressed="true">100</button>
+                <button type="button" class="pqb" data-a="250" aria-pressed="false">250</button>
+                <button type="button" class="pqb" data-a="500" aria-pressed="false">500</button>
               </div>
             </div>
             <div class="pach-group">
               <label>Risk</label>
               <div class="pach-risk-btns">
-                <button class="prb" data-r="low">Low</button>
-                <button class="prb active" data-r="medium">Medium</button>
-                <button class="prb" data-r="high">High</button>
+                <button type="button" class="prb" data-r="low" aria-pressed="false">Low</button>
+                <button type="button" class="prb active" data-r="medium" aria-pressed="true">Medium</button>
+                <button type="button" class="prb" data-r="high" aria-pressed="false">High</button>
               </div>
             </div>
             <div class="pach-group">
               <label>Balls</label>
               <div class="pach-ball-btns">
-                <button class="pbb active" data-n="1">1</button>
-                <button class="pbb" data-n="3">3</button>
-                <button class="pbb" data-n="5">5</button>
+                <button type="button" class="pbb active" data-n="1" aria-pressed="true">1</button>
+                <button type="button" class="pbb" data-n="3" aria-pressed="false">3</button>
+                <button type="button" class="pbb" data-n="5" aria-pressed="false">5</button>
               </div>
             </div>
             <button id="pachDropBtn" class="btn btn-primary btn-full pach-drop-btn">🔮 Drop!</button>
@@ -174,23 +175,39 @@ class PachinkoGame {
   }
 
   attachEvents() {
-    document.querySelectorAll('.pqb').forEach(b => b.addEventListener('click', e => {
-      document.getElementById('pachBet').value = e.target.dataset.a;
+    const betInput = this.root.querySelector('#pachBet');
+    this.root.querySelectorAll('.pqb').forEach(button => button.addEventListener('click', event => {
+      betInput.value = event.currentTarget.dataset.a;
+      this.syncBetSelector();
     }));
-    document.querySelectorAll('.prb').forEach(b => b.addEventListener('click', e => {
-      document.querySelectorAll('.prb').forEach(x => x.classList.remove('active'));
-      e.target.classList.add('active');
-      this.risk = e.target.dataset.r;
+    betInput?.addEventListener('input', () => this.syncBetSelector());
+    this.root.querySelectorAll('.prb').forEach(button => button.addEventListener('click', event => {
+      const selectedRisk = event.currentTarget.dataset.r;
+      this.syncSelectorState('.prb', control => control.dataset.r === selectedRisk);
+      this.risk = selectedRisk;
       this.setupBoard();
       this.renderPayoutLegend();
       this.drawFrame();
     }));
-    document.querySelectorAll('.pbb').forEach(b => b.addEventListener('click', e => {
-      document.querySelectorAll('.pbb').forEach(x => x.classList.remove('active'));
-      e.target.classList.add('active');
-      this.ballCount = parseInt(e.target.dataset.n);
+    this.root.querySelectorAll('.pbb').forEach(button => button.addEventListener('click', event => {
+      const selectedCount = Number(event.currentTarget.dataset.n);
+      this.syncSelectorState('.pbb', control => Number(control.dataset.n) === selectedCount);
+      this.ballCount = selectedCount;
     }));
-    document.getElementById('pachDropBtn')?.addEventListener('click', () => this.dropBalls());
+    this.root.querySelector('#pachDropBtn')?.addEventListener('click', () => this.dropBalls());
+  }
+
+  syncSelectorState(selector, isSelected) {
+    this.root.querySelectorAll(selector).forEach(control => {
+      const selected = Boolean(isSelected(control));
+      control.classList.toggle('active', selected);
+      control.setAttribute('aria-pressed', String(selected));
+    });
+  }
+
+  syncBetSelector() {
+    const amount = Number(this.root.querySelector('#pachBet')?.value);
+    this.syncSelectorState('.pqb', control => Number(control.dataset.a) === amount);
   }
 
   dropBalls() {
@@ -282,7 +299,7 @@ class PachinkoGame {
       button.disabled = false;
       if (button.dataset) button.dataset.consecutive = locked ? 'true' : 'false';
     }
-    document.querySelectorAll('.pqb, .prb, .pbb').forEach(control => { control.disabled = locked; });
+    (this.root || document).querySelectorAll('.pqb, .prb, .pbb').forEach(control => { control.disabled = locked; });
   }
 
   getOutstandingBallCount() {
