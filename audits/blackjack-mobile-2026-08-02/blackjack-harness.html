@@ -23,6 +23,7 @@
       async apiFetch() { throw new Error('QA harness is read-only'); }
     };
     const game = new BlackjackGame(casino);
+    window.__blackjackGame = game;
     const cards = [
       { value:'8', suit:'hearts' }, { value:'8', suit:'spades' }, { value:'2', suit:'clubs' },
       { value:'3', suit:'diamonds' }, { value:'4', suit:'hearts' }, { value:'ace', suit:'clubs' },

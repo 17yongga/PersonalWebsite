@@ -119,6 +119,10 @@ test('mobile layout contract exposes overflow and contains controls, modals, and
   assert.match(premium, /\.blackjack-container \.blackjack-stake-action \{ min-height:var\(--casino-mobile-control-min,44px\)!important/);
   assert.match(blackjack, /blackjack-container is-wagering/);
   assert.match(blackjack, /classList\.toggle\('is-wagering', !this\.roundId\)/);
+  assert.match(blackjack, /selectStakeChip\(amount\)/);
+  assert.match(blackjack, /this\.stakeChips = \[amount\]/);
+  assert.match(blackjack, /blackjackStakeStatus/);
+  assert.doesNotMatch(blackjack, /current \+ amount/);
   assert.match(premium, /\.blackjack-container\.is-wagering \.game-area \{ display:block; min-height:112px/);
   assert.match(premium, /\.blackjack-container\.is-wagering \.game-controls \{ display:none!important; \}/);
 });

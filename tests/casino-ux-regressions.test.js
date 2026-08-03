@@ -64,7 +64,9 @@ test('casino wager controls use chip semantics and Roulette preserves green sele
   const premium = read('games/premium-games.css');
   assert.match(blackjack, /casino-chip/);
   assert.match(blackjack, /aria-pressed="false"/);
-  assert.match(blackjack, /addStakeChip/);
+  assert.match(blackjack, /selectStakeChip/);
+  assert.match(blackjack, /this\.stakeChips = \[amount\]/);
+  assert.match(blackjack, /blackjackStakeStatus/);
   assert.match(blackjack, /undoStakeChip/);
   assert.match(blackjack, /clearStake/);
   assert.match(blackjack, /setMaxStake/);

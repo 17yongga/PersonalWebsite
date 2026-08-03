@@ -66,7 +66,42 @@ const path = require('node:path');
             result: document.querySelector('#resultDisplay')?.textContent || ''
           };
         });
-        results.push({ width, state, errors, metrics });
+        let interaction = null;
+        if (state === 'wager') {
+          interaction = { selections: [], keyboard: [], dealRequest: null, statusText: '' };
+          for (const amount of [50, 100, 250, 500]) {
+            await page.click(`.quick-bet-btn[data-amount="${amount}"]`);
+            interaction.selections.push(await page.evaluate(expected => ({
+              expected,
+              value: Number(document.querySelector('#blackjackBet')?.value),
+              pressed: [...document.querySelectorAll('.quick-bet-btn[aria-pressed="true"]')].map(chip => Number(chip.dataset.amount)),
+              status: document.querySelector('#blackjackStakeStatus')?.textContent?.trim() || ''
+            }), amount));
+          }
+          for (const [amount, key] of [[250, 'Enter'], [100, 'Space']]) {
+            await page.focus(`.quick-bet-btn[data-amount="${amount}"]`);
+            await page.keyboard.press(key);
+            interaction.keyboard.push(await page.evaluate((expected, activationKey) => ({
+              expected,
+              key: activationKey,
+              value: Number(document.querySelector('#blackjackBet')?.value),
+              pressed: [...document.querySelectorAll('.quick-bet-btn[aria-pressed="true"]')].map(chip => Number(chip.dataset.amount))
+            }), amount, key));
+          }
+          await page.evaluate(() => {
+            window.__blackjackDealRequest = null;
+            window.__blackjackGame.casino.apiFetch = async (url, options = {}) => {
+              window.__blackjackDealRequest = { url, method: options.method, body: JSON.parse(options.body || '{}') };
+              return { ok: false, json: async () => ({ error: 'QA request captured' }) };
+            };
+          });
+          await page.click('.quick-bet-btn[data-amount="250"]');
+          await page.click('#placeBetBtn');
+          await page.waitForFunction(() => window.__blackjackDealRequest !== null);
+          interaction.dealRequest = await page.evaluate(() => window.__blackjackDealRequest);
+          interaction.statusText = await page.evaluate(() => document.querySelector('#blackjackStakeStatus')?.textContent?.trim() || '');
+        }
+        results.push({ width, state, errors, metrics, interaction });
         await page.close();
       }
     }
@@ -79,6 +114,15 @@ const path = require('node:path');
     if (result.errors.length) issues.push(`errors=${result.errors.join('|')}`);
     if (result.metrics.documentWidth !== result.width) issues.push(`overflow=${result.metrics.documentWidth - result.width}`);
     if (!result.metrics.chipsCircular) issues.push('chips-not-circular');
+    if (result.interaction) {
+      for (const selection of [...result.interaction.selections, ...result.interaction.keyboard]) {
+        if (selection.value !== selection.expected) issues.push(`chip-${selection.key || 'tap'}-${selection.expected}-set-${selection.value}`);
+        if (selection.pressed.length !== 1 || selection.pressed[0] !== selection.expected) issues.push(`chip-${selection.expected}-pressed-${selection.pressed.join(',') || 'none'}`);
+      }
+      if (!result.interaction.selections.every(selection => selection.status.includes(String(selection.expected)))) issues.push('chip-selection-status-not-updated');
+      if (result.interaction.dealRequest?.url !== '/api/games/blackjack/start' || result.interaction.dealRequest?.method !== 'POST' || result.interaction.dealRequest?.body?.bet !== 250) issues.push(`deal-payload=${JSON.stringify(result.interaction.dealRequest)}`);
+      if (!result.interaction.statusText.includes('250')) issues.push(`deal-status=${result.interaction.statusText || 'missing'}`);
+    }
     if (!result.metrics.cardsInsideShell) issues.push('cards-outside-shell');
     if (!result.metrics.controlsEqual) issues.push('controls-not-equal');
     if (result.state === 'split' && !result.metrics.hands.some(hand => hand.classes.includes('is-winner'))) issues.push('split-winner-not-highlighted');

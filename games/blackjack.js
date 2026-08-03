@@ -52,7 +52,8 @@ class BlackjackGame {
     this.presentationTimer = null;
     this.presentationGeneration = 0;
     this.presentationInProgress = false;
-    this.stakeChips = [100];
+    this.defaultStake = Math.min(100, Math.max(0, Math.floor(this.casino.credits || 0)));
+    this.stakeChips = this.defaultStake === 100 ? [100] : [];
     this.boundKeyboardHandler = event => this.handleKeyboard(event);
     this.init();
   }
@@ -82,11 +83,14 @@ class BlackjackGame {
             </div>
             <div class="bet-input-group blackjack-stake-composer">
               <div class="blackjack-bet-input-wrap">
-                <input type="number" id="blackjackBet" min="1" max="${this.casino.credits}" value="100" step="10" inputmode="numeric" aria-describedby="blackjackBetUnit">
+                <input type="number" id="blackjackBet" min="1" max="${this.casino.credits}" value="${this.defaultStake}" step="10" inputmode="numeric" aria-describedby="blackjackBetUnit blackjackStakeStatus">
                 <span id="blackjackBetUnit">CREDITS</span>
               </div>
               <div class="blackjack-chip-rack">
-                <span class="blackjack-chip-rack-label">Add chips</span>
+                <div class="blackjack-chip-rack-header">
+                  <span class="blackjack-chip-rack-label">Quick select</span>
+                  <output id="blackjackStakeStatus" for="blackjackBet" aria-live="polite"></output>
+                </div>
                 <div class="quick-bets" role="group" aria-label="Casino chip values">
                   <button type="button" class="quick-bet-btn casino-chip chip-50" data-amount="50" aria-pressed="false"><span>50</span></button>
                   <button type="button" class="quick-bet-btn casino-chip chip-100" data-amount="100" aria-pressed="false"><span>100</span></button>
@@ -158,7 +162,7 @@ class BlackjackGame {
     this.root?.querySelectorAll('.quick-bet-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const amount = parseInt(btn.dataset.amount);
-        this.addStakeChip(amount);
+        this.selectStakeChip(amount);
       });
     });
     this.getElement('blackjackUndoStake')?.addEventListener('click', () => this.undoStakeChip());
@@ -189,11 +193,10 @@ class BlackjackGame {
     this.syncSelectedChip();
   }
 
-  addStakeChip(amount) {
-    const current = Number(this.getElement('blackjackBet')?.value) || 0;
-    if (current + amount > this.casino.credits) return this.showError('That chip would exceed your available credits.');
-    this.stakeChips.push(amount);
-    this.setStakeAmount(current + amount);
+  selectStakeChip(amount) {
+    if (amount > this.casino.credits) return this.showError('That chip exceeds your available credits.');
+    this.stakeChips = [amount];
+    this.setStakeAmount(amount);
     window.casinoSound?.play('chip', { game: 'blackjack' });
   }
 
@@ -216,16 +219,18 @@ class BlackjackGame {
   }
 
   syncSelectedChip() {
-    const counts = this.stakeChips.reduce((map, value) => map.set(value, (map.get(value) || 0) + 1), new Map());
+    const selectedAmount = this.stakeChips.length === 1 ? this.stakeChips[0] : null;
     this.root?.querySelectorAll('.quick-bet-btn').forEach(chip => {
       const amount = Number(chip.dataset.amount);
-      const count = counts.get(amount) || 0;
-      const selected = count > 0;
+      const selected = amount === selectedAmount;
       chip.classList.toggle('is-selected', selected);
       chip.setAttribute('aria-pressed', String(selected));
-      chip.dataset.count = count ? String(count) : '';
-      chip.setAttribute('aria-label', `${amount} credit chip${count ? `, ${count} allocated` : ''}`);
+      chip.dataset.count = '';
+      chip.setAttribute('aria-label', `${amount} credits${selected ? ', selected' : ''}`);
     });
+    const amount = Number(this.getElement('blackjackBet')?.value) || 0;
+    const status = this.getElement('blackjackStakeStatus');
+    if (status) status.textContent = amount > 0 ? `${amount} credits selected` : 'No stake selected';
   }
 
   async placeBet() {
