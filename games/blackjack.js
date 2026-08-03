@@ -61,7 +61,7 @@ class BlackjackGame {
     const gameView = document.getElementById('blackjackGame');
     this.root = gameView;
     gameView.innerHTML = `
-      <div class="blackjack-container">
+      <div class="blackjack-container is-wagering">
         <div class="blackjack-ambient" aria-hidden="true"></div>
         <header class="blackjack-table-header">
           <div>
@@ -666,6 +666,8 @@ class BlackjackGame {
   }
 
   updateGameControls() {
+    const container = this.root?.querySelector('.blackjack-container');
+    container?.classList.toggle('is-wagering', !this.roundId);
     const active = Boolean(this.roundId) && !this.gameOver && !this.insuranceOffered && !this.presentationInProgress;
     const doubleDownBtn = this.getElement('doubleDownBtn');
     doubleDownBtn?.classList.toggle('hidden', !active || !this.serverCapabilities.canDouble);

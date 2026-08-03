@@ -97,6 +97,7 @@ test('mobile layout contract exposes overflow and contains controls, modals, and
   const shell = read('casino.css');
   const games = read('games/games.css');
   const premium = read('games/premium-games.css');
+  const blackjack = read('games/blackjack.js');
 
   assert.match(shell, /--casino-mobile-control-min:\s*44px/);
   assert.match(shell, /--casino-mobile-primary-min:\s*48px/);
@@ -116,4 +117,8 @@ test('mobile layout contract exposes overflow and contains controls, modals, and
   assert.match(games, /\.pach-result \{ display:grid; grid-template-columns:minmax\(0,1fr\) minmax\(0,auto\)/);
   assert.match(games, /\.btn-close-modal[^\n]+--casino-mobile-control-min/);
   assert.match(premium, /\.blackjack-container \.blackjack-stake-action \{ min-height:var\(--casino-mobile-control-min,44px\)!important/);
+  assert.match(blackjack, /blackjack-container is-wagering/);
+  assert.match(blackjack, /classList\.toggle\('is-wagering', !this\.roundId\)/);
+  assert.match(premium, /\.blackjack-container\.is-wagering \.game-area \{ display:block; min-height:112px/);
+  assert.match(premium, /\.blackjack-container\.is-wagering \.game-controls \{ display:none!important; \}/);
 });

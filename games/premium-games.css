@@ -260,6 +260,14 @@
   .blackjack-table-shell.has-split-hands .game-area { min-height:520px; }
   .blackjack-container .dealer-section,.blackjack-container .player-section { min-height:126px!important; padding:8px!important; }
   .blackjack-container .cards-container { --blackjack-hand-origin:62px; min-height:80px!important; padding:2px 0 5px; }
+
+  /* Before a round starts, the wager rail is the task. Do not reserve the active-table rows. */
+  .blackjack-container.is-wagering .game-area { display:block; min-height:112px; padding:8px!important; }
+  .blackjack-container.is-wagering .dealer-section,
+  .blackjack-container.is-wagering .result-display,
+  .blackjack-container.is-wagering .player-section,
+  .blackjack-container.is-wagering .insurance-section,
+  .blackjack-container.is-wagering .game-controls { display:none!important; }
   .blackjack-container .blackjack-card,.blackjack-container.insurance-active .blackjack-card { width:clamp(50px,15vw,66px)!important; min-width:clamp(50px,15vw,66px)!important; height:clamp(70px,21vw,92px)!important; min-height:clamp(70px,21vw,92px)!important; margin-left:-8px; border-radius:8px!important; }
   .blackjack-card-face { border-radius:8px; }
   .blackjack-card-corner { top:5px; left:6px; }

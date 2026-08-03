@@ -7,17 +7,22 @@ const path = require('node:path');
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
   const outputDir = __dirname;
   const qaBaseUrl = process.env.BLACKJACK_QA_URL_BASE || 'http://127.0.0.1:8765/audits/blackjack-mobile-2026-08-02/blackjack-harness.html';
+  const qaWidths = process.env.BLACKJACK_QA_WIDTHS
+    ? JSON.parse(process.env.BLACKJACK_QA_WIDTHS)
+    : [390, 393, 1280];
   const results = [];
   try {
-    for (const width of [390, 1280]) {
+    for (const width of qaWidths) {
       for (const state of ['wager', 'pair', 'long', 'split']) {
         const page = await browser.newPage();
-        await page.setViewport({ width, height: width === 390 ? 844 : 900, deviceScaleFactor: 1 });
+        const height = width === 390 ? 844 : width === 393 ? 852 : 900;
+        await page.setViewport({ width, height, deviceScaleFactor: 1 });
         const errors = [];
         page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
         page.on('pageerror', error => errors.push(error.message));
         page.on('requestfailed', request => errors.push(`${request.url()}: ${request.failure()?.errorText}`));
         await page.goto(`${qaBaseUrl}?state=${state}`, { waitUntil: 'networkidle0' });
+        await page.screenshot({ path: path.join(outputDir, `viewport-${state}-${width}.png`) });
         await page.screenshot({ path: path.join(outputDir, `${state}-${width}.png`), fullPage: true });
         const metrics = await page.evaluate(() => {
           const rect = element => element ? (() => {
@@ -26,6 +31,10 @@ const path = require('node:path');
           })() : null;
           const shell = rect(document.querySelector('.blackjack-table-shell'));
           const gameArea = rect(document.querySelector('.game-area'));
+          const dealerSection = rect(document.querySelector('.dealer-section'));
+          const playerSection = rect(document.querySelector('.player-section'));
+          const resultDisplay = rect(document.querySelector('.result-display'));
+          const gameControls = rect(document.querySelector('.game-controls'));
           const chips = [...document.querySelectorAll('.casino-chip')].map(rect);
           const visibleControls = [...document.querySelectorAll('.game-controls .btn:not(.hidden)')].map(element => ({ id: element.id, ...rect(element) }));
           const cards = [...document.querySelectorAll('.blackjack-card')].map(rect);
@@ -37,8 +46,14 @@ const path = require('node:path');
           return {
             viewport: { width: innerWidth, height: innerHeight },
             documentWidth: document.documentElement.scrollWidth,
+            documentHeight: document.documentElement.scrollHeight,
             shell,
             gameArea,
+            dealerSection,
+            playerSection,
+            resultDisplay,
+            gameControls,
+            containerClasses: document.querySelector('.blackjack-container')?.className || '',
             chips,
             visibleControls,
             cards,
@@ -68,6 +83,17 @@ const path = require('node:path');
     if (!result.metrics.controlsEqual) issues.push('controls-not-equal');
     if (result.state === 'split' && !result.metrics.hands.some(hand => hand.classes.includes('is-winner'))) issues.push('split-winner-not-highlighted');
     if (result.state === 'split' && !result.metrics.hands.some(hand => hand.classes.includes('is-loser'))) issues.push('split-loser-not-muted');
+    if (result.state !== 'wager' && result.metrics.containerClasses.includes('is-wagering')) issues.push('stale-wagering-layout-state');
+    if (result.width <= 400 && result.state === 'wager') {
+      if (!result.metrics.containerClasses.includes('is-wagering')) issues.push('missing-wagering-layout-state');
+      if (result.metrics.gameArea.height > 140) issues.push(`wager-game-area-too-tall=${result.metrics.gameArea.height}`);
+      if (result.metrics.shell.height > 500) issues.push(`wager-shell-too-tall=${result.metrics.shell.height}`);
+      if (result.metrics.documentHeight > result.metrics.viewport.height) issues.push(`wager-document-scroll=${result.metrics.documentHeight - result.metrics.viewport.height}`);
+      if (result.metrics.resultDisplay.height > .5) issues.push(`empty-result-reserves-space=${result.metrics.resultDisplay.height}`);
+      if (result.metrics.gameControls.height > .5) issues.push(`empty-controls-reserve-space=${result.metrics.gameControls.height}`);
+      if (result.metrics.dealerSection.height > 120) issues.push(`empty-dealer-too-tall=${result.metrics.dealerSection.height}`);
+      if (result.metrics.playerSection.height > 120) issues.push(`empty-player-too-tall=${result.metrics.playerSection.height}`);
+    }
     return issues.map(issue => `${result.width}/${result.state}: ${issue}`);
   });
   const mobile = Object.fromEntries(results.filter(result => result.width === 390).map(result => [result.state, result.metrics]));
