@@ -92,3 +92,28 @@ test('release and UI contracts include cards, truthful auth copy, safe mobile na
   assert.match(css, /\.achievement-card\.locked \{ opacity:1; \}/);
   assert.match(css, /\.stats-modal \.stat-label[^\n]+font-size:11px; color:#b8ada8/);
 });
+
+test('mobile layout contract exposes overflow and contains controls, modals, and dynamic results', () => {
+  const shell = read('casino.css');
+  const games = read('games/games.css');
+  const premium = read('games/premium-games.css');
+
+  assert.match(shell, /--casino-mobile-control-min:\s*44px/);
+  assert.match(shell, /--casino-mobile-primary-min:\s*48px/);
+  assert.match(shell, /--casino-mobile-nav-clearance:/);
+  assert.match(shell, /body\.casino-game-active,[\s\S]*padding-bottom:\s*env\(safe-area-inset-bottom\)/);
+  assert.match(shell, /orientation:\s*landscape[\s\S]*max-height:\s*480px[\s\S]*\.neon-bottom-nav \{ display:\s*none !important/);
+
+  const mobileContainment = games.slice(
+    games.indexOf('/* Contain game shells structurally.'),
+    games.indexOf('/* Scrollable areas get momentum scrolling */')
+  );
+  assert.match(mobileContainment, /min-width:\s*0/);
+  assert.doesNotMatch(mobileContainment, /overflow-x:\s*hidden/);
+  assert.match(games, /\.confirmation-modal,[\s\S]*\.poker-modal[\s\S]*--casino-mobile-header-height/);
+  assert.match(games, /\.feed-item \{ display:grid; grid-template-columns:minmax\(0,1fr\) auto auto/);
+  assert.match(games, /\.feed-name \{ min-width:0; overflow-wrap:anywhere; word-break:normal/);
+  assert.match(games, /\.pach-result \{ display:grid; grid-template-columns:minmax\(0,1fr\) minmax\(0,auto\)/);
+  assert.match(games, /\.btn-close-modal[^\n]+--casino-mobile-control-min/);
+  assert.match(premium, /\.blackjack-container \.blackjack-stake-action \{ min-height:var\(--casino-mobile-control-min,44px\)!important/);
+});

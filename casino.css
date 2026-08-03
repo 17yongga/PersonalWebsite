@@ -46,6 +46,15 @@
   --font-sans: 'Space Grotesk', system-ui, sans-serif;
   --font-mono: 'Space Mono', ui-monospace, monospace;
   --font-serif: 'DM Serif Display', serif;
+  /* Shared narrow-screen geometry. The page shell owns viewport-edge and
+     fixed-navigation clearance; game rooms own only their internal gaps. */
+  --casino-mobile-page-pad: clamp(12px, 4vw, 18px);
+  --casino-mobile-panel-pad: clamp(12px, 3.5vw, 16px);
+  --casino-mobile-section-gap: 12px;
+  --casino-mobile-control-min: 44px;
+  --casino-mobile-primary-min: 48px;
+  --casino-mobile-header-height: 69px;
+  --casino-mobile-nav-clearance: calc(68px + env(safe-area-inset-bottom));
   /* Glow policy: text uses one restrained layer; surfaces keep dark elevation separate. */
   --glow-text-subtle: 0 0 4px currentColor;
   --glow-text-active: 0 0 6px currentColor;
@@ -3258,7 +3267,9 @@ body.casino-dialog-open { overflow: hidden; }
 
 @media (max-width: 640px) {
   body::after { content: none; }
-  body { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+  body { padding-bottom: var(--casino-mobile-nav-clearance); }
+  body.casino-game-active,
+  body.casino-dialog-open { padding-bottom: env(safe-area-inset-bottom); }
   .neon-bottom-nav { padding-bottom: env(safe-area-inset-bottom); backdrop-filter: none; }
   .game-card:hover { transform: none; }
   .casino-header, .mobile-actions-dropdown, .neon-toast { backdrop-filter: none; }
@@ -3273,7 +3284,7 @@ body.casino-dialog-open { overflow: hidden; }
   .games-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .game-card.featured { grid-column: span 2; }
   .lobby-games .game-card { min-height: 268px !important; padding: 12px 12px 108px !important; }
-  .lobby-games .game-card.featured { min-height: 218px !important; padding-bottom: 64px !important; }
+  .lobby-games .game-card.featured { min-height: 176px !important; padding-bottom: 58px !important; }
   .lobby-games .game-card h3.game-card-title { font-size: clamp(18px, 5.6vw, 22px) !important; }
   .lobby-games .game-card.featured h3.game-card-title { font-size: clamp(26px, 8vw, 32px) !important; }
   .lobby-games .game-card[data-game="cs2betting"] h3.game-card-title,
@@ -3283,7 +3294,9 @@ body.casino-dialog-open { overflow: hidden; }
   .lobby-games .game-card:not(.featured) .game-card-footer { display: grid; gap: 7px; }
   .lobby-games .game-card:not(.featured) .btn-play { width: 100%; justify-content: center; }
   .lobby-games .game-card .game-card-stats { gap: 7px; font-size: 9px; }
-  .neon-hero { padding-block: 22px 28px; }
+  .neon-hero { padding-block: 12px 8px; }
+  .neon-hero-headline { margin-top: 8px; }
+  .lobby-section-header { margin-top: 0; }
   .hero-line-amber, .hero-line-pink { font-size: clamp(38px, 13vw, 52px); }
   body[data-current-casino-game="cs2betting"] .back-btn,
   body[data-current-casino-game="cs2betting"] .how-to-play-ingame-btn,
@@ -3336,4 +3349,12 @@ body.casino-dialog-open { overflow: hidden; }
   .bh-bulbs-svg circle, .tour-bulbs-svg circle {
     animation: none !important;
   }
+}
+
+/* Short landscape phones cannot spare a fixed bottom bar. Header navigation
+   remains available while the floor and game controls retain the viewport. */
+@media (orientation: landscape) and (max-width: 900px) and (max-height: 480px) {
+  body { padding-bottom: env(safe-area-inset-bottom) !important; }
+  .neon-bottom-nav { display: none !important; }
+  .mobile-menu-toggle { width: 44px; height: 44px; min-width: 44px; }
 }
