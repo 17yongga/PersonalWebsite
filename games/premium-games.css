@@ -102,8 +102,11 @@
 .blackjack-container .result-display.lose { border:1px solid rgba(248,113,113,.52); background:rgba(91,24,30,.68); color:#fecaca; }
 .blackjack-container .result-display.tie { border:1px solid rgba(245,201,106,.45); background:rgba(74,57,26,.64); color:#f8e3ad; }
 @keyframes bj-result { from { opacity:0; transform:translateY(8px) scale(.96); } to { opacity:1; transform:none; } }
-.blackjack-container .insurance-section { margin:0; padding:0; border:1px solid rgba(245,201,106,.35); background:rgba(69,48,15,.68); box-shadow:0 14px 34px rgba(0,0,0,.22); }
-.blackjack-container .insurance-prompt { padding:16px 20px; }
+.blackjack-container .insurance-section { position:relative; margin:0; padding:0; border:1px solid rgba(245,201,106,.35); background:rgba(69,48,15,.68); box-shadow:0 14px 34px rgba(0,0,0,.22); }
+.blackjack-container .insurance-section:not(.hidden) { animation:bj-insurance-in .42s cubic-bezier(.2,.8,.2,1) both; }
+.blackjack-container .insurance-section.is-resolving .insurance-prompt { opacity:.28; }
+.blackjack-container .insurance-section.is-resolving::after { content:attr(data-decision); position:absolute; inset:0; display:grid; place-items:center; color:#f8e3ad; font-size:12px; font-weight:950; letter-spacing:.1em; text-transform:uppercase; animation:bj-insurance-decision .42s cubic-bezier(.2,.8,.2,1) both; }
+.blackjack-container .insurance-prompt { padding:16px 20px; transition:opacity .2s ease; }
 .blackjack-container .game-controls { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:10px; margin:0; padding:14px; border:1px solid rgba(255,255,255,.07); border-radius:18px; background:rgba(1,12,11,.52); backdrop-filter:blur(16px); }
 .blackjack-container .game-controls .btn { display:flex; width:100%!important; min-width:0; max-width:none; height:50px!important; min-height:50px!important; max-height:50px!important; align-items:center; justify-content:space-between; padding:10px 14px!important; border-radius:12px; font-size:12px; font-weight:800; letter-spacing:.055em; text-transform:uppercase; }
 .blackjack-container .game-controls kbd { display:grid; width:22px; height:22px; place-items:center; border:1px solid rgba(255,255,255,.18); border-radius:6px; background:rgba(0,0,0,.18); color:#b8c7c4; font:800 9px/1 inherit; }
@@ -129,8 +132,49 @@
 .blackjack-hand-result:empty { display:none; }
 .blackjack-player-hand.is-loser .blackjack-hand-result { color:#fca5a5; }
 .blackjack-player-hand.is-push .blackjack-hand-result { color:#f5d58b; }
+.blackjack-container .dealer-section.is-bust { border-color:rgba(248,113,113,.5); background:rgba(91,24,30,.16); }
+.blackjack-container .dealer-section.is-blackjack { border-color:rgba(245,201,106,.58); background:rgba(74,57,26,.18); }
+.blackjack-container .dealer-result { margin-left:10px; color:#fca5a5; }
+.blackjack-container .dealer-section:not(.is-bust) .dealer-result { color:#f8e3ad; }
 .blackjack-container .score-display>span:last-child { color:#f4cc72; text-shadow:0 0 4px rgba(245,201,106,.22); }
 .blackjack-container .cards-container.is-crowded .blackjack-card:not(:first-child) { margin-left:-24px; }
+
+/* Semantic action, split, hand-focus, dealer-turn, and settlement choreography. */
+.blackjack-player-hand::before { content:''; position:absolute; top:-7px; left:16px; height:14px; padding:0 7px; border-radius:999px; background:#f5c96a; color:#201506; font-size:7px; font-weight:950; letter-spacing:.12em; line-height:14px; opacity:0; transform:translateY(5px); transition:opacity .22s ease,transform .22s ease; }
+.blackjack-player-hand { position:relative; }
+.blackjack-player-hand.is-active::before { content:'PLAYING'; opacity:1; transform:none; }
+.blackjack-player-hand.is-active { animation:bj-hand-focus-in .42s cubic-bezier(.2,.8,.2,1) both; }
+.blackjack-player-hand.is-inactive-hand:not(.is-winner):not(.is-loser):not(.is-push) { opacity:.68; filter:saturate(.72); }
+.blackjack-player-hand.is-hand-complete { animation:bj-hand-complete .34s ease both; }
+.blackjack-player-hand.is-bust { border-color:rgba(248,113,113,.5); background:rgba(91,24,30,.18); }
+.blackjack-player-hand.is-blackjack { border-color:rgba(74,222,128,.72); background:rgba(20,83,45,.2); }
+.blackjack-player-hand.is-splitting { animation:bj-split-hand-in .48s cubic-bezier(.2,.8,.2,1) both; }
+.blackjack-card.is-split-left { animation:bj-split-card-left .48s cubic-bezier(.2,.8,.2,1) both; }
+.blackjack-card.is-split-right { animation:bj-split-card-right .48s cubic-bezier(.2,.8,.2,1) both; }
+.blackjack-player-hand.is-settlement-reveal { animation:bj-hand-settlement .5s cubic-bezier(.2,.8,.2,1) both; }
+.blackjack-container .dealer-section { transition:border-color .3s ease,background .3s ease,box-shadow .3s ease,opacity .3s ease,filter .3s ease; }
+.blackjack-table-shell.is-dealer-turn .dealer-section { border-color:rgba(245,201,106,.46); background:rgba(245,201,106,.055); box-shadow:0 0 0 1px rgba(245,201,106,.08),0 18px 32px rgba(0,0,0,.16); animation:bj-dealer-turn .55s cubic-bezier(.2,.8,.2,1) both; }
+.blackjack-table-shell.is-dealer-turn .player-section { opacity:.76; transition:opacity .3s ease; }
+.blackjack-table-shell.is-resetting .dealer-section { animation:bj-round-clear-up .32s ease both; }
+.blackjack-table-shell.is-resetting .player-section,.blackjack-table-shell.is-resetting .result-display { animation:bj-round-clear-down .32s ease both; }
+.blackjack-container.is-wagering .betting-section:not(.is-locked) { animation:bj-wager-enter .4s cubic-bezier(.2,.8,.2,1) both; }
+.blackjack-container .game-controls .btn.is-action-accepted { animation:bj-action-accepted .38s cubic-bezier(.2,.8,.2,1) both; }
+#creditsAmount.blackjack-credit-settled { animation:bj-credit-settled .72s cubic-bezier(.2,.8,.2,1) both; }
+
+@keyframes bj-split-hand-in { from { opacity:.4; transform:scale(.94); } to { opacity:1; transform:none; } }
+@keyframes bj-split-card-left { from { transform:translateX(58%) rotate(4deg); } to { transform:none; } }
+@keyframes bj-split-card-right { from { transform:translateX(-58%) rotate(-4deg); } to { transform:none; } }
+@keyframes bj-hand-focus-in { 0% { box-shadow:0 0 0 rgba(245,201,106,0); } 55% { box-shadow:0 0 0 3px rgba(245,201,106,.16),0 12px 28px rgba(0,0,0,.18); } 100% { box-shadow:0 0 0 1px rgba(245,201,106,.08); } }
+@keyframes bj-hand-complete { 50% { transform:translateY(-2px); } to { transform:none; } }
+@keyframes bj-hand-settlement { from { opacity:.55; transform:translateY(8px) scale(.98); } 65% { opacity:1; transform:translateY(-2px) scale(1.01); } to { opacity:1; transform:none; } }
+@keyframes bj-dealer-turn { from { transform:translateY(-5px); opacity:.7; } to { transform:none; opacity:1; } }
+@keyframes bj-action-accepted { 45% { transform:translateY(2px) scale(.96); filter:brightness(1.22); } to { transform:none; } }
+@keyframes bj-credit-settled { 45% { color:#86efac; transform:translateY(-2px) scale(1.12); text-shadow:0 0 18px rgba(74,222,128,.58); } to { transform:none; } }
+@keyframes bj-insurance-in { from { opacity:0; transform:translateY(8px) scale(.98); } to { opacity:1; transform:none; } }
+@keyframes bj-insurance-decision { from { opacity:0; transform:scale(.94); } 55% { opacity:1; transform:scale(1.02); } to { opacity:1; transform:none; } }
+@keyframes bj-round-clear-up { to { opacity:0; transform:translateY(-14px) scale(.98); } }
+@keyframes bj-round-clear-down { to { opacity:0; transform:translateY(14px) scale(.98); } }
+@keyframes bj-wager-enter { from { opacity:.35; transform:translateY(-8px); } to { opacity:1; transform:none; } }
 
 /* Shared premium surface and motion language for the remaining game rooms. */
 .rl-container,.coinflip-casino-container,.crash-container,.pachinko-container,.poker-casino-container { position:relative; isolation:isolate; }
@@ -366,8 +410,8 @@
 }
 
 @media (prefers-reduced-motion:reduce) {
-  .blackjack-card.is-dealing,.blackjack-card.is-revealing .blackjack-card-inner,.blackjack-container .result-display:not(:empty),.rl-chip-winner,.result-message,.crash-cashout-btn,.pach-result-item,.winner-announcement { animation:none!important; }
-  .blackjack-card-inner,.blackjack-container .blackjack-card,.coinflip-casino-container .coin,.room-item,.poker-table-card,.rl-color-btn,.rl-quick-btn,.crash-quick-bets .cqb,.pach-quick .pqb,.pach-risk-btns .prb,.pach-ball-btns .pbb,.poker-action-btns .pa-btn,.cs2-betting-container .odds-card { transition-duration:.01ms!important; }
+  .blackjack-card.is-dealing,.blackjack-card.is-revealing .blackjack-card-inner,.blackjack-container .result-display:not(:empty),.blackjack-container .insurance-section:not(.hidden),.blackjack-container .insurance-section.is-resolving::after,.blackjack-player-hand.is-active,.blackjack-player-hand.is-hand-complete,.blackjack-player-hand.is-splitting,.blackjack-card.is-split-left,.blackjack-card.is-split-right,.blackjack-player-hand.is-settlement-reveal,.blackjack-table-shell.is-dealer-turn .dealer-section,.blackjack-table-shell.is-resetting .dealer-section,.blackjack-table-shell.is-resetting .player-section,.blackjack-table-shell.is-resetting .result-display,.blackjack-container.is-wagering .betting-section:not(.is-locked),.blackjack-container .game-controls .btn.is-action-accepted,#creditsAmount.blackjack-credit-settled,.rl-chip-winner,.result-message,.crash-cashout-btn,.pach-result-item,.winner-announcement { animation:none!important; }
+  .blackjack-card-inner,.blackjack-container .blackjack-card,.blackjack-player-hand,.blackjack-player-hand::before,.blackjack-container .dealer-section,.coinflip-casino-container .coin,.room-item,.poker-table-card,.rl-color-btn,.rl-quick-btn,.crash-quick-bets .cqb,.pach-quick .pqb,.pach-risk-btns .prb,.pach-ball-btns .pbb,.poker-action-btns .pa-btn,.cs2-betting-container .odds-card { transition-duration:.01ms!important; }
   .rl-color-btn:hover,.rl-color-btn.rl-btn-active,.crash-quick-bets .cqb:hover,.pach-quick .pqb:hover,.pach-risk-btns .prb:hover,.pach-ball-btns .pbb:hover,.poker-action-btns .pa-btn:hover,.cs2-betting-container .odds-card:hover { transform:none!important; }
   .rl-belt-track.rl-belt-pre-spinning { animation:none!important; }
 }

@@ -1,32 +1,117 @@
 // Blackjack Game Module
 
 const BLACKJACK_DEAL_CADENCE_MS = 460;
+const BLACKJACK_SPLIT_SEPARATION_MS = 360;
+const BLACKJACK_HAND_SETTLEMENT_CADENCE_MS = 360;
 
-function buildCardPresentation({ acceptedStart, initialHydration, previousPlayerCount, previousDealerCount, playerCount, dealerCount, dealerRevealed }) {
-  if (initialHydration) return { player: [], dealer: [], revealDealer: false, completionMs: 0 };
-  if (acceptedStart) {
-    const player = Array.from({ length: playerCount }, (_, index) => ({ index, delayMs: index * BLACKJACK_DEAL_CADENCE_MS * 2 }));
-    const dealer = Array.from({ length: dealerCount }, (_, index) => ({ index, delayMs: (index * 2 + 1) * BLACKJACK_DEAL_CADENCE_MS }));
-    return {
-      player,
-      dealer,
-      revealDealer: false,
-      completionMs: Math.max(0, (playerCount + dealerCount - 1) * BLACKJACK_DEAL_CADENCE_MS + 760)
-    };
+function blackjackHands(state) {
+  if (Array.isArray(state?.playerHands) && state.playerHands.length) return state.playerHands;
+  if (!state) return [];
+  return [{ cards: state.playerHand || [], score: state.playerScore, result: state.result, payout: state.payout }];
+}
+
+function buildBlackjackTransitionPlan({
+  previousState = null,
+  nextState,
+  acceptedAction = null,
+  acceptedStart = false,
+  initialHydration = false,
+  reducedMotion = false
+}) {
+  const empty = {
+    kind: initialHydration ? 'hydrate' : 'update',
+    reducedMotion: Boolean(reducedMotion),
+    replaySettlement: false,
+    splitCreated: false,
+    activeHandChanged: false,
+    previousActiveHandIndex: 0,
+    nextActiveHandIndex: Number.isSafeInteger(nextState?.activeHandIndex) ? nextState.activeHandIndex : 0,
+    preservedSplitCardIndices: [],
+    playerCardsByHand: [],
+    dealerCards: [],
+    revealDealerAtMs: null,
+    handoffAtMs: 0,
+    handSettlementAtMs: [],
+    walletCommitAtMs: 0,
+    summaryAtMs: 0,
+    completionMs: 0
+  };
+  if (!nextState || initialHydration) return empty;
+
+  const previousHands = blackjackHands(previousState);
+  const nextHands = blackjackHands(nextState);
+  const previousActiveHandIndex = Number.isSafeInteger(previousState?.activeHandIndex) ? previousState.activeHandIndex : 0;
+  const nextActiveHandIndex = Number.isSafeInteger(nextState.activeHandIndex) ? nextState.activeHandIndex : 0;
+  const splitCreated = previousHands.length === 1 && nextHands.length === 2 && acceptedAction === 'split';
+  const newlySettled = Boolean(nextState.settled && !previousState?.settled);
+  const activeHandChanged = Boolean(previousState && previousActiveHandIndex !== nextActiveHandIndex);
+  const scale = reducedMotion ? 0 : 1;
+  const playerCardsByHand = nextHands.map((hand, handIndex) => {
+    let previousCount = previousHands[handIndex]?.cards?.length || 0;
+    let baseDelay = 0;
+    if (acceptedStart) {
+      previousCount = 0;
+      baseDelay = handIndex * BLACKJACK_DEAL_CADENCE_MS;
+    } else if (splitCreated) {
+      previousCount = 1;
+      baseDelay = BLACKJACK_SPLIT_SEPARATION_MS + handIndex * BLACKJACK_DEAL_CADENCE_MS;
+    }
+    return (hand.cards || []).slice(previousCount).map((card, offset) => ({
+      index: previousCount + offset,
+      delayMs: scale * (acceptedStart
+        ? (offset * 2) * BLACKJACK_DEAL_CADENCE_MS
+        : baseDelay + offset * BLACKJACK_DEAL_CADENCE_MS)
+    }));
+  });
+  const previousDealerCount = acceptedStart ? 0 : (previousState?.dealerHand?.length || 0);
+  const revealDealerAtMs = newlySettled ? 0 : null;
+  const dealerBaseDelay = newlySettled ? BLACKJACK_DEAL_CADENCE_MS : 0;
+  const dealerCards = (nextState.dealerHand || []).slice(previousDealerCount).map((card, offset) => ({
+    index: previousDealerCount + offset,
+    delayMs: scale * (acceptedStart
+      ? (offset * 2 + 1) * BLACKJACK_DEAL_CADENCE_MS
+      : dealerBaseDelay + offset * BLACKJACK_DEAL_CADENCE_MS)
+  }));
+
+  const latestPlayerCardMs = Math.max(0, ...playerCardsByHand.flat().map(card => card.delayMs));
+  const latestDealerCardMs = Math.max(0, ...dealerCards.map(card => card.delayMs));
+  const hasCardMotion = playerCardsByHand.some(cards => cards.length) || dealerCards.length > 0;
+  let kind = acceptedStart ? 'deal' : splitCreated ? 'split' : activeHandChanged ? 'hand-handoff' : acceptedAction || 'update';
+  let handoffAtMs = scale * (hasCardMotion ? Math.max(latestPlayerCardMs, latestDealerCardMs) + 420 : 180);
+  let handSettlementAtMs = [];
+  let walletCommitAtMs = 0;
+  let summaryAtMs = 0;
+  let completionMs = scale * (hasCardMotion ? Math.max(latestPlayerCardMs, latestDealerCardMs) + 760 : activeHandChanged ? 360 : acceptedAction ? 620 : 0);
+
+  if (newlySettled) {
+    kind = 'settlement';
+    const dealerCompleteAtMs = scale * (Math.max(BLACKJACK_DEAL_CADENCE_MS, latestDealerCardMs) + 760);
+    handSettlementAtMs = nextHands.map((hand, index) => dealerCompleteAtMs + scale * index * BLACKJACK_HAND_SETTLEMENT_CADENCE_MS);
+    const lastHandAtMs = handSettlementAtMs.at(-1) || dealerCompleteAtMs;
+    walletCommitAtMs = lastHandAtMs + scale * 320;
+    summaryAtMs = walletCommitAtMs + scale * 260;
+    completionMs = summaryAtMs + scale * 420;
+    handoffAtMs = 0;
   }
 
-  const revealDelay = dealerRevealed ? 0 : -1;
-  const player = Array.from({ length: Math.max(0, playerCount - previousPlayerCount) }, (_, offset) => ({
-    index: previousPlayerCount + offset,
-    delayMs: offset * BLACKJACK_DEAL_CADENCE_MS
-  }));
-  const dealerStart = revealDelay >= 0 ? BLACKJACK_DEAL_CADENCE_MS : 0;
-  const dealer = Array.from({ length: Math.max(0, dealerCount - previousDealerCount) }, (_, offset) => ({
-    index: previousDealerCount + offset,
-    delayMs: dealerStart + offset * BLACKJACK_DEAL_CADENCE_MS
-  }));
-  const lastDelay = Math.max(revealDelay, ...player.map(card => card.delayMs), ...dealer.map(card => card.delayMs), 0);
-  return { player, dealer, revealDealer: dealerRevealed, completionMs: lastDelay + (player.length || dealer.length || dealerRevealed ? 760 : 0) };
+  return {
+    ...empty,
+    kind,
+    replaySettlement: newlySettled,
+    splitCreated,
+    activeHandChanged,
+    previousActiveHandIndex,
+    nextActiveHandIndex,
+    preservedSplitCardIndices: splitCreated ? [0, 1] : [],
+    playerCardsByHand,
+    dealerCards,
+    revealDealerAtMs,
+    handoffAtMs,
+    handSettlementAtMs,
+    walletCommitAtMs,
+    summaryAtMs,
+    completionMs
+  };
 }
 
 class BlackjackGame {
@@ -49,9 +134,12 @@ class BlackjackGame {
     this.initialHandSize = 2; // Track initial hand size (2 cards)
     this.soundHydrated = false;
     this.soundAcceptedRoundId = null;
-    this.presentationTimer = null;
+    this.presentationTimers = new Set();
     this.presentationGeneration = 0;
     this.presentationInProgress = false;
+    this.lastServerState = null;
+    this.pendingAction = null;
+    this.reducedMotion = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
     this.defaultStake = Math.min(100, Math.max(0, Math.floor(this.casino.credits || 0)));
     this.stakeChips = this.defaultStake === 100 ? [100] : [];
     this.boundKeyboardHandler = event => this.handleKeyboard(event);
@@ -110,7 +198,7 @@ class BlackjackGame {
           <div id="gameArea" class="game-area">
             <div class="blackjack-table-insignia" aria-hidden="true"><span>777</span><small>BLACKJACK</small></div>
             <div class="dealer-section">
-              <div class="blackjack-hand-heading"><h3>Dealer</h3><div class="score-display"><span class="score-label">HAND</span><span id="dealerScore">0</span></div></div>
+              <div class="blackjack-hand-heading"><h3>Dealer</h3><span id="dealerResult" class="blackjack-hand-result dealer-result" aria-hidden="true"></span><div class="score-display"><span class="score-label">HAND</span><span id="dealerScore">0</span></div></div>
               <div id="dealerCards" class="cards-container"></div>
             </div>
 
@@ -270,6 +358,7 @@ class BlackjackGame {
 
   async requestAction(action) {
     if (!this.roundId || this.gameOver) return;
+    this.pendingAction = action;
     this.setBusy(true);
     try {
       const response = await this.casino.apiFetch('/api/games/blackjack/action', {
@@ -291,34 +380,78 @@ class BlackjackGame {
       this.showError(error.message);
       window.casinoSound?.play('error', { game: 'blackjack' });
     } finally {
+      this.pendingAction = null;
       this.setBusy(false);
       this.updateGameControls();
     }
   }
 
+  cancelPresentation() {
+    this.presentationTimers.forEach(timer => clearTimeout(timer));
+    this.presentationTimers.clear();
+    this.presentationGeneration += 1;
+    this.presentationInProgress = false;
+    const shell = this.root?.querySelector('.blackjack-table-shell');
+    shell?.classList.remove('is-presenting', 'is-dealer-turn', 'is-settling', 'is-credit-settling', 'is-resetting');
+    shell?.removeAttribute('data-action');
+  }
+
+  schedulePresentation(generation, delayMs, callback) {
+    if (delayMs <= 0) {
+      if (generation === this.presentationGeneration) callback();
+      return null;
+    }
+    const timer = setTimeout(() => {
+      this.presentationTimers.delete(timer);
+      if (generation === this.presentationGeneration) callback();
+    }, delayMs);
+    this.presentationTimers.add(timer);
+    return timer;
+  }
+
+  markAcceptedAction(action) {
+    const shell = this.root?.querySelector('.blackjack-table-shell');
+    if (!shell || !action) return;
+    shell.dataset.action = action;
+    const button = this.getElement({ hit: 'hitBtn', stand: 'standBtn', double: 'doubleDownBtn', split: 'splitBtn', insurance: 'takeInsuranceBtn', declineInsurance: 'declineInsuranceBtn' }[action]);
+    button?.classList.add('is-action-accepted');
+    const generation = this.presentationGeneration;
+    this.schedulePresentation(generation, this.reducedMotion ? 0 : 420, () => {
+      button?.classList.remove('is-action-accepted');
+      if (shell.dataset.action === action) shell.removeAttribute('data-action');
+    });
+  }
+
+  pulseCredits() {
+    const credits = document.getElementById('creditsAmount');
+    if (!credits) return;
+    credits.classList.remove('blackjack-credit-settled');
+    void credits.offsetWidth;
+    credits.classList.add('blackjack-credit-settled');
+    const generation = this.presentationGeneration;
+    this.schedulePresentation(generation, this.reducedMotion ? 0 : 760, () => credits.classList.remove('blackjack-credit-settled'));
+  }
+
   applyServerState(state, balance) {
-    const previousRoundId = this.roundId;
-    const sameRound = previousRoundId === state.roundId;
-    const nextHands = Array.isArray(state.playerHands) && state.playerHands.length
-      ? state.playerHands
-      : [{ cards: state.playerHand || [], score: state.playerScore, bet: state.bet, active: !state.settled, result: state.result, payout: state.payout }];
-    const previousActiveIndex = sameRound ? this.activeHandIndex : 0;
-    const previousPlayerCount = sameRound ? (this.playerHands[previousActiveIndex]?.cards?.length || this.playerHand.length) : 0;
-    const previousDealerCount = sameRound ? this.dealerHand.length : 0;
-    const wasSettled = sameRound ? this.gameOver : false;
+    const sameRound = this.roundId === state.roundId;
+    const previousState = sameRound ? this.lastServerState : null;
+    const nextHands = blackjackHands(state);
     const acceptedStart = Boolean(state.roundId && this.soundAcceptedRoundId === state.roundId);
     const initialHydration = !this.soundHydrated && !acceptedStart;
+    const acceptedAction = sameRound ? this.pendingAction : null;
     const activeHandIndex = Number.isSafeInteger(state.activeHandIndex) ? state.activeHandIndex : 0;
-    const activeCards = nextHands[activeHandIndex]?.cards || nextHands[0].cards;
-    const presentation = buildCardPresentation({
+    const plan = buildBlackjackTransitionPlan({
+      previousState,
+      nextState: state,
+      acceptedAction,
       acceptedStart,
       initialHydration,
-      previousPlayerCount,
-      previousDealerCount,
-      playerCount: activeCards.length,
-      dealerCount: state.dealerHand.length,
-      dealerRevealed: sameRound && !wasSettled && state.settled
+      reducedMotion: this.reducedMotion
     });
+
+    this.cancelPresentation();
+    const generation = this.presentationGeneration;
+    this.presentationInProgress = plan.completionMs > 0;
     this.soundHydrated = true;
     if (acceptedStart) this.soundAcceptedRoundId = null;
     this.roundId = state.roundId;
@@ -326,9 +459,9 @@ class BlackjackGame {
     this.insuranceBet = state.insuranceBet;
     this.playerHands = nextHands;
     this.activeHandIndex = activeHandIndex;
-    this.playerHand = activeCards;
-    this.dealerHand = state.dealerHand;
-    this.gameOver = state.settled;
+    this.playerHand = nextHands[activeHandIndex]?.cards || nextHands[0]?.cards || [];
+    this.dealerHand = state.dealerHand || [];
+    this.gameOver = Boolean(state.settled);
     this.hasDoubledDown = Boolean(nextHands[activeHandIndex]?.doubled);
     this.insuranceOffered = state.phase === 'insurance';
     this.serverCapabilities = {
@@ -337,109 +470,198 @@ class BlackjackGame {
       canDouble: Boolean(state.canDouble),
       canSplit: Boolean(state.canSplit)
     };
+    this.lastServerState = state;
+
+    const shell = this.root?.querySelector('.blackjack-table-shell');
+    shell?.classList.toggle('is-presenting', this.presentationInProgress);
+    shell?.classList.toggle('is-dealer-turn', plan.kind === 'settlement');
+    shell?.classList.toggle('is-settling', plan.kind === 'settlement');
+    shell?.classList.toggle('has-split-hands', nextHands.length > 1);
+    if (acceptedAction) this.markAcceptedAction(acceptedAction);
 
     this.root?.querySelector('.betting-section')?.classList.add('is-locked');
     const betInput = this.getElement('blackjackBet');
     betInput?.setAttribute('aria-readonly', 'true');
     if (betInput) betInput.readOnly = true;
-    this.renderPlayerHands(nextHands, activeHandIndex, state.settled, presentation.player);
-    this.displayCards('dealerCards', this.dealerHand, !state.settled, presentation.dealer);
 
-    const sound = window.casinoSound;
-    if (sound && state.roundId) {
-      if (acceptedStart) sound.playOnce(`blackjack:${state.roundId}:wager`, 'wager', { game: 'blackjack' });
-      const dealtCards = [
-        ...presentation.player.map(card => ({ ...card, hand: `player-${activeHandIndex}` })),
-        ...presentation.dealer.map(card => ({ ...card, hand: 'dealer' }))
-      ].sort((a, b) => a.delayMs - b.delayMs);
-      dealtCards.forEach(card => {
-        sound.playOnce(`blackjack:${state.roundId}:deal:${card.hand}:${card.index}`, 'cardDeal', {
-          delay: card.delayMs / 1000,
-          cooldown: 0,
-          game: 'blackjack',
-          pan: card.hand === 'dealer' ? .18 : -.18
-        });
-      });
-      if (presentation.revealDealer) {
-        sound.playOnce(`blackjack:${state.roundId}:reveal`, 'cardFlip', { cooldown: 0, game: 'blackjack' });
-      }
-      if (state.settled && !wasSettled && !initialHydration) {
-        const totalStake = state.bet + (state.insuranceBet || 0);
-        const resultSound = state.payout > totalStake ? 'win' : state.payout === totalStake ? 'push' : 'lose';
-        sound.playOnce(`blackjack:${state.roundId}:result`, resultSound, {
-          delay: Math.max(.34, presentation.completionMs / 1000),
-          cooldown: 0,
-          game: 'blackjack'
-        });
-      }
-    }
+    const visibleActiveIndex = plan.activeHandChanged && plan.completionMs > 0 ? plan.previousActiveHandIndex : activeHandIndex;
+    this.renderPlayerHands(nextHands, visibleActiveIndex, false, plan.playerCardsByHand, {
+      preserveSplit: plan.splitCreated,
+      showSettledResults: Boolean(state.settled && !plan.replaySettlement)
+    });
+    this.displayCards('dealerCards', this.dealerHand, !state.settled, plan.dealerCards);
+    this.renderDealerOutcome(state, Boolean(state.settled && !plan.replaySettlement));
 
     const insurance = this.getElement('insuranceSection');
-    insurance?.classList.toggle('hidden', state.phase !== 'insurance');
-    this.root?.querySelector('.blackjack-container')?.classList.toggle('insurance-active', state.phase === 'insurance');
-    this.root?.querySelector('.blackjack-table-shell')?.classList.toggle('has-split-hands', nextHands.length > 1);
-
+    const insuranceResolving = previousState?.phase === 'insurance'
+      && state.phase !== 'insurance'
+      && ['insurance', 'declineInsurance'].includes(acceptedAction);
+    if (insuranceResolving) {
+      insurance?.classList.remove('hidden');
+      insurance?.classList.add('is-resolving');
+      if (insurance) insurance.dataset.decision = acceptedAction === 'insurance' ? 'Insurance accepted' : 'Insurance declined';
+      this.schedulePresentation(generation, this.reducedMotion ? 0 : 420, () => {
+        insurance?.classList.add('hidden');
+        insurance?.classList.remove('is-resolving');
+        insurance?.removeAttribute('data-decision');
+        this.root?.querySelector('.blackjack-container')?.classList.remove('insurance-active');
+      });
+    } else {
+      insurance?.classList.toggle('hidden', state.phase !== 'insurance');
+      insurance?.classList.remove('is-resolving');
+      insurance?.removeAttribute('data-decision');
+    }
+    this.root?.querySelector('.blackjack-container')?.classList.toggle('insurance-active', state.phase === 'insurance' || insuranceResolving);
     const result = this.getElement('resultDisplay');
-    const revealPresentation = () => {
-      if (result) {
-        const totalStake = state.bet + (state.insuranceBet || 0);
-        const net = state.payout - totalStake;
-        const handResults = nextHands.map(hand => hand.result).filter(Boolean);
-        const mixedHands = new Set(handResults).size > 1;
-        const visualResult = mixedHands ? 'MIXED' : state.payout > totalStake ? 'WIN' : state.payout === totalStake ? 'PUSH' : 'LOSS';
-        const amount = net > 0 ? `+${net}` : net < 0 ? String(net) : 'EVEN';
-        result.textContent = state.settled ? `${visualResult} · ${amount} CREDITS` : '';
-        result.setAttribute('aria-label', state.settled ? `Round complete. ${visualResult}. Payout ${state.payout} credits.` : '');
-        result.className = `result-display ${state.settled ? (state.payout > totalStake ? 'win' : state.payout === totalStake ? 'tie' : 'lose') : ''}`;
+    if (result && plan.replaySettlement) {
+      result.textContent = '';
+      result.removeAttribute('aria-label');
+      result.className = 'result-display';
+    }
+    if (plan.replaySettlement) {
+      this.renderPlayerHandResults(nextHands, false);
+      this.setActiveHandFocus(-1);
+      const dealerScore = this.getElement('dealerScore');
+      if (dealerScore) dealerScore.textContent = String(previousState?.dealerScore || '?');
+    }
+
+    this.scheduleBlackjackSounds(state, plan, acceptedStart, generation);
+    if (plan.activeHandChanged && !state.settled) {
+      const previousHand = previousState ? blackjackHands(previousState)[plan.previousActiveHandIndex] : null;
+      this.schedulePresentation(generation, plan.handoffAtMs, () => {
+        this.markCompletedActionHand(plan.previousActiveHandIndex, previousHand, acceptedAction);
+        this.setActiveHandFocus(activeHandIndex);
+      });
+    }
+
+    const validBalance = Number.isFinite(balance) && balance >= 0 && Number.isSafeInteger(Math.round(balance * 1000));
+    const commitBalance = () => {
+      if (!validBalance) return;
+      this.casino.setCredits(balance);
+      if (acceptedAction === 'double' || acceptedAction === 'split' || plan.replaySettlement) this.pulseCredits();
+    };
+
+    if (plan.replaySettlement) {
+      const settledDealerCards = (state.dealerHand || []).filter(Boolean);
+      const updateDealerScoreThrough = cardCount => {
+        const dealerScore = this.getElement('dealerScore');
+        if (dealerScore) dealerScore.textContent = String(this.calculateScore(settledDealerCards.slice(0, cardCount)));
+      };
+      this.schedulePresentation(generation, plan.revealDealerAtMs || 0, () => updateDealerScoreThrough(Math.min(2, settledDealerCards.length)));
+      plan.dealerCards.forEach(card => {
+        this.schedulePresentation(generation, card.delayMs + (this.reducedMotion ? 0 : 300), () => updateDealerScoreThrough(card.index + 1));
+      });
+      const dealerCompleteAtMs = plan.handSettlementAtMs[0] ?? 0;
+      this.schedulePresentation(generation, dealerCompleteAtMs, () => this.renderDealerOutcome(state, true));
+      plan.handSettlementAtMs.forEach((delayMs, index) => {
+        this.schedulePresentation(generation, delayMs, () => this.renderPlayerHandResult(nextHands[index], index, true));
+      });
+      this.schedulePresentation(generation, plan.walletCommitAtMs, () => {
+        shell?.classList.add('is-credit-settling');
+        commitBalance();
+      });
+      this.schedulePresentation(generation, plan.summaryAtMs, () => this.renderRoundSummary(state, nextHands));
+    } else if (plan.completionMs > 0) {
+      this.schedulePresentation(generation, Math.min(plan.completionMs, this.reducedMotion ? 0 : 460), commitBalance);
+    } else {
+      commitBalance();
+      if (state.settled) {
+        this.renderPlayerHandResults(nextHands, true);
+        this.renderRoundSummary(state, nextHands);
+        const dealerScore = this.getElement('dealerScore');
+        if (dealerScore) dealerScore.textContent = String(state.dealerScore);
       }
-      this.renderPlayerHandResults(nextHands, state.settled);
-      this.getElement('dealerScore').textContent = state.settled ? String(state.dealerScore) : String(state.dealerScore || '?');
+    }
+
+    const finishPresentation = () => {
       this.presentationInProgress = false;
-      this.root?.querySelector('.blackjack-table-shell')?.classList.remove('is-presenting');
+      shell?.classList.remove('is-presenting', 'is-dealer-turn', 'is-settling', 'is-credit-settling');
+      this.setActiveHandFocus(state.settled ? -1 : activeHandIndex);
       this.updateGameControls();
     };
-    clearTimeout(this.presentationTimer);
-    const generation = ++this.presentationGeneration;
-    this.presentationInProgress = presentation.completionMs > 0;
-    this.root?.querySelector('.blackjack-table-shell')?.classList.toggle('is-presenting', this.presentationInProgress);
-    if (this.presentationInProgress) {
-      if (result) result.textContent = '';
-      this.presentationTimer = setTimeout(() => {
-        if (generation === this.presentationGeneration) revealPresentation();
-      }, presentation.completionMs);
-    } else {
-      revealPresentation();
-    }
-    if (Number.isSafeInteger(balance)) this.casino.setCredits(balance);
+    if (plan.completionMs > 0) this.schedulePresentation(generation, plan.completionMs, finishPresentation);
+    else finishPresentation();
     this.updateGameControls();
   }
 
-  renderPlayerHands(hands, activeHandIndex, settled, animatedCards = []) {
+  scheduleBlackjackSounds(state, plan, acceptedStart, generation) {
+    const sound = window.casinoSound;
+    if (!sound || !state.roundId) return;
+    if (acceptedStart) sound.playOnce(`blackjack:${state.roundId}:wager`, 'wager', { game: 'blackjack' });
+    const dealtCards = [
+      ...plan.playerCardsByHand.flatMap((cards, handIndex) => cards.map(card => ({ ...card, hand: `player-${handIndex}` }))),
+      ...plan.dealerCards.map(card => ({ ...card, hand: 'dealer' }))
+    ].sort((a, b) => a.delayMs - b.delayMs);
+    dealtCards.forEach(card => this.schedulePresentation(generation, card.delayMs, () => {
+      sound.playOnce(`blackjack:${state.roundId}:deal:${card.hand}:${card.index}`, 'cardDeal', {
+        cooldown: 0,
+        game: 'blackjack',
+        pan: card.hand === 'dealer' ? .18 : -.18
+      });
+    }));
+    if (plan.revealDealerAtMs !== null) {
+      this.schedulePresentation(generation, plan.revealDealerAtMs, () => {
+        sound.playOnce(`blackjack:${state.roundId}:reveal`, 'cardFlip', { cooldown: 0, game: 'blackjack' });
+      });
+    }
+    if (plan.replaySettlement) {
+      const totalStake = state.bet + (state.insuranceBet || 0);
+      const resultSound = state.payout > totalStake ? 'win' : state.payout === totalStake ? 'push' : 'lose';
+      this.schedulePresentation(generation, plan.summaryAtMs, () => {
+        sound.playOnce(`blackjack:${state.roundId}:result`, resultSound, { cooldown: 0, game: 'blackjack' });
+      });
+    }
+  }
+
+  createPlayerHandArticle(index, handCount) {
+    const article = document.createElement('article');
+    article.className = 'blackjack-player-hand';
+    article.dataset.handIndex = String(index);
+    const heading = document.createElement('div');
+    heading.className = 'blackjack-hand-heading';
+    const title = document.createElement('h3');
+    title.textContent = handCount > 1 ? `Hand ${index + 1}` : 'You';
+    const badge = document.createElement('span');
+    badge.className = 'blackjack-hand-result';
+    badge.setAttribute('aria-hidden', 'true');
+    const score = document.createElement('div');
+    score.className = 'score-display';
+    score.innerHTML = `<span class="score-label">HAND</span><span id="${index ? `playerScore${index}` : 'playerScore'}">0</span>`;
+    const cards = document.createElement('div');
+    cards.id = index ? `playerCards${index}` : 'playerCards';
+    cards.className = 'cards-container';
+    heading.append(title, badge, score);
+    article.append(heading, cards);
+    return article;
+  }
+
+  prepareSplitHands(host, hands) {
+    const existingCards = [...host.querySelectorAll('.blackjack-card')].slice(0, 2);
+    host.replaceChildren();
+    hands.forEach((hand, index) => {
+      const article = this.createPlayerHandArticle(index, hands.length);
+      article.classList.add('is-splitting');
+      const card = existingCards[index];
+      if (card) {
+        card.classList.add(index === 0 ? 'is-split-left' : 'is-split-right');
+        article.querySelector('.cards-container')?.appendChild(card);
+      }
+      host.appendChild(article);
+    });
+    const generation = this.presentationGeneration;
+    this.schedulePresentation(generation, this.reducedMotion ? 0 : BLACKJACK_SPLIT_SEPARATION_MS + 120, () => {
+      host.querySelectorAll('.is-splitting').forEach(element => element.classList.remove('is-splitting'));
+      host.querySelectorAll('.is-split-left,.is-split-right').forEach(element => element.classList.remove('is-split-left', 'is-split-right'));
+    });
+  }
+
+  renderPlayerHands(hands, activeHandIndex, settled, animatedCardsByHand = [], options = {}) {
     const host = this.getElement('playerHands');
     if (!host) return;
-    if (host.children.length !== hands.length) {
-      host.replaceChildren();
-      hands.forEach((hand, index) => {
-        const article = document.createElement('article');
-        article.className = 'blackjack-player-hand';
-        article.dataset.handIndex = String(index);
-        const heading = document.createElement('div');
-        heading.className = 'blackjack-hand-heading';
-        const title = document.createElement('h3');
-        title.textContent = hands.length > 1 ? `Hand ${index + 1}` : 'You';
-        const badge = document.createElement('span');
-        badge.className = 'blackjack-hand-result';
-        badge.setAttribute('aria-hidden', 'true');
-        const score = document.createElement('div');
-        score.className = 'score-display';
-        score.innerHTML = `<span class="score-label">HAND</span><span id="${index ? `playerScore${index}` : 'playerScore'}">0</span>`;
-        const cards = document.createElement('div');
-        cards.id = index ? `playerCards${index}` : 'playerCards';
-        cards.className = 'cards-container';
-        heading.append(title, badge, score);
-        article.append(heading, cards);
-        host.appendChild(article);
-      });
+    if (options.preserveSplit && host.children.length === 1 && hands.length === 2) {
+      this.prepareSplitHands(host, hands);
+    } else if (host.children.length !== hands.length) {
+      host.replaceChildren(...hands.map((hand, index) => this.createPlayerHandArticle(index, hands.length)));
     }
 
     hands.forEach((hand, index) => {
@@ -447,13 +669,78 @@ class BlackjackGame {
       article?.classList.toggle('is-active', !settled && index === activeHandIndex);
       const score = this.getElement(index ? `playerScore${index}` : 'playerScore');
       if (score) score.textContent = String(hand.score ?? this.calculateScore(hand.cards || []));
-      this.displayCards(index ? `playerCards${index}` : 'playerCards', hand.cards || [], false,
-        index === activeHandIndex ? animatedCards : []);
+      this.displayCards(index ? `playerCards${index}` : 'playerCards', hand.cards || [], false, animatedCardsByHand[index] || []);
       const cards = this.getElement(index ? `playerCards${index}` : 'playerCards');
       cards?.classList.toggle('is-crowded', (hand.cards?.length || 0) >= 4);
       cards?.style.setProperty('--hand-size', String(hand.cards?.length || 0));
     });
-    this.renderPlayerHandResults(hands, settled);
+    this.renderPlayerHandResults(hands, Boolean(options.showSettledResults));
+  }
+
+  setActiveHandFocus(activeHandIndex) {
+    const hands = this.getElement('playerHands')?.querySelectorAll('.blackjack-player-hand') || [];
+    hands.forEach((article, index) => {
+      const active = index === activeHandIndex;
+      article.classList.toggle('is-active', active);
+      article.classList.toggle('is-inactive-hand', activeHandIndex >= 0 && !active);
+      article.setAttribute('aria-current', active ? 'step' : 'false');
+    });
+  }
+
+  markCompletedActionHand(index, hand, action) {
+    const article = this.getElement('playerHands')?.querySelector(`[data-hand-index="${index}"]`);
+    if (!article) return;
+    article.classList.add('is-hand-complete');
+    const badge = article.querySelector('.blackjack-hand-result');
+    const bust = hand?.result === 'bust' || Number(hand?.score) > 21;
+    const blackjack = hand?.result === 'blackjack';
+    article.classList.toggle('is-bust', bust);
+    article.classList.toggle('is-blackjack', blackjack);
+    if (badge) badge.textContent = bust ? 'BUST' : blackjack ? 'BLACKJACK' : action === 'stand' ? 'STAND' : hand?.complete ? 'DONE' : '';
+  }
+
+  renderPlayerHandResult(hand, index, settled) {
+    const article = this.getElement('playerHands')?.querySelector(`[data-hand-index="${index}"]`);
+    if (!article) return;
+    const winner = settled && ['win', 'blackjack'].includes(hand?.result);
+    const loser = settled && ['loss', 'bust', 'dealer_blackjack'].includes(hand?.result);
+    const push = settled && hand?.result === 'push';
+    article.classList.remove('is-hand-complete', 'is-bust', 'is-blackjack', 'is-winner', 'is-loser', 'is-push');
+    article.classList.toggle('is-winner', winner);
+    article.classList.toggle('is-loser', loser);
+    article.classList.toggle('is-push', push);
+    article.classList.add('is-settlement-reveal');
+    const badge = article.querySelector('.blackjack-hand-result');
+    if (badge) badge.textContent = winner ? (hand.result === 'blackjack' ? 'BLACKJACK' : 'WIN') : loser ? 'LOSS' : push ? 'PUSH' : '';
+  }
+
+  renderDealerOutcome(state, settled) {
+    const section = this.root?.querySelector('.dealer-section');
+    const badge = this.getElement('dealerResult');
+    const score = Number(state?.dealerScore);
+    const dealerBlackjack = score === 21 && (state?.dealerHand?.length || 0) === 2;
+    const bust = score > 21;
+    const hands = blackjackHands(state);
+    const dealerWon = settled && !bust && hands.every(hand => ['loss', 'bust', 'dealer_blackjack'].includes(hand.result));
+    section?.classList.toggle('is-bust', settled && bust);
+    section?.classList.toggle('is-blackjack', settled && dealerBlackjack);
+    if (badge) badge.textContent = !settled ? '' : bust ? 'BUST' : dealerBlackjack ? 'BLACKJACK' : dealerWon ? 'WINS' : 'STANDS';
+  }
+
+  renderRoundSummary(state, hands) {
+    const result = this.getElement('resultDisplay');
+    if (!result || !state.settled) return;
+    this.renderPlayerHandResults(hands, true);
+    this.renderDealerOutcome(state, true);
+    const totalStake = state.bet + (state.insuranceBet || 0);
+    const net = state.payout - totalStake;
+    const handResults = hands.map(hand => hand.result).filter(Boolean);
+    const mixedHands = new Set(handResults).size > 1;
+    const visualResult = mixedHands ? 'MIXED' : state.payout > totalStake ? 'WIN' : state.payout === totalStake ? 'PUSH' : 'LOSS';
+    const amount = net > 0 ? `+${net}` : net < 0 ? String(net) : 'EVEN';
+    result.textContent = `${visualResult} · ${amount} CREDITS`;
+    result.setAttribute('aria-label', `Round complete. ${visualResult}. Payout ${state.payout} credits.`);
+    result.className = `result-display ${state.payout > totalStake ? 'win' : state.payout === totalStake ? 'tie' : 'lose'}`;
   }
 
   renderPlayerHandResults(hands, settled) {
@@ -688,7 +975,7 @@ class BlackjackGame {
     if (stand) stand.disabled = !active || !this.serverCapabilities.canStand;
     if (doubleDownBtn) doubleDownBtn.disabled = !active || !this.serverCapabilities.canDouble;
     if (splitBtn) splitBtn.disabled = !active || !this.serverCapabilities.canSplit;
-    newGame?.classList.toggle('hidden', !this.gameOver);
+    newGame?.classList.toggle('hidden', !this.gameOver || this.presentationInProgress);
     if (newGame) newGame.disabled = !this.gameOver || this.presentationInProgress;
     if (placeBet) {
       placeBet.disabled = Boolean(this.roundId);
@@ -831,6 +1118,11 @@ class BlackjackGame {
     inner.append(front, back);
     cardEl.appendChild(inner);
     this.updateCardElement(cardEl, card, { hidden });
+    if (animate) {
+      cardEl.addEventListener('animationend', event => {
+        if (event.target === cardEl) cardEl.classList.remove('is-dealing');
+      }, { once: true });
+    }
     return cardEl;
   }
 
@@ -877,9 +1169,18 @@ class BlackjackGame {
     this.lastHideFirstStates[containerKey] = hideFirst;
   }
 
-  resetGame() {
+  resetGame(immediate = false) {
     if (this.roundId && !this.gameOver) {
       this.showError('Finish the active round before starting a new one.');
+      return;
+    }
+    if (!immediate && !this.reducedMotion && this.roundId) {
+      this.cancelPresentation();
+      const generation = this.presentationGeneration;
+      this.presentationInProgress = true;
+      this.root?.querySelector('.blackjack-table-shell')?.classList.add('is-presenting', 'is-resetting');
+      this.updateGameControls();
+      this.schedulePresentation(generation, 320, () => this.resetGame(true));
       return;
     }
     this.roundId = null;
@@ -895,9 +1196,9 @@ class BlackjackGame {
     this.insuranceOffered = false;
     this.lastHideFirstStates = {};
     this.initialHandSize = 2;
-    clearTimeout(this.presentationTimer);
-    this.presentationGeneration += 1;
-    this.presentationInProgress = false;
+    this.cancelPresentation();
+    this.lastServerState = null;
+    this.pendingAction = null;
     this.root?.querySelector('.blackjack-table-shell')?.classList.remove('is-presenting', 'has-split-hands');
     this.root?.querySelector('.betting-section')?.classList.remove('is-locked');
     const betInput = this.getElement('blackjackBet');
@@ -909,6 +1210,9 @@ class BlackjackGame {
     }
     this.getElement('dealerCards')?.replaceChildren();
     this.getElement('dealerScore').textContent = '0';
+    const dealerResult = this.getElement('dealerResult');
+    if (dealerResult) dealerResult.textContent = '';
+    this.root?.querySelector('.dealer-section')?.classList.remove('is-winner', 'is-loser', 'is-bust', 'is-blackjack');
     this.getElement('insuranceSection').classList.add('hidden');
     this.root?.querySelector('.blackjack-container')?.classList.remove('insurance-active');
     const resultDisplay = this.getElement('resultDisplay');
@@ -927,10 +1231,10 @@ class BlackjackGame {
 
   destroy() {
     document.removeEventListener('keydown', this.boundKeyboardHandler);
-    clearTimeout(this.presentationTimer);
-    this.presentationGeneration += 1;
+    this.cancelPresentation();
   }
 }
 
+window.__blackjackPresentation = Object.freeze({ buildBlackjackTransitionPlan });
 window.BlackjackGame = BlackjackGame;
 

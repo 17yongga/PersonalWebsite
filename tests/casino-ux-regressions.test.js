@@ -23,9 +23,10 @@ test('Blackjack presentation preserves card identity, reconciles the dealer reve
   const source = read('games/blackjack.js');
   const premium = read('games/premium-games.css');
   assert.match(source, /BLACKJACK_DEAL_CADENCE_MS/);
-  assert.match(source, /buildCardPresentation/);
-  assert.match(source, /previousPlayerCount/);
-  assert.match(source, /previousDealerCount/);
+  assert.match(source, /buildBlackjackTransitionPlan/);
+  assert.match(source, /preservedSplitCardIndices/);
+  assert.match(source, /prepareSplitHands/);
+  assert.match(source, /schedulePresentation/);
   assert.match(source, /existingCard\.classList\.toggle\('is-hidden'/);
   assert.match(source, /this\.updateCardElement\(existingCard, hand\[0\]/);
   assert.match(source, /updateCardElement\(cardEl, card/);
