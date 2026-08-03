@@ -1,6 +1,17 @@
 # Casino — STATUS.md
 > Updated: 2026-08-03
 
+## Live Blackjack Motion + Settlement Release — frontend `neon777-20260803-r59` / backend `r57` (2026-08-03)
+- **Full interaction choreography:** Blackjack now plans semantic transitions from consecutive authoritative server snapshots. Deal, Hit, Stand, Double, Split, insurance decisions, active split-hand transfer, dealer reveal/draws, per-hand settlement, aggregate result, wallet feedback, and round reset each have explicit presentation phases instead of jumping directly to the final DOM.
+- **Split and hand clarity:** Split preserves the two original card nodes, separates them into independent hands, then deals replacement cards sequentially. The active-hand marker moves only after the completed hand visibly resolves; Bust/Stand/Blackjack hand states and dealer Bust/Stand labels remain clear without being mistaken for playable states.
+- **Authority and lifecycle:** the client never calculates or applies an outcome. It stages only server-returned cards, hand results, payout, and balance. One generation-cancelled presentation owner controls action locks, animation/sound callbacks, route teardown, reset, and re-entry. Interrupted sequences leave zero timers or duplicate keyboard actions. Reduced motion commits every semantic state immediately with no invisible wait.
+- **Deterministic verification:** source suite passed **106/106**. Exact `r59` passed Blackjack final-state QA **12/12**, normal-motion Split/handoff/dealer/settlement/wallet/reset at 393px and 1280px, reduced motion, destroy/re-entry/blocked-input lifecycle, and a 38-view mobile/desktop core matrix with zero overflow, runtime/resource errors, Blackjack small targets, or lifecycle growth. Visual review covered split separation, first-hand-only settlement, dealer bust disclosure, final split summary, and desktop composition.
+- **Immutable package:** Linux x86_64 `r59` contains **6,251** manifested files; manifest/source SHA-256 `096772a6f32f14c4e83760488ae97474680f8d4467e7d08b39e8bbe0eef03237`; entry SHA-256 `04f663a652ae6081ce4787b3f2b79dda50bd834350ce49948714098554a8db57`; exact changed-source parity; valid native SQLite; and sealed read-only paths. `r58` was superseded before promotion after exact-package QA found the three desktop Blackjack stake actions at 36px; `r59` raises them to the 44px interaction contract.
+- **Production deployment:** frontend-only `r59` is live; the untouched server-authoritative backend and PM2 pointer remain on `r57` with identical PID/restart state. CloudFront invalidation `I402ZKQZCQHHS6ZPN3Z7MKR4ZT` completed. The live entry has 25/25 `r59` references, zero stale references, and all 26 immutable assets match the exact package with immutable caching.
+- **Live no-wager QA:** all **36/36** views at 390×844 and 393×852 passed with zero overflow, clipping, undersized targets, navigation overlap, console errors, or page errors. Public health/projection, unauthenticated-session 401, and hostile-origin 403 passed. No production wager or QA account was used.
+- **Production preservation:** deployment retained 39 accounts, one active `cs2betting` escrow worth 135 credits, `409,510.708` aggregate credits, 618 ledger transactions, SQLite integrity `ok`, the exact user projection hash, and PM2 PID/restart state. These totals were captured immediately before the frontend switch and remained identical after it.
+- **Rollback:** immediate frontend rollback is immutable `r57`; backend remains `r57`. Pre-switch entry is retained locally at `/tmp/pre-r59-live-casino.html` and immutable `r57` remains in S3.
+
 ## Live Pachinko Mobile Controls + Fractional Payout Repair — `neon777-20260803-r57` (2026-08-03)
 - **Reported monetary defect fixed:** Pachinko previously used `Math.floor(bet × multiplier)` in both the authoritative route and client presentation. A 1-credit ball landing on any sub-1× slot therefore paid and displayed `0`; 2-credit balls could also become zero at 0.48× and 0.28×. `r57` derives every per-ball result in integer milli-credits beside the canonical multiplier table, includes the exact payout in the signed server result/proof, sums the batch without float drift, commits the exact net delta, and makes the client render only the server-authored payout.
 - **End-to-end deterministic proof:** an exact Linux-package temporary-database run forced a 1-credit High-risk landing on 0.28×. The response returned payout `0.28`, the balance changed from `10000` to `9999.28`, the ledger stored `-720` milli-credits with exact before/after values, idempotent replay did not settle twice, session refetch returned `9999.28`, and restart/login preserved `9999.28`. No production account or wager was used. Fractional balances also remain usable by CS2 through the canonical ledger balance rather than an obsolete integer-only JSON-projection check.
@@ -58,9 +69,9 @@
 - **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`, and live login captures `live-login-390.png` / `live-login-1280.png`. Subjective listening remains Gary's human acceptance check; technical synthesis, scheduling, recovery, cleanup, and live delivery are verified.
 
 ## What's Live
-- **Frontend:** `r55` at https://gary-yong.com/casino.html (S3/CloudFront)
-- **API/Backend:** `r55` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
-- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260803-r55/backend`
+- **Frontend:** `r59` at https://gary-yong.com/casino.html (S3/CloudFront)
+- **API/Backend:** `r57` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
+- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260803-r57/backend`
 
 ## Games (8 total)
 | Game | Type | Notes |
