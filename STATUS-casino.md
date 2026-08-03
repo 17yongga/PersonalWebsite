@@ -1,11 +1,15 @@
 # Casino — STATUS.md
 > Updated: 2026-08-03
 
-## Verified Blackjack Chip Interaction Candidate — `neon777-20260803-r55` (Awaiting Promotion Approval)
+## Live Blackjack Chip Interaction Release — `neon777-20260803-r55` (2026-08-03)
 - **Interaction repair:** wager chips are now direct stake selectors rather than additive shortcuts. Tapping 50, 100, 250, or 500 sets that exact wager, keeps exactly one chip selected, updates an explicit live `N credits selected` confirmation, and provides tactile pressed feedback. Manual entry, Undo/Clear/Max, and the server-authoritative Deal Cards request remain intact.
 - **Functional browser proof:** physical touch/click activation for all four chips, Enter and Space activation, one-active-chip semantics, selected-wager status, and the stubbed Deal payload were verified at 390px, 393px, and 1280px. A selected 250 chip produced exactly `{ bet: 250 }` through the existing `/api/games/blackjack/start` path without a real wager.
 - **Verification:** source suite passed **97/97**. Exact-package Blackjack passed **12/12**; core responsive matrix **72/72**; landscape/reduced motion **26/26**; lifecycle growth remained zero; Roulette/audio authority QA passed; and exact-package visual review found no blocker.
-- **Immutable package:** Linux x86_64 `r55` contains 6,282 manifested files with manifest SHA-256 `efce5f72297a8a491a044c9fdd5dbb85030be5eb535e776066d34070fd1f43ec`, zero symlinks/world-writable paths, valid native `better-sqlite3`, 25 `r55` entry references, and exact changed-source parity. Production remains on `r54` pending explicit promotion approval.
+- **Immutable package:** Linux x86_64 `r55` contains 6,282 manifested files with manifest SHA-256 `efce5f72297a8a491a044c9fdd5dbb85030be5eb535e776066d34070fd1f43ec`, zero symlinks/world-writable paths, valid native `better-sqlite3`, and exact changed-source parity.
+- **Production deployment:** exact frontend/backend `r55` are live. The backend pointer resolves to `/home/ubuntu/casino-app/releases/neon777-20260803-r55/backend` and passed two guarded starts. CloudFront invalidation `I990C0SMNFXLM1Q0Q4O2PMV4AS` completed; live entry SHA-256 is `4cf7fce6f1d94fe836687459901563ba5b86faf61d91210e37bc6d40cac60209`; all 25 entry references use `r55`; and all 26 immutable runtime files match production hashes/cache contracts.
+- **Live no-wager QA:** all 36 Casino views at 390×844 and 393×852 passed with zero overflow, viewport escape, clipped text, undersized targets, navigation overlap, console errors, or page errors. Public health/projection, unauthenticated-session 401, hostile-origin 403, and live Blackjack visual review passed.
+- **Production preservation:** both restarts retained 39 accounts, one active `cs2betting` escrow worth 135 credits, `409,420.008` aggregate credits, 592 ledger transactions, SQLite integrity `ok`, and zero foreign-key failures. Every unrelated PM2 process retained its PID/restart count. No production wager or QA account was used.
+- **Rollback:** immediate frontend/backend rollback is `r54`; owner-only SQLite/JSON/entry/pointer backup is `/home/ubuntu/casino-backups/pre-r55-20260803T180918Z`.
 
 ## Live Blackjack Starting-Screen Hotfix — `neon777-20260803-r54` (2026-08-03)
 - **Reported defect fixed:** real-phone evidence exposed a gap in the `r53` full-page QA: the mobile pre-deal table reserved the active Dealer, result, Player, insurance, and action rows before any cards existed. `r54` adds an explicit `is-wagering` presentation state, keeps the stake composer and Deal Cards action intact, and hides the empty active-round scaffolding until an authoritative round starts.
@@ -43,9 +47,9 @@
 - **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`, and live login captures `live-login-390.png` / `live-login-1280.png`. Subjective listening remains Gary's human acceptance check; technical synthesis, scheduling, recovery, cleanup, and live delivery are verified.
 
 ## What's Live
-- **Frontend:** `r54` at https://gary-yong.com/casino.html (S3/CloudFront)
-- **API/Backend:** `r54` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
-- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260803-r54/backend`
+- **Frontend:** `r55` at https://gary-yong.com/casino.html (S3/CloudFront)
+- **API/Backend:** `r55` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
+- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260803-r55/backend`
 
 ## Games (8 total)
 | Game | Type | Notes |
