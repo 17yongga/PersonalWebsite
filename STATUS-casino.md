@@ -1,5 +1,14 @@
 # Casino — STATUS.md
-> Updated: 2026-08-02
+> Updated: 2026-08-03
+
+## Live Comprehensive Mobile UI Release — `neon777-20260802-r53` (2026-08-03)
+- **Scope:** coordinated responsive refinement across authentication, lobby, header/menu, bottom navigation, tour, history, How to Play, shared dialogs, and all eight games. Shared mobile spacing, safe-area, navigation-clearance, touch-target, modal, dynamic-text, and short-landscape contracts now prevent viewport escape, clipped controls, long-text bleed, and fixed-navigation obstruction while preserving desktop behavior.
+- **Verification:** source suite passed **97/97**. The exact immutable package passed **72/72** core views at 375×667, 390×844, 430×932, and 768×1024; **26/26** landscape/reduced-motion views; one 20-transition lifecycle gate with zero listener/timer/RAF/socket/DOM growth; Blackjack **8/8** focused views; and focused Roulette/audio authority QA.
+- **Immutable package:** Linux x86_64 `r53` has 6,282 manifested files, manifest SHA-256 `bec9a37b897becec73c9350a80ce6984a7890a44f026c6fd0081a051f2d82138`, zero symlinks or writable package paths, a verified native `better-sqlite3` binary, and SQLite integrity `ok`.
+- **Production deployment:** exact frontend/backend `r53` are live. The stable backend pointer resolves to `/home/ubuntu/casino-app/releases/neon777-20260802-r53/backend`; PM2 survived a second restart-persistence check. CloudFront invalidation `IAJK8FTPC8HYC1M46C6GK6VT4B` completed, the live entry SHA-256 is `421bb9046ca60e1e4feb459da7c90d80d9bfe88e5a66f829f8dd5426f3faeeaf`, all 25 runtime references use `r53`, and all 26 immutable runtime files match production byte-for-byte with immutable cache headers.
+- **Live no-wager QA:** the complete 18-view 390×844 production matrix had zero overflow, viewport escape, clipped text, small targets, navigation overlap, console errors, or page errors. A 1280×900 all-game pass had zero overflow/console/page errors and no visual release blocker; its only deterministic flags were the deliberately ellipsized long QA username and compact desktop chip controls. Public health/projection, unauthenticated-session 401, hostile-origin 403, and visual review passed.
+- **Production preservation:** before and after both restarts, production retained 39 accounts, one active `cs2betting` escrow worth 135 credits, `409,240.008` aggregate credits, SQLite integrity `ok`, and zero foreign-key failures. All eight unrelated application processes remained online with unchanged PIDs/restart counts. No production wager or QA account was used.
+- **Rollback:** immediate frontend/backend rollback is `r45`; owner-only pre-cutover evidence and SQLite/JSON/entry snapshots are at `/home/ubuntu/casino-backups/pre-r53-20260803T053452Z`.
 
 ## Live Coordinated Release — `neon777-20260802-r45` (2026-08-02)
 - **Coordinated scope:** the verified mobile Blackjack and server-authoritative split-hand work is packaged together with a self-healing shared Web Audio lifecycle, contextual authoritative-timed cues, impact-sensitive Pachinko peg audio, authoritative-tick-driven Crash rhythm, and atomic server-authoritative Roulette set/replace/clear.
@@ -18,9 +27,9 @@
 - **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`, and live login captures `live-login-390.png` / `live-login-1280.png`. Subjective listening remains Gary's human acceptance check; technical synthesis, scheduling, recovery, cleanup, and live delivery are verified.
 
 ## What's Live
-- **Frontend:** `r45` at https://gary-yong.com/casino.html (S3/CloudFront)
-- **API/Backend:** `r45` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
-- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260802-r45/backend`
+- **Frontend:** `r53` at https://gary-yong.com/casino.html (S3/CloudFront)
+- **API/Backend:** `r53` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
+- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260802-r53/backend`
 
 ## Games (8 total)
 | Game | Type | Notes |
