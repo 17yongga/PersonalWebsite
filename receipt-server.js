@@ -50,6 +50,15 @@ Rules:
 - If date is not visible at all, use null
 - Return ONLY the JSON object`;
 
+const STATEMENT_VERIFICATION_PROMPT = `Inspect the BOTTOM of this bank or credit-card statement image. Extract the bottommost 8 visible dated transaction rows, or all remaining rows if fewer than 8.
+
+Start at the bottom image edge and work upward. Include rows below a payment or credit. Include a partially clipped final row only when its date, description, and amount are readable. Return the rows once in visual top-to-bottom order. Do not invent hidden text.
+
+Return ONLY valid JSON:
+{"items":[{"description":"transaction description","amount":12.99,"category":"📦 Other","date":"YYYY-MM-DD"}]}
+
+Use positive numeric amounts.`;
+
 function corsHeaders(req) {
   const origin = req.headers.origin || '';
   const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
@@ -66,28 +75,30 @@ function sendJSON(res, statusCode, data, req) {
   res.end(JSON.stringify(data));
 }
 
-function callVisionAPI(imageDataUrl) {
+function callVisionAPI(imageDataUrl, prompt = PROMPT, options = {}) {
   return new Promise((resolve, reject) => {
     const match = imageDataUrl.match(/^data:image\/(\w+);base64,(.+)$/);
     if (!match) { reject(new Error('Invalid image data URL')); return; }
     const mimeType = 'image/' + match[1];
     const base64Data = match[2];
 
-    const body = JSON.stringify({
+    const requestData = {
       model: VISION_MODEL,
       messages: [{
         role: 'user',
         content: [
-          { type: 'text', text: PROMPT },
+          { type: 'text', text: prompt },
           { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Data}` } }
         ]
       }],
       temperature: 0.1,
+      reasoning_effort: 'none',
       max_completion_tokens: 3000,
-      response_format: { type: 'json_object' },
-    });
+    };
+    if (options.jsonMode !== false) requestData.response_format = { type: 'json_object' };
+    const body = JSON.stringify(requestData);
 
-    const options = {
+    const requestOptions = {
       hostname: 'api.groq.com',
       path: '/openai/v1/chat/completions',
       method: 'POST',
@@ -98,7 +109,7 @@ function callVisionAPI(imageDataUrl) {
       },
     };
 
-    const req = https.request(options, (res) => {
+    const req = https.request(requestOptions, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
@@ -125,11 +136,112 @@ function callVisionAPI(imageDataUrl) {
 
 function parseAIResponse(content) {
   try { return JSON.parse(content); } catch (_) {}
-  let cleaned = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  const cleaned = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
   try { return JSON.parse(cleaned); } catch (_) {}
-  const m = cleaned.match(/\{[\s\S]*\}/);
-  if (m) { try { return JSON.parse(m[0]); } catch (_) {} }
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (match) { try { return JSON.parse(match[0]); } catch (_) {} }
   throw new Error('Could not parse response');
+}
+
+function normalizeScanResult(parsed) {
+  const result = { ...parsed };
+  result.items = Array.isArray(parsed.items) ? parsed.items.map(item => ({
+    description: String(item.description || item.name || 'Unknown'),
+    amount: Math.abs(parseFloat(item.amount) || 0),
+    category: String(item.category || '📦 Other'),
+    date: item.date || parsed.date || null,
+  })) : [];
+  return result;
+}
+
+function normalizeDescription(value) {
+  return String(value || '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, ' ')
+    .trim();
+}
+
+function descriptionsMatch(left, right) {
+  const a = normalizeDescription(left);
+  const b = normalizeDescription(right);
+  if (!a || !b) return false;
+  if (a === b || a.includes(b) || b.includes(a)) return true;
+  const aTokens = new Set(a.split(/\s+/).filter(token => token.length > 1));
+  const bTokens = new Set(b.split(/\s+/).filter(token => token.length > 1));
+  const union = new Set([...aTokens, ...bTokens]);
+  const overlap = [...aTokens].filter(token => bTokens.has(token)).length;
+  return union.size > 0 && overlap / union.size >= 0.6;
+}
+
+function sameTransaction(left, right) {
+  return left.date === right.date
+    && Number(left.amount) === Number(right.amount)
+    && descriptionsMatch(left.description, right.description);
+}
+
+function mergeScanResults(primary, verification) {
+  const merged = { ...primary, items: [...primary.items] };
+  for (const candidate of verification.items) {
+    if (!merged.items.some(existing => sameTransaction(existing, candidate))) {
+      merged.items.push(candidate);
+    }
+  }
+  return merged;
+}
+
+function isStatementResult(result) {
+  if (String(result.document_type || '').toLowerCase() === 'statement') return true;
+  if (/bank|credit\s*card|card\s*statement/i.test(String(result.merchant || ''))) return true;
+  const datedItems = result.items.filter(item => item.date);
+  return result.items.length >= 4 && new Set(datedItems.map(item => item.date)).size >= 2;
+}
+
+function isJsonGenerationError(error) {
+  return /validate JSON|parse.*response|could not parse|json/i.test(String(error?.message || ''));
+}
+
+async function callVisionForJson(imageDataUrl, prompt, visionCaller, { strictFirst = true } = {}) {
+  const modes = strictFirst ? [true, false] : [false, false];
+  let lastError;
+  for (let attempt = 0; attempt < modes.length; attempt += 1) {
+    try {
+      const content = await visionCaller(imageDataUrl, prompt, { jsonMode: modes[attempt] });
+      try {
+        return parseAIResponse(content);
+      } catch (error) {
+        if (process.env.DEBUG_RECEIPT_SCAN === '1') {
+          console.warn(`[receipt-debug] Unparsed model output: ${String(content).slice(0, 4000)}`);
+        }
+        throw error;
+      }
+    } catch (error) {
+      lastError = error;
+      if (attempt === modes.length - 1 || !isJsonGenerationError(error)) throw error;
+      console.warn(
+        `[${new Date().toISOString()}] Vision JSON generation failed; retrying once without strict JSON mode`
+      );
+    }
+  }
+  throw lastError;
+}
+
+async function analyzeImage(imageDataUrl, visionCaller = callVisionAPI) {
+  const primary = normalizeScanResult(
+    await callVisionForJson(imageDataUrl, PROMPT, visionCaller, { strictFirst: true })
+  );
+  if (!isStatementResult(primary)) return primary;
+
+  try {
+    const verification = normalizeScanResult(
+      await callVisionForJson(imageDataUrl, STATEMENT_VERIFICATION_PROMPT, visionCaller, {
+        strictFirst: false,
+      })
+    );
+    return mergeScanResults(primary, verification);
+  } catch (error) {
+    console.warn(`[${new Date().toISOString()}] Statement completeness pass failed: ${error.message}`);
+    return primary;
+  }
 }
 
 const server = http.createServer((req, res) => {
@@ -163,26 +275,23 @@ const server = http.createServer((req, res) => {
         }
 
         console.log(`[${new Date().toISOString()}] Scanning receipt via Groq ${VISION_MODEL}...`);
-        const aiResponse = await callVisionAPI(image);
-        const parsed = parseAIResponse(aiResponse);
+        const parsed = await analyzeImage(image);
 
         if (!parsed.items || !Array.isArray(parsed.items) || parsed.items.length === 0) {
           sendJSON(res, 200, { success: false, error: 'No transactions found in the image' }, req);
           return;
         }
 
-        parsed.items = parsed.items.map(item => ({
-          description: String(item.description || item.name || 'Unknown'),
-          amount: Math.abs(parseFloat(item.amount) || 0),
-          category: String(item.category || 'Other'),
-          date: item.date || parsed.date || null,
-        }));
-
         console.log(`[${new Date().toISOString()}] ✓ ${parsed.items.length} items found`);
         sendJSON(res, 200, { success: true, data: parsed }, req);
       } catch (err) {
         console.error(`[${new Date().toISOString()}] ✗`, err.message);
-        sendJSON(res, 500, { error: err.message }, req);
+        sendJSON(res, 502, {
+          success: false,
+          code: 'SCAN_PROCESSING_FAILED',
+          retryable: true,
+          error: "We couldn't read that image. Please try again or choose a clearer photo.",
+        }, req);
       }
     });
     return;
@@ -191,6 +300,21 @@ const server = http.createServer((req, res) => {
   sendJSON(res, 404, { error: 'Not found' }, req);
 });
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(`Dr.Molt Receipt Scanner on port ${PORT} (Groq ${VISION_MODEL})`);
-});
+if (require.main === module) {
+  server.listen(PORT, '127.0.0.1', () => {
+    console.log(`Dr.Molt Receipt Scanner on port ${PORT} (Groq ${VISION_MODEL})`);
+  });
+}
+
+module.exports = {
+  PROMPT,
+  STATEMENT_VERIFICATION_PROMPT,
+  analyzeImage,
+  callVisionForJson,
+  descriptionsMatch,
+  isStatementResult,
+  mergeScanResults,
+  normalizeScanResult,
+  parseAIResponse,
+  server,
+};
