@@ -1,5 +1,40 @@
-# Budget App — STATUS.md
-> Updated: 2026-07-14 (calm motion pass implemented locally and simulator-QA verified)
+# Flowt — STATUS.md
+> Updated: 2026-08-08 (receipt/statement scanner reliability fix live)
+
+## Current State (2026-08-08 — scanner completeness + JSON reliability live)
+- Fixed the scanner class that missed statement rows after `PAYMENT THANK YOU`: production now disables Qwen thinking for extraction, runs a focused bottom-of-statement audit only for statement-like scans, and deterministically merges/deduplicates recovered rows.
+- Fixed intermittent Groq `Failed to validate JSON` errors with a bounded strict-JSON → non-strict retry and a stable public `SCAN_PROCESSING_FAILED` error contract; raw provider/prompt details are no longer exposed to users.
+- Exact production regression image now returns **14/14 visible transactions**, including Koodo, AWS, Square One Insurance, and the partially clipped Lelabo row. Public receipt health is HTTP 200; a deliberately unreadable image returns friendly HTTP 502 JSON.
+- Mobile hardening is committed locally for the next build: native scanner photos are resized when wider than 1800px, converted to compressed JPEG, and legacy/raw provider errors are normalized to friendly copy. Verification passed: receipt backend **9/9**, Flowt app **206/206**, TypeScript clean. Current installed builds already receive the live backend completeness/error fix; native image normalization requires the next app build.
+
+## Current State (2026-08-07 — Alan account login identifier corrected)
+- Corrected the accidental whitespace in Alan's production login email for account ID `65`; no password or password hash was accessed, changed, or disclosed.
+- Stopped and restarted only PM2 `budget-server`, created an owner-only pre-change DB backup, and updated exactly one user row with no duplicate normalized email.
+- Verification passed: PM2 online, app-wide DB healthcheck green, localhost and public health HTTP 200, and a deliberately wrong-password login now returns `Invalid password`, proving the corrected identifier resolves to the existing account.
+
+## Current State (2026-08-02 — production healthy; targeted auto-recovery enabled)
+- **2026-08-02 outage recovery:** Public and localhost health timed out while EC2, nginx, SSH and PM2 remained online; `budget-server` was wedged at **100% CPU**. Restarted only PM2 `budget-server`, restoring public health to HTTP 200 in 0.09s and the unauthenticated auth boundary to HTTP 401.
+- **Data verified unchanged:** app-wide DB health passed at **37 users / 32 spaces / 48 members / 611 expenses / 114 splits / max expense ID 699**, integrity `ok`; the 15:00 UTC hourly backup was fresh. No nginx, EC2, DB restore, source deploy or unrelated process restart occurred.
+- **Proactive recovery enabled:** the existing 15-minute `Flowt production DB watchdog` now probes localhost twice, verifies the pinned production DB path and full application-wide DB guard, then may restart **only** `budget-server`. It confirms localhost and public recovery, emits a recovery message, and enforces a 30-minute restart cooldown. Proxy-only failures alert without touching nginx; DB-guard failures block auto-restart and alert.
+
+## Current State (2026-07-31 — shared-host capacity reviewed; SEO/ASO remains live)
+- **2026-07-31 shared-host capacity audit and storage expansion:** Flowt remains healthy on the common `t3.small`; `budget-server` currently uses ~89.4 MB RSS and public budget/receipt health return 200. The host has ~958 MB available memory and near-idle CPU, so a compute upgrade is not mandatory for the deployed CS Cases feature. Gary expanded the EBS device from 8 to 20 GiB, and the root partition/ext4 filesystem were grown online to 20 GiB. Final root use is 6.5 GiB / 34% with 13 GiB available; all PM2 services stayed online with zero restart changes, all public health checks returned 200, and no filesystem/device errors appeared. Prior SQL.js/WASM hangs remain an application durability issue that extra RAM alone will not fix. Use `t3.medium` only if additional consolidated-host resilience is desired or monitoring later proves memory pressure.
+- **Web SEO deployed:** `useflowt.app` now targets shared-expense, couples-budget, roommate-expense, receipt-scan, bill-split and settle-up intent with refreshed homepage metadata/structured data plus dedicated `/couples-budget-app.html`, `/roommate-expense-tracker.html`, and `/shared-expense-app.html` pages. Sitemap/social card/video schema were refreshed; IndexNow accepted all four primary URLs with HTTP 202.
+- **Apple ASO synced to App Store Connect 1.0.11:** name `Flowt: Shared Expense App`, subtitle `Couples Budget & Bill Split`, non-redundant 90-character keyword set, revised promotional/description copy, and the five existing v2 screenshots. Pull-back verification confirmed the exact remote metadata and screenshot order. No App Review/public release was started.
+- **Google Play packet prepared:** title `Flowt: Shared Expense Tracker`, 70-character short description, revised full description, and repaired 1024×500 feature graphic with unclipped `Scan, split, and settle shared expenses.` copy. The existing EAS service account authenticated and staged the edit/upload, but Google rejected commit with `403 PERMISSION_DENIED`; grant it **Manage store presence** for Flowt. The edit was not committed, so no partial listing change occurred.
+- **Verification:** live desktop/mobile page QA passed at 1440×1000 and 390×844 with HTTP 200, one H1, zero overflow, valid JSON-LD and zero browser errors; EAS metadata lint passed; app tests **202/202** and TypeScript passed. Pre-release website backup: `/Users/moltbot/clawd/backups/flowt-seo-pre-20260730-144335`.
+- **Next external gates:** add/verify `useflowt.app` in Google Search Console and submit the sitemap; grant the existing EAS Play service account **Manage store presence** and rerun the prepared listing commit; release iOS 1.0.11 when product review is complete so version-scoped metadata becomes public.
+
+## Current State (2026-07-28 — FinSync sunset completed safely)
+- Retired public FinSync web frontends at `gary-yong.com/budget.html` and `/budget/index.html`; both now send browsers to `https://useflowt.app/` and contain no FinSync app code.
+- Removed the obsolete public S3 Python/FastAPI prototype (`budget-backend/`), stale public source copy (`budget-server/`), screenshot and prototype documents after a verified local backup of **10,107 files / 190,344,903 bytes** with SHA-256 manifest.
+- Archived the matching local FinSync-only frontend, Python backend, screenshot and setup docs under `archive/finsync-budget-retired-2026-07-28/` instead of deleting them permanently.
+- **Flowt separation preserved:** PM2 `budget-server` (port 3003), PM2 `receipt-server` (port 3002), `/budget` and `/receipt` nginx routes, the PM2-pinned production database, backups, manifests and mobile API constants were not changed or restarted. Legacy `budget`/`finsync` internal identifiers remain where current Flowt releases or database guardrails depend on them.
+- Verification passed: Flowt mobile tests **202/202**, backend tests **136/136**, TypeScript clean, production API health **200**, auth boundary **401**, receipt health **200**, landing **200**, PM2 PIDs/restart counts unchanged, and production DB health/integrity green with **0 issues**.
+
+## Current State (2026-07-28)
+- **Flowt marketing homepage bold art direction is implemented locally, not deployed:** kept the exact app-blue token family and real in-product imagery while rebuilding the hero as a navy product stage, strengthening headline scale, layering a restrained `50 / 50` ownership motif, turning the walkthrough into a sticky editorial sequence, staggering household-use imagery, and consolidating the monthly workflow into one dark-edged system.
+- Verification: HTML parser PASS; Chrome QA at 1440×1000 and true 390×844 reports 0 horizontal/text overflow, 0 broken images, and 0 console errors. Production `useflowt.app` is unchanged pending review.
 
 ## Business Registration (CRA)
 - **Business Number (BN9):** 78908 2971
@@ -11,11 +46,11 @@
 - **receipt-server** (PM2 id:5, port 3002) — receipt/screenshot scan backend, Groq vision API, proxied at `api.gary-yong.com/receipt`. Part of Flowt — needed, do not remove.
 
 ## What's Live
-- **URL:** https://gary-yong.com/budget.html (frontend via S3/CloudFront)
+- **Retired URL compatibility:** https://gary-yong.com/budget.html and `/budget/index.html` redirect to the Flowt landing page
 - **Flowt landing:** https://useflowt.app/ (S3 bucket `useflowt-app-site-628063714079`, CloudFront `E2OGDPVMTBXKHP`)
 - **App name:** Flowt (confirmed 2026-03-14)
-- Full login/register system, shared vs. individual expense tracking, Chart.js visualizations
-- Backend: PM2 `budget-server` on EC2, port 3002, online
+- Active mobile app with login/register, Budget Spaces, shared/personal expenses, receipts, charts and settlements
+- Backend: PM2 `budget-server` on EC2, port 3003, online
 - Receipt scanner: PM2 `receipt-server` on EC2, port 3002 (proxied via nginx)
 
 ## Current State (2026-07-27)
