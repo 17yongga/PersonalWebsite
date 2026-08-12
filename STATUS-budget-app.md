@@ -1,5 +1,17 @@
 # Flowt — STATUS.md
-> Updated: 2026-08-08 (receipt/statement scanner reliability fix live)
+> Updated: 2026-08-12 (v1.0.12 submitted to Play closed testing and Apple App Review)
+
+## Current State (2026-08-12 — Flowt 1.0.12 release submitted)
+- Shipped the complete accumulated mobile release from clean commit `5a7de54`: durable **Payment history** in Settlement (separate from expenses), exact per-person custom percentage splits for selected members in larger groups, Android/iOS password capitalization fixes, Android-aware notification copy, scanner image normalization, and the other verified changes since the prior official builds.
+- Backend prerequisite release `8787150` is live through the DB-excluding safe deploy. A checksum-verified pre-deploy database backup is preserved at `/home/ubuntu/budget-server/backups/incidents/pre-release-20260812-115125/`; production DB health is green at **38 users / 33 spaces / 663 expenses / max expense ID 751 / 177 splits**, and public API health is HTTP 200.
+- **Android:** EAS build `8980248c-a275-4f99-85bb-d62171bb47a4` finished as **1.0.12 (versionCode 8)**; AAB `https://expo.dev/artifacts/eas/aTm5-6Tb42nDBNMeVJ5RMUrMpIl4XR1p0eb_QvucCBE.aab`. EAS submission `19791d81-d6e0-444a-874d-a7e2f4005b1c` finished; Google Play Developer API independently verifies closed-testing track `alpha`, release `1.0.12`, versionCode `8`, status **completed**.
+- **iOS:** EAS build `62e0fbeb-7fe9-40ad-8dae-4674cf25fcc9` finished as **1.0.12 (49)**; IPA `https://expo.dev/artifacts/eas/-5FRaJ4hZMaoKqWogpQ1XPDEeeVW4OBeejotSS3KNOw.ipa`. EAS submission `1a21e8ef-8302-4d1c-b8e2-6877d60ba813` finished. ASC build `7d31ae2c-342b-4e2e-a396-41f6239a05b9` is **VALID / APP_STORE_ELIGIBLE**; version `1.0.12` and build `49` are attached to review submission `a27bbee6-59e3-484d-ad4f-eea0be5cecbe`, verified **WAITING_FOR_REVIEW**.
+- Verification: backend **139/139**, app **213/213**, TypeScript clean, Expo dependency compatibility clean, Android+iOS bundle exports passed, metadata lint/push succeeded, custom 70/30 split payload and `$63/$27` visual journey passed after removing a contradictory equal-preview defect. Android channel/permission/token/payload/Play credentials are verified; production currently has no registered Android token, so physical-device banner receipt remains a post-install tester check.
+
+## Current State (2026-08-08 — watchdog orphan-process detection corrected)
+- Remediated the false `orphan node - process` alert caused by the watchdog's loose `grep "node -"` check matching PM2-managed `sable-api` running with the legitimate `--enable-source-maps` flag.
+- Detection now matches only Node's standalone stdin-script argument (`node -`) and continues to alert on the rogue-writer class involved in the July data-loss incident, without matching normal `node --flag` processes.
+- Verification passed: shell syntax clean; fixture check matched real `node -` cases and rejected `--enable-source-maps`; a full healthy watchdog run exited with empty stdout; public Flowt health remained HTTP 200. No production process, database, nginx, or PM2 service was changed or restarted.
 
 ## Current State (2026-08-08 — scanner completeness + JSON reliability live)
 - Fixed the scanner class that missed statement rows after `PAYMENT THANK YOU`: production now disables Qwen thinking for extraction, runs a focused bottom-of-statement audit only for statement-like scans, and deterministically merges/deduplicates recovered rows.
