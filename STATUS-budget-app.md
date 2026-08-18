@@ -1,5 +1,10 @@
 # Flowt — STATUS.md
-> Updated: 2026-08-12 (v1.0.12 submitted to Play closed testing and Apple App Review)
+> Updated: 2026-08-18 (iOS 1.0.12 metadata rejection corrected and resubmitted)
+
+## Current State (2026-08-18 — iOS metadata rejection corrected)
+- Apple rejected iOS **1.0.12 (49)** under Guideline 2.3.10 because the version's **What's New** text mentioned Android. This was metadata-only; build 49 remained **VALID / APP_STORE_ELIGIBLE**, so no rebuild was required.
+- Removed all Android/platform references from the en-CA release notes while preserving the factual Payment history, custom percentage split, password, notification, and refinement summary. EAS metadata lint passed; a remote metadata pull confirmed all other localized fields and all five App Store screenshots/order matched before push; API verification confirmed the corrected live `whatsNew` text.
+- Closed old unresolved submission `a27bbee6-59e3-484d-ad4f-eea0be5cecbe`, created fresh submission `fa1eb0d2-2e79-480b-acb3-fc2106781359` with the same version/build, and resubmitted it. App Store Connect verifies both version and submission are **WAITING_FOR_REVIEW** as of 2026-08-18 17:17 EDT.
 
 ## Current State (2026-08-12 — Flowt 1.0.12 release submitted)
 - Shipped the complete accumulated mobile release from clean commit `5a7de54`: durable **Payment history** in Settlement (separate from expenses), exact per-person custom percentage splits for selected members in larger groups, Android/iOS password capitalization fixes, Android-aware notification copy, scanner image normalization, and the other verified changes since the prior official builds.
