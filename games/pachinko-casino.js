@@ -112,10 +112,9 @@ class PachinkoGame {
     const isMobile = window.innerWidth <= 768;
     const availableW = Math.max(1, Math.floor(wrap.clientWidth));
     const maxW = Math.min(availableW, 760);
-    const ratio = maxW / 500;
-    
+
     this.W = maxW;
-    this.H = Math.floor(700 * ratio);
+    this.H = Math.floor(maxW * 1.18);
     
     const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
     this.canvas.width = this.W * dpr;
@@ -132,21 +131,21 @@ class PachinkoGame {
     this.pegs = [];
     this.slots = [];
     const W = this.W, H = this.H;
-    const pegR = Math.max(2, W * 0.005);
-    const startY = H * 0.08;
-    const endY = H * 0.78;
-    const rowH = (endY - startY) / this.ROWS;
+    const pegR = Math.max(2, W * 0.0055);
+    const startY = H * 0.13;
+    const endY = H * 0.73;
+    const rowH = (endY - startY) / Math.max(1, this.ROWS - 1);
     const slotCount = this.ROWS + 1; // 17 slots for 16 rows
+    const slotW = (W * 0.88) / slotCount;
 
     for (let row = 0; row < this.ROWS; row++) {
       const pegsInRow = row + 3;
-      const rowWidth = W * 0.82;
+      const rowWidth = (pegsInRow - 1) * slotW;
       const startX = (W - rowWidth) / 2;
-      const gap = rowWidth / (pegsInRow - 1);
       for (let col = 0; col < pegsInRow; col++) {
         this.pegs.push({
           id: `${row}:${col}`,
-          x: startX + col * gap,
+          x: startX + col * slotW,
           y: startY + row * rowH,
           r: pegR,
           glow: 0
@@ -155,9 +154,8 @@ class PachinkoGame {
     }
 
     // Slots at bottom
-    const slotY = H * 0.82;
-    const slotH = H * 0.16;
-    const slotW = (W * 0.88) / slotCount;
+    const slotY = H * 0.79;
+    const slotH = H * 0.18;
     const slotStartX = (W - slotW * slotCount) / 2;
     const mults = PachinkoGame.MULTIPLIERS[this.risk];
 
@@ -172,6 +170,16 @@ class PachinkoGame {
         glow: 0
       });
     }
+  }
+
+  createAuthoritativeRoute(slotIndex, random = Math.random) {
+    const rightCount = Math.max(0, Math.min(this.ROWS, Number(slotIndex) || 0));
+    const decisions = Array.from({ length: this.ROWS }, (_, index) => index < rightCount ? 1 : -1);
+    for (let index = decisions.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(random() * (index + 1));
+      [decisions[index], decisions[swapIndex]] = [decisions[swapIndex], decisions[index]];
+    }
+    return decisions;
   }
 
   attachEvents() {
@@ -278,14 +286,16 @@ class PachinkoGame {
           if (this._destroyed) return;
           window.casinoSound?.playOnce(`pachinko:${requestId}:drop:${index}`, 'pachinkoDrop', { cooldown: 0, game: 'pachinko' });
           const targetSlot = this.slots[serverResult.slotIndex];
+          const routeDecisions = this.createAuthoritativeRoute(serverResult.slotIndex);
+          const startSpread = Math.min(12, targetSlot?.w * 0.7 || 12);
           const ball = {
-            x: this.W / 2 + (Math.random() - 0.5) * 12, y: this.H * 0.02,
+            x: this.W / 2 + (Math.random() - 0.5) * startSpread, y: this.H * 0.045,
             vx: (Math.random() - 0.5), vy: 0, r: Math.max(4, this.W * 0.009),
             active: true, bet, trail: [], hue: 40 + Math.random() * 40,
             stuckFrames: 0, lastY: 0, serverResult, soundKey: `${requestId}:${index}`,
             pegSoundAt: Object.create(null),
             batchId: requestId, presentationConfirmed: false,
-            guidePhase: Math.random(),
+            guidePhase: Math.random(), routeDecisions,
             targetX: targetSlot ? targetSlot.x + targetSlot.w / 2 : this.W / 2
           };
           this.balls.push(ball);
@@ -392,10 +402,10 @@ class PachinkoGame {
   }
 
   update() {
-    const gravity = this.H * 0.000075;
-    const friction = 0.988;
-    const bounce = 0.46;
-    const maxVy = this.H * 0.0062;
+    const gravity = this.H * 0.0003;
+    const friction = 0.99;
+    const bounce = 0.3;
+    const maxVy = this.H * 0.016;
     const maxVx = this.W * 0.006;
 
     for (const ball of this.balls) {
@@ -516,21 +526,28 @@ class PachinkoGame {
   }
 
   applyAuthoritativeGuidance(ball, slot) {
-    const startY = this.H * 0.08;
+    const startY = this.H * 0.13;
     const endY = slot.y - ball.r * 2.2;
     if (ball.y <= startY || endY <= startY) return;
     const progress = Math.max(0, Math.min(1, (ball.y - startY) / (endY - startY)));
-    const eased = progress * progress * (3 - 2 * progress);
     const targetX = slot.x + slot.w / 2;
+    const routeDecisions = Array.isArray(ball.routeDecisions) && ball.routeDecisions.length === this.ROWS
+      ? ball.routeDecisions
+      : this.createAuthoritativeRoute(ball.serverResult?.slotIndex ?? this.slots.indexOf(slot));
+    ball.routeDecisions = routeDecisions;
+    const routeRow = Math.max(0, Math.min(this.ROWS - 1, Math.floor(progress * this.ROWS)));
+    const routeOffset = routeDecisions.slice(0, routeRow + 1).reduce((sum, direction) => sum + direction, 0)
+      * slot.w * 0.5;
     const phase = Number.isFinite(ball.guidePhase) ? ball.guidePhase : 0.5;
-    const variation = Math.sin((progress * this.ROWS + phase) * Math.PI)
-      * slot.w * 0.2 * (1 - progress);
-    const guideX = this.W / 2 + (targetX - this.W / 2) * eased + variation;
-    const response = 0.0012 + progress * 0.0028;
-    const maxCorrection = this.W * (0.00008 + progress * 0.0005);
+    const rowVariation = Math.sin((progress * this.ROWS + phase) * Math.PI) * slot.w * 0.12;
+    const routeX = this.W / 2 + routeOffset + rowVariation;
+    const finishBlend = Math.max(0, (progress - 0.68) / 0.32);
+    const guideX = routeX + (targetX - routeX) * finishBlend * finishBlend;
+    const response = 0.0015 + progress * 0.0032;
+    const maxCorrection = this.W * (0.00011 + progress * 0.00056);
     const correction = Math.max(-maxCorrection, Math.min(maxCorrection, (guideX - ball.x) * response));
     ball.vx += correction;
-    if (progress > 0.72) ball.vx *= 0.97;
+    if (progress > 0.76) ball.vx *= 0.968;
   }
 
   isBallAlignedForSlot(ball, slot) {
@@ -611,6 +628,20 @@ class PachinkoGame {
       }
     }
 
+    // A visible centre chute makes the launch point legible while each ball
+    // still starts with a small, bounded horizontal variation.
+    const chuteHalf = Math.max(12, W * 0.035);
+    const chuteTop = H * 0.018;
+    const chuteBottom = H * 0.095;
+    ctx.strokeStyle = 'rgba(255,217,138,.34)';
+    ctx.lineWidth = Math.max(1, W * 0.002);
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - chuteHalf, chuteTop);
+    ctx.lineTo(W / 2 - chuteHalf * 0.42, chuteBottom);
+    ctx.moveTo(W / 2 + chuteHalf, chuteTop);
+    ctx.lineTo(W / 2 + chuteHalf * 0.42, chuteBottom);
+    ctx.stroke();
+
     // Draw pegs (cream bulbs — match marquee aesthetic)
     for (const peg of this.pegs) {
       const glow = Math.max(0, peg.glow);
@@ -659,17 +690,19 @@ class PachinkoGame {
       ctx.lineWidth = 1;
       ctx.strokeRect(slot.x + 1, slot.y, slot.w - 2, slot.h);
 
-      // Multiplier text — fit to slot width
-      const label = m >= 1000 ? (m/1000) + 'k' : m + 'x';
-      const maxFontSize = Math.min(slot.w * 0.45, slot.h * 0.25);
-      const fontSize = Math.max(7, Math.min(maxFontSize, this.W * 0.02));
+      // Rotate labels inside narrow 17-slot boards instead of clipping long
+      // decimal multipliers horizontally on phones.
+      const label = m >= 1000 ? (m/1000) + 'k' : m + '×';
+      const fontSize = Math.max(7, Math.min(11, slot.w * 0.62, this.W * 0.018));
+      ctx.save();
+      ctx.translate(slot.x + slot.w / 2, slot.y + slot.h / 2);
+      if (slot.w < 34) ctx.rotate(-Math.PI / 2);
       ctx.fillStyle = '#fff3e4';
       ctx.font = `bold ${fontSize}px "Space Mono", ui-monospace, monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(label, slot.x + slot.w / 2, slot.y + slot.h / 2);
-      ctx.textAlign = 'start';
-      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(label, 0, 0);
+      ctx.restore();
     }
 
     // Draw balls (with trails)

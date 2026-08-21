@@ -227,7 +227,7 @@
 /* Crash: cockpit-style chart and a decisive cash-out control. */
 .crash-container { max-width:1120px; margin-inline:auto; padding:clamp(12px,2vw,24px); }
 .crash-layout { gap:18px!important; }
-.crash-canvas-wrap { overflow:hidden; border:1px solid rgba(56,189,248,.2)!important; border-radius:24px!important; background:linear-gradient(rgba(56,189,248,.035) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,rgba(56,189,248,.035) 1px,transparent 1px) 0 0/32px 32px,radial-gradient(circle at 30% 100%,rgba(14,165,233,.12),transparent 56%),#060b13!important; box-shadow:inset 0 0 60px rgba(0,0,0,.26),0 24px 64px rgba(0,0,0,.32); }
+.crash-canvas-wrap { overflow:hidden; aspect-ratio:25/13; border:1px solid rgba(56,189,248,.2)!important; border-radius:24px!important; background:linear-gradient(rgba(56,189,248,.035) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,rgba(56,189,248,.035) 1px,transparent 1px) 0 0/32px 32px,radial-gradient(circle at 30% 100%,rgba(14,165,233,.12),transparent 56%),#060b13!important; box-shadow:inset 0 0 60px rgba(0,0,0,.26),0 24px 64px rgba(0,0,0,.32); }
 .crash-multiplier { font-variant-numeric:tabular-nums; letter-spacing:-.06em; text-shadow:0 0 24px rgba(56,189,248,.24),0 12px 30px rgba(0,0,0,.52); }
 .crash-bet-section,.crash-feed-section { border:1px solid rgba(56,189,248,.15)!important; border-radius:20px!important; background:linear-gradient(150deg,rgba(16,24,36,.94),rgba(7,10,16,.96))!important; box-shadow:0 18px 48px rgba(0,0,0,.24); }
 .crash-quick-bets .cqb { min-height:44px; border-radius:12px; transition:transform .17s ease,border-color .17s ease!important; }
@@ -241,7 +241,7 @@
 /* Pachinko: jewel-box board and physical chip-like selectors. */
 .pachinko-container { max-width:1080px; margin-inline:auto; padding:clamp(12px,2vw,24px); }
 .pachinko-layout { display:grid!important; grid-template-columns:minmax(0,1fr) minmax(260px,320px)!important; grid-template-areas:"board controls" "board results"; align-items:start; gap:18px!important; }
-.pachinko-canvas-wrap { grid-area:board; min-width:0; overflow:hidden; border:1px solid rgba(192,132,252,.24)!important; border-radius:26px!important; background:radial-gradient(circle at 50% 18%,rgba(168,85,247,.17),transparent 54%),#080812!important; box-shadow:inset 0 0 70px rgba(76,29,149,.13),0 25px 65px rgba(0,0,0,.34); }
+.pachinko-canvas-wrap { grid-area:board; min-width:0; overflow:hidden; aspect-ratio:50/59; border:1px solid rgba(192,132,252,.24)!important; border-radius:26px!important; background:radial-gradient(circle at 50% 18%,rgba(168,85,247,.17),transparent 54%),#080812!important; box-shadow:inset 0 0 70px rgba(76,29,149,.13),0 25px 65px rgba(0,0,0,.34); }
 .pachinko-payout-legend { padding:10px 14px 13px; border-top:1px solid rgba(216,180,254,.13); color:#c9bdd5; font-size:10px; line-height:1.5; text-align:center; }
 .pachinko-controls { grid-area:controls; border:1px solid rgba(192,132,252,.18)!important; border-radius:22px!important; background:linear-gradient(150deg,rgba(30,20,42,.94),rgba(8,10,17,.97))!important; box-shadow:0 18px 48px rgba(0,0,0,.26); }
 .pach-results { grid-area:results; min-width:0; }
@@ -308,6 +308,8 @@
   .blackjack-table-shell.has-split-hands .game-area { min-height:520px; }
   .blackjack-container .dealer-section,.blackjack-container .player-section { min-height:126px!important; padding:8px!important; }
   .blackjack-container .cards-container { --blackjack-hand-origin:62px; min-height:80px!important; padding:2px 0 5px; }
+  .blackjack-container .cards-container { box-sizing:border-box; width:100%!important; margin-left:0!important; padding-left:calc(50% - var(--blackjack-hand-origin)); align-self:stretch; }
+  .blackjack-container .cards-container .blackjack-card:not(:first-child) { margin-left:-24px!important; }
 
   /* Before a round starts, the wager rail is the task. Do not reserve the active-table rows. */
   .blackjack-container.is-wagering .game-area { display:block; min-height:112px; padding:8px!important; }
@@ -405,8 +407,17 @@
   .pach-drop-btn { margin-top:2px; }
   .pachinko-canvas-wrap { width:100%; }
   .pachinko-canvas-wrap canvas { width:100%; height:auto; }
+  .pach-results { max-height:none; overflow:visible; }
 
   .coinflip-casino-container .room-selection-header,.poker-lobby .lobby-header { gap:10px; }
+}
+
+@media (max-width:360px) {
+  .blackjack-table-header { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; }
+  .blackjack-rules { max-width:100%; grid-template-columns:repeat(2,minmax(0,1fr)); text-align:left; white-space:normal; }
+  .blackjack-rules span { min-width:0; overflow-wrap:anywhere; }
+  .blackjack-container .cards-container.is-crowded { width:100%!important; max-width:100%!important; margin-left:0!important; padding-left:0; align-self:stretch; overflow:clip; }
+  .blackjack-container .cards-container.is-crowded .blackjack-card:not(:first-child) { margin-left:-34px!important; }
 }
 
 @media (prefers-reduced-motion:reduce) {

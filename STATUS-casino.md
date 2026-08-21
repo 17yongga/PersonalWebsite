@@ -1,5 +1,14 @@
 # Casino — STATUS.md
-> Updated: 2026-08-03
+> Updated: 2026-08-21
+
+## Live Comprehensive Interface + Pachinko Board Release — frontend `neon777-20260821-r65` / backend `r57` (2026-08-21)
+- **All-interface audit:** split the production-parity audit across shared/auth/lobby/dialog/CS2 surfaces, six active-state core games, and Pachinko research/physics. Evidence covers 320×568, 375×667, 390×844, 393×852, 430×932, 768×1024, 844×390 short landscape, and 1280×900 with physical controls, active/settled fixtures, scrolling, focus, reduced motion, lifecycle, console/network, clipping, hit-test, touch-target, and canvas geometry probes.
+- **CS2 bet-slip repair:** the short-mobile sheet now has one owned scroll region and document-order Stake → Odds → Total return → Profit → actions flow. Long credit values wrap safely, quick amounts and Close meet 44px, and the short-height sticky footer no longer covers the payout card. The exact/live 320×568 scrolled journey visibly exposes all four payout rows plus Place Bet and Cancel.
+- **Pachinko redesign:** replaced the constant full-width peg rows with a centre-expanding, constant-pitch triangular Galton board and a visible launch chute; reduced the board from 1.40× to 1.18× height; rotated narrow slot labels for legibility; and removed mobile result clipping. Every accepted server-selected slot now receives a shuffled 16-decision left/right route whose right-count exactly encodes that authoritative slot, followed by physical peg response and the existing vertical-only confirmation descent. Backend outcome, multiplier, payout, balance, and settlement contracts are unchanged.
+- **Other responsive repairs:** Crash no longer stops at an obsolete 900px canvas cap and its CSS/bitmap aspect ratio is aligned; narrow Blackjack rules and cards remain inside the table; mobile CS Cases battle names/drops wrap instead of bleeding.
+- **Verification:** source suite passed **107/107**. Pachinko passed 680 direct trajectories plus 240 60/120Hz runs across eight sizes: all 17 slots aligned, zero residual intersections, zero non-server settlements, zero final horizontal shift, and typical duration about 2–4 seconds (320px mean 5.5s, max 6.2s). Exact package passed 36-view 320/390 shared/all-game QA with zero horizontal overflow, clipped text, undersized targets, console errors, or page errors in game/dialog states; focused active-state Crash/Blackjack/Cases and CS2 payout-scroll visual review passed.
+- **Immutable package and production:** `r65` contains 6,251 manifested files; manifest/source SHA-256 `548a8ba99fbc688391f6846007967e9e12413b8ca8121ca9108fd574ba8dbf5a`; entry SHA-256 `8ebc76e94bcd4406121f66a81c296e86003ebdb128f0c895d0096b4ab4b53662`. CloudFront invalidation `IDC84CP3HM134NPSU6O2HBC2WZ` completed; all 25 referenced runtime assets match the exact package and immutable-cache contract. Backend/PM2/data remained untouched on `r57`; health/projection stayed `ok`; no production account or wager was used.
+- **Rollback:** immediate frontend rollback is immutable `r59`; backend remains `r57`. Pre-switch entry is `/tmp/pre-r65-live-casino.html`.
 
 ## Live Blackjack Motion + Settlement Release — frontend `neon777-20260803-r59` / backend `r57` (2026-08-03)
 - **Full interaction choreography:** Blackjack now plans semantic transitions from consecutive authoritative server snapshots. Deal, Hit, Stand, Double, Split, insurance decisions, active split-hand transfer, dealer reveal/draws, per-hand settlement, aggregate result, wallet feedback, and round reset each have explicit presentation phases instead of jumping directly to the final DOM.
@@ -69,7 +78,7 @@
 - **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`, and live login captures `live-login-390.png` / `live-login-1280.png`. Subjective listening remains Gary's human acceptance check; technical synthesis, scheduling, recovery, cleanup, and live delivery are verified.
 
 ## What's Live
-- **Frontend:** `r59` at https://gary-yong.com/casino.html (S3/CloudFront)
+- **Frontend:** `r65` at https://gary-yong.com/casino.html (S3/CloudFront)
 - **API/Backend:** `r57` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
 - **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260803-r57/backend`
 

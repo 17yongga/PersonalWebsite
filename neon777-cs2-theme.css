@@ -665,7 +665,7 @@
   }
 
   .cs2-betslip-modal-content {
-    max-height: 82vh !important;
+    max-height: 100dvh !important;
     border-radius: 18px 18px 0 0 !important;
   }
 }

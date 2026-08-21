@@ -62,10 +62,15 @@ test('Crash canvas consumes its wrapper on desktop and mobile', () => {
   const Tablet = loadGameClass('games/crash-casino.js', 'CrashGame', 768);
   const tablet = resizeFixture(Tablet, 734);
   assert.equal(tablet.style.width, '734px');
+
+  const Wide = loadGameClass('games/crash-casino.js', 'CrashGame', 1440);
+  const wide = resizeFixture(Wide, 1080);
+  assert.equal(wide.style.width, '1080px', 'desktop chart has no obsolete 900px dead-band cap');
 });
 
 test('game layout stylesheet encodes interaction-priority responsive areas', () => {
   const premium = read('games/premium-games.css');
+  const cs2Ui = read('cs2-modern-betting-ui.css');
   const crash = read('games/crash-casino.js');
   assert.match(premium, /--game-shell-wide:\s*1320px/);
   assert.match(premium, /\.crash-layout[^}]*grid-template-areas:\s*"chart controls"\s*"history feed"/s);
@@ -75,6 +80,9 @@ test('game layout stylesheet encodes interaction-priority responsive areas', () 
   assert.match(premium, /@media \(max-width:768px\)[\s\S]*\.pachinko-controls[^}]*grid-template-columns:\s*minmax\(0,1fr\)/);
   assert.match(premium, /\.pach-risk-btns,\.pach-ball-btns[^}]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(premium, /\.pach-results:empty\s*\{\s*display:none/);
+  assert.match(premium, /\.pachinko-canvas-wrap\s*\{[^}]*aspect-ratio:\s*50\s*\/\s*59/s);
+  assert.match(cs2Ui, /@media \(max-width: 768px\)[\s\S]*\.cs2-betslip-modal-content[^}]*max-height:\s*100dvh/);
+  assert.match(premium, /@media \(max-width:360px\)[\s\S]*\.blackjack-rules[^}]*max-width:\s*100%/);
   assert.match(crash, /class="crash-canvas-wrap"[\s\S]*class="crash-history"[\s\S]*class="crash-bet-section"[\s\S]*class="crash-feed-section"/);
 });
 

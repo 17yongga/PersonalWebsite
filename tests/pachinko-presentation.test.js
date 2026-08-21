@@ -294,6 +294,32 @@ test('Pachinko all authoritative results align through the peg field before ente
   }
 });
 
+test('Pachinko builds varied row decisions that still encode the authoritative slot', () => {
+  const PachinkoGame = loadPachinko();
+  const game = blankGame(PachinkoGame, { setCredits() {} });
+  const values = [0.91, 0.13, 0.72, 0.34, 0.55, 0.02, 0.81, 0.27, 0.63, 0.44, 0.18, 0.76, 0.49, 0.07, 0.96, 0.39];
+  let cursor = 0;
+  const route = game.createAuthoritativeRoute(6, () => values[cursor++ % values.length]);
+  assert.equal(route.length, game.ROWS);
+  assert.equal(route.filter(direction => direction > 0).length, 6);
+  assert.equal(route.filter(direction => direction < 0).length, game.ROWS - 6);
+  assert.ok(new Set(route).size > 1, 'a middle lane visibly alternates left and right decisions');
+});
+
+test('Pachinko peg rows expand from the centre at one stable horizontal pitch', () => {
+  const PachinkoGame = loadPachinko();
+  const game = blankGame(PachinkoGame, { setCredits() {} });
+  const rows = Array.from({ length: game.ROWS }, (_, row) => game.pegs.filter(peg => peg.id.startsWith(`${row}:`)));
+  const firstPitch = rows[0][1].x - rows[0][0].x;
+  rows.forEach((pegs, row) => {
+    assert.equal(pegs.length, row + 3);
+    for (let index = 1; index < pegs.length; index += 1) {
+      assert.ok(Math.abs((pegs[index].x - pegs[index - 1].x) - firstPitch) < 1e-9);
+    }
+    assert.ok(Math.abs((pegs[0].x + pegs.at(-1).x) / 2 - game.W / 2) < 1e-9);
+  });
+});
+
 test('Pachinko rejection creates no visual ball or speculative balance change', async () => {
   const timers = [];
   const input = { value: '100', disabled: false };

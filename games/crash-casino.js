@@ -86,9 +86,8 @@ class CrashGame {
     if (!wrap || !this.canvas) return;
     
     // Fill the chart column instead of leaving a dead band at the right edge.
-    const isMobile = window.innerWidth <= 768;
     const availableW = Math.max(1, Math.floor(wrap.clientWidth));
-    const w = Math.min(availableW, 900);
+    const w = availableW;
     
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = w * dpr;

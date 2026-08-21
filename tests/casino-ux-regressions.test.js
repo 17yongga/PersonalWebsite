@@ -146,11 +146,25 @@ test('Pachinko owns responsive lifecycle and uses multiplier-tier landing audio'
   assert.match(source, /pachinkoLandingJackpot/);
   assert.match(source, /pachinkoLandingHigh/);
   assert.match(source, /fixedStepMs = \(1000 \/ 60\) \/ 1\.12/);
-  assert.match(source, /const gravity = this\.H \* 0\.000075/);
+  assert.match(source, /const gravity = this\.H \* 0\.0003/);
   assert.match(source, /pachinkoPayoutLegend/);
   assert.match(source, /pendingBatches/);
   assert.match(source, /confirmBallPresentation/);
+  assert.match(source, /createAuthoritativeRoute/);
+  assert.match(source, /routeDecisions/);
+  assert.doesNotMatch(source, /const rowWidth = W \* 0\.82/);
   assert.match(source, /b\.active \|\| b\.landingHoldFrames > 0 \|\| b\.trail\.length/);
+});
+
+test('CS2 mobile bet slip owns one scroll region and keeps payout text above its actions', () => {
+  const css = read('cs2-modern-betting-ui.css');
+  const theme = read('neon777-cs2-theme.css');
+  assert.match(css, /@media \(max-width: 768px\)[\s\S]*\.cs2-betslip-modal-content[^}]*height:\s*min\(100dvh,\s*760px\)/);
+  assert.match(css, /@media \(max-width: 768px\)[\s\S]*\.cs2-bet-controls[^}]*min-height:\s*0[^}]*overflow-y:\s*auto/);
+  assert.match(css, /\.payout-info > div[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*auto\)/);
+  assert.match(css, /\.payout-info \.payout-value[^}]*overflow-wrap:\s*anywhere/);
+  assert.match(css, /@media \(max-width: 768px\) and \(max-height: 650px\)[\s\S]*\.potential-payout[^}]*min-height:\s*142px/);
+  assert.match(theme, /@media \(max-width: 900px\)[\s\S]*\.cs2-betslip-modal-content[^}]*max-height:\s*100dvh/);
 });
 
 test('achievement badge tracks unread unlocks and clears when badges are viewed', () => {
