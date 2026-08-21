@@ -8,6 +8,8 @@ class CaseOpeningGame {
     this.catalog = [];
     this.selectedCaseId = null;
     this.openCount = 1;
+    this.fastOpen = false;
+    this.dropTableExpanded = false;
     this.view = 'open';
     this.era = 'all';
     this.battleQueue = [];
@@ -134,6 +136,19 @@ class CaseOpeningGame {
     if (button.dataset.era) { this.era = button.dataset.era; return this.renderOpen(); }
     if (button.dataset.selectCase) { this.selectedCaseId = button.dataset.selectCase; return this.renderOpen(); }
     if (button.dataset.openCount) { this.openCount = Number(button.dataset.openCount); return this.renderOpen(); }
+    if (button.dataset.action === 'toggle-drops') { this.dropTableExpanded = !this.dropTableExpanded; return this.renderOpen(); }
+    if (button.dataset.action === 'toggle-fast') { this.fastOpen = !this.fastOpen; return this.renderOpen(); }
+    if (button.dataset.action === 'open-again') return this.openSelected();
+    if (button.dataset.action === 'view-inventory') return this.switchView('inventory');
+    if (button.dataset.action === 'view-proof') return this.switchView('fairness');
+    if (button.dataset.action === 'new-battle') return this.renderBattle();
+    if (button.dataset.keepItem) {
+      const card = button.closest('.case-result-card');
+      card?.classList.add('is-kept');
+      button.textContent = 'KEPT';
+      button.disabled = true;
+      return;
+    }
     if (button.dataset.action === 'open') return this.openSelected();
     if (button.dataset.battleAdd) { if (this.battleQueue.length < 12) this.battleQueue.push(button.dataset.battleAdd); return this.renderBattle(); }
     if (button.dataset.battleRemove) { this.battleQueue.splice(Number(button.dataset.battleRemove), 1); return this.renderBattle(); }
@@ -163,6 +178,7 @@ class CaseOpeningGame {
   switchView(view) {
     if (!['open', 'battle', 'inventory', 'fairness'].includes(view)) return;
     this.view = view;
+    if (view !== 'battle') this.root.classList.remove('battle-final-active');
     this.root.querySelectorAll('.case-mode').forEach(button => {
       const active = button.dataset.caseView === view;
       button.classList.toggle('active', active);
@@ -184,9 +200,11 @@ class CaseOpeningGame {
 
   caseArtwork(caseData, size = 'large') {
     const short = this.escape(caseData.name.replace(/Case$/i, '').trim());
-    return `<div class="case-art ${size}" style="--case-accent:${caseData.accent}">
-      <div class="case-art-lid"></div><div class="case-art-lock"></div>
-      <span>${short}</span><small>${caseData.generation === 'csgo' ? 'LEGACY' : 'CS2'}</small>
+    const featured = [...(caseData.items || [])].sort((a, b) => Number(b.value) - Number(a.value)).slice(0, 3);
+    return `<div class="case-art case-visual-stack ${size}" style="--case-accent:${caseData.accent}">
+      <div class="case-visual-glow" aria-hidden="true"></div>
+      <div class="case-visual-weapons" aria-hidden="true">${featured.map((item, index) => `<img src="${this.escape(item.image)}" alt="" loading="${size === 'large' ? 'eager' : 'lazy'}" decoding="async" data-stack-index="${index}">`).join('')}</div>
+      <div class="case-visual-core"><span>${short}</span><small>${caseData.generation === 'csgo' ? 'LEGACY' : 'CS2'}</small></div>
     </div>`;
   }
 
@@ -216,8 +234,10 @@ class CaseOpeningGame {
   }
 
   reelItems(winner, laneIndex = 0) {
-    const pool = this.catalog.flatMap(caseData => caseData.items || []);
-    const cards = Array.from({ length: 26 }, (_, index) => pool[(laneIndex * 7 + index * 11) % pool.length]);
+    const owner = this.catalog.find(caseData => caseData.items?.some(item => item.id === winner?.id))
+      || this.catalog.find(caseData => caseData.id === this.selectedCaseId);
+    const pool = owner?.items?.length ? owner.items : this.catalog.flatMap(caseData => caseData.items || []);
+    const cards = Array.from({ length: 26 }, (_, index) => pool[(laneIndex * 3 + index * 7) % pool.length]);
     cards[22] = winner;
     return cards;
   }
@@ -258,37 +278,46 @@ class CaseOpeningGame {
     const selected = this.catalog.find(item => item.id === this.selectedCaseId) || visible[0];
     if (selected && !visible.includes(selected)) this.selectedCaseId = visible[0]?.id;
     const active = this.catalog.find(item => item.id === this.selectedCaseId) || visible[0];
+    const featured = active ? [...active.items].sort((a, b) => Number(b.value) - Number(a.value)).slice(0, 3) : [];
+    const totalCost = active ? active.price * this.openCount : 0;
     view.innerHTML = `
-      <div class="case-era-switch" role="group" aria-label="Case collection filter">
-        ${[['all','All cases'],['csgo','CS:GO Legacy'],['cs2','CS2 Collection']].map(([id,label]) => `<button data-era="${id}" aria-pressed="${this.era === id}" class="${this.era === id ? 'active' : ''}">${label}</button>`).join('')}
-      </div>
-      <div class="case-shelf">
-        ${visible.map(item => `<button class="case-tile ${item.id === active?.id ? 'selected' : ''}" aria-pressed="${item.id === active?.id}" data-select-case="${item.id}">
-          ${this.caseArtwork(item, 'small')}<strong>${this.escape(item.name)}</strong><span>${this.credits(item.price)} credits</span>
-        </button>`).join('')}
-      </div>
-      ${active ? `<div class="case-opening-stage">
-        <div class="case-focus">
-          ${this.caseArtwork(active)}
-          <span class="case-collection-label">${active.generation === 'csgo' ? 'CS:GO LEGACY COLLECTION' : 'COUNTER-STRIKE 2 COLLECTION'}</span>
-          <h3>${this.escape(active.name)}</h3>
-          <p>Site-made case · ${Math.round(active.expectedReturn * 100)}% disclosed RTP</p>
-          <div class="case-count-control" role="group" aria-label="Cases to open">
-            ${[1,3,5].map(count => `<button data-open-count="${count}" aria-pressed="${this.openCount === count}" class="${this.openCount === count ? 'active' : ''}">${count}×</button>`).join('')}
+      <section class="case-market">
+        <div class="case-market-toolbar">
+          <div><span class="case-eyebrow">CHOOSE YOUR CASE</span><h3>Armory collection</h3></div>
+          <div class="case-era-switch" role="group" aria-label="Case collection filter">
+            ${[['all','All cases'],['csgo','CS:GO Legacy'],['cs2','CS2 Collection']].map(([id,label]) => `<button data-era="${id}" aria-pressed="${this.era === id}" class="${this.era === id ? 'active' : ''}">${label}</button>`).join('')}
           </div>
-          <button class="case-primary-action" data-action="open" ${this.busy ? 'disabled' : ''}>${this.busy ? 'OPENING…' : `OPEN FOR ${this.credits(active.price * this.openCount)} CREDITS`}</button>
-          <p class="case-no-cash">Virtual items only · zero monetary or Steam value</p>
         </div>
-        <aside class="case-drop-table">
-          <div class="case-section-heading"><div><span>DROP TABLE</span><h3>Possible skins</h3></div><small>Odds disclosed</small></div>
-          <div class="case-drop-list">${active.items.slice().reverse().map(item => `<div class="case-drop-row" style="--skin-color:${item.color}">
-            ${this.weaponArt(item)}
-            <div><strong>${this.escape(item.name)}</strong><span>${this.escape(item.officialRarity || item.rarity)}</span></div>
-            <div class="case-drop-value"><strong>${this.credits(item.value)}</strong><span>${item.chanceLabel}</span></div>
-          </div>`).join('')}</div>
+        <div class="case-shelf" role="group" aria-label="Available cases">
+          ${visible.map(item => { const top = [...item.items].sort((a,b) => Number(b.value) - Number(a.value))[0]; return `<button class="case-tile ${item.id === active?.id ? 'selected' : ''}" aria-pressed="${item.id === active?.id}" aria-label="${this.escape(item.name)}, ${this.credits(item.price)} credits" data-select-case="${item.id}">
+            ${this.caseArtwork(item, 'small')}<span class="case-tile-copy"><strong>${this.escape(item.name)}</strong><span>${this.credits(item.price)} credits</span><small>Top drop · ${this.escape(top?.weapon || '—')}</small></span>
+          </button>`; }).join('')}
+        </div>
+      </section>
+      ${active ? `<div class="case-opening-stage" style="--case-accent:${active.accent}">
+        <section class="case-focus">
+          <div class="case-focus-visual">${this.caseArtwork(active)}</div>
+          <div class="case-focus-copy">
+            <span class="case-collection-label">${active.generation === 'csgo' ? 'CS:GO LEGACY COLLECTION' : 'COUNTER-STRIKE 2 COLLECTION'}</span>
+            <h3>${this.escape(active.name)}</h3>
+            <p>Five disclosed outcomes. Every item is fixed by the server before the reveal.</p>
+            <div class="case-facts"><div><span>PRICE EACH</span><strong>${this.credits(active.price)}</strong></div><div><span>DISCLOSED RTP</span><strong>${Math.round(active.expectedReturn * 100)}%</strong></div><div><span>TOP DROP</span><strong>${this.credits(featured[0]?.value || 0)}</strong></div></div>
+            ${featured[0] ? `<div class="case-featured-drop" style="--skin-color:${featured[0].color}">${this.weaponArt(featured[0])}<div><span>FEATURED DROP</span><strong>${this.escape(featured[0].name)}</strong><small>${this.escape(featured[0].officialRarity || featured[0].rarity)} · ${this.credits(featured[0].value)} credits</small></div></div>` : ''}
+            <div class="case-open-dock">
+              <div class="case-count-row"><div class="case-count-control" role="group" aria-label="Cases to open">${[1,3,5].map(count => `<button data-open-count="${count}" aria-pressed="${this.openCount === count}" class="${this.openCount === count ? 'active' : ''}">${count}×</button>`).join('')}</div><button class="case-fast-toggle ${this.fastOpen ? 'active' : ''}" data-action="toggle-fast" aria-pressed="${this.fastOpen}">⚡ Fast reveal</button></div>
+              <div class="case-open-total"><span>Total</span><strong>${this.credits(totalCost)} credits</strong></div>
+              <button class="case-primary-action" data-action="open" ${this.busy ? 'disabled' : ''}>${this.busy ? 'PUBLISHING COMMITMENT…' : `OPEN ${this.openCount} ${this.openCount === 1 ? 'CASE' : 'CASES'}`}</button>
+              <p class="case-no-cash">Virtual items only · no cash, Steam, withdrawal, or external trading value</p>
+            </div>
+          </div>
+        </section>
+        <aside class="case-drop-table ${this.dropTableExpanded ? 'is-expanded' : ''}">
+          <div class="case-section-heading"><div><span>EXACT ODDS</span><h3>Possible skins</h3></div><button class="case-drop-toggle" data-action="toggle-drops" aria-expanded="${this.dropTableExpanded}">${this.dropTableExpanded ? 'Hide full table' : 'View all 5 drops'}</button></div>
+          <div class="case-drop-preview">${featured.map(item => `<article style="--skin-color:${item.color}">${this.weaponArt(item)}<strong>${this.escape(item.weapon)}</strong><span>${this.escape(item.finish)}</span><b>${item.chanceLabel}</b></article>`).join('')}</div>
+          <div class="case-drop-list">${active.items.slice().reverse().map(item => `<div class="case-drop-row" style="--skin-color:${item.color}">${this.weaponArt(item)}<div><strong>${this.escape(item.name)}</strong><span>${this.escape(item.officialRarity || item.rarity)}</span></div><div class="case-drop-value"><strong>${this.credits(item.value)}</strong><span>${item.chanceLabel}</span></div></div>`).join('')}</div>
+          <footer>Odds total 100% · ${Math.round(active.expectedReturn * 100)}% disclosed RTP · virtual values only</footer>
         </aside>
-      </div>
-      <div class="case-results" id="caseResults" aria-live="polite"></div>` : ''}`;
+      </div><div class="case-results" id="caseResults" aria-live="polite"></div>` : ''}`;
   }
 
   isDefinitiveError(error) {
@@ -328,7 +357,9 @@ class CaseOpeningGame {
       this.pending.open = null;
       this.casino.setCredits(data.balance);
       this.latestProof = data.proof;
-      await this.animateDrops(data.items || []);
+      const inventoryById = new Map((data.inventory || []).map(item => [item.inventoryId, item]));
+      const revealedItems = (data.items || []).map(item => ({ ...item, ...(inventoryById.get(item.inventoryId) || {}) }));
+      await this.animateDrops(revealedItems);
       this.message(`${data.items.length} ${data.items.length === 1 ? 'skin' : 'skins'} added to inventory.`, 'success');
     } catch (error) {
       if (this.isDefinitiveError(error)) this.pending.open = null;
@@ -345,7 +376,7 @@ class CaseOpeningGame {
     const token = Symbol('case-opening');
     this.presentationToken = token;
     results.innerHTML = `<section class="case-reel-stage" aria-live="polite">
-      <header><span>OPENING ${items.length} ${items.length === 1 ? 'CASE' : 'CASES'}</span><strong>Result fixed by server · revealing now</strong></header>
+      <header><div><span>OPENING ${items.length} ${items.length === 1 ? 'CASE' : 'CASES'}</span><h3>Authoritative reveal</h3></div><strong>${this.fastOpen ? 'FAST REVEAL' : 'Result fixed by server'}</strong></header>
       ${items.map((item, index) => this.reelLaneMarkup(item, index)).join('')}
     </section>`;
     results.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
@@ -353,16 +384,19 @@ class CaseOpeningGame {
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       if (this.presentationToken !== token || this.destroyed) return;
       const stage = results.querySelector('.case-reel-stage');
-      this.startReels(stage, 3500);
+      this.startReels(stage, this.fastOpen ? 700 : 2700);
       window.casinoSound?.play('caseReel', { game: 'cases' });
-      await this.wait(4050 + Math.max(0, items.length - 1) * 110);
+      await this.wait((this.fastOpen ? 980 : 3100) + Math.max(0, items.length - 1) * (this.fastOpen ? 30 : 80));
       if (this.presentationToken !== token || this.destroyed) return;
     }
     window.casinoSound?.play('caseReveal', { game: 'cases' });
-    results.innerHTML = `<div class="case-result-grid">${items.map((item, index) => `<article class="case-result-card" style="--skin-color:${item.color};--reveal-delay:${index * 90}ms">
-      <span class="case-result-rarity">${this.escape(item.officialRarity || item.rarity)}</span>${this.weaponArt(item)}
-      <h4>${this.escape(item.weapon)}</h4><p>${this.escape(item.finish)}</p><strong>${this.credits(item.value)} credits</strong>
-    </article>`).join('')}</div>`;
+    const totalValue = items.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+    results.innerHTML = `<section class="case-result-stage"><header><div><span class="case-eyebrow">UNBOXED</span><h3>${items.length} ${items.length === 1 ? 'item' : 'items'} added to your armory</h3></div><strong>${this.credits(totalValue)} credits total</strong></header>
+      <div class="case-result-grid">${items.map((item, index) => `<article class="case-result-card" style="--skin-color:${item.color};--reveal-delay:${index * 90}ms">
+        <span class="case-result-rarity">${this.escape(item.officialRarity || item.rarity)}</span>${this.weaponArt(item)}
+        <h4>${this.escape(item.weapon)}</h4><p>${this.escape(item.finish)}</p><strong>${this.credits(item.value)} credits</strong><small>✓ Added to inventory</small>${item.inventoryId ? `<footer><button data-keep-item="${this.escape(item.inventoryId)}">KEEP</button><button data-sell-item="${this.escape(item.inventoryId)}">SELL · ${this.credits(item.value)}</button></footer>` : ''}
+      </article>`).join('')}</div>
+      <div class="case-result-actions"><button class="case-primary-action" data-action="open-again">OPEN AGAIN</button><button data-action="view-inventory">VIEW INVENTORY</button><button data-action="view-proof">VERIFY RESULT</button></div></section>`;
     this.presentationToken = null;
     results.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
   }
@@ -370,6 +404,7 @@ class CaseOpeningGame {
   renderBattle() {
     const view = this.root?.querySelector('#caseBattleView');
     if (!view) return;
+    this.root.classList.remove('battle-final-active');
     const total = this.battleQueue.reduce((sum, id) => sum + (this.catalog.find(item => item.id === id)?.price || 0), 0);
     view.innerHTML = `
       <div class="battle-builder">
@@ -427,15 +462,18 @@ class CaseOpeningGame {
     const arena = this.root.querySelector('#battleArena');
     if (!arena) return;
     if (battle.status === 'waiting') {
+      this.root.classList.remove('battle-final-active');
       arena.innerHTML = `<div class="battle-waiting"><span class="case-loader"></span><h3>Waiting for a challenger</h3><p>Battle ${this.escape(battle.battleId.slice(-10))}</p><button data-cancel-battle="${battle.battleId}">Cancel &amp; refund</button></div>`;
       return;
     }
     const results = battle.results || [];
-    arena.innerHTML = `<div class="battle-versus">${results.map((result,index) => `<article class="battle-player ${battle.winnerId === result.userId ? 'winner' : ''}">
+    this.root.classList.add('battle-final-active');
+    const winner = results.find(result => battle.winnerId === result.userId);
+    arena.innerHTML = `<section class="battle-final"><header><div><span class="case-eyebrow">BATTLE COMPLETE</span><h3>${this.escape(winner?.userId || 'Winner')} takes all</h3></div><strong>Winner-takes-all virtual inventory</strong></header><div class="battle-versus">${results.map((result,index) => `<article class="battle-player ${battle.winnerId === result.userId ? 'winner' : ''}">
       <header><span>${index === 0 ? 'PLAYER 1' : (battle.opponentType === 'bot' ? 'ROBOT' : 'PLAYER 2')}</span><h3>${this.escape(result.userId)}</h3><strong>${this.credits(result.total)} total</strong></header>
       <div class="battle-drops">${result.drops.map(item => `<div style="--skin-color:${item.color}">${this.weaponArt(item)}<span>${this.escape(item.finish)}</span><b>${this.credits(item.value)}</b></div>`).join('')}</div>
       ${battle.winnerId === result.userId ? '<div class="battle-winner-ribbon">WINNER · TAKES ALL</div>' : ''}
-    </article>`).join('<div class="battle-vs-mark">VS</div>')}</div>`;
+    </article>`).join('<div class="battle-vs-mark">VS</div>')}</div><div class="battle-final-actions"><button class="case-primary-action" data-action="new-battle">BUILD ANOTHER BATTLE</button><button data-action="view-proof">VERIFY BATTLE</button><button data-action="view-inventory">VIEW INVENTORY</button></div></section>`;
   }
 
   async presentBattleResult(battle) {
@@ -690,6 +728,7 @@ class CaseOpeningGame {
     this.destroyed = true;
     this.clearPresentationTimers();
     this.root?.classList.remove('battle-presentation-active');
+    this.root?.classList.remove('battle-final-active');
     clearInterval(this.pollTimer);
     clearTimeout(this.messageTimer);
     const socket = this.casino.getSocket?.();

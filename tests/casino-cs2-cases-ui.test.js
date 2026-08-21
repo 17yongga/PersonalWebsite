@@ -140,6 +140,16 @@ test('case game is wired into the lobby, game manager, release package and lifec
   assert.doesNotMatch(cases, /<svg viewBox="0 0 180 70"/);
   assert.match(cases, /case-reel-window/);
   assert.match(cases, /--reel-stop/);
+  assert.match(cases, /case-visual-stack/);
+  assert.match(cases, /case-featured-drop/);
+  assert.match(cases, /data-action="toggle-drops"/);
+  assert.match(cases, /data-action="toggle-fast"/);
+  assert.match(cases, /data-action="open-again"/);
+  assert.match(cases, /data-action="view-inventory"/);
+  assert.match(cases, /data-keep-item/);
+  assert.match(cases, /data-sell-item/);
+  assert.match(cases, /case-result-actions/);
+  assert.match(cases, /this\.fastOpen \? 700 : 2700/);
   assert.match(cases, /window\.casinoSound\?\.play\('caseReel'/);
   assert.match(cases, /async presentBattleResult/);
   assert.match(cases, /for \(let roundIndex = 0; roundIndex < roundCount/);
@@ -147,6 +157,11 @@ test('case game is wired into the lobby, game manager, release package and lifec
   const caseCss = read('games/case-opening.css');
   assert.match(caseCss, /\.case-reel-window/);
   assert.match(caseCss, /\.case-reel-track/);
+  assert.match(caseCss, /\.case-visual-stack/);
+  assert.match(caseCss, /\.case-open-dock/);
+  assert.match(caseCss, /\.case-result-actions/);
+  assert.match(caseCss, /scroll-snap-type:\s*x mandatory/);
+  assert.match(caseCss, /\.battle-final-actions/);
   assert.match(caseCss, /\.battle-round-stage/);
   assert.match(caseCss, /overflow-wrap:anywhere/);
   assert.match(build, /assets\/cs2-skins/);
