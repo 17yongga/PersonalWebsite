@@ -300,7 +300,7 @@
   .case-mode { flex:0 0 auto; scroll-snap-align:start; }
   .case-market { margin-inline:-2px; padding:12px; overflow:hidden; }
   .case-market-toolbar { align-items:flex-start; flex-direction:column; gap:10px; }
-  .case-market-toolbar .case-era-switch { width:100%; flex-wrap:nowrap; overflow-x:auto; }
+  .case-market-toolbar .case-era-switch { width:100%; flex-wrap:nowrap; justify-content:flex-start; overflow-x:auto; }
   .case-era-switch button { flex:0 0 auto; }
   .case-shelf { display:flex; gap:10px; margin:0 -12px; padding:3px 12px 14px; overflow-x:auto; scroll-snap-type:x mandatory; scroll-padding-inline:12px; }
   .case-tile { flex:0 0 158px; grid-template-rows:84px auto; min-height:158px; }
