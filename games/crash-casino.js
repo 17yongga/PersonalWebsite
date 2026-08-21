@@ -368,7 +368,7 @@ class CrashGame {
     const el = document.getElementById('crashStatus');
     if (!el) return;
     if (this.phase === 'betting') {
-      el.textContent = `Starting in ${Math.ceil(this.bettingTimeLeft)}s — Place your bets!`;
+      el.textContent = `Starting in ${Math.ceil(this.bettingTimeLeft)}s`;
       el.className = 'crash-status betting';
       el.style.display = '';
     } else if (this.phase === 'running') {

@@ -128,6 +128,7 @@ test('Coinflip renders unambiguous semantic Heads and Tails faces', () => {
 
 test('Crash cash-out exposes an immediate pending state and clears it authoritatively', () => {
   const source = read('games/crash-casino.js');
+  const premium = read('games/premium-games.css');
   assert.match(source, /cashoutPending/);
   assert.match(source, /Locked at/);
   assert.match(source, /Cash-out locked at/);
@@ -136,6 +137,10 @@ test('Crash cash-out exposes an immediate pending state and clears it authoritat
   assert.match(source, /playOnce\(`crash:\$\{this\.soundRoundId/);
   assert.match(source, /Math\.min\(window\.devicePixelRatio \|\| 1, 2\)/);
   assert.match(source, /cancelAnimationFrame\(this\.resizeFrame\)/);
+  assert.match(source, /`Starting in \$\{Math\.ceil\(this\.bettingTimeLeft\)\}s`/);
+  assert.doesNotMatch(source, /Starting in \$\{Math\.ceil\(this\.bettingTimeLeft\)\}s — Place your bets!/);
+  assert.match(premium, /\.crash-multiplier\.betting-label[^}]*top:\s*34%/);
+  assert.match(premium, /\.crash-status\.betting[^}]*top:\s*72%[^}]*bottom:\s*auto/);
 });
 
 test('Pachinko owns responsive lifecycle and uses multiplier-tier landing audio', () => {
