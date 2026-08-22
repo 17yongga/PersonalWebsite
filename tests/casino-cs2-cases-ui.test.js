@@ -142,6 +142,9 @@ test('case game is wired into the lobby, game manager, release package and lifec
   assert.match(cases, /--reel-stop/);
   assert.match(cases, /case-visual-stack/);
   assert.match(cases, /case-featured-drop/);
+  assert.match(cases, /centerHorizontalControl/);
+  assert.match(cases, /\.scrollLeft\s*=/);
+  assert.match(cases, /class="case-drop-preview"\s+tabindex="0"\s+role="region"/);
   assert.match(cases, /data-action="toggle-drops"/);
   assert.match(cases, /data-action="toggle-fast"/);
   assert.match(cases, /data-action="open-again"/);

@@ -53,6 +53,14 @@ class CaseOpeningGame {
     return this.casino.formatCredits ? this.casino.formatCredits(value) : String(Math.round(Number(value) || 0));
   }
 
+  centerHorizontalControl(selector) {
+    if (this.destroyed) return;
+    const element = this.root?.querySelector(selector);
+    const scroller = element?.parentElement;
+    if (!element || !scroller || scroller.scrollWidth <= scroller.clientWidth) return;
+    scroller.scrollLeft = Math.max(0, element.offsetLeft - (scroller.clientWidth - element.offsetWidth) / 2);
+  }
+
   async request(path, options = {}) {
     const response = await this.casino.apiFetch(path, options);
     const data = await response.json().catch(() => ({}));
@@ -196,6 +204,7 @@ class CaseOpeningGame {
     if (view === 'battle') { this.renderBattle(); this.loadBattles(); }
     if (view === 'inventory') this.loadInventory();
     if (view === 'fairness') this.renderFairness();
+    this.centerHorizontalControl('.case-mode-nav .case-mode.active');
   }
 
   caseArtwork(caseData, size = 'large') {
@@ -313,11 +322,13 @@ class CaseOpeningGame {
         </section>
         <aside class="case-drop-table ${this.dropTableExpanded ? 'is-expanded' : ''}">
           <div class="case-section-heading"><div><span>EXACT ODDS</span><h3>Possible skins</h3></div><button class="case-drop-toggle" data-action="toggle-drops" aria-expanded="${this.dropTableExpanded}">${this.dropTableExpanded ? 'Hide full table' : 'View all 5 drops'}</button></div>
-          <div class="case-drop-preview">${featured.map(item => `<article style="--skin-color:${item.color}">${this.weaponArt(item)}<strong>${this.escape(item.weapon)}</strong><span>${this.escape(item.finish)}</span><b>${item.chanceLabel}</b></article>`).join('')}</div>
+          <div class="case-drop-preview" tabindex="0" role="region" aria-label="Featured possible drops">${featured.map(item => `<article style="--skin-color:${item.color}">${this.weaponArt(item)}<strong>${this.escape(item.weapon)}</strong><span>${this.escape(item.finish)}</span><b>${item.chanceLabel}</b></article>`).join('')}</div>
           <div class="case-drop-list">${active.items.slice().reverse().map(item => `<div class="case-drop-row" style="--skin-color:${item.color}">${this.weaponArt(item)}<div><strong>${this.escape(item.name)}</strong><span>${this.escape(item.officialRarity || item.rarity)}</span></div><div class="case-drop-value"><strong>${this.credits(item.value)}</strong><span>${item.chanceLabel}</span></div></div>`).join('')}</div>
           <footer>Odds total 100% · ${Math.round(active.expectedReturn * 100)}% disclosed RTP · virtual values only</footer>
         </aside>
       </div><div class="case-results" id="caseResults" aria-live="polite"></div>` : ''}`;
+    this.centerHorizontalControl('.case-era-switch button.active');
+    this.centerHorizontalControl('.case-shelf .case-tile.selected');
   }
 
   isDefinitiveError(error) {
