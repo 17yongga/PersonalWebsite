@@ -158,7 +158,9 @@ test('case game is wired into the lobby, game manager, release package and lifec
   assert.match(caseCss, /\.case-reel-window/);
   assert.match(caseCss, /\.case-reel-track/);
   assert.match(caseCss, /\.case-visual-stack/);
-  assert.match(caseCss, /\.case-open-dock/);
+  assert.match(caseCss, /\.case-open-dock\s*\{\s*position:static;\s*z-index:auto;/);
+  assert.doesNotMatch(caseCss, /\.case-open-dock\s*\{[^}]*position:sticky;/);
+  assert.match(caseCss, /\.case-mode-nav,\.case-status,\.battle-ticket\s*\{\s*position:static;/);
   assert.match(caseCss, /\.case-result-actions/);
   assert.match(caseCss, /scroll-snap-type:\s*x mandatory/);
   assert.match(caseCss, /\.battle-final-actions/);

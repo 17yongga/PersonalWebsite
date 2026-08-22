@@ -238,7 +238,7 @@
 .case-featured-drop span { color:var(--skin-color); font-size:.56rem; font-weight:900; letter-spacing:.12em; }
 .case-featured-drop strong { margin:4px 0; overflow-wrap:anywhere; }
 .case-featured-drop small { color:var(--case-muted); }
-.case-open-dock { padding:13px; border:1px solid rgba(57,242,161,.2); border-radius:14px; background:rgba(4,8,12,.68); box-shadow:0 18px 36px rgba(0,0,0,.2); }
+.case-open-dock { position:static; z-index:auto; padding:13px; border:1px solid rgba(57,242,161,.2); border-radius:14px; background:rgba(4,8,12,.68); box-shadow:0 18px 36px rgba(0,0,0,.2); }
 .case-count-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; }
 .case-count-control { margin:0; }
 .case-fast-toggle { min-height:44px; padding:0 12px; border:1px solid var(--case-line); border-radius:9px; color:var(--case-muted); background:transparent; font-weight:800; cursor:pointer; }
@@ -296,7 +296,8 @@
   .case-game-shell { padding:10px 12px calc(90px + env(safe-area-inset-bottom)); overflow:hidden; }
   .case-hero { align-items:flex-start; padding:15px; }
   .case-hero p { font-size:.82rem; }
-  .case-mode-nav { top:6px; width:100%; display:flex; overflow-x:auto; scroll-snap-type:x mandatory; }
+  .case-mode-nav,.case-status,.battle-ticket { position:static; }
+  .case-mode-nav { top:auto; width:100%; display:flex; overflow-x:auto; scroll-snap-type:x mandatory; }
   .case-mode { flex:0 0 auto; scroll-snap-align:start; }
   .case-market { margin-inline:-2px; padding:12px; overflow:hidden; }
   .case-market-toolbar { align-items:flex-start; flex-direction:column; gap:10px; }
@@ -315,7 +316,7 @@
   .case-facts span { font-size:.48rem; }.case-facts strong { font-size:.7rem; }
   .case-featured-drop { grid-template-columns:92px minmax(0,1fr); }
   .case-featured-drop .skin-image { height:56px; }
-  .case-open-dock { position:sticky; bottom:calc(72px + env(safe-area-inset-bottom)); z-index:12; margin-inline:-5px; padding:10px; backdrop-filter:blur(18px); }
+  .case-open-dock { margin-inline:-5px; padding:10px; }
   .case-count-row { grid-template-columns:1fr; }
   .case-fast-toggle { width:100%; }
   .case-open-dock .case-primary-action { min-height:52px; }
