@@ -1,12 +1,13 @@
 # Casino — STATUS.md
 > Updated: 2026-08-22
 
-## Live CS2 Cases Mobile Occlusion Repair — frontend `neon777-20260821-r74` / backend `r57` (2026-08-22)
+## Live CS2 Cases Mobile Occlusion + Accessibility Repair — frontend `neon777-20260822-r77` / backend `r57` (2026-08-22)
 - **Real-phone root cause:** Gary's iPhone screenshot proved the mobile `.case-open-dock` inherited `position:sticky` and floated over `.case-featured-drop` while scrolling, completely obscuring its canonical skin/details. Earlier generic geometry checks missed sibling occlusion because they covered viewport/nav clipping rather than pairwise intersections.
 - **Owning repair:** all opening controls now remain in normal document flow on every viewport. Mobile also disables desktop sticky positioning for the mode navigation, transient status, and battle ticket so they cannot cover opening, battle, inventory, or fairness content during scroll/re-entry. Desktop composition remains unchanged.
 - **Audit upgrade:** the fixture browser harness now scrolls directly to Featured Drop, controls, and exact odds and checks explicit sibling pairs: featured/control, facts/control, hero/control, nav/content, status/nav, builder/ticket, arena/ticket, final/lobby, and result/actions.
-- **Verification:** **107/107** source tests passed. Exact `r74` completed **114** states across 320×568, 375×667, 390×844, 393×852, 430×932, and 844×390: zero sibling overlap, document overflow, undersized controls, bottom-nav obstruction, console/page/resource errors, or lifecycle growth. Visual acceptance covered the formerly broken scroll position, 320px Featured Drop, 5-lane reel, 5-item Keep/Sell result, and settled battle. Live `r74` repeated 57 states at 320/390/430 with the same zero-overlap/error result.
-- **Immutable production:** manifest SHA-256 `21f736130a9ad8f9e8b0ad6fba395b00c0e55f65c254b1cb597f8efa9b4e02f0`; entry SHA-256 `0d09e37b56c217da191bae52c46131cf03a3999b00daea79651184d90f91c7ec`; all 25 live assets match with immutable caching. Backend/PM2/data remain untouched on `r57`; health/projection remains `ok`; no production account or wager was used. Rollback is frontend `r73`.
+- **Audit follow-through:** the parallel audit independently measured the old `r73` collision at exactly 58px across all tested widths. Its remaining low-severity findings are also closed: active filters/cases/mode tabs now centre inside their horizontal scrollers after rerender; the drop preview is a keyboard-focusable labelled region; result Keep/Sell controls use a 46px floor so browser rounding cannot produce 43.4px targets; the former portrait/landscape scroll jump disappeared with the in-flow dock.
+- **Verification:** **107/107** source tests passed. The owning `r74` fix completed **114** exact states across 320×568, 375×667, 390×844, 393×852, 430×932, and 844×390 plus 57 live states at 320/390/430: zero sibling overlap, document overflow, bottom-nav obstruction, console/page/resource errors, or lifecycle growth. Follow-up exact/live `r77` at the 430px edge case has zero overlap, overflow, sub-44px targets, axe violations, runtime/resource errors, or lifecycle growth.
+- **Immutable production:** `r77` manifest SHA-256 `5af12e352cf897a7737f5a0e68ac563287be7fadf34291210234db21e5ac6ac9`; entry SHA-256 `ab0239e822d11b3788911a98080d0a1657587e06814986be76e5d0abeaf178f8`; all 25 live assets match with immutable caching. Backend/PM2/data remain untouched on `r57`; health/projection remains `ok`; no production account or wager was used. Rollback is frontend `r74` or `r73`.
 
 ## Live Crash Overlay + Premium CS2 Cases Release — frontend `neon777-20260821-r73` / backend `r57` (2026-08-21)
 - **Crash real-phone repair:** Gary's iPhone screenshot exposed overlapping betting-phase layers. `NEXT ROUND` now occupies a dedicated upper chart zone with readable word spacing, while a compact `Starting in Ns` countdown sits independently below. Exact and live betting/running/crashed checks at 320×568, 390×844, 844×390, and 1280×900 have zero clipping, overlap, undersized controls, runtime errors, or failed resources. The focused repair first shipped in `r68` and is included in `r73`.
@@ -95,7 +96,7 @@
 - **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`, and live login captures `live-login-390.png` / `live-login-1280.png`. Subjective listening remains Gary's human acceptance check; technical synthesis, scheduling, recovery, cleanup, and live delivery are verified.
 
 ## What's Live
-- **Frontend:** `r74` at https://gary-yong.com/casino.html (S3/CloudFront)
+- **Frontend:** `r77` at https://gary-yong.com/casino.html (S3/CloudFront)
 - **API/Backend:** `r57` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
 - **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260803-r57/backend`
 
