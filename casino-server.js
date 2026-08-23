@@ -1637,25 +1637,33 @@ app.get('/api/cases/inventory', requireAuth, (req, res) => {
 app.post('/api/cases/inventory/sell-all', requireAuth, apiMutationRateLimit, async (req, res) => {
   try {
     const userId = req.auth.username;
-    const sold = caseGameService.sellAll({
-      userId,
-      inventoryIds: req.body?.inventoryIds,
-      requestId: sanitizeText(req.body?.requestId, 80)
+    const sold = await runWithUserBalanceLock(userId, async () => {
+      const result = caseGameService.sellAll({
+        userId,
+        inventoryIds: req.body?.inventoryIds,
+        requestId: sanitizeText(req.body?.requestId, 80)
+      });
+      const balance = casinoLedger.balance(userId);
+      await projectCommittedBalance(userId, balance);
+      return { ...result, balance, inventory: caseGameService.inventory(userId) };
     });
-    await projectCommittedBalance(userId, sold.balance);
-    res.json({ success: true, ...sold, inventory: caseGameService.inventory(userId) });
+    res.json({ success: true, ...sold });
   } catch (error) { sendCaseApiError(res, error); }
 });
 
 app.post('/api/cases/inventory/:inventoryId/sell', requireAuth, apiMutationRateLimit, async (req, res) => {
   try {
     const userId = req.auth.username;
-    const sold = caseGameService.sell({
-      userId,
-      inventoryId: sanitizeText(req.params.inventoryId, 160),
-      requestId: sanitizeText(req.body?.requestId, 80)
+    const sold = await runWithUserBalanceLock(userId, async () => {
+      const result = caseGameService.sell({
+        userId,
+        inventoryId: sanitizeText(req.params.inventoryId, 160),
+        requestId: sanitizeText(req.body?.requestId, 80)
+      });
+      const balance = casinoLedger.balance(userId);
+      await projectCommittedBalance(userId, balance);
+      return { ...result, balance };
     });
-    await projectCommittedBalance(userId, sold.balance);
     res.json({ success: true, ...sold });
   } catch (error) { sendCaseApiError(res, error); }
 });

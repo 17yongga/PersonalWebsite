@@ -312,7 +312,7 @@ class CaseGameService {
       }
       return changed;
     })();
-    return { inventoryId, value: item.value, balance: result.balance, item: this._publicInventory(this.stmt.inventoryItem.get(inventoryId)) };
+    return { inventoryId, value: item.value, balance: this.ledger.balance(userId), item: this._publicInventory(this.stmt.inventoryItem.get(inventoryId)) };
   }
 
   sellAll({ userId, inventoryIds, requestId }) {
@@ -331,21 +331,23 @@ class CaseGameService {
       referenceId: `sell-all-${requestId}`, response: { inventoryIds: ids, count: ids.length, value }, metadata
     };
     const prior = this.ledger.lookup(idempotencyKey);
-    const changed = prior || this.db.transaction(() => {
-      if (rows.some(row => row.status !== 'available')) throw new Error('One or more inventory items are already sold');
-      const committed = this.ledger.change(input);
-      const soldAt = this.now();
-      for (const id of ids) {
-        if (this.stmt.sellInventory.run(soldAt, id).changes !== 1) throw new Error('Inventory sale transition failed');
-      }
-      return committed;
-    })();
-    const replay = prior ? this.ledger.change(input) : changed;
+    if (prior) {
+      this.ledger.change(input);
+    } else {
+      this.db.transaction(() => {
+        if (rows.some(row => row.status !== 'available')) throw new Error('One or more inventory items are already sold');
+        this.ledger.change(input);
+        const soldAt = this.now();
+        for (const id of ids) {
+          if (this.stmt.sellInventory.run(soldAt, id).changes !== 1) throw new Error('Inventory sale transition failed');
+        }
+      })();
+    }
     return {
       inventoryIds: ids,
       count: ids.length,
       value,
-      balance: replay.balance,
+      balance: this.ledger.balance(userId),
       items: ids.map(id => this._publicInventory(this.stmt.inventoryItem.get(id)))
     };
   }

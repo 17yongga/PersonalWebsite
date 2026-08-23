@@ -210,6 +210,7 @@ test('mobile Cases keeps the opening decision compact and confirms item sales in
   assert.match(client, /case-mobile-summary/);
   assert.match(client, /data-action="toggle-case-details"/);
   assert.match(client, /data-action="sell-all"/);
+  assert.match(client, /lastRevealedItems = this\.lastRevealedItems\.filter\(item => item\.inventoryId !== button\.dataset\.keepItem\)/);
   assert.match(client, /classList\.add\('is-sold'\)/);
   assert.match(client, /aria-busy/);
   assert.match(css, /@media \(max-width:760px\)[\s\S]*\.case-secondary-details:not\(\.is-expanded\)\s*\{\s*display:none/);

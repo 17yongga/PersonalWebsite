@@ -157,8 +157,12 @@ class CaseOpeningGame {
     if (button.dataset.keepItem) {
       const card = button.closest('.case-result-card');
       card?.classList.add('is-kept');
+      card.dataset.decision = 'kept';
+      this.lastRevealedItems = this.lastRevealedItems.filter(item => item.inventoryId !== button.dataset.keepItem);
       button.textContent = 'KEPT';
       button.disabled = true;
+      card.querySelector('[data-sell-item]')?.setAttribute('disabled', '');
+      this.syncResultSellAll();
       return;
     }
     if (button.dataset.action === 'open') return this.openSelected();
@@ -695,6 +699,16 @@ class CaseOpeningGame {
     if (total) total.textContent = `Collection value: ${this.credits(value)} credits`;
   }
 
+  syncResultSellAll() {
+    const button = this.root?.querySelector('.case-result-stage [data-action="sell-all"]');
+    if (!button || button.dataset.saleState === 'sold') return;
+    const value = this.lastRevealedItems.reduce((sum, item) => sum + Number(item.value || 0), 0);
+    button.disabled = this.lastRevealedItems.length === 0;
+    button.textContent = this.lastRevealedItems.length
+      ? `SELL ${this.lastRevealedItems.length} UNDECIDED · ${this.credits(value)}`
+      : 'ALL ITEMS DECIDED';
+  }
+
   async sellItem(inventoryId) {
     if (this.busy) return;
     this.busy = true;
@@ -716,6 +730,7 @@ class CaseOpeningGame {
       this.lastRevealedItems = this.lastRevealedItems.filter(entry => entry.inventoryId !== inventoryId);
       this.markSoldCards([inventoryId], new Map([[inventoryId, item]]));
       this.syncInventorySummary();
+      this.syncResultSellAll();
     } catch (error) {
       if (this.isDefinitiveError(error)) this.pending.sells.delete(inventoryId);
       buttons.forEach(button => { button.disabled = false; button.removeAttribute('aria-busy'); button.textContent = 'SELL FAILED · RETRY'; button.title = error.message; });
