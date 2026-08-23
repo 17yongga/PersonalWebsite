@@ -4,6 +4,7 @@ const crypto = require('crypto');
 
 const SUITS = ['hearts', 'diamonds', 'clubs', 'spades'];
 const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king', 'ace'];
+const TEN_VALUE_CARDS = new Set(['10', 'jack', 'queen', 'king']);
 const PACHINKO_MULTIPLIERS = Object.freeze({
   low: Object.freeze([5, 2.5, 1.6, 1.3, 1.15, 1.05, 0.95, 0.9, 0.85, 0.9, 0.95, 1.05, 1.15, 1.3, 1.6, 2.5, 5]),
   medium: Object.freeze([50, 18, 6, 3, 1.8, 1.2, 0.9, 0.75, 0.6, 0.75, 0.9, 1.2, 1.8, 3, 6, 18, 50]),
@@ -48,8 +49,9 @@ function cardPublic(card) {
 }
 
 class BlackjackService {
-  constructor({ randomInt = crypto.randomInt } = {}) {
+  constructor({ randomInt = crypto.randomInt, deckFactory = createShuffledDeck } = {}) {
     this.randomInt = randomInt;
+    this.deckFactory = deckFactory;
     this.rounds = new Map();
   }
 
@@ -84,7 +86,7 @@ class BlackjackService {
     if (!Number.isSafeInteger(bet) || bet < 1) throw new RangeError('Invalid bet');
     const existing = this.rounds.get(username);
     if (existing && !existing.settled) throw new Error('A blackjack round is already active');
-    const deck = createShuffledDeck(randomInt);
+    const deck = this.deckFactory(randomInt);
     const playerCards = [deck.pop(), deck.pop()];
     const round = {
       id: roundId,
@@ -100,9 +102,12 @@ class BlackjackService {
       phase: 'player',
       settled: false,
       payout: 0,
-      result: null
+      result: null,
+      revision: 0,
+      actionRequests: new Map()
     };
     if (round.dealer[1].value === 'ace') round.phase = 'insurance';
+    else if (TEN_VALUE_CARDS.has(round.dealer[1].value) && scoreHand(round.dealer) === 21) this.#settle(round);
     else if (scoreHand(playerCards) === 21) this.#settle(round);
     this.rounds.set(username, round);
     return this.publicState(round);
@@ -114,8 +119,9 @@ class BlackjackService {
     if (round.settled) return this.publicState(round);
     if (round.phase === 'insurance') {
       if (!['insurance', 'declineInsurance'].includes(action)) throw new Error('Insurance decision required');
-      if (action === 'insurance') round.insuranceBet = Math.floor(round.baseBet / 2);
+      if (action === 'insurance') round.insuranceBet = round.baseBet / 2;
       const dealerBlackjack = scoreHand(round.dealer) === 21;
+      round.revision += 1;
       if (dealerBlackjack) return this.publicState(this.#settle(round));
       round.phase = 'player';
       if (scoreHand(round.playerHands[0].cards) === 21) return this.publicState(this.#settle(round));
@@ -161,6 +167,7 @@ class BlackjackService {
     } else {
       throw new Error('Unknown blackjack action');
     }
+    round.revision += 1;
     return this.publicState(round);
   }
 
@@ -184,7 +191,7 @@ class BlackjackService {
       let result = 'loss';
       let handPayout = 0;
       if (playerScore > 21) result = 'bust';
-      else if (playerNatural && !dealerNatural) { result = 'blackjack'; handPayout = Math.floor(hand.bet * 2.5); }
+      else if (playerNatural && !dealerNatural) { result = 'blackjack'; handPayout = hand.bet * 2.5; }
       else if (dealerNatural && playerNatural) { result = 'push'; handPayout = hand.bet; }
       else if (dealerNatural) result = 'dealer_blackjack';
       else if (dealerScore > 21 || playerScore > dealerScore) { result = 'win'; handPayout = hand.bet * 2; }
@@ -225,6 +232,7 @@ class BlackjackService {
     const dealerEvaluation = evaluateBlackjackHand(visibleDealerCards);
     return {
       roundId: round.id,
+      revision: round.revision,
       baseBet: round.baseBet,
       bet: this.#totalBet(round),
       insuranceBet: round.insuranceBet,

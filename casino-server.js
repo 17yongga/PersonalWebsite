@@ -1915,7 +1915,13 @@ app.post("/api/games/blackjack/action", requireAuth, apiMutationRateLimit, async
   const username = req.auth.username;
   const roundId = sanitizeText(req.body?.roundId, 80);
   const action = sanitizeText(req.body?.action, 30);
-  if (!roundId || !['hit', 'stand', 'double', 'split', 'insurance', 'declineInsurance'].includes(action)) {
+  const requestId = sanitizeText(req.body?.requestId, 80);
+  const expectedRevision = Number(req.body?.expectedRevision);
+  const requestedHandIndex = Number(req.body?.activeHandIndex);
+  const modernRequest = Boolean(requestId);
+  if (!roundId || !['hit', 'stand', 'double', 'split', 'insurance', 'declineInsurance'].includes(action) ||
+      (modernRequest && (!/^[A-Za-z0-9_-]{8,80}$/.test(requestId) || !Number.isSafeInteger(expectedRevision) || expectedRevision < 0 ||
+        !Number.isSafeInteger(requestedHandIndex) || requestedHandIndex < 0))) {
     return res.status(400).json({ error: "Invalid blackjack action" });
   }
   try {
@@ -1923,20 +1929,30 @@ app.post("/api/games/blackjack/action", requireAuth, apiMutationRateLimit, async
       if (!users[username]) return { status: 404, error: "User not found" };
       const current = blackjackService.rounds.get(username);
       if (!current || current.id !== roundId) return { status: 404, error: "Blackjack round not found" };
+      const signature = JSON.stringify({ roundId, expectedRevision, activeHandIndex: requestedHandIndex, action });
+      const actionRequests = current.actionRequests instanceof Map ? current.actionRequests : (current.actionRequests = new Map());
+      if (modernRequest && actionRequests.has(requestId)) {
+        const prior = actionRequests.get(requestId);
+        if (prior.signature !== signature) return { status: 409, error: "Blackjack request identifier was already used for different inputs" };
+        return prior.response;
+      }
+      if (modernRequest && (current.revision !== expectedRevision || current.activeHandIndex !== requestedHandIndex)) {
+        return { status: 409, error: "Blackjack round state changed before this action was accepted" };
+      }
       if (current.settled) {
         return { status: 200, state: blackjackService.publicState(current), balance: casinoLedger.balance(username), fairness: fairRng.getProof(roundId) };
       }
       const activeHand = current.playerHands?.[current.activeHandIndex];
       const extraDebit = action === 'double' ? activeHand?.bet || 0
         : action === 'split' ? current.baseBet
-          : action === 'insurance' ? Math.floor(current.baseBet / 2) : 0;
+          : action === 'insurance' ? current.baseBet / 2 : 0;
       if (extraDebit > casinoLedger.balance(username)) return { status: 400, error: "Insufficient credits" };
       let extraEscrow = null;
+      const handIndex = Number.isSafeInteger(current.activeHandIndex) ? current.activeHandIndex : 0;
       if (extraDebit > 0) {
-        const handIndex = Number.isSafeInteger(current.activeHandIndex) ? current.activeHandIndex : 0;
         const referenceId = `${roundId}:${action}:hand-${handIndex}`;
         extraEscrow = await reserveCredits(username, {
-          game: 'blackjack', referenceId, stake: extraDebit, metadata: { roundId, action, handIndex }
+          game: 'blackjack', referenceId, stake: extraDebit, metadata: { roundId, action, handIndex, requestId: requestId || null }
         });
         current.escrowIds.push(extraEscrow.escrow.escrowId);
       }
@@ -1946,11 +1962,16 @@ app.post("/api/games/blackjack/action", requireAuth, apiMutationRateLimit, async
           nonce: current.fairContext.nonce, nextCommitment: current.fairContext.nextCommitment };
         if (state.settled) proof = await settleBlackjackLedger(username, current, state);
         else casinoLedger.saveRound({ roundId, game: 'blackjack', state, commitment: proof.commitment, seedId: proof.commitment, nonce: proof.nonce });
-        return { status: 200, state, balance: casinoLedger.balance(username), fairness: proof };
+        const accepted = { status: 200, state, balance: casinoLedger.balance(username), fairness: proof };
+        if (modernRequest) {
+          actionRequests.set(requestId, { signature, response: accepted });
+          while (actionRequests.size > 32) actionRequests.delete(actionRequests.keys().next().value);
+        }
+        return accepted;
       } catch (error) {
         if (extraEscrow) {
           await finishEscrow({ escrowId: extraEscrow.escrow.escrowId, payout: extraDebit,
-            idempotencyKey: `blackjack:${roundId}:${action}:rollback`, action: 'refund', metadata: { reason: 'action_failed' } });
+            idempotencyKey: `blackjack:${roundId}:${action}:hand-${handIndex}:${requestId || 'legacy'}:rollback`, action: 'refund', metadata: { reason: 'action_failed' } });
           current.escrowIds = current.escrowIds.filter(id => id !== extraEscrow.escrow.escrowId);
         }
         throw error;

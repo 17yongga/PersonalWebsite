@@ -92,6 +92,11 @@ test('authenticated casino boundary and authoritative games', { timeout: 30000 }
     VALUES ('pachinko',?,?,0,?) ON CONFLICT(game) DO UPDATE SET
       current_seed=excluded.current_seed,current_commitment=excluded.current_commitment,nonce=0,updated_at=excluded.updated_at`)
     .run(fixedPachinkoSeed, crypto.createHash('sha256').update(fixedPachinkoSeed, 'hex').digest('hex'), Date.now());
+  const fixedBlackjackSeed = '22'.repeat(32);
+  fairnessDb.prepare(`INSERT INTO fair_seeds(game,current_seed,current_commitment,nonce,updated_at)
+    VALUES ('blackjack',?,?,0,?) ON CONFLICT(game) DO UPDATE SET
+      current_seed=excluded.current_seed,current_commitment=excluded.current_commitment,nonce=0,updated_at=excluded.updated_at`)
+    .run(fixedBlackjackSeed, crypto.createHash('sha256').update(fixedBlackjackSeed, 'hex').digest('hex'), Date.now());
   fairnessDb.close();
 
   response = await fetch(`${url}/api/session`, { headers: { cookie } });
@@ -151,11 +156,42 @@ test('authenticated casino boundary and authoritative games', { timeout: 30000 }
   });
   let blackjack = await response.json();
   assert.equal(response.status, 200, JSON.stringify(blackjack));
+  if (blackjack.state.phase === 'insurance') {
+    response = await fetch(`${url}/api/games/blackjack/action`, {
+      method: 'POST', headers: authHeaders,
+      body: JSON.stringify({ roundId: blackjack.state.roundId, action: 'declineInsurance', requestId: 'blackjack_decline_001',
+        expectedRevision: blackjack.state.revision, activeHandIndex: blackjack.state.activeHandIndex })
+    });
+    blackjack = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(blackjack));
+  }
+  assert.equal(blackjack.state.canDouble, true, 'fixed Blackjack seed must produce a playable two-card hand');
+  const doubleBody = {
+    roundId: blackjack.state.roundId, action: 'double', requestId: 'blackjack_double_001',
+    expectedRevision: blackjack.state.revision, activeHandIndex: blackjack.state.activeHandIndex
+  };
+  const [doubleResponseA, doubleResponseB] = await Promise.all([
+    fetch(`${url}/api/games/blackjack/action`, { method: 'POST', headers: authHeaders, body: JSON.stringify(doubleBody) }),
+    fetch(`${url}/api/games/blackjack/action`, { method: 'POST', headers: authHeaders, body: JSON.stringify(doubleBody) })
+  ]);
+  const doubled = await doubleResponseA.json();
+  const doubledReplay = await doubleResponseB.json();
+  assert.equal(doubleResponseA.status, 200, JSON.stringify(doubled));
+  assert.equal(doubleResponseB.status, 200, JSON.stringify(doubledReplay));
+  assert.deepEqual(doubledReplay, doubled, 'concurrent double retry returns one accepted state');
+  assert.equal(doubled.state.bet, 50, 'double stake is reserved exactly once');
+  response = await fetch(`${url}/api/games/blackjack/action`, {
+    method: 'POST', headers: authHeaders,
+    body: JSON.stringify({ ...doubleBody, action: 'stand' })
+  });
+  assert.equal(response.status, 409, 'changed action under one Blackjack requestId fails closed');
+  blackjack = doubled;
   for (let actions = 0; !blackjack.state.settled && actions < 4; actions += 1) {
     const action = blackjack.state.phase === 'insurance' ? 'declineInsurance' : 'stand';
     response = await fetch(`${url}/api/games/blackjack/action`, {
       method: 'POST', headers: authHeaders,
-      body: JSON.stringify({ roundId: blackjack.state.roundId, action })
+      body: JSON.stringify({ roundId: blackjack.state.roundId, action, requestId: `blackjack_finish_${actions}`,
+        expectedRevision: blackjack.state.revision, activeHandIndex: blackjack.state.activeHandIndex })
     });
     blackjack = await response.json();
     assert.equal(response.status, 200, JSON.stringify(blackjack));

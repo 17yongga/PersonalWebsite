@@ -245,6 +245,8 @@ test('Blackjack reserves equal dealer and player stages and labels authoritative
   assert.match(premium, /\.player-section:has\(\.blackjack-player-hand\.is-active\)/);
   assert.match(blackjack, /hand\.isSoft/);
   assert.match(blackjack, /state\.dealerSoft/);
+  assert.match(blackjack, /expectedRevision:\s*this\.roundRevision/);
+  assert.match(blackjack, /requestId:\s*this\.pendingActionRequest\.requestId/);
 });
 
 test('game transitions use the shared viewport stabilizer instead of ad-hoc smooth scrolling', () => {

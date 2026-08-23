@@ -139,6 +139,8 @@ class BlackjackGame {
     this.presentationInProgress = false;
     this.lastServerState = null;
     this.pendingAction = null;
+    this.pendingActionRequest = null;
+    this.roundRevision = 0;
     this.reducedMotion = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
     this.defaultStake = Math.min(100, Math.max(0, Math.floor(this.casino.credits || 0)));
     this.stakeChips = this.defaultStake === 100 ? [100] : [];
@@ -360,14 +362,29 @@ class BlackjackGame {
   async requestAction(action) {
     if (!this.roundId || this.gameOver) return;
     this.pendingAction = action;
+    const signature = JSON.stringify({ roundId: this.roundId, revision: this.roundRevision, activeHandIndex: this.activeHandIndex, action });
+    if (!this.pendingActionRequest || this.pendingActionRequest.signature !== signature) {
+      this.pendingActionRequest = {
+        signature,
+        requestId: globalThis.crypto?.randomUUID?.() || `blackjack_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+      };
+    }
+    let definitiveResponse = false;
     this.setBusy(true);
     try {
       const response = await this.casino.apiFetch('/api/games/blackjack/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roundId: this.roundId, action })
+        body: JSON.stringify({
+          roundId: this.roundId,
+          action,
+          requestId: this.pendingActionRequest.requestId,
+          expectedRevision: this.roundRevision,
+          activeHandIndex: this.activeHandIndex
+        })
       });
       const data = await response.json();
+      definitiveResponse = response.status < 500;
       if (!response.ok) throw new Error(data.error || 'Blackjack action failed');
       const actionEffect = {
         hit: 'blackjackHit',
@@ -381,6 +398,7 @@ class BlackjackGame {
       this.showError(error.message);
       window.casinoSound?.play('error', { game: 'blackjack' });
     } finally {
+      if (definitiveResponse) this.pendingActionRequest = null;
       this.pendingAction = null;
       this.setBusy(false);
       this.updateGameControls();
@@ -456,6 +474,7 @@ class BlackjackGame {
     this.soundHydrated = true;
     if (acceptedStart) this.soundAcceptedRoundId = null;
     this.roundId = state.roundId;
+    this.roundRevision = Number.isSafeInteger(state.revision) ? state.revision : 0;
     this.currentBet = state.bet;
     this.insuranceBet = state.insuranceBet;
     this.playerHands = nextHands;
@@ -740,9 +759,10 @@ class BlackjackGame {
     this.renderDealerOutcome(state, true);
     const totalStake = state.bet + (state.insuranceBet || 0);
     const net = state.payout - totalStake;
-    const handResults = hands.map(hand => hand.result).filter(Boolean);
-    const mixedHands = new Set(handResults).size > 1;
-    const visualResult = mixedHands ? 'MIXED' : state.payout > totalStake ? 'WIN' : state.payout === totalStake ? 'PUSH' : 'LOSS';
+    const outcomeKinds = hands.map(hand => ['win', 'blackjack'].includes(hand.result) ? 'win'
+      : hand.result === 'push' ? 'push' : 'loss');
+    const mixedHands = new Set(outcomeKinds).size > 1;
+    const visualResult = mixedHands ? 'MIXED' : net > 0 ? 'WIN' : net === 0 ? 'PUSH' : 'LOSS';
     const amount = net > 0 ? `+${net}` : net < 0 ? String(net) : 'EVEN';
     result.textContent = `${visualResult} · ${amount} CREDITS`;
     result.setAttribute('aria-label', `Round complete. ${visualResult}. Payout ${state.payout} credits.`);
@@ -1178,6 +1198,8 @@ class BlackjackGame {
     this.cancelPresentation();
     this.lastServerState = null;
     this.pendingAction = null;
+    this.pendingActionRequest = null;
+    this.roundRevision = 0;
     this.root?.querySelector('.blackjack-table-shell')?.classList.remove('is-presenting', 'has-split-hands');
     this.root?.querySelector('.betting-section')?.classList.remove('is-locked');
     const betInput = this.getElement('blackjackBet');

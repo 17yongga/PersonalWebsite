@@ -49,6 +49,42 @@ test('blackjack public state publishes authoritative soft status without treatin
   assert.notEqual(settled.playerHands[0].result, 'blackjack');
 });
 
+test('blackjack pays exact 3:2 gross return for odd stakes and exact 2:1 insurance profit', () => {
+  const naturalDeck = [
+    { value: '9', suit: 'clubs' }, { value: '10', suit: 'spades' },
+    { value: 'king', suit: 'diamonds' }, { value: 'ace', suit: 'hearts' }
+  ];
+  const naturalService = new BlackjackService({ deckFactory: () => [...naturalDeck] });
+  const natural = naturalService.start('odd-natural', 1, { roundId: 'odd-natural-round' });
+  assert.equal(natural.settled, true);
+  assert.equal(natural.result, 'blackjack');
+  assert.equal(natural.payout, 2.5);
+
+  const insuranceDeck = [
+    { value: 'ace', suit: 'clubs' }, { value: 'king', suit: 'spades' },
+    { value: '8', suit: 'diamonds' }, { value: '9', suit: 'hearts' }
+  ];
+  const insuranceService = new BlackjackService({ deckFactory: () => [...insuranceDeck] });
+  const offered = insuranceService.start('odd-insurance', 1, { roundId: 'odd-insurance-round' });
+  assert.equal(offered.phase, 'insurance');
+  const insured = insuranceService.action('odd-insurance', offered.roundId, 'insurance');
+  assert.equal(insured.insuranceBet, 0.5);
+  assert.equal(insured.payout, 1.5);
+});
+
+test('blackjack peeks under a ten-value upcard and settles dealer natural before player actions', () => {
+  const deck = [
+    { value: 'king', suit: 'clubs' }, { value: 'ace', suit: 'spades' },
+    { value: '8', suit: 'diamonds' }, { value: '9', suit: 'hearts' }
+  ];
+  const service = new BlackjackService({ deckFactory: () => [...deck] });
+  const state = service.start('ten-up-peek', 25, { roundId: 'ten-up-peek-round' });
+  assert.equal(state.settled, true);
+  assert.equal(state.result, 'dealer_blackjack');
+  assert.equal(state.canDouble, false);
+  assert.equal(state.revision, 0);
+});
+
 test('blackjack deck contains 52 unique cards', () => {
   const deck = createShuffledDeck(() => 0);
   assert.equal(deck.length, 52);
@@ -61,7 +97,7 @@ test('blackjack service rejects replay and returns no hidden dealer card after s
   if (state.phase === 'insurance') state = service.action('gary', state.roundId, 'declineInsurance');
   while (!state.settled) state = service.action('gary', state.roundId, 'stand');
   assert.ok(state.dealerHand.every(Boolean));
-  assert.ok(Number.isSafeInteger(state.payout));
+  assert.ok(Number.isSafeInteger(Math.round(state.payout * 1000)));
   const replay = service.action('gary', state.roundId, 'stand');
   assert.equal(replay.payout, state.payout);
   assert.throws(() => service.action('other', state.roundId, 'stand'), /not found/);
@@ -85,10 +121,12 @@ test('blackjack split creates two independently playable equal-stake hands', () 
   assert.equal(split.activeHandIndex, 0);
   assert.equal(split.canSplit, false);
   assert.equal(split.bet, 200);
+  assert.equal(split.revision, 1);
 
   const firstStood = service.action('split-player', started.roundId, 'stand');
   assert.equal(firstStood.activeHandIndex, 1);
   assert.equal(firstStood.settled, false);
+  assert.equal(firstStood.revision, 2);
   const settled = service.action('split-player', started.roundId, 'stand');
   assert.equal(settled.settled, true);
   assert.equal(settled.handResults.length, 2);
