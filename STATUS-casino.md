@@ -1,6 +1,18 @@
 # Casino — STATUS.md
 > Updated: 2026-08-23
 
+## Live Blackjack Rules + Stable Game Viewports + Compact Mobile Cases — frontend/backend `neon777-20260823-r91` (2026-08-23)
+- **Blackjack rule correction:** one canonical evaluator now publishes score plus soft/hard status after Ace demotion. A hand is soft whenever an Ace remains valued at 11, including an Ace drawn after the opening two cards. The UI shows `SOFT` directly in the score pill; How to Play now explains draw-order-independent softness and that this table stands on all 17.
+- **Standard monetary/table behavior:** odd-stake naturals now return exact 3:2 gross value through the milli-credit ledger; odd-stake insurance uses an exact half-credit stake and 2:1 profit; ten-value upcards now peek and settle dealer blackjack before player Double/Split. Split 21 remains a regular win. Round summaries classify bust/loss as the same loss family rather than incorrectly saying `MIXED`.
+- **Retry-safe Blackjack actions:** Hit/Stand/Double/Split/Insurance carry retry-stable request IDs bound to round revision, active hand, and action. Concurrent exact Double retry returns the same state and reserves one extra stake; changed action under the same ID returns `409`.
+- **Equal Blackjack canvases:** dealer and player stages share one size token and identical outer geometry. Exact Chromium measured equal stages in active/settled states at 320×568, 390×844, 430×932, 768×1024, 844×390, and 1280×900. Single-hand active styling now accents the outer player stage rather than creating a smaller nested canvas.
+- **Cross-game post-bet stability:** Roulette, Coinflip, Crash, Poker, Blackjack, Pachinko, CS2 Betting, and CS Cases now use one bounded post-action viewport stabilizer; browser scroll anchoring no longer fights authoritative DOM changes. The final live 70-state core matrix has zero visible-surface destination failures, undersized controls, or non-fixture runtime errors.
+- **Compact mobile Cases:** mobile now reaches case selection, quantity, Fast Reveal, total, and Open in one focused workbench. Case tiles are smaller, selected-case facts are summarized in one row, and large art/full facts/odds stay behind `Details & odds`. Inventory is two-column where width permits, with Sell All immediately visible in the header.
+- **Atomic Sell All + in-place decisions:** Sell All is one payload-bound, server-authoritative SQLite/ledger transaction, not N individual sales. Exact concurrent replay returns `200/200`, changed item set returns `409`, and one ledger credit/status transition occurs. Keep excludes that item from Sell All. Individual Sell and Sell All retain every card in place and change the initiating buttons to `SELLING…` then `SOLD · +value`; no inventory reload or detached success banner moves the page.
+- **Verification:** **123/123** source tests passed. Exact Linux copied-production API proved Blackjack concurrent Double and Cases Sell All idempotency/atomicity. Exact/live Cases QA covered 137 states at 320×568, 375×667, 390×844, 430×932, 768×1024, 844×390, and 1280×900: zero overflow, small targets, navigation overlap, axe A/AA violations, console/page/resource failures, lifecycle growth, or Keep/Sell/Sell-All action scroll/anchor movement. Live CS2/Blackjack audit remained 16/16 clean.
+- **Immutable production:** frontend source manifest SHA-256 `263208b38016a7a7ca83ae0bfbda44693f0dc7ce2a1630fd5a2464e18aa7b5b5`; entry SHA-256 `a7daa3163f2c8b205b224ffa5ae872ea91fba349013b5731915d650d7c75f608`; 26/26 live assets exact/immutable. Linux backend server SHA-256 `ba94fedd3747b3473bd1669e4b38afc8b74c0ac644526d1cf566c331442a2b8a`; sealed manifest SHA-256 `839f91f483dbbec4898bcad6b0d3630c5fe585f1e7e645292bf32b3390a6c447`.
+- **Production integrity:** two guarded r91 starts retained 39 accounts, `402,140.268` aggregate credits, one legitimate 300-credit CS2 escrow, exact JSON/SQLite projection, SQLite integrity `ok`, and unchanged unrelated PM2 processes. No production QA wager or inventory mutation was used. Rollback is frontend/backend r85; backup `/home/ubuntu/casino-backups/pre-r91-20260823T1505Z`.
+
 ## Live CS2 Parlays + Settlement Recovery + Unified Controls — frontend/backend `neon777-20260823-r81` (2026-08-23)
 - **Server-authoritative parlays:** CS2 now supports 2–8 different matches, one selection per match, combined odds capped at 100×, and a 1,000,000-credit maximum return. The client submits only event IDs, selections, stake, and a retry-stable request ID; the server revalidates every market, snapshots each bookmaker quote, computes combined odds/return, reserves one escrow, and rejects changed-payload replay. Losing one leg loses the parlay; pending legs keep it open; void legs are removed from combined odds; all-void parlays refund.
 - **Open-bet root cause fixed:** sync could mark an event `finished` after four hours without storing a winner, while settlement queried sources only when status was not finished. Those records could never settle and eventually fell outside the rolling latest-50 result feed. Settlement now resolves whenever a winner is absent, queries exact bo3.gg provider IDs, preserves stored results during sync, and voids only genuinely unresolved events after a seven-day result grace.
@@ -105,9 +117,9 @@
 - **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`, and live login captures `live-login-390.png` / `live-login-1280.png`. Subjective listening remains Gary's human acceptance check; technical synthesis, scheduling, recovery, cleanup, and live delivery are verified.
 
 ## What's Live
-- **Frontend:** `r81` at https://gary-yong.com/casino.html (S3/CloudFront)
-- **API/Backend:** `r81` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
-- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260823-r81/backend`
+- **Frontend:** `r91` at https://gary-yong.com/casino.html (S3/CloudFront)
+- **API/Backend:** `r91` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
+- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260823-r91/backend`
 
 ## Games (8 total)
 | Game | Type | Notes |
