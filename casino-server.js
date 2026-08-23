@@ -1634,6 +1634,19 @@ app.get('/api/cases/inventory', requireAuth, (req, res) => {
   catch (error) { sendCaseApiError(res, error); }
 });
 
+app.post('/api/cases/inventory/sell-all', requireAuth, apiMutationRateLimit, async (req, res) => {
+  try {
+    const userId = req.auth.username;
+    const sold = caseGameService.sellAll({
+      userId,
+      inventoryIds: req.body?.inventoryIds,
+      requestId: sanitizeText(req.body?.requestId, 80)
+    });
+    await projectCommittedBalance(userId, sold.balance);
+    res.json({ success: true, ...sold, inventory: caseGameService.inventory(userId) });
+  } catch (error) { sendCaseApiError(res, error); }
+});
+
 app.post('/api/cases/inventory/:inventoryId/sell', requireAuth, apiMutationRateLimit, async (req, res) => {
   try {
     const userId = req.auth.username;

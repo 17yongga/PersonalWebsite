@@ -10,6 +10,7 @@ class CaseOpeningGame {
     this.openCount = 1;
     this.fastOpen = false;
     this.dropTableExpanded = false;
+    this.caseDetailsExpanded = false;
     this.view = 'open';
     this.era = 'all';
     this.battleQueue = [];
@@ -22,7 +23,9 @@ class CaseOpeningGame {
     this.presentationToken = null;
     this.presentingBattleKey = null;
     this.lastPresentedBattleKey = null;
-    this.pending = { open: null, battle: null, joins: new Map(), cancels: new Map(), sells: new Map() };
+    this.lastRevealedItems = [];
+    this.inventoryItems = [];
+    this.pending = { open: null, battle: null, joins: new Map(), cancels: new Map(), sells: new Map(), sellAll: null };
     try { this.activeBattleId = sessionStorage.getItem('neon777ActiveCaseBattle') || null; } catch (_) { this.activeBattleId = null; }
     this.socketHandler = () => this.view === 'battle' && this.loadBattles();
     this.clickHandler = event => this.handleClick(event);
@@ -142,10 +145,11 @@ class CaseOpeningGame {
     if (!button || !this.root.contains(button)) return;
     if (button.dataset.caseView) return this.switchView(button.dataset.caseView);
     if (button.dataset.era) { this.era = button.dataset.era; return this.renderOpen(); }
-    if (button.dataset.selectCase) { this.selectedCaseId = button.dataset.selectCase; return this.renderOpen(); }
+    if (button.dataset.selectCase) { this.selectedCaseId = button.dataset.selectCase; this.renderOpen(); return this.casino.stabilizeGameViewport?.(this.root.querySelector('.case-mobile-summary')); }
     if (button.dataset.openCount) { this.openCount = Number(button.dataset.openCount); return this.renderOpen(); }
     if (button.dataset.action === 'toggle-drops') { this.dropTableExpanded = !this.dropTableExpanded; return this.renderOpen(); }
     if (button.dataset.action === 'toggle-fast') { this.fastOpen = !this.fastOpen; return this.renderOpen(); }
+    if (button.dataset.action === 'toggle-case-details') return this.toggleCaseDetails();
     if (button.dataset.action === 'open-again') return this.openSelected();
     if (button.dataset.action === 'view-inventory') return this.switchView('inventory');
     if (button.dataset.action === 'view-proof') return this.switchView('fairness');
@@ -164,7 +168,8 @@ class CaseOpeningGame {
     if (button.dataset.action === 'create-battle') return this.createBattle();
     if (button.dataset.joinBattle) return this.joinBattle(button.dataset.joinBattle);
     if (button.dataset.cancelBattle) return this.cancelBattle(button.dataset.cancelBattle);
-    if (button.dataset.sellItem) return this.sellItem(button.dataset.sellItem);
+    if (button.dataset.sellItem) return this.sellItem(button.dataset.sellItem, button);
+    if (button.dataset.action === 'sell-all') return this.sellAll(button.dataset.scope === 'results' ? this.lastRevealedItems : this.inventoryItems, button);
     if (button.dataset.action === 'refresh-inventory') return this.loadInventory();
     if (button.dataset.action === 'refresh-battles') return this.loadBattles();
     if (button.dataset.action === 'verify-proof') return this.verifyLatestProof();
@@ -280,6 +285,16 @@ class CaseOpeningGame {
     container.classList.add('is-rolling');
   }
 
+  toggleCaseDetails() {
+    this.caseDetailsExpanded = !this.caseDetailsExpanded;
+    this.root?.querySelectorAll('.case-secondary-details').forEach(element => element.classList.toggle('is-expanded', this.caseDetailsExpanded));
+    const button = this.root?.querySelector('[data-action="toggle-case-details"]');
+    if (button) {
+      button.setAttribute('aria-expanded', String(this.caseDetailsExpanded));
+      button.textContent = this.caseDetailsExpanded ? 'Hide details' : 'Details & odds';
+    }
+  }
+
   renderOpen() {
     const view = this.root?.querySelector('#caseOpenView');
     if (!view) return;
@@ -305,13 +320,20 @@ class CaseOpeningGame {
       </section>
       ${active ? `<div class="case-opening-stage" style="--case-accent:${active.accent}">
         <section class="case-focus">
-          <div class="case-focus-visual">${this.caseArtwork(active)}</div>
+          <div class="case-mobile-summary">
+            ${this.caseArtwork(active, 'small')}
+            <div><span>${active.generation === 'csgo' ? 'CS:GO LEGACY' : 'COUNTER-STRIKE 2'}</span><strong>${this.escape(active.name)}</strong><small>${this.credits(active.price)} each · ${Math.round(active.expectedReturn * 100)}% RTP</small></div>
+            <button data-action="toggle-case-details" aria-expanded="${this.caseDetailsExpanded}">${this.caseDetailsExpanded ? 'Hide details' : 'Details & odds'}</button>
+          </div>
+          <div class="case-focus-visual case-secondary-details ${this.caseDetailsExpanded ? 'is-expanded' : ''}">${this.caseArtwork(active)}</div>
           <div class="case-focus-copy">
-            <span class="case-collection-label">${active.generation === 'csgo' ? 'CS:GO LEGACY COLLECTION' : 'COUNTER-STRIKE 2 COLLECTION'}</span>
-            <h3>${this.escape(active.name)}</h3>
-            <p>Five disclosed outcomes. Every item is fixed by the server before the reveal.</p>
-            <div class="case-facts"><div><span>PRICE EACH</span><strong>${this.credits(active.price)}</strong></div><div><span>DISCLOSED RTP</span><strong>${Math.round(active.expectedReturn * 100)}%</strong></div><div><span>TOP DROP</span><strong>${this.credits(featured[0]?.value || 0)}</strong></div></div>
-            ${featured[0] ? `<div class="case-featured-drop" style="--skin-color:${featured[0].color}">${this.weaponArt(featured[0])}<div><span>FEATURED DROP</span><strong>${this.escape(featured[0].name)}</strong><small>${this.escape(featured[0].officialRarity || featured[0].rarity)} · ${this.credits(featured[0].value)} credits</small></div></div>` : ''}
+            <div class="case-secondary-details ${this.caseDetailsExpanded ? 'is-expanded' : ''}">
+              <span class="case-collection-label">${active.generation === 'csgo' ? 'CS:GO LEGACY COLLECTION' : 'COUNTER-STRIKE 2 COLLECTION'}</span>
+              <h3>${this.escape(active.name)}</h3>
+              <p>Five disclosed outcomes. Every item is fixed by the server before the reveal.</p>
+              <div class="case-facts"><div><span>PRICE EACH</span><strong>${this.credits(active.price)}</strong></div><div><span>DISCLOSED RTP</span><strong>${Math.round(active.expectedReturn * 100)}%</strong></div><div><span>TOP DROP</span><strong>${this.credits(featured[0]?.value || 0)}</strong></div></div>
+              ${featured[0] ? `<div class="case-featured-drop" style="--skin-color:${featured[0].color}">${this.weaponArt(featured[0])}<div><span>FEATURED DROP</span><strong>${this.escape(featured[0].name)}</strong><small>${this.escape(featured[0].officialRarity || featured[0].rarity)} · ${this.credits(featured[0].value)} credits</small></div></div>` : ''}
+            </div>
             <div class="case-open-dock">
               <div class="case-count-row"><div class="case-count-control" role="group" aria-label="Cases to open">${[1,3,5].map(count => `<button data-open-count="${count}" aria-pressed="${this.openCount === count}" class="${this.openCount === count ? 'active' : ''}">${count}×</button>`).join('')}</div><button class="case-fast-toggle ${this.fastOpen ? 'active' : ''}" data-action="toggle-fast" aria-pressed="${this.fastOpen}">⚡ Fast reveal</button></div>
               <div class="case-open-total"><span>Total</span><strong>${this.credits(totalCost)} credits</strong></div>
@@ -320,7 +342,7 @@ class CaseOpeningGame {
             </div>
           </div>
         </section>
-        <aside class="case-drop-table ${this.dropTableExpanded ? 'is-expanded' : ''}">
+        <aside class="case-drop-table case-secondary-details ${this.caseDetailsExpanded ? 'is-expanded' : ''} ${this.dropTableExpanded ? 'is-expanded-drops' : ''}">
           <div class="case-section-heading"><div><span>EXACT ODDS</span><h3>Possible skins</h3></div><button class="case-drop-toggle" data-action="toggle-drops" aria-expanded="${this.dropTableExpanded}">${this.dropTableExpanded ? 'Hide full table' : 'View all 5 drops'}</button></div>
           <div class="case-drop-preview" tabindex="0" role="region" aria-label="Featured possible drops">${featured.map(item => `<article style="--skin-color:${item.color}">${this.weaponArt(item)}<strong>${this.escape(item.weapon)}</strong><span>${this.escape(item.finish)}</span><b>${item.chanceLabel}</b></article>`).join('')}</div>
           <div class="case-drop-list">${active.items.slice().reverse().map(item => `<div class="case-drop-row" style="--skin-color:${item.color}">${this.weaponArt(item)}<div><strong>${this.escape(item.name)}</strong><span>${this.escape(item.officialRarity || item.rarity)}</span></div><div class="case-drop-value"><strong>${this.credits(item.value)}</strong><span>${item.chanceLabel}</span></div></div>`).join('')}</div>
@@ -390,7 +412,7 @@ class CaseOpeningGame {
       <header><div><span>OPENING ${items.length} ${items.length === 1 ? 'CASE' : 'CASES'}</span><h3>Authoritative reveal</h3></div><strong>${this.fastOpen ? 'FAST REVEAL' : 'Result fixed by server'}</strong></header>
       ${items.map((item, index) => this.reelLaneMarkup(item, index)).join('')}
     </section>`;
-    this.casino.stabilizeGameViewport?.(results, { force: true });
+    this.casino.stabilizeGameViewport?.(results, { force: true, retryDelays: [] });
     if (!reducedMotion) {
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       if (this.presentationToken !== token || this.destroyed) return;
@@ -402,14 +424,15 @@ class CaseOpeningGame {
     }
     window.casinoSound?.play('caseReveal', { game: 'cases' });
     const totalValue = items.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
-    results.innerHTML = `<section class="case-result-stage"><header><div><span class="case-eyebrow">UNBOXED</span><h3>${items.length} ${items.length === 1 ? 'item' : 'items'} added to your armory</h3></div><strong>${this.credits(totalValue)} credits total</strong></header>
-      <div class="case-result-grid">${items.map((item, index) => `<article class="case-result-card" style="--skin-color:${item.color};--reveal-delay:${index * 90}ms">
+    this.lastRevealedItems = items.filter(item => item.inventoryId);
+    results.innerHTML = `<section class="case-result-stage"><header><div><span class="case-eyebrow">UNBOXED</span><h3>${items.length} ${items.length === 1 ? 'item' : 'items'} added to your armory</h3></div><div class="case-result-batch-actions"><strong>${this.credits(totalValue)} credits total</strong>${this.lastRevealedItems.length ? `<button class="case-sell-all" data-action="sell-all" data-scope="results">SELL ALL · ${this.credits(totalValue)}</button>` : ''}</div></header>
+      <div class="case-result-grid">${items.map((item, index) => `<article class="case-result-card" data-inventory-id="${this.escape(item.inventoryId || '')}" style="--skin-color:${item.color};--reveal-delay:${index * 90}ms">
         <span class="case-result-rarity">${this.escape(item.officialRarity || item.rarity)}</span>${this.weaponArt(item)}
         <h4>${this.escape(item.weapon)}</h4><p>${this.escape(item.finish)}</p><strong>${this.credits(item.value)} credits</strong><small>✓ Added to inventory</small>${item.inventoryId ? `<footer><button data-keep-item="${this.escape(item.inventoryId)}">KEEP</button><button data-sell-item="${this.escape(item.inventoryId)}">SELL · ${this.credits(item.value)}</button></footer>` : ''}
       </article>`).join('')}</div>
       <div class="case-result-actions"><button class="case-primary-action" data-action="open-again">OPEN AGAIN</button><button data-action="view-inventory">VIEW INVENTORY</button><button data-action="view-proof">VERIFY RESULT</button></div></section>`;
     this.presentationToken = null;
-    this.casino.stabilizeGameViewport?.(results, { force: true });
+    this.casino.stabilizeGameViewport?.(results, { force: true, retryDelays: [] });
   }
 
   renderBattle() {
@@ -513,7 +536,7 @@ class CaseOpeningGame {
       <div class="battle-scoreboard">${results.map((result, index) => `<div><span>${this.escape(result.userId)}</span><strong id="battleRunningTotal${index}">0</strong></div>`).join('')}</div>
       <div class="battle-round-stage" id="battleRoundStage"></div>
     </section>`;
-    this.casino.stabilizeGameViewport?.(arena, { force: true });
+    this.casino.stabilizeGameViewport?.(arena, { force: true, retryDelays: [] });
     const stage = arena.querySelector('#battleRoundStage');
     for (let roundIndex = 0; roundIndex < roundCount; roundIndex += 1) {
       if (this.presentationToken !== token || this.destroyed) return;
@@ -631,34 +654,114 @@ class CaseOpeningGame {
     view.innerHTML = '<div class="case-loader">Loading inventory…</div>';
     try {
       const data = await this.request('/api/cases/inventory');
-      const value = data.items.reduce((sum,item) => sum + item.value, 0);
-      view.innerHTML = `<div class="inventory-header"><div><span class="case-eyebrow">YOUR ARMORY</span><h3>${data.items.length} virtual skins</h3><p>Collection value: ${this.credits(value)} credits</p></div><button data-action="refresh-inventory">Refresh</button></div>
-        <div class="inventory-grid">${data.items.map(item => `<article class="inventory-card" style="--skin-color:${item.color}">
+      this.inventoryItems = data.items || [];
+      const value = this.inventoryItems.reduce((sum,item) => sum + item.value, 0);
+      view.innerHTML = `<div class="inventory-header"><div><span class="case-eyebrow">YOUR ARMORY</span><h3 data-inventory-count>${this.inventoryItems.length} virtual skins</h3><p data-inventory-value>Collection value: ${this.credits(value)} credits</p></div><div class="inventory-header-actions">${this.inventoryItems.length ? `<button class="case-sell-all" data-action="sell-all" data-scope="inventory">SELL ALL · ${this.credits(value)}</button>` : ''}<button data-action="refresh-inventory">Refresh</button></div></div>
+        <div class="inventory-grid">${this.inventoryItems.map(item => `<article class="inventory-card" data-inventory-id="${this.escape(item.inventoryId)}" style="--skin-color:${item.color}">
           <span>${this.escape(item.rarity)}</span>${this.weaponArt(item)}<h4>${this.escape(item.weapon)}</h4><p>${this.escape(item.finish)}</p>
-          <footer><strong>${this.credits(item.value)} credits</strong><button data-sell-item="${item.inventoryId}">Sell</button></footer>
+          <footer><strong>${this.credits(item.value)} credits</strong><button data-sell-item="${this.escape(item.inventoryId)}">SELL</button></footer>
         </article>`).join('') || '<div class="case-empty"><h3>Your armory is empty</h3><p>Open a case or win a battle to collect skins.</p></div>'}</div>`;
     } catch (error) { view.innerHTML = `<div class="case-empty"><p>${this.escape(error.message)}</p></div>`; }
   }
 
+  saleItems() {
+    return new Map([...this.inventoryItems, ...this.lastRevealedItems].filter(item => item?.inventoryId).map(item => [item.inventoryId, item]));
+  }
+
+  markSoldCards(inventoryIds, valueById) {
+    const ids = new Set(inventoryIds);
+    this.root?.querySelectorAll('[data-inventory-id]').forEach(card => {
+      const id = card.dataset.inventoryId;
+      if (!ids.has(id)) return;
+      const value = Number(valueById.get(id)?.value || 0);
+      card.classList.add('is-sold');
+      card.querySelectorAll('button').forEach(button => {
+        button.disabled = true;
+        button.removeAttribute('aria-busy');
+        button.dataset.saleState = 'sold';
+        if (button.dataset.sellItem) button.textContent = `SOLD · +${this.credits(value)}`;
+        if (button.dataset.keepItem) button.hidden = true;
+      });
+      const status = card.querySelector(':scope > small');
+      if (status) status.textContent = '✓ Sold to balance';
+    });
+  }
+
+  syncInventorySummary() {
+    const value = this.inventoryItems.reduce((sum, item) => sum + Number(item.value || 0), 0);
+    const count = this.root?.querySelector('[data-inventory-count]');
+    const total = this.root?.querySelector('[data-inventory-value]');
+    if (count) count.textContent = `${this.inventoryItems.length} virtual skins`;
+    if (total) total.textContent = `Collection value: ${this.credits(value)} credits`;
+  }
+
   async sellItem(inventoryId) {
     if (this.busy) return;
-    this.setBusy(true);
+    this.busy = true;
     let action = this.pending.sells.get(inventoryId);
     if (!action) {
       action = { requestId: this.id('sell') };
       this.pending.sells.set(inventoryId, action);
     }
+    const buttons = [...(this.root?.querySelectorAll('[data-sell-item]') || [])].filter(button => button.dataset.sellItem === inventoryId);
+    const batchButtons = [...(this.root?.querySelectorAll('[data-action="sell-all"]') || [])];
+    buttons.forEach(button => { button.disabled = true; button.setAttribute('aria-busy', 'true'); button.textContent = 'SELLING…'; });
+    batchButtons.forEach(button => { button.disabled = true; });
     try {
       const data = await this.post(`/api/cases/inventory/${encodeURIComponent(inventoryId)}/sell`, action);
       this.pending.sells.delete(inventoryId);
       this.casino.setCredits(data.balance);
-      this.message(`Sold for ${this.credits(data.value)} credits.`, 'success');
-      this.loadInventory();
+      const item = this.saleItems().get(inventoryId) || { inventoryId, value: data.value };
+      this.inventoryItems = this.inventoryItems.filter(entry => entry.inventoryId !== inventoryId);
+      this.lastRevealedItems = this.lastRevealedItems.filter(entry => entry.inventoryId !== inventoryId);
+      this.markSoldCards([inventoryId], new Map([[inventoryId, item]]));
+      this.syncInventorySummary();
     } catch (error) {
       if (this.isDefinitiveError(error)) this.pending.sells.delete(inventoryId);
-      this.message(error.message, 'error');
+      buttons.forEach(button => { button.disabled = false; button.removeAttribute('aria-busy'); button.textContent = 'SELL FAILED · RETRY'; button.title = error.message; });
+    } finally {
+      batchButtons.forEach(button => { if (button.dataset.saleState !== 'sold') button.disabled = false; });
+      this.busy = false;
     }
-    finally { this.setBusy(false); }
+  }
+
+  async sellAll(items, sourceButton) {
+    if (this.busy) return;
+    const available = (items || []).filter(item => item?.inventoryId);
+    const inventoryIds = [...new Set(available.map(item => item.inventoryId))].sort();
+    if (!inventoryIds.length) return;
+    const signature = JSON.stringify(inventoryIds);
+    if (!this.pending.sellAll || this.pending.sellAll.signature !== signature) {
+      this.pending.sellAll = { signature, requestId: this.id('sell-all') };
+    }
+    const action = this.pending.sellAll;
+    const value = available.reduce((sum, item) => sum + Number(item.value || 0), 0);
+    this.busy = true;
+    sourceButton.disabled = true;
+    sourceButton.setAttribute('aria-busy', 'true');
+    sourceButton.textContent = `SELLING ${inventoryIds.length}…`;
+    const itemButtons = [...(this.root?.querySelectorAll('[data-sell-item]') || [])].filter(button => inventoryIds.includes(button.dataset.sellItem));
+    itemButtons.forEach(button => { button.disabled = true; button.setAttribute('aria-busy', 'true'); button.textContent = 'SELLING…'; });
+    try {
+      const data = await this.post('/api/cases/inventory/sell-all', { requestId: action.requestId, inventoryIds });
+      this.pending.sellAll = null;
+      this.casino.setCredits(data.balance);
+      const valueById = new Map(available.map(item => [item.inventoryId, item]));
+      this.inventoryItems = this.inventoryItems.filter(item => !inventoryIds.includes(item.inventoryId));
+      this.lastRevealedItems = this.lastRevealedItems.filter(item => !inventoryIds.includes(item.inventoryId));
+      this.markSoldCards(inventoryIds, valueById);
+      this.syncInventorySummary();
+      sourceButton.removeAttribute('aria-busy');
+      sourceButton.dataset.saleState = 'sold';
+      sourceButton.textContent = `SOLD ${data.count} · +${this.credits(data.value)}`;
+    } catch (error) {
+      if (this.isDefinitiveError(error)) this.pending.sellAll = null;
+      sourceButton.disabled = false;
+      sourceButton.removeAttribute('aria-busy');
+      sourceButton.textContent = `SELL ALL · ${this.credits(value)}`;
+      sourceButton.title = error.message;
+      itemButtons.forEach(button => { button.disabled = false; button.removeAttribute('aria-busy'); button.textContent = 'SELL'; });
+    } finally { this.busy = false; }
   }
 
   renderFairness() {
@@ -723,7 +826,9 @@ class CaseOpeningGame {
 
   setBusy(busy) {
     this.busy = busy;
-    this.root?.querySelectorAll('[data-action="open"],[data-action="create-battle"],[data-join-battle],[data-cancel-battle],[data-sell-item]').forEach(button => { button.disabled = busy; });
+    this.root?.querySelectorAll('[data-action="open"],[data-action="create-battle"],[data-action="sell-all"],[data-join-battle],[data-cancel-battle],[data-sell-item]').forEach(button => {
+      button.disabled = busy || button.dataset.saleState === 'sold';
+    });
   }
 
   message(text, type = 'info') {

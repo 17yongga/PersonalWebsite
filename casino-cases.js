@@ -315,6 +315,41 @@ class CaseGameService {
     return { inventoryId, value: item.value, balance: result.balance, item: this._publicInventory(this.stmt.inventoryItem.get(inventoryId)) };
   }
 
+  sellAll({ userId, inventoryIds, requestId }) {
+    safe(userId, 'userId', 64); safe(requestId, 'requestId', 80);
+    if (!Array.isArray(inventoryIds) || inventoryIds.length < 1 || inventoryIds.length > 500) throw new RangeError('Inventory items are required');
+    const ids = [...new Set(inventoryIds.map(id => safe(id, 'inventoryId')))].sort();
+    if (ids.length !== inventoryIds.length) throw new RangeError('Inventory items must be unique');
+    const rows = ids.map(id => this.stmt.inventoryItem.get(id));
+    if (rows.some((row, index) => !row || row.user_id !== userId || row.inventory_id !== ids[index])) throw new Error('Inventory item not found');
+    const items = rows.map(row => parse(row.item_json, {}));
+    const value = items.reduce((sum, item) => sum + Number(item.value || 0), 0);
+    const idempotencyKey = `case-sell-all:${userId}:${requestId}`;
+    const metadata = { requestId, inventoryIds: ids };
+    const input = {
+      userId, delta: value, idempotencyKey, game: 'case_opening', action: 'sell_all',
+      referenceId: `sell-all-${requestId}`, response: { inventoryIds: ids, count: ids.length, value }, metadata
+    };
+    const prior = this.ledger.lookup(idempotencyKey);
+    const changed = prior || this.db.transaction(() => {
+      if (rows.some(row => row.status !== 'available')) throw new Error('One or more inventory items are already sold');
+      const committed = this.ledger.change(input);
+      const soldAt = this.now();
+      for (const id of ids) {
+        if (this.stmt.sellInventory.run(soldAt, id).changes !== 1) throw new Error('Inventory sale transition failed');
+      }
+      return committed;
+    })();
+    const replay = prior ? this.ledger.change(input) : changed;
+    return {
+      inventoryIds: ids,
+      count: ids.length,
+      value,
+      balance: replay.balance,
+      items: ids.map(id => this._publicInventory(this.stmt.inventoryItem.get(id)))
+    };
+  }
+
   createBattle({ userId, opponent = 'human', caseIds, requestId, fairRoundId, clientSeed = 'neon777' }) {
     safe(userId, 'userId', 64); safe(requestId, 'requestId', 80); safe(clientSeed, 'clientSeed', 128);
     if (!['human', 'bot'].includes(opponent)) throw new RangeError('Opponent must be human or bot');

@@ -80,6 +80,22 @@ test('inventory sell is idempotent and credits the disclosed whole-number value 
   assert.throws(() => env.cases.sell({ userId: 'alice', inventoryId: item.inventoryId, requestId: 'sell-request-2' }), /already sold/i);
 });
 
+test('inventory sell-all is atomic, payload-bound, and credits every selected item once', t => {
+  const env = setup(); t.after(env.close);
+  const ready = prepare(env.cases, 'alice', 'case_opening', 'prepare-sell-all-1');
+  const opened = env.cases.open({ userId: 'alice', caseId: 'cs2-quantum', count: 3, requestId: 'open-sell-all-1', fairRoundId: ready.roundId, clientSeed: 'alice-seed' });
+  const inventoryIds = opened.inventory.map(item => item.inventoryId);
+  const expectedValue = opened.inventory.reduce((sum, item) => sum + item.value, 0);
+  const sold = env.cases.sellAll({ userId: 'alice', inventoryIds, requestId: 'sell-all-request-1' });
+  assert.equal(sold.value, expectedValue);
+  assert.equal(sold.count, 3);
+  assert.equal(sold.balance, opened.balance + expectedValue);
+  assert.deepEqual(sold.items.map(item => item.status), ['sold', 'sold', 'sold']);
+  assert.deepEqual(env.cases.sellAll({ userId: 'alice', inventoryIds, requestId: 'sell-all-request-1' }), sold);
+  assert.throws(() => env.cases.sellAll({ userId: 'alice', inventoryIds: inventoryIds.slice(0, 2), requestId: 'sell-all-request-1' }), /different request/i);
+  assert.throws(() => env.cases.sellAll({ userId: 'alice', inventoryIds, requestId: 'sell-all-request-2' }), /already sold/i);
+});
+
 test('bot battle opens identical sequence and winner takes all generated items', t => {
   const env = setup(); t.after(env.close);
   const ready = prepare(env.cases, 'alice', 'case_battle', 'prepare-bot-1');

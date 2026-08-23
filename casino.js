@@ -932,7 +932,7 @@ class CasinoManager {
     return this.socket;
   }
 
-  stabilizeGameViewport(target, { force = false } = {}) {
+  stabilizeGameViewport(target, { force = false, retryDelays = [180, 700] } = {}) {
     const element = typeof target === 'string' ? document.querySelector(target) : target;
     if (!element?.isConnected) return;
     const token = (this._gameViewportToken || 0) + 1;
@@ -953,7 +953,7 @@ class CasinoManager {
       if (Math.abs(window.scrollY - top) > 1) window.scrollTo({ top, behavior: 'auto' });
     };
     requestAnimationFrame(() => requestAnimationFrame(settle));
-    for (const delay of [180, 700]) {
+    for (const delay of retryDelays) {
       const timeout = setTimeout(settle, delay);
       this._gameViewportTimeouts.push(timeout);
     }

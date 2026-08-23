@@ -160,7 +160,7 @@ test('case game is wired into the lobby, game manager, release package and lifec
   assert.match(cases, /removeEventListener\('click', this\.clickHandler\)/);
   assert.match(cases, /role="tab"[^>]*aria-selected/);
   assert.match(cases, /role="tabpanel"/);
-  assert.match(cases, /this\.pending = \{ open: null, battle: null, joins: new Map\(\), cancels: new Map\(\), sells: new Map\(\) \}/);
+  assert.match(cases, /this\.pending = \{ open: null, battle: null, joins: new Map\(\), cancels: new Map\(\), sells: new Map\(\), sellAll: null \}/);
   assert.match(cases, /if \(this\.isDefinitiveError\(error\)\) this\.pending\.open = null/);
   assert.match(cases, /class="skin-image"/);
   assert.doesNotMatch(cases, /<svg viewBox="0 0 180 70"/);
@@ -189,7 +189,8 @@ test('case game is wired into the lobby, game manager, release package and lifec
   assert.match(caseCss, /\.case-visual-stack/);
   assert.match(caseCss, /\.case-open-dock\s*\{\s*position:static;\s*z-index:auto;/);
   assert.doesNotMatch(caseCss, /\.case-open-dock\s*\{[^}]*position:sticky;/);
-  assert.match(caseCss, /\.case-mode-nav,\.case-status,\.battle-ticket\s*\{\s*position:static;/);
+  assert.match(caseCss, /\.case-mode-nav,\.battle-ticket\s*\{\s*position:static;/);
+  assert.match(caseCss, /\.case-status\s*\{\s*position:fixed;/);
   assert.match(caseCss, /\.case-result-actions/);
   assert.match(caseCss, /scroll-snap-type:\s*x mandatory/);
   assert.match(caseCss, /\.battle-final-actions/);
@@ -199,4 +200,19 @@ test('case game is wired into the lobby, game manager, release package and lifec
   const service = read('casino-cases.js');
   assert.match(service, /results:\s*participants/);
   assert.match(service, /winnerId:\s*row\.winner_id/);
+});
+
+test('mobile Cases keeps the opening decision compact and confirms item sales in place', () => {
+  const client = read('games/case-opening-casino.js');
+  const css = read('games/case-opening.css');
+  const server = read('casino-server.js');
+  const cases = read('casino-cases.js');
+  assert.match(client, /case-mobile-summary/);
+  assert.match(client, /data-action="toggle-case-details"/);
+  assert.match(client, /data-action="sell-all"/);
+  assert.match(client, /classList\.add\('is-sold'\)/);
+  assert.match(client, /aria-busy/);
+  assert.match(css, /@media \(max-width:760px\)[\s\S]*\.case-secondary-details:not\(\.is-expanded\)\s*\{\s*display:none/);
+  assert.match(server, /\/api\/cases\/inventory\/sell-all/);
+  assert.match(cases, /sellAll\(\{ userId, inventoryIds, requestId \}\)/);
 });
