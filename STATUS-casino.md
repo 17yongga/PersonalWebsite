@@ -1,5 +1,14 @@
 # Casino — STATUS.md
-> Updated: 2026-08-22
+> Updated: 2026-08-23
+
+## Live CS2 Parlays + Settlement Recovery + Unified Controls — frontend/backend `neon777-20260823-r81` (2026-08-23)
+- **Server-authoritative parlays:** CS2 now supports 2–8 different matches, one selection per match, combined odds capped at 100×, and a 1,000,000-credit maximum return. The client submits only event IDs, selections, stake, and a retry-stable request ID; the server revalidates every market, snapshots each bookmaker quote, computes combined odds/return, reserves one escrow, and rejects changed-payload replay. Losing one leg loses the parlay; pending legs keep it open; void legs are removed from combined odds; all-void parlays refund.
+- **Open-bet root cause fixed:** sync could mark an event `finished` after four hours without storing a winner, while settlement queried sources only when status was not finished. Those records could never settle and eventually fell outside the rolling latest-50 result feed. Settlement now resolves whenever a winner is absent, queries exact bo3.gg provider IDs, preserves stored results during sync, and voids only genuinely unresolved events after a seven-day result grace.
+- **Historical recovery completed through the normal idempotent path:** bo3.gg confirmed Astralis 2–1 paiN, Spirit 2–1 Vitality, and FUT 2–1 FURIA. Production settled suffix `99CA8CA5` as won for the stored 315-credit return; `3E676F30`, companion Vitality wager `641251FC`, and FURIA wager `323A7688` settled lost. Exactly four escrow/ledger settlements and four history records exist. The future FUT–Spirit wager remains the only pending CS2 escrow (300 credits).
+- **Unified control system:** a final-loaded shared contract now owns 48px standard controls, 44px icon controls, margin/padding/radius, focus-visible, and disabled states across all eight games. Blackjack Hit and Stand are now identical peers in dimensions, baseline, 10px radius, surface, border, typography, and spacing. Desktop Roulette Clear and Coinflip quick amounts now meet the interaction floor; Coinflip Heads/Tails expose synchronized `aria-pressed`; CS2-only `.btn` and animation rules are fully scoped so they cannot restyle other games.
+- **Verification:** **115/115** source tests passed. Exact package passed copied-production settlement on macOS and Linux, direct provider-ID result resolution, SQLite integrity/restart/idempotency, and concurrent parlay replay (`200/200`, changed payload `409`, one debit). Exact and live parlay/Blackjack audit passed 16 states at 320×568, 390×844, 430×932, and 1280×900 with zero bad states, overflow, undersized controls, or runtime errors. Seven-game active/settled mobile+desktop matrix has zero undersized controls; generic remaining hit/clip flags are known off-viewport/reel harness artifacts, and the Coinflip connection message is the audit socket stub.
+- **Immutable production:** frontend package has 6,253 files; source manifest SHA-256 `6fb42480d63088075a8721007448e0c34b42011817c53d97c7bfe9bc702da785`; entry SHA-256 `983167761969580797ef4c16b97c1088e4c4876d0012ae8363ea0113695f8e00`; 26/26 live assets are byte-identical and immutable-cached. Linux backend server SHA-256 `80d276efe19bb56e28c305c36c1ae617b3326557bbcceed38147cf84488d6b61`; sealed backend manifest SHA-256 `472b86fa2ca4b390e6855ce4e62586cda8f632a6e8e545c088366bf474d388cc`.
+- **Production integrity:** two guarded PM2 starts passed. All 39 accounts reconcile exactly between SQLite and JSON; aggregate wallet value moved only by the official 315-credit winning return to `402,700.268`; integrity is `ok`; unrelated PM2 PIDs/restarts are unchanged; startup replay retained exactly four settlement transactions/history records. Rollback is frontend `r77`, backend `r57`; owner-only backup is `/home/ubuntu/casino-backups/pre-r81-20260823T0735Z`.
 
 ## Live CS2 Cases Mobile Occlusion + Accessibility Repair — frontend `neon777-20260822-r77` / backend `r57` (2026-08-22)
 - **Real-phone root cause:** Gary's iPhone screenshot proved the mobile `.case-open-dock` inherited `position:sticky` and floated over `.case-featured-drop` while scrolling, completely obscuring its canonical skin/details. Earlier generic geometry checks missed sibling occlusion because they covered viewport/nav clipping rather than pairwise intersections.
@@ -96,9 +105,9 @@
 - **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`, and live login captures `live-login-390.png` / `live-login-1280.png`. Subjective listening remains Gary's human acceptance check; technical synthesis, scheduling, recovery, cleanup, and live delivery are verified.
 
 ## What's Live
-- **Frontend:** `r77` at https://gary-yong.com/casino.html (S3/CloudFront)
-- **API/Backend:** `r57` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
-- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260803-r57/backend`
+- **Frontend:** `r81` at https://gary-yong.com/casino.html (S3/CloudFront)
+- **API/Backend:** `r81` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
+- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260823-r81/backend`
 
 ## Games (8 total)
 | Game | Type | Notes |
