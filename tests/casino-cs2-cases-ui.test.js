@@ -102,7 +102,33 @@ test('CS2 wager retries are payload-bound and polling preserves the selected por
   assert.match(client, /showBets\(this\.currentBetsTab\)/);
   assert.doesNotMatch(client, /e\.key === 'Enter'[\s\S]{0,180}handlePlaceBet/);
   assert.match(server, /Wager request identifier was already used for different inputs/);
-  assert.match(server, /priorBet\.eventId === sanitizeText\(eventId, 160\)/);
+  assert.match(server, /storedCS2WagerSignature\(priorBet\) !== requestSignature/);
+  assert.match(server, /cs2WagerSignature\(wagerType, amount, requestedLegs\)/);
+});
+
+test('CS2 parlays are server-authoritative, bounded, and recover finished events without results', () => {
+  const client = read('cs2-betting-modern.js');
+  const server = read('casino-server.js');
+  const provider = read('cs2-bo3gg-client.js');
+  const build = read('scripts/build-casino-release.js');
+  assert.match(client, /this\.betMode = 'single'/);
+  assert.match(client, /this\.parlayLegs = \[\]/);
+  assert.match(client, /data-wager-mode="parlay"/);
+  assert.match(client, /legs:\s*this\.parlayLegs\.map/);
+  assert.match(client, /renderParlayBetCard/);
+  assert.doesNotMatch(client, /highlightValidationStatus/);
+  assert.match(server, /validateParlayLegs\(lockedLegs\)/);
+  assert.match(server, /evaluateWager\(bet, outcomes\)/);
+  assert.match(server, /event\?\.result\?\.winner/);
+  assert.match(server, /result:\s*match\.result \|\| existingEvent\?\.result \|\| null/);
+  assert.match(server, /result_unavailable_after_grace/);
+  assert.match(provider, /fetchResultById/);
+  assert.match(provider, /filter\[matches\.id\]\[eq\]/);
+  assert.match(build, /cs2-wager-rules\.js/);
+  const animations = read('cs2-animations.css');
+  assert.doesNotMatch(animations, /^\.btn/m);
+  assert.doesNotMatch(animations, /^\s+\.btn/m);
+  assert.match(animations, /\.cs2-betting-container \.btn/);
 });
 
 test('balance displays two decimals while non-balance credit formatting rounds', () => {

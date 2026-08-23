@@ -218,3 +218,20 @@ test('responsive audit findings retain keyboard access, contrast, and 44px contr
   assert.match(premium, /\.pach-group input \{ min-height:44px!important/);
   assert.match(cs2Theme, /\.cs2-betting-container \.cs2-refresh-btn \{ min-height:44px!important/);
 });
+
+test('all game action buttons share one dimension and focus contract', () => {
+  const controls = read('casino-controls.css');
+  const blackjack = read('games/blackjack.js');
+  const html = read('casino.html');
+  assert.match(controls, /--casino-control-min:\s*48px/);
+  assert.match(controls, /\.game-view :where\(/);
+  assert.match(controls, /margin:\s*0 !important/);
+  assert.match(controls, /#hitBtn,#standBtn,#doubleDownBtn,#splitBtn,#newGameBtn/);
+  assert.match(controls, /button:focus-visible/);
+  assert.match(blackjack, /id="hitBtn" class="btn btn-primary"/);
+  assert.match(blackjack, /id="standBtn" class="btn btn-secondary"/);
+  assert.match(html, /casino-controls\.css/);
+  const coinflip = read('games/coinflip-casino.js');
+  assert.match(coinflip, /id="createChooseHeadsBtn"[^>]*aria-pressed="false"/);
+  assert.match(coinflip, /heads\.setAttribute\('aria-pressed', String\(choice === 'Heads'\)\)/);
+});

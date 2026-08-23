@@ -1,0 +1,107 @@
+/* NEON 777 shared control contract — loaded after game themes. */
+:root {
+  --casino-control-min: 48px;
+  --casino-control-radius: 10px;
+  --casino-control-pad-x: 16px;
+  --casino-control-font: 12px;
+  --casino-control-border: rgba(255,255,255,.16);
+  --casino-control-surface: rgba(255,255,255,.055);
+  --casino-control-hover: rgba(255,181,77,.12);
+}
+
+.game-view :where(
+  .btn,
+  .blackjack-stake-action,
+  .rl-quick-btn,
+  .cqb,
+  .pqb,
+  .prb,
+  .pbb,
+  .pa-btn,
+  .bp-btn,
+  .btn-quick-bet,
+  .quick-buy-btn,
+  .case-primary-action,
+  .case-fast-toggle,
+  .case-drop-toggle,
+  .case-result-actions button,
+  .battle-final-actions button,
+  .battle-opponent-toggle button,
+  .cs2-refresh-btn,
+  .credit-history-btn,
+  .bet-tab,
+  .quick-bet-btn,
+  .cs2-mode-btn,
+  .parlay-review-btn,
+  #rlClearBet
+) {
+  box-sizing: border-box;
+  min-height: var(--casino-control-min);
+  margin: 0 !important;
+  padding: 0 var(--casino-control-pad-x);
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--casino-control-radius);
+  font-family: var(--font-deco, Inter, system-ui, sans-serif);
+  font-size: var(--casino-control-font);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: .065em;
+  text-transform: uppercase;
+  touch-action: manipulation;
+}
+
+.game-view .btn { display: inline-flex; width: auto; }
+.game-view .btn-full { width: 100%; }
+.game-view .btn-primary { margin: 0 !important; }
+.game-view .btn-secondary {
+  min-height: var(--casino-control-min);
+  padding: 0 var(--casino-control-pad-x);
+  border-radius: var(--casino-control-radius);
+  font-size: var(--casino-control-font);
+}
+
+/* Blackjack choices are peers. Hit must not inherit the wager/deal CTA treatment. */
+.game-view .blackjack-container .game-controls :is(#hitBtn,#standBtn,#doubleDownBtn,#splitBtn,#newGameBtn) {
+  margin: 0 !important;
+  border: 1px solid rgba(245,201,106,.28) !important;
+  background: rgba(255,255,255,.055) !important;
+  color: #f4eee3 !important;
+  border-radius: var(--casino-control-radius) !important;
+  box-shadow: none !important;
+}
+.game-view .blackjack-container .game-controls :is(#hitBtn,#standBtn,#doubleDownBtn,#splitBtn,#newGameBtn):not(:disabled):hover {
+  border-color: rgba(245,201,106,.72) !important;
+  background: rgba(245,201,106,.12) !important;
+  color: #fff8e8 !important;
+  filter: none;
+}
+
+.game-view button:focus-visible,
+.game-view [role="button"]:focus-visible {
+  outline: 3px solid #fff !important;
+  outline-offset: 3px;
+}
+.game-view button:disabled,
+.game-view .btn:disabled {
+  cursor: not-allowed;
+  opacity: .46;
+  filter: saturate(.5);
+  box-shadow: none !important;
+}
+
+/* Icon-only dismiss/remove controls use the accepted compact control size. */
+.game-view :where(.close-btn,.btn-close,.btn-close-modal,.battle-queue button,.parlay-leg>button) {
+  display: inline-grid;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  place-items: center;
+  border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+  :root { --casino-control-min: 48px; --casino-control-pad-x: 14px; --casino-control-font: 11px; }
+}

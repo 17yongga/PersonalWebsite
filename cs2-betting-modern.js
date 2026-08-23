@@ -10,6 +10,8 @@ class CS2ModernBettingGame {
     this.currentBalance = 0;
     this.selectedEvent = null;
     this.selectedOutcome = null;
+    this.betMode = 'single';
+    this.parlayLegs = [];
     this.betAmount = 100;
     this.currentBetsTab = 'open';
     this.pendingBetRequestId = null;
@@ -98,6 +100,13 @@ class CS2ModernBettingGame {
           <div class="cs2-disclaimer">
             <p>🎯 Fantasy betting with virtual credits only. No real money involved.</p>
           </div>
+          <section class="cs2-wager-composer" aria-label="Wager type and parlay selections">
+            <div class="cs2-wager-mode" role="group" aria-label="Wager type">
+              <button class="cs2-mode-btn active" data-wager-mode="single" aria-pressed="true">Single</button>
+              <button class="cs2-mode-btn" data-wager-mode="parlay" aria-pressed="false">Parlay</button>
+            </div>
+            <div id="cs2ParlayTray" class="cs2-parlay-tray hidden" aria-live="polite"></div>
+          </section>
 
           <!-- Main Layout -->
           <div class="cs2-betting-layout">
@@ -147,7 +156,7 @@ class CS2ModernBettingGame {
           <div class="cs2-betslip-modal-overlay"></div>
           <div class="cs2-betslip-modal-content">
             <div class="betslip-modal-header">
-              <h3>Bet Slip</h3>
+              <h3 id="cs2BetSlipTitle">Bet Slip</h3>
               <button id="closeBetSlipBtn" class="close-btn" title="Close">&times;</button>
             </div>
 
@@ -272,6 +281,11 @@ class CS2ModernBettingGame {
     this.attachKeyboardListeners();
     this.addManagedListener(root, 'click', event => {
       const tournamentHeader = event.target.closest('.cs2-tournament-header');
+      const wagerMode = event.target.closest('[data-wager-mode]');
+      if (wagerMode) this.setWagerMode(wagerMode.dataset.wagerMode);
+      const removeLeg = event.target.closest('[data-remove-parlay-leg]');
+      if (removeLeg) this.removeParlayLeg(removeLeg.dataset.removeParlayLeg);
+      if (event.target.closest('[data-review-parlay]')) this.reviewParlay();
       if (tournamentHeader) {
         const section = tournamentHeader.parentElement;
         const collapsed = section.classList.toggle('collapsed');
@@ -465,12 +479,6 @@ class CS2ModernBettingGame {
     // Real-time validation feedback
     this.validateBetAmount();
     this.updatePotentialPayout();
-    
-    // Debounced input validation
-    clearTimeout(this.validationTimer);
-    this.validationTimer = setTimeout(() => {
-      this.highlightValidationStatus();
-    }, 300);
   }
 
   validateBetAmount() {
@@ -535,16 +543,102 @@ class CS2ModernBettingGame {
     this.triggerHapticFeedback('light');
   }
 
+  setWagerMode(mode) {
+    if (!['single', 'parlay'].includes(mode) || this.betMode === mode) return;
+    this.betMode = mode;
+    this.selectedEvent = null;
+    this.selectedOutcome = null;
+    this.root?.querySelectorAll('[data-wager-mode]').forEach(button => {
+      const active = button.dataset.wagerMode === mode;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    this.syncOddsSelections();
+    this.renderParlayTray();
+  }
+
+  combinedParlayOdds() {
+    return Math.round(this.parlayLegs.reduce((product, leg) => product * leg.odds, 1) * 1000) / 1000;
+  }
+
+  syncOddsSelections() {
+    this.root?.querySelectorAll('.odds-pill').forEach(card => {
+      const selected = this.betMode === 'parlay'
+        ? this.parlayLegs.some(leg => leg.eventId === card.dataset.eventId && leg.selection === card.dataset.selection)
+        : this.selectedEvent?.id === card.dataset.eventId && this.selectedOutcome === card.dataset.selection;
+      card.classList.toggle('selected', selected);
+    });
+  }
+
+  toggleParlayLeg(eventId, selection) {
+    const event = this.events.find(candidate => candidate.id === eventId);
+    const odds = Number(event?.odds?.[selection]);
+    if (!event || !Number.isFinite(odds) || odds <= 1) return;
+    const previousLegs = this.parlayLegs.map(leg => ({ ...leg }));
+    const existingIndex = this.parlayLegs.findIndex(leg => leg.eventId === eventId);
+    if (existingIndex >= 0 && this.parlayLegs[existingIndex].selection === selection) {
+      this.parlayLegs.splice(existingIndex, 1);
+    } else {
+      const leg = {
+        eventId,
+        selection,
+        selectionName: selection === 'team1' ? event.homeTeam : selection === 'team2' ? event.awayTeam : 'Draw',
+        homeTeam: event.homeTeam,
+        awayTeam: event.awayTeam,
+        odds
+      };
+      if (existingIndex >= 0) this.parlayLegs.splice(existingIndex, 1, leg);
+      else if (this.parlayLegs.length < 8) this.parlayLegs.push(leg);
+      else return this.showToast('Parlays support up to 8 matches', 'info');
+    }
+    if (this.parlayLegs.length >= 2 && this.combinedParlayOdds() > 100) {
+      this.parlayLegs = previousLegs;
+      return this.showToast('Combined parlay odds cannot exceed 100×', 'info');
+    }
+    this.pendingBetRequestId = null;
+    this.pendingBetRequestSignature = null;
+    this.syncOddsSelections();
+    this.renderParlayTray();
+  }
+
+  removeParlayLeg(eventId) {
+    this.parlayLegs = this.parlayLegs.filter(leg => leg.eventId !== eventId);
+    this.pendingBetRequestId = null;
+    this.pendingBetRequestSignature = null;
+    this.syncOddsSelections();
+    this.renderParlayTray();
+  }
+
+  renderParlayTray() {
+    const tray = this.root?.querySelector('#cs2ParlayTray');
+    if (!tray) return;
+    tray.classList.toggle('hidden', this.betMode !== 'parlay');
+    if (this.betMode !== 'parlay') return;
+    const odds = this.parlayLegs.length ? this.combinedParlayOdds() : 1;
+    tray.innerHTML = `<div class="parlay-tray-header"><div><span>PARLAY BUILDER</span><strong>${this.parlayLegs.length}/8 legs</strong></div><b>${this.parlayLegs.length ? odds.toFixed(3) : '—'}×</b></div>
+      <div class="parlay-leg-list">${this.parlayLegs.map(leg => `<div class="parlay-leg"><span><strong>${this.escapeHtml(leg.selectionName)}</strong><small>${this.escapeHtml(leg.homeTeam)} vs ${this.escapeHtml(leg.awayTeam)} · ${leg.odds.toFixed(2)}×</small></span><button data-remove-parlay-leg="${this.escapeHtml(leg.eventId)}" aria-label="Remove ${this.escapeHtml(leg.selectionName)}">×</button></div>`).join('') || '<p>Select one outcome from at least two different matches.</p>'}</div>
+      <button class="btn btn-primary parlay-review-btn" data-review-parlay ${this.parlayLegs.length < 2 ? 'disabled' : ''}>Review parlay</button>`;
+  }
+
+  reviewParlay() {
+    if (this.parlayLegs.length < 2) return this.showToast('Select at least two matches for a parlay', 'info');
+    this.showBetSlipModal();
+    this.renderBetSelection();
+    this.updatePotentialPayout();
+  }
+
   async handleOddsSelection(oddsCard) {
     const eventId = oddsCard.dataset.eventId;
     const selection = oddsCard.dataset.selection;
     
-    // Visual feedback
-    this.animateOddsSelection(oddsCard);
     this.triggerHapticFeedback('medium');
-    
-    // Fetch odds and show bet slip
     await this.fetchEventOddsIfNeeded(eventId);
+    if (this.betMode === 'parlay') {
+      window.casinoSound?.play('ui', { game: 'cs2betting' });
+      this.toggleParlayLeg(eventId, selection);
+      return;
+    }
+    this.animateOddsSelection(oddsCard);
     this.selectOutcome(eventId, selection);
   }
 
@@ -566,8 +660,12 @@ class CS2ModernBettingGame {
   }
 
   async handlePlaceBet() {
-    if (!this.selectedEvent || !this.selectedOutcome) {
+    if (this.betMode === 'single' && (!this.selectedEvent || !this.selectedOutcome)) {
       this.showToast('❌ Please select a match and outcome', 'error');
+      return;
+    }
+    if (this.betMode === 'parlay' && this.parlayLegs.length < 2) {
+      this.showToast('❌ A parlay requires at least two matches', 'error');
       return;
     }
 
@@ -593,7 +691,10 @@ class CS2ModernBettingGame {
         Placing Bet...
       `;
 
-      const requestSignature = JSON.stringify({ eventId: this.selectedEvent.id, selection: this.selectedOutcome, amount: this.betAmount });
+      const wagerPayload = this.betMode === 'parlay'
+        ? { legs: this.parlayLegs.map(leg => ({ eventId: leg.eventId, selection: leg.selection })), amount: this.betAmount }
+        : { eventId: this.selectedEvent.id, selection: this.selectedOutcome, amount: this.betAmount };
+      const requestSignature = JSON.stringify({ type: this.betMode, ...wagerPayload });
       if (!this.pendingBetRequestId || this.pendingBetRequestSignature !== requestSignature) {
         this.pendingBetRequestId = globalThis.crypto?.randomUUID?.() || `cs2_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
         this.pendingBetRequestSignature = requestSignature;
@@ -602,12 +703,7 @@ class CS2ModernBettingGame {
       const response = await this.casino.apiFetch('/api/cs2/bets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requestId,
-          eventId: this.selectedEvent.id,
-          selection: this.selectedOutcome,
-          amount: this.betAmount
-        })
+        body: JSON.stringify({ requestId, ...wagerPayload })
       });
 
       const data = await response.json();
@@ -626,7 +722,12 @@ class CS2ModernBettingGame {
         
         // Show success animation
         this.animateBetSuccess();
-        this.showToast(`🎉 Bet placed! New balance: ${this.currentBalance} credits`, 'success');
+        this.showToast(`🎉 ${this.betMode === 'parlay' ? 'Parlay' : 'Bet'} placed! New balance: ${this.currentBalance} credits`, 'success');
+        if (this.betMode === 'parlay') {
+          this.parlayLegs = [];
+          this.syncOddsSelections();
+          this.renderParlayTray();
+        }
         
         // Reload bets and close modal
         await this.loadBets();
@@ -804,6 +905,8 @@ class CS2ModernBettingGame {
     
     // Attach enhanced event listeners
     this.attachEventCardListeners();
+    this.syncOddsSelections();
+    this.renderParlayTray();
   }
 
   groupEventsByTournament(events) {
@@ -1060,10 +1163,9 @@ class CS2ModernBettingGame {
       betControls.classList.add('hidden');
     }
     
-    // Remove odds selections
-    this.root?.querySelectorAll('.odds-pill.selected').forEach(card => {
-      card.classList.remove('selected');
-    });
+    const title = document.getElementById('cs2BetSlipTitle');
+    if (title) title.textContent = 'Bet Slip';
+    this.syncOddsSelections();
   }
 
   async openCreditHistory() {
@@ -1216,39 +1318,35 @@ class CS2ModernBettingGame {
   }
 
   renderBetSelection() {
-    if (!this.selectedEvent || !this.selectedOutcome) return;
-
     const betSlip = document.getElementById('cs2BetSlip');
     const betControls = document.getElementById('cs2BetControls');
-    
-    const selectionName = this.selectedOutcome === 'team1' ? 
-      this.selectedEvent.homeTeam : this.selectedEvent.awayTeam;
+    const title = document.getElementById('cs2BetSlipTitle');
+    if (this.betMode === 'parlay') {
+      if (this.parlayLegs.length < 2) return;
+      if (title) title.textContent = `${this.parlayLegs.length}-Leg Parlay`;
+      betSlip.innerHTML = `<div class="betslip-parlay-list">${this.parlayLegs.map((leg, index) => `<div class="betslip-parlay-leg"><span>${index + 1}</span><div><strong>${this.escapeHtml(leg.selectionName)}</strong><small>${this.escapeHtml(leg.homeTeam)} vs ${this.escapeHtml(leg.awayTeam)}</small></div><b>${leg.odds.toFixed(2)}×</b></div>`).join('')}</div>`;
+      betControls.classList.remove('hidden');
+      return;
+    }
+    if (!this.selectedEvent || !this.selectedOutcome) return;
+    if (title) title.textContent = 'Single Bet';
+    const selectionName = this.selectedOutcome === 'team1' ? this.selectedEvent.homeTeam : this.selectedEvent.awayTeam;
     const odds = this.selectedEvent.odds?.[this.selectedOutcome] || 2.0;
 
     betSlip.innerHTML = `
       <div class="selection-match">
-        <div class="match-tournament">
-          🏆 ${this.escapeHtml(this.selectedEvent.tournamentName || 'Tournament')}
-        </div>
-        <div class="match-teams">
-          <span>${this.escapeHtml(this.selectedEvent.homeTeam || 'Team 1')}</span>
-          <span class="vs-text">vs</span>
-          <span>${this.escapeHtml(this.selectedEvent.awayTeam || 'Team 2')}</span>
-        </div>
+        <div class="match-tournament">🏆 ${this.escapeHtml(this.selectedEvent.tournamentName || 'Tournament')}</div>
+        <div class="match-teams"><span>${this.escapeHtml(this.selectedEvent.homeTeam || 'Team 1')}</span><span class="vs-text">vs</span><span>${this.escapeHtml(this.selectedEvent.awayTeam || 'Team 2')}</span></div>
       </div>
-      <div class="selection-outcome">
-        <div class="outcome-label">Your Selection:</div>
-        <div class="outcome-value">${this.escapeHtml(selectionName)} @ ${odds.toFixed(2)}</div>
-      </div>
-    `;
-
+      <div class="selection-outcome"><div class="outcome-label">Your Selection:</div><div class="outcome-value">${this.escapeHtml(selectionName)} @ ${odds.toFixed(2)}</div></div>`;
     betControls.classList.remove('hidden');
   }
 
   updatePotentialPayout() {
-    if (!this.selectedEvent || !this.selectedOutcome) return;
-
-    const odds = this.selectedEvent.odds?.[this.selectedOutcome] || 2.0;
+    const odds = this.betMode === 'parlay'
+      ? this.combinedParlayOdds()
+      : Number(this.selectedEvent?.odds?.[this.selectedOutcome]);
+    if (!Number.isFinite(odds) || odds <= 1) return;
     const payout = this.betAmount * odds;
     const profit = payout - this.betAmount;
 
@@ -1351,7 +1449,19 @@ class CS2ModernBettingGame {
     if (lossesEl) lossesEl.textContent = `L: ${losses}`;
   }
 
+  renderParlayBetCard(bet) {
+    const statusClass = ['won', 'lost', 'void'].includes(bet.status) ? bet.status : 'pending';
+    const legs = Array.isArray(bet.legs) ? bet.legs : [];
+    const potentialPayout = bet.potentialPayout || Math.round(bet.amount * bet.odds);
+    return `<article class="cs2-bet-card cs2-parlay-card ${statusClass}">
+      <div class="bet-header"><div><span class="parlay-card-kicker">${legs.length}-LEG PARLAY</span><div class="bet-id">#${bet.id.slice(-8).toUpperCase()}</div></div><div class="bet-status ${statusClass}">${this.getStatusBadge(bet.status)}</div></div>
+      <div class="parlay-card-legs">${legs.map((leg, index) => `<div class="parlay-card-leg ${leg.status || 'pending'}"><span>${index + 1}</span><div><strong>${this.escapeHtml(leg.selectionName)}</strong><small>${this.escapeHtml(leg.homeTeam)} vs ${this.escapeHtml(leg.awayTeam)}</small></div><b>${Number(leg.odds).toFixed(2)}×</b></div>`).join('')}</div>
+      <div class="bet-details"><div class="bet-detail-item"><div class="bet-detail-label">Stake</div><div class="bet-detail-value">${bet.amount}</div></div><div class="bet-detail-item"><div class="bet-detail-label">Combined</div><div class="bet-detail-value">${Number(bet.odds).toFixed(3)}</div></div><div class="bet-detail-item"><div class="bet-detail-label">Return</div><div class="bet-detail-value">${this.casino.formatCredits(potentialPayout)}</div></div></div>
+      ${bet.settledAt ? `<div class="bet-settled">Settled: ${new Date(bet.settledAt).toLocaleString()}</div>` : ''}</article>`;
+  }
+
   renderBetCard(bet) {
+    if (bet.type === 'parlay') return this.renderParlayBetCard(bet);
     const event = this.events.find(e => e.id === bet.eventId);
     
     // Use stored team names from bet object, fallback to event lookup

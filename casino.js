@@ -1717,7 +1717,8 @@ class CasinoManager {
             <ul>
               <li>Browse upcoming matches (updated every 2 hours from bo3.gg)</li>
               <li>Click a match to see the teams and odds</li>
-              <li>Select a team, enter your bet amount, and confirm</li>
+              <li>Single: select one team, enter your stake, and confirm.</li>
+              <li>Parlay: choose 2–8 different matches, review the combined odds, then place one stake.</li>
               <li>Bets settle automatically once the match result is in</li>
             </ul>
           </div>
@@ -1729,6 +1730,7 @@ class CasinoManager {
               <li>Underdog: higher odds (e.g. 3.5×) — riskier but bigger payout</li>
               <li>Win: <span class="htp-tag green">bet × odds</span></li>
               <li>Lose: <span class="htp-tag red">bet lost</span></li>
+              <li>A parlay wins only when every non-void leg wins. A losing leg loses the parlay; void legs are removed from combined odds.</li>
             </ul>
           </div>
           <div class="htp-section">
@@ -1736,7 +1738,8 @@ class CasinoManager {
             <ul>
               <li>Match data sourced from bo3.gg — covers ESL Pro League and major tournaments.</li>
               <li>Odds reflect real bookmaker lines with a typical bookmaker margin.</li>
-              <li>Cancelled matches are refunded.</li>
+              <li>Cancelled singles are refunded. Cancelled parlay legs are removed; an all-void parlay is refunded.</li>
+              <li>Parlays allow one selection per match, combined odds up to 100×, and a maximum 1,000,000-credit return.</li>
             </ul>
           </div>
         `

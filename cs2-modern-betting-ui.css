@@ -1922,9 +1922,9 @@
 }
 
 /* ============================================
-   Modern Button System
+   Modern Button System (scoped to CS2)
    ============================================ */
-.btn {
+.cs2-betting-container .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1945,7 +1945,7 @@
   line-height: 1;
 }
 
-.btn::before {
+.cs2-betting-container .btn::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -1954,11 +1954,8 @@
   transition: opacity var(--cs2-transition-fast);
 }
 
-.btn:hover::before {
-  opacity: 1;
-}
-
-.btn-primary {
+.cs2-betting-container .btn:hover::before { opacity: 1; }
+.cs2-betting-container .btn-primary {
   background: linear-gradient(135deg, var(--cs2-primary), var(--cs2-primary-dark));
   color: white;
   box-shadow: 0 4px 20px rgba(var(--cs2-primary-rgb), 0.35), 0 0 0 1px rgba(var(--cs2-primary-rgb), 0.1);
@@ -1966,59 +1963,19 @@
   font-weight: 800;
   letter-spacing: 0.75px;
 }
-
-.btn-primary:hover {
+.cs2-betting-container .btn-primary:hover {
   background: linear-gradient(135deg, var(--cs2-primary-light), var(--cs2-primary));
   transform: translateY(-2px);
   box-shadow: 0 8px 32px rgba(var(--cs2-primary-rgb), 0.5), 0 0 20px rgba(var(--cs2-primary-rgb), 0.2), 0 0 0 1px rgba(var(--cs2-primary-rgb), 0.15);
 }
-
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: var(--cs2-shadow-sm);
-}
-
-.btn-secondary {
-  background: var(--cs2-bg-elevated);
-  color: var(--cs2-text-secondary);
-  border: 1px solid var(--cs2-border);
-  box-shadow: var(--cs2-shadow-sm);
-}
-
-.btn-secondary:hover {
-  background: var(--cs2-bg-card-hover);
-  color: var(--cs2-text-primary);
-  border-color: var(--cs2-border-hover);
-  transform: translateY(-1px);
-}
-
-.btn-secondary:active {
-  transform: translateY(0);
-}
-
-.btn-large {
-  padding: var(--cs2-space-lg) var(--cs2-space-2xl);
-  font-size: 1rem;
-  font-weight: 700;
-  width: 100%;
-}
-
-.btn-small {
-  padding: var(--cs2-space-sm) var(--cs2-space-md);
-  font-size: 0.75rem;
-}
-
-.btn-icon {
-  padding: var(--cs2-space-md);
-  width: auto;
-  aspect-ratio: 1;
-}
+.cs2-betting-container .btn-primary:active { transform: translateY(0); }
+.cs2-betting-container .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: var(--cs2-shadow-sm); }
+.cs2-betting-container .btn-secondary { background: var(--cs2-bg-elevated); color: var(--cs2-text-secondary); border: 1px solid var(--cs2-border); box-shadow: var(--cs2-shadow-sm); }
+.cs2-betting-container .btn-secondary:hover { background: var(--cs2-bg-card-hover); color: var(--cs2-text-primary); border-color: var(--cs2-border-hover); transform: translateY(-1px); }
+.cs2-betting-container .btn-secondary:active { transform: translateY(0); }
+.cs2-betting-container .btn-large { padding: var(--cs2-space-lg) var(--cs2-space-2xl); font-size: 1rem; font-weight: 700; width: 100%; }
+.cs2-betting-container .btn-small { padding: var(--cs2-space-sm) var(--cs2-space-md); font-size: 0.75rem; }
+.cs2-betting-container .btn-icon { padding: var(--cs2-space-md); width: auto; aspect-ratio: 1; }
 
 /* ============================================
    My Bets Panel - Enhanced Design
@@ -2583,7 +2540,7 @@
     min-height: 44px; /* iOS touch target minimum */
   }
   
-  .btn {
+  .cs2-betting-container .btn {
     min-height: 44px;
     padding: var(--cs2-space-md) var(--cs2-space-lg);
   }
@@ -2832,10 +2789,10 @@
 }
 
 /* Focus Styles for Keyboard Navigation */
-.odds-card:focus,
-.btn:focus,
-.quick-bet-btn:focus,
-.bet-tab:focus,
+.cs2-betting-container .odds-card:focus,
+.cs2-betting-container .btn:focus,
+.cs2-betting-container .quick-bet-btn:focus,
+.cs2-betting-container .bet-tab:focus,
 .cs2-refresh-btn:focus {
   outline: 2px solid var(--cs2-primary);
   outline-offset: 2px;
@@ -2850,9 +2807,9 @@
     color: black;
   }
   
-  .cs2-betslip-modal,
-  .cs2-refresh-btn,
-  .btn-secondary {
+  .cs2-betting-container .cs2-betslip-modal,
+  .cs2-betting-container .cs2-refresh-btn,
+  .cs2-betting-container .btn-secondary {
     display: none;
   }
 }/* ============================================
@@ -3462,11 +3419,11 @@
 }
 
 /* Better focus states */
-.odds-pill:focus-visible,
-.odds-btn:focus-visible,
-.btn:focus-visible,
-.quick-bet-btn:focus-visible,
-.bet-tab:focus-visible,
+.cs2-betting-container .odds-pill:focus-visible,
+.cs2-betting-container .odds-btn:focus-visible,
+.cs2-betting-container .btn:focus-visible,
+.cs2-betting-container .quick-bet-btn:focus-visible,
+.cs2-betting-container .bet-tab:focus-visible,
 .cs2-refresh-btn:focus-visible,
 .credit-history-btn:focus-visible {
   outline: 2px solid var(--cs2-primary);
@@ -4127,4 +4084,27 @@
     bottom: auto;
     margin: 0 -14px max(-14px, calc(-1 * env(safe-area-inset-bottom))) !important;
   }
+}
+
+/* Server-authoritative single/parlay composer. */
+.cs2-wager-composer { display:grid; gap:10px; margin:0 0 16px; }
+.cs2-wager-mode { display:grid; grid-template-columns:1fr 1fr; gap:6px; width:min(360px,100%); padding:5px; border:1px solid var(--cs2-border); border-radius:14px; background:rgba(10,14,20,.82); }
+.cs2-mode-btn { min-height:46px; border:0; border-radius:10px; color:var(--cs2-text-secondary); background:transparent; font-weight:850; cursor:pointer; }
+.cs2-mode-btn.active { color:#06120d; background:var(--cs2-accent); box-shadow:0 7px 20px rgba(var(--cs2-accent-rgb),.22); }
+.cs2-parlay-tray { display:grid; gap:10px; padding:14px; border:1px solid rgba(var(--cs2-accent-rgb),.25); border-radius:16px; background:linear-gradient(145deg,rgba(16,23,32,.96),rgba(8,12,18,.98)); }
+.cs2-parlay-tray.hidden { display:none; }
+.parlay-tray-header { display:flex; align-items:end; justify-content:space-between; gap:12px; }
+.parlay-tray-header>div>* { display:block; }.parlay-tray-header span,.parlay-card-kicker { color:var(--cs2-accent); font-size:.62rem; font-weight:900; letter-spacing:.15em; }.parlay-tray-header strong { margin-top:4px; }.parlay-tray-header>b { color:#fff; font-size:1.2rem; }
+.parlay-leg-list,.betslip-parlay-list,.parlay-card-legs { display:grid; gap:7px; }
+.parlay-leg,.betslip-parlay-leg,.parlay-card-leg { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; min-width:0; padding:9px 10px; border:1px solid rgba(255,255,255,.08); border-radius:10px; background:rgba(255,255,255,.035); }
+.parlay-leg>span,.parlay-leg>span>*,.betslip-parlay-leg>div>*,.parlay-card-leg>div>* { display:block; min-width:0; overflow-wrap:anywhere; }.parlay-leg small,.betslip-parlay-leg small,.parlay-card-leg small { margin-top:3px; color:var(--cs2-text-secondary); font-size:.68rem; }.parlay-leg>button { border:1px solid rgba(255,255,255,.12); color:#ff9dcb; background:rgba(255,75,126,.08); cursor:pointer; }
+.parlay-review-btn { width:100%!important; }
+.betslip-parlay-leg,.parlay-card-leg { grid-template-columns:28px minmax(0,1fr) auto; }.betslip-parlay-leg>span,.parlay-card-leg>span { display:grid; width:26px; height:26px; place-items:center; border-radius:50%; color:#07120d; background:var(--cs2-accent); font-size:.7rem; font-weight:900; }.betslip-parlay-leg>b,.parlay-card-leg>b { color:#fff; }
+.cs2-parlay-card { gap:12px; }.parlay-card-kicker { display:block; margin-bottom:4px; }.parlay-card-leg.won { border-color:rgba(57,242,161,.28); }.parlay-card-leg.lost { opacity:.62; border-color:rgba(255,75,126,.3); }.parlay-card-leg.void { opacity:.72; }
+
+@media (max-width:768px) {
+  .cs2-wager-composer { margin-inline:4px; }
+  .cs2-wager-mode { width:100%; }
+  .cs2-parlay-tray { padding:10px; }
+  .parlay-leg,.betslip-parlay-leg,.parlay-card-leg { padding:8px; }
 }

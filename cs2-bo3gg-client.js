@@ -306,6 +306,28 @@ async function fetchUpcomingMatches(options = {}) {
   }
 }
 
+async function mapFinishedMatch(match) {
+  const details = await resolveMatchDetails(match);
+  let winner = null;
+  if (match.winner_team_id === match.team1_id) winner = 'team1';
+  else if (match.winner_team_id === match.team2_id) winner = 'team2';
+  return {
+    id: `bo3gg_${match.id}`,
+    team1: details.team1Name,
+    team2: details.team2Name,
+    winner,
+    winnerName: winner === 'team1' ? details.team1Name : (winner === 'team2' ? details.team2Name : null),
+    score: `${match.team1_score}-${match.team2_score}`,
+    team1Score: match.team1_score,
+    team2Score: match.team2_score,
+    startDate: match.start_date,
+    endDate: match.end_date,
+    status: match.status,
+    source: 'bo3gg',
+    confidence: 0.95
+  };
+}
+
 /**
  * Fetch recently finished CS2 matches for settlement
  * @param {Object} options - { limit: number }
@@ -339,35 +361,32 @@ async function fetchRecentResults(options = {}) {
     }
     
     const results = [];
-    for (const match of data.results) {
-      const details = await resolveMatchDetails(match);
-      
-      let winner = null;
-      if (match.winner_team_id === match.team1_id) winner = 'team1';
-      else if (match.winner_team_id === match.team2_id) winner = 'team2';
-      
-      results.push({
-        id: `bo3gg_${match.id}`,
-        team1: details.team1Name,
-        team2: details.team2Name,
-        winner,
-        winnerName: winner === 'team1' ? details.team1Name : (winner === 'team2' ? details.team2Name : null),
-        score: `${match.team1_score}-${match.team2_score}`,
-        team1Score: match.team1_score,
-        team2Score: match.team2_score,
-        startDate: match.start_date,
-        endDate: match.end_date,
-        status: 'finished',
-        source: 'bo3gg',
-        confidence: 0.95
-      });
-    }
+    for (const match of data.results) results.push(await mapFinishedMatch(match));
     
     console.log(`[bo3.gg] Found ${results.length} recent results`);
     return results;
   } catch (error) {
     console.error('[bo3.gg] Error fetching results:', error.message);
     return [];
+  }
+}
+
+async function fetchResultById(eventId) {
+  const numericId = Number(String(eventId || '').replace(/^bo3gg_/, ''));
+  if (!Number.isSafeInteger(numericId) || numericId < 1) return null;
+  try {
+    const data = await rateLimitedRequest('/matches', {
+      'filter[matches.id][eq]': numericId,
+      'page[limit]': 1
+    });
+    const match = data?.results?.[0];
+    if (!match || match.status !== 'finished') return null;
+    if (match.team1_id) await fetchTeamDetails(match.team1_id);
+    if (match.team2_id) await fetchTeamDetails(match.team2_id);
+    return mapFinishedMatch(match);
+  } catch (error) {
+    console.warn(`[bo3.gg] Failed to fetch result for ${eventId}:`, error.message);
+    return null;
   }
 }
 
@@ -433,6 +452,7 @@ module.exports = {
   fetchUpcomingMatches,
   fetchCurrentMatches,
   fetchRecentResults,
+  fetchResultById,
   fetchTeamDetails,
   fetchTeamsBatch,
   parseTeamNamesFromSlug,

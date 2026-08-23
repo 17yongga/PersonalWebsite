@@ -210,13 +210,13 @@
    ============================================ */
 
 /* Enhanced Button Feedback */
-.btn {
+.cs2-betting-container .btn {
   position: relative;
   overflow: hidden;
   transform: translateZ(0); /* Enable hardware acceleration */
 }
 
-.btn::before {
+.cs2-betting-container .btn::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -225,12 +225,12 @@
   transition: opacity 0.2s ease;
 }
 
-.btn:hover::before {
+.cs2-betting-container .btn:hover::before {
   opacity: 1;
 }
 
 /* Success Button Animation */
-.btn-success-pulse {
+.cs2-betting-container .btn-success-pulse {
   animation: successPulse 0.6s ease-out;
 }
 
@@ -250,13 +250,13 @@
 }
 
 /* Loading Button State */
-.btn-loading {
+.cs2-betting-container .btn-loading {
   position: relative;
   color: transparent !important;
   pointer-events: none;
 }
 
-.btn-loading::after {
+.cs2-betting-container .btn-loading::after {
   content: '';
   position: absolute;
   top: 50%;
@@ -457,7 +457,7 @@
 /* GPU Acceleration for Interactive Elements */
 .odds-card,
 .cs2-event-card,
-.btn,
+.cs2-betting-container .btn,
 .cs2-betslip-modal-content {
   will-change: transform;
 }
@@ -466,7 +466,7 @@
 @media (prefers-reduced-motion: reduce) {
   .cs2-event-card,
   .odds-card,
-  .btn,
+  .cs2-betting-container .btn,
   .cs2-toast {
     animation: none !important;
     transition: none !important;
@@ -474,7 +474,7 @@
   
   .cs2-event-card:hover,
   .odds-card:hover,
-  .btn:hover {
+  .cs2-betting-container .btn:hover {
     transform: none !important;
   }
 }
@@ -506,9 +506,9 @@
   }
   
   /* Faster transitions for better touch response */
-  .btn,
+  .cs2-betting-container .btn,
   .odds-card,
-  .quick-bet-btn {
+  .cs2-betting-container .quick-bet-btn {
     transition-duration: 0.15s;
   }
 }
@@ -519,8 +519,8 @@
 
 /* Focus Indicators with Animation */
 .odds-card:focus,
-.btn:focus,
-.quick-bet-btn:focus {
+.cs2-betting-container .btn:focus,
+.cs2-betting-container .quick-bet-btn:focus {
   animation: focusGlow 1s ease-in-out infinite alternate;
 }
 

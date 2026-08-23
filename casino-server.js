@@ -28,6 +28,13 @@ const { FairRng, FAIR_GAMES } = require('./casino-fairness');
 const { createCasinoMailer } = require('./casino-email');
 const { CaseGameService } = require('./casino-cases');
 const { getCS2BettingAvailability } = require('./cs2-market-availability');
+const {
+  validateParlayLegs,
+  potentialPayout: calculateCS2PotentialPayout,
+  evaluateWager,
+  CS2_PARLAY_MIN_LEGS,
+  CS2_PARLAY_MAX_LEGS
+} = require('./cs2-wager-rules');
 
 // CS2 bo3.gg API Client - Primary data source for matches and odds
 let cs2Bo3ggClient = null;
@@ -3649,7 +3656,7 @@ app.get("/api/cs2/bets", requireAuth, async (req, res) => {
     const transactions = userBets.map(bet => {
       totalWagered += bet.amount || 0;
       if (bet.status === 'won') {
-        const payout = Math.round((bet.amount || 0) * (bet.odds || 1));
+        const payout = bet.potentialPayout ?? Math.round((bet.amount || 0) * (bet.odds || 1));
         totalWon += payout;
         wins++;
         settled++;
@@ -3701,21 +3708,42 @@ app.get("/api/cs2/balance", requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/cs2/bets - Place a new bet
+function cs2WagerSignature(type, amount, legs) {
+  return JSON.stringify({
+    type,
+    amount,
+    legs: legs.map(leg => ({ eventId: leg.eventId, selection: leg.selection }))
+  });
+}
+
+function storedCS2WagerSignature(bet) {
+  if (bet.requestSignature) return bet.requestSignature;
+  const legs = Array.isArray(bet.legs) && bet.legs.length
+    ? bet.legs
+    : [{ eventId: bet.eventId, selection: bet.selection }];
+  return cs2WagerSignature(bet.type === 'parlay' ? 'parlay' : 'single', bet.amount, legs);
+}
+
+// POST /api/cs2/bets - Place a new single or parlay wager
 app.post("/api/cs2/bets", requireAuth, apiMutationRateLimit, async (req, res) => {
   try {
     const userId = req.auth.username;
-    const { eventId, selection, amount } = req.body || {};
+    const amount = req.body?.amount;
     const requestId = sanitizeText(req.body?.requestId, 80);
-    
-    // Validation
-    if (!eventId || !selection || amount === undefined || amount === null || !/^[A-Za-z0-9_-]{8,80}$/.test(requestId)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Missing required fields: eventId, selection, amount"
-      });
+    const suppliedLegs = Array.isArray(req.body?.legs) ? req.body.legs : null;
+    const wagerType = suppliedLegs ? 'parlay' : 'single';
+    const rawLegs = suppliedLegs || [{ eventId: req.body?.eventId, selection: req.body?.selection }];
+    const requestedLegs = rawLegs.map(leg => ({
+      eventId: sanitizeText(leg?.eventId, 160),
+      selection: sanitizeText(leg?.selection, 16)
+    }));
+
+    if (!/^[A-Za-z0-9_-]{8,80}$/.test(requestId) || requestedLegs.some(leg => !leg.eventId || !leg.selection)) {
+      return res.status(400).json({ success: false, error: "Missing required wager fields" });
     }
-    
+    if (wagerType === 'parlay' && (requestedLegs.length < CS2_PARLAY_MIN_LEGS || requestedLegs.length > CS2_PARLAY_MAX_LEGS)) {
+      return res.status(400).json({ success: false, error: `Parlays require ${CS2_PARLAY_MIN_LEGS}-${CS2_PARLAY_MAX_LEGS} legs` });
+    }
     if (!Number.isSafeInteger(amount) || amount < 1) {
       return res.status(400).json({ 
         success: false, 
@@ -3727,62 +3755,58 @@ app.post("/api/cs2/bets", requireAuth, apiMutationRateLimit, async (req, res) =>
     // current balance. The first accepted payload is permanently bound to the
     // request identifier.
     const betId = `bet_${crypto.createHash('sha256').update(`${userId}:${requestId}`).digest('hex').slice(0, 24)}`;
+    const requestSignature = cs2WagerSignature(wagerType, amount, requestedLegs);
     const priorBet = cs2BettingState.bets[betId];
     if (priorBet) {
-      const samePayload = priorBet.userId === userId
-        && priorBet.eventId === sanitizeText(eventId, 160)
-        && priorBet.selection === selection
-        && priorBet.amount === amount;
-      if (!samePayload) return res.status(409).json({ success: false, error: 'Wager request identifier was already used for different inputs' });
+      if (priorBet.userId !== userId || storedCS2WagerSignature(priorBet) !== requestSignature) {
+        return res.status(409).json({ success: false, error: 'Wager request identifier was already used for different inputs' });
+      }
       return res.json({ success: true, bet: priorBet, newBalance: casinoLedger.balance(userId) });
     }
-    
-    // Check if event exists and is open for betting
-    const event = cs2BettingState.events[eventId];
-    if (!event) {
-      return res.status(404).json({ success: false, error: "Event not found" });
-    }
-    
-    const availability = getCS2BettingAvailability(event);
-    if (availability.bettingStatus !== 'open') {
-      return res.status(400).json({
-        success: false,
-        error: availability.reason || `Cannot place bet on event with status: ${event.status}`,
-        bettingStatus: availability.bettingStatus
+
+    const lockedLegs = [];
+    for (const requested of requestedLegs) {
+      const event = cs2BettingState.events[requested.eventId];
+      if (!event) return res.status(404).json({ success: false, error: `Event not found: ${requested.eventId}` });
+      const availability = getCS2BettingAvailability(event);
+      if (availability.bettingStatus !== 'open') {
+        return res.status(400).json({ success: false, error: availability.reason || `Cannot bet on ${requested.eventId}`, bettingStatus: availability.bettingStatus });
+      }
+      if (!['team1', 'team2', 'draw'].includes(requested.selection)) {
+        return res.status(400).json({ success: false, error: "Invalid selection" });
+      }
+      const odds = Number(event.odds?.[requested.selection]);
+      if (!Number.isFinite(odds) || odds <= 1 || odds > 100) {
+        return res.status(400).json({ success: false, error: `Odds unavailable for ${requested.eventId}` });
+      }
+      const homeTeam = sanitizeText(event.homeTeam || event.participant1Name || 'Team 1', 80);
+      const awayTeam = sanitizeText(event.awayTeam || event.participant2Name || 'Team 2', 80);
+      lockedLegs.push({
+        eventId: requested.eventId,
+        selection: requested.selection,
+        selectionName: requested.selection === 'team1' ? homeTeam : requested.selection === 'team2' ? awayTeam : 'Draw',
+        homeTeam,
+        awayTeam,
+        odds,
+        oddsSource: event.oddsSource || null,
+        oddsUpdatedAt: event.oddsUpdatedAt || event.lastUpdate || null,
+        eventStatusAtPlacement: event.status,
+        status: 'pending',
+        result: null
       });
     }
-    
-    // Validate selection (must be team1, team2, or draw)
-    if (!['team1', 'team2', 'draw'].includes(selection)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Invalid selection. Must be 'team1', 'team2', or 'draw'" 
-      });
-    }
-    
-    // Get authenticated user balance.
-    const user = users[userId];
-    if (!user) {
-      return res.status(404).json({ success: false, error: "User not found" });
-    }
-    
-    // Get odds for the selection before entering the balance lock.
-    const odds = Number(event.odds && event.odds[selection]);
-    if (!Number.isFinite(odds) || odds <= 1 || odds > 100) {
-      return res.status(400).json({ 
-        success: false, 
-        error: `Odds not available for selection: ${selection}` 
-      });
+    let combinedWagerOdds;
+    try {
+      combinedWagerOdds = wagerType === 'parlay' ? validateParlayLegs(lockedLegs) : lockedLegs[0].odds;
+      calculateCS2PotentialPayout(amount, combinedWagerOdds);
+    } catch (error) {
+      return res.status(400).json({ success: false, error: error.message });
     }
 
     const placement = await runWithUserBalanceLock(userId, async () => {
       const existingBet = cs2BettingState.bets[betId];
       if (existingBet) {
-        const samePayload = existingBet.userId === userId
-          && existingBet.eventId === sanitizeText(eventId, 160)
-          && existingBet.selection === selection
-          && existingBet.amount === amount;
-        return samePayload
+        return existingBet.userId === userId && storedCS2WagerSignature(existingBet) === requestSignature
           ? { status: 200, bet: existingBet, newBalance: casinoLedger.balance(userId) }
           : { status: 409, error: 'Wager request identifier was already used for different inputs' };
       }
@@ -3793,31 +3817,37 @@ app.post("/api/cs2/bets", requireAuth, apiMutationRateLimit, async (req, res) =>
         return { status: 400, error: "Insufficient credits", balance: authoritativeBalance };
       }
 
-
-      const homeTeam = sanitizeText(event.homeTeam || event.participant1Name || 'Team 1', 80);
-      const awayTeam = sanitizeText(event.awayTeam || event.participant2Name || 'Team 2', 80);
-      const selectionName = selection === 'team1' ? homeTeam : selection === 'team2' ? awayTeam : 'Draw';
+      const firstLeg = lockedLegs[0];
       const bet = {
         id: betId,
         userId,
-        eventId: sanitizeText(eventId, 160),
-        selection,
-        selectionName,
-        homeTeam,
-        awayTeam,
+        type: wagerType,
+        eventId: wagerType === 'single' ? firstLeg.eventId : null,
+        selection: wagerType === 'single' ? firstLeg.selection : null,
+        selectionName: wagerType === 'single' ? firstLeg.selectionName : `${lockedLegs.length}-leg parlay`,
+        homeTeam: wagerType === 'single' ? firstLeg.homeTeam : null,
+        awayTeam: wagerType === 'single' ? firstLeg.awayTeam : null,
+        legs: wagerType === 'parlay' ? lockedLegs : undefined,
         amount,
-        odds,
-        oddsSource: event.oddsSource || null,
-        oddsUpdatedAt: event.oddsUpdatedAt || event.lastUpdate || null,
-        eventStatusAtPlacement: event.status,
-        potentialPayout: Math.round(amount * odds),
+        odds: combinedWagerOdds,
+        oddsSource: wagerType === 'single' ? firstLeg.oddsSource : 'combined-bookmaker',
+        oddsUpdatedAt: wagerType === 'single' ? firstLeg.oddsUpdatedAt : new Date().toISOString(),
+        eventStatusAtPlacement: wagerType === 'single' ? firstLeg.eventStatusAtPlacement : 'multiple',
+        potentialPayout: calculateCS2PotentialPayout(amount, combinedWagerOdds),
+        requestSignature,
         status: 'pending',
         placedAt: new Date().toISOString(),
         settledAt: null
       };
 
+      const reserveMetadata = {
+        wagerType,
+        requestId,
+        odds: combinedWagerOdds,
+        legs: lockedLegs.map(leg => ({ eventId: leg.eventId, selection: leg.selection, odds: leg.odds, oddsSource: leg.oddsSource, oddsUpdatedAt: leg.oddsUpdatedAt }))
+      };
       const reserved = await reserveCredits(userId, { game: 'cs2betting', referenceId: betId, stake: amount,
-        metadata: { eventId, selection, odds, oddsSource: event.oddsSource || null, oddsUpdatedAt: event.oddsUpdatedAt || event.lastUpdate || null, eventStatus: event.status, requestId } });
+        metadata: reserveMetadata });
       bet.escrowId = reserved.escrow.escrowId;
       cs2BettingState.bets[betId] = bet;
       try {
@@ -4099,6 +4129,7 @@ async function syncCS2Events(options = {}) {
         status: finalStatus,
         statusId: match.statusId || (finalStatus === 'live' ? 1 : (finalStatus === 'finished' ? 2 : 0)),
         completed: finalCompleted,
+        result: match.result || existingEvent?.result || null,
         hasOdds: matchHasBookmakerOdds,
         lastUpdate: match.lastUpdate || match.updatedAt || new Date().toISOString()
       };
@@ -4190,255 +4221,171 @@ async function syncCS2Events(options = {}) {
   }
 }
 
-// Settle CS2 bets based on match results
-async function settleCS2Bets() {
-  if (!cs2Bo3ggClient && !cs2ResultFetcher) {
-    console.warn("[CS2 Settlement] No result sources available (bo3gg client + HLTV both missing), skipping");
-    return;
+// Settle CS2 singles and parlays from authoritative match results.
+const CS2_RESULT_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
+
+async function resolveCS2EventOutcome(eventId, recentResults) {
+  const event = cs2BettingState.events[eventId];
+  if (event?.status === 'cancelled') return { status: 'cancelled', winner: null, source: 'event_state' };
+  if (event?.result?.winner) return { status: 'finished', ...event.result };
+
+  let matchResult = recentResults.get(eventId) || null;
+  if (!matchResult && cs2Bo3ggClient?.fetchResultById) matchResult = await cs2Bo3ggClient.fetchResultById(eventId);
+  if (matchResult?.winner) {
+    const result = {
+      winner: matchResult.winner,
+      participant1Score: matchResult.team1Score,
+      participant2Score: matchResult.team2Score,
+      homeScore: matchResult.team1Score,
+      awayScore: matchResult.team2Score,
+      source: matchResult.source || 'bo3gg'
+    };
+    if (event) {
+      event.status = 'finished';
+      event.statusId = 3;
+      event.completed = true;
+      event.result = result;
+      cs2BettingState.events[eventId] = event;
+    }
+    return { status: 'finished', ...result };
   }
 
-  try {
-    console.log("[CS2 Settlement] Starting settlement check...");
-    
-    // Get all pending bets
-    const pendingBets = Object.values(cs2BettingState.bets).filter(bet => bet.status === 'pending');
-    
-    if (pendingBets.length === 0) {
-      console.log("[CS2 Settlement] No pending bets to settle");
-      // Still update timestamp even if no bets to settle
-      cs2BettingState.lastSettlementCheck = new Date().toISOString();
-      await saveCS2BettingData();
-      return { settled: 0, won: 0, lost: 0 };
-    }
-    
-    let settledCount = 0;
-    let wonCount = 0;
-    let lostCount = 0;
-    
-    // Group bets by eventId to minimize API calls
-    const betsByEvent = {};
-    for (const bet of pendingBets) {
-      if (!betsByEvent[bet.eventId]) {
-        betsByEvent[bet.eventId] = [];
-      }
-      betsByEvent[bet.eventId].push(bet);
-    }
-    
-    // Batch-fetch recent results from bo3.gg once (free, no rate limit)
-    let bo3ggResultsCache = null;
-    if (cs2Bo3ggClient) {
-      try {
-        console.log("[CS2 Settlement] Fetching recent results from bo3.gg...");
-        bo3ggResultsCache = await cs2Bo3ggClient.fetchRecentResults({ limit: 50 });
-        console.log(`[CS2 Settlement] bo3.gg returned ${bo3ggResultsCache.length} recent results`);
-      } catch (err) {
-        console.warn(`[CS2 Settlement] bo3.gg batch fetch failed: ${err.message}`);
-        bo3ggResultsCache = null;
-      }
-    }
-
-    // Check each event for results
-    for (const eventId of Object.keys(betsByEvent)) {
-      const event = cs2BettingState.events[eventId];
-      
-      if (!event) {
-        console.warn(`Event ${eventId} not found in state, skipping bets`);
-        continue;
-      }
-      
-      // Resolve result for unfinished events
-      if (event.status !== 'finished') {
-        let resultFound = false;
-
-        // Primary source: bo3.gg (fetched once above, looked up by ID)
-        if (!resultFound && bo3ggResultsCache) {
-          const matchResult = bo3ggResultsCache.find(r => r.id === eventId);
-          if (matchResult && matchResult.winner) {
+  if (event && cs2ResultFetcher) {
+    try {
+      const team1 = event.homeTeam || event.participant1Name;
+      const team2 = event.awayTeam || event.participant2Name;
+      if (team1 && team2) {
+        const scraperResult = await cs2ResultFetcher.findMatchResult(team1, team2);
+        if (scraperResult?.winner) {
+          const { teamsMatch } = require('./cs2-free-result-sources');
+          const winner = teamsMatch(scraperResult.winner, team1) ? 'team1'
+            : teamsMatch(scraperResult.winner, team2) ? 'team2' : null;
+          if (winner) {
+            const result = { winner, participant1Score: null, participant2Score: null, source: scraperResult.source, confidence: scraperResult.confidence };
             event.status = 'finished';
             event.statusId = 3;
             event.completed = true;
-            event.result = {
-              winner: matchResult.winner,
-              participant1Score: matchResult.team1Score,
-              participant2Score: matchResult.team2Score,
-              homeScore: matchResult.team1Score,
-              awayScore: matchResult.team2Score,
-              source: 'bo3gg'
-            };
+            event.result = result;
             cs2BettingState.events[eventId] = event;
-            resultFound = true;
-            console.log(`[CS2 Settlement] ✓ bo3.gg: ${eventId} → winner=${matchResult.winner} (${matchResult.score})`);
+            return { status: 'finished', ...result };
           }
-        }
-
-        // Fallback: HLTV/Liquipedia scraper (if bo3.gg didn't have the match)
-        if (!resultFound && cs2ResultFetcher) {
-          try {
-            const team1 = event.homeTeam || event.participant1Name;
-            const team2 = event.awayTeam || event.participant2Name;
-            if (team1 && team2) {
-              console.log(`[CS2 Settlement] Trying HLTV/Liquipedia for ${team1} vs ${team2}...`);
-              const scraperResult = await cs2ResultFetcher.findMatchResult(team1, team2);
-              if (scraperResult && scraperResult.winner) {
-                const { teamsMatch } = require('./cs2-free-result-sources');
-                let winner = null;
-                if (teamsMatch(scraperResult.winner, team1)) winner = 'team1';
-                else if (teamsMatch(scraperResult.winner, team2)) winner = 'team2';
-                if (winner) {
-                  event.status = 'finished';
-                  event.statusId = 3;
-                  event.completed = true;
-                  event.result = {
-                    winner,
-                    participant1Score: null,
-                    participant2Score: null,
-                    source: scraperResult.source,
-                    confidence: scraperResult.confidence
-                  };
-                  cs2BettingState.events[eventId] = event;
-                  resultFound = true;
-                  console.log(`[CS2 Settlement] ✓ ${scraperResult.source}: ${team1} vs ${team2} → winner=${winner}`);
-                }
-              }
-            }
-          } catch (error) {
-            console.warn(`[CS2 Settlement] HLTV/Liquipedia failed for ${eventId}: ${error.message}`);
-          }
-        }
-
-        if (!resultFound) {
-          // Match still in progress or too recent — skip for now
-          continue;
         }
       }
-      
-      // Settle bets for this event
-      const eventBets = betsByEvent[eventId];
-      for (const bet of eventBets) {
-        if (bet.status !== 'pending') {
-          continue;
-        }
-        
-        const winner = event.result?.winner;
-        
-        if (!winner) {
-          // No result available, check if event was cancelled
-          if (event.status === 'cancelled') {
-            const user = users[bet.userId];
-            if (user) {
-              await runWithUserBalanceLock(bet.userId, async () => {
-                if (bet.status !== 'pending') return;
-                await finishEscrow({ escrowId: bet.escrowId, payout: bet.amount,
-                  idempotencyKey: `cs2:${bet.id}:void`, action: 'refund', metadata: { eventId: bet.eventId } });
-                bet.status = 'void';
-                bet.result = 'void';
-              });
-            }
-          }
-          // Otherwise, keep as pending (event might be in progress)
-          continue;
-        }
-        
-        // Determine if bet won
-        const betWon = (bet.selection === 'team1' && winner === 'team1') ||
-                       (bet.selection === 'team2' && winner === 'team2') ||
-                       (bet.selection === 'draw' && winner === 'draw');
-        
-        if (betWon) {
-          const payout = bet.potentialPayout;
-          const user = users[bet.userId];
-          if (user) {
-            await runWithUserBalanceLock(bet.userId, async () => {
-              if (bet.status !== 'pending') return;
-              await finishEscrow({ escrowId: bet.escrowId, payout,
-                idempotencyKey: `cs2:${bet.id}:settle`, metadata: { eventId: bet.eventId, winner } });
-              bet.status = 'won';
-              bet.result = 'win';
-            });
-
-            // Track stats and achievements
-            updateUserStats(bet.userId, 'cs2betting', bet.amount, true, payout, { 
-              selection: bet.selection,
-              odds: bet.odds,
-              eventName: bet.eventName,
-              teams: bet.teams
-            });
-            const newAchievements = checkAchievements(bet.userId, 'cs2betting', bet.amount, true, { 
-              selection: bet.selection,
-              odds: bet.odds,
-              payout: payout
-            });
-            
-            // Emit achievement notifications (if player is online)
-            if (newAchievements.length > 0) {
-              const playerSocketId = Object.keys(players).find(sid => players[sid].userId === bet.userId);
-              if (playerSocketId) {
-                io.to(playerSocketId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
-              }
-            }
-          }
-          
-          // Record in bet history
-          if (users[bet.userId]) addBetRecord(users[bet.userId].username, { game: 'cs2betting', bet: bet.amount, result: 'Win', payout: payout, multiplier: parseFloat(bet.odds) || null, details: bet.eventName || '' });
-          wonCount++;
-        } else {
-          await runWithUserBalanceLock(bet.userId, async () => {
-            if (bet.status !== 'pending') return;
-            await finishEscrow({ escrowId: bet.escrowId, payout: 0,
-              idempotencyKey: `cs2:${bet.id}:settle`, metadata: { eventId: bet.eventId, winner } });
-            bet.status = 'lost';
-            bet.result = 'loss';
-          });
-          
-          // Track stats for losing bet too
-          updateUserStats(bet.userId, 'cs2betting', bet.amount, false, 0, { 
-            selection: bet.selection,
-            odds: bet.odds,
-            eventName: bet.eventName,
-            teams: bet.teams
-          });
-          const newAchievements = checkAchievements(bet.userId, 'cs2betting', bet.amount, false, { 
-            selection: bet.selection,
-            odds: bet.odds
-          });
-          
-          // Emit achievement notifications (if player is online)
-          if (newAchievements.length > 0) {
-            const playerSocketId = Object.keys(players).find(sid => players[sid].userId === bet.userId);
-            if (playerSocketId) {
-              io.to(playerSocketId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
-            }
-          }
-          
-          // Record in bet history
-          if (users[bet.userId]) addBetRecord(users[bet.userId].username, { game: 'cs2betting', bet: bet.amount, result: 'Loss', payout: 0, multiplier: parseFloat(bet.odds) || null, details: bet.eventName || '' });
-          lostCount++;
-        }
-        
-        if (bet.status === 'pending') continue;
-        bet.settledAt = new Date().toISOString();
-        cs2BettingState.bets[bet.id] = bet;
-        settledCount++;
-      }
+    } catch (error) {
+      console.warn(`[CS2 Settlement] Result fallback failed for ${eventId}: ${error.message}`);
     }
-    
-    if (settledCount > 0) {
+  }
+  return null;
+}
+
+async function settleCS2Bets() {
+  if (!cs2Bo3ggClient && !cs2ResultFetcher) {
+    console.warn('[CS2 Settlement] No result sources available, skipping');
+    return null;
+  }
+  try {
+    console.log('[CS2 Settlement] Starting settlement check...');
+    const pendingBets = Object.values(cs2BettingState.bets).filter(bet => bet.status === 'pending');
+    if (!pendingBets.length) {
+      cs2BettingState.lastSettlementCheck = new Date().toISOString();
       await saveCS2BettingData();
-      console.log(`[CS2 Settlement] Settled ${settledCount} bets: ${wonCount} won, ${lostCount} lost`);
-    } else {
-      console.log(`[CS2 Settlement] No bets to settle`);
+      console.log('[CS2 Settlement] No pending bets to settle');
+      return { settled: 0, won: 0, lost: 0, void: 0 };
     }
-    
-    // Update last settlement check timestamp (even if no bets were settled)
+
+    const eventIds = new Set();
+    for (const bet of pendingBets) {
+      const legs = Array.isArray(bet.legs) && bet.legs.length ? bet.legs : [{ eventId: bet.eventId }];
+      for (const leg of legs) if (leg.eventId) eventIds.add(leg.eventId);
+    }
+
+    const recentResults = new Map();
+    if (cs2Bo3ggClient?.fetchRecentResults) {
+      try {
+        const results = await cs2Bo3ggClient.fetchRecentResults({ limit: 50 });
+        for (const result of results || []) recentResults.set(result.id, result);
+      } catch (error) {
+        console.warn(`[CS2 Settlement] Recent-result batch failed: ${error.message}`);
+      }
+    }
+
+    const outcomes = {};
+    for (const eventId of eventIds) {
+      const outcome = await resolveCS2EventOutcome(eventId, recentResults);
+      if (outcome) outcomes[eventId] = outcome;
+    }
+
+    const now = Date.now();
+    for (const bet of pendingBets) {
+      const legs = Array.isArray(bet.legs) && bet.legs.length ? bet.legs : [{ eventId: bet.eventId }];
+      for (const leg of legs) {
+        if (outcomes[leg.eventId]) continue;
+        const event = cs2BettingState.events[leg.eventId];
+        const referenceTime = Date.parse(event?.startTime || event?.commenceTime || bet.placedAt || '');
+        if (Number.isFinite(referenceTime) && now - referenceTime >= CS2_RESULT_GRACE_MS) {
+          outcomes[leg.eventId] = { status: 'cancelled', winner: null, source: 'result_unavailable_after_grace' };
+          console.warn(`[CS2 Settlement] Voiding unresolved event ${leg.eventId} after seven-day result grace`);
+        }
+      }
+    }
+
+    const stats = { settled: 0, won: 0, lost: 0, void: 0 };
+    for (const bet of pendingBets) {
+      const decision = evaluateWager(bet, outcomes);
+      if (Array.isArray(bet.legs)) bet.legs = decision.legs;
+      if (decision.status === 'pending') continue;
+
+      await runWithUserBalanceLock(bet.userId, async () => {
+        if (bet.status !== 'pending') return;
+        await finishEscrow({
+          escrowId: bet.escrowId,
+          payout: decision.payout,
+          idempotencyKey: `cs2:${bet.id}:settle`,
+          action: decision.status === 'void' ? 'refund' : 'settle',
+          metadata: { wagerType: bet.type || 'single', eventId: bet.eventId || null, legCount: decision.legs.length, result: decision.status }
+        });
+        bet.status = decision.status;
+        bet.result = decision.result;
+        bet.settledAt = new Date().toISOString();
+        bet.settledOdds = decision.effectiveOdds;
+        if (decision.payout !== null) bet.potentialPayout = decision.payout;
+        if (Array.isArray(bet.legs)) bet.legs = decision.legs;
+        cs2BettingState.bets[bet.id] = bet;
+      });
+      if (bet.status === 'pending') continue;
+
+      const won = bet.status === 'won';
+      const payout = decision.payout || 0;
+      const details = bet.type === 'parlay' ? `${decision.legs.length}-leg parlay` : (bet.eventName || `${bet.homeTeam || ''} vs ${bet.awayTeam || ''}`.trim());
+      if (users[bet.userId]) {
+        updateUserStats(bet.userId, 'cs2betting', bet.amount, won, payout, { selection: bet.selectionName, odds: decision.effectiveOdds || bet.odds, eventName: details, teams: bet.teams });
+        const newAchievements = checkAchievements(bet.userId, 'cs2betting', bet.amount, won, { selection: bet.selectionName, odds: decision.effectiveOdds || bet.odds, payout });
+        if (newAchievements.length) {
+          const playerSocketId = Object.keys(players).find(socketId => players[socketId].userId === bet.userId);
+          if (playerSocketId) io.to(playerSocketId).emit('achievementUnlocked', newAchievements.map(id => ACHIEVEMENTS[id]));
+        }
+        addBetRecord(users[bet.userId].username, {
+          game: 'cs2betting', bet: bet.amount,
+          result: bet.status === 'won' ? 'Win' : bet.status === 'lost' ? 'Loss' : 'Void',
+          payout, multiplier: decision.effectiveOdds || null, details
+        });
+      }
+      stats[bet.status]++;
+      stats.settled++;
+    }
+
     cs2BettingState.lastSettlementCheck = new Date().toISOString();
     await saveCS2BettingData();
-    
-    return { settled: settledCount, won: wonCount, lost: lostCount };
+    console.log(`[CS2 Settlement] Settled ${stats.settled}: ${stats.won} won, ${stats.lost} lost, ${stats.void} void`);
+    return stats;
   } catch (error) {
-    console.error("Error settling CS2 bets:", error);
+    console.error('[CS2 Settlement] Failed:', error);
     return null;
   }
 }
+
+
+
 
 // Aggregate odds for all active CS2 events from HLTV and gambling scrapers
 /**

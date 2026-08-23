@@ -70,11 +70,11 @@ class CoinflipGame {
                 <div class="choice-section">
                   <label>Your Choice</label>
                   <div class="choice-buttons">
-                    <button id="createChooseHeadsBtn" class="btn-choice btn-heads">
+                    <button id="createChooseHeadsBtn" class="btn-choice btn-heads" aria-pressed="false">
                       <span class="choice-icon">🪙</span>
                       <span>Heads</span>
                     </button>
-                    <button id="createChooseTailsBtn" class="btn-choice btn-tails">
+                    <button id="createChooseTailsBtn" class="btn-choice btn-tails" aria-pressed="false">
                       <span class="choice-icon">🪙</span>
                       <span>Tails</span>
                     </button>
@@ -437,6 +437,8 @@ class CoinflipGame {
         this.createChoice = null;
         document.getElementById('createChooseHeadsBtn')?.classList.remove('selected');
         document.getElementById('createChooseTailsBtn')?.classList.remove('selected');
+        document.getElementById('createChooseHeadsBtn')?.setAttribute('aria-pressed', 'false');
+        document.getElementById('createChooseTailsBtn')?.setAttribute('aria-pressed', 'false');
         this.updateCreateRoomButton();
       }
     }
@@ -444,8 +446,12 @@ class CoinflipGame {
 
   selectCreateChoice(choice) {
     this.createChoice = choice;
-    document.getElementById('createChooseHeadsBtn').classList.toggle('selected', choice === 'Heads');
-    document.getElementById('createChooseTailsBtn').classList.toggle('selected', choice === 'Tails');
+    const heads = document.getElementById('createChooseHeadsBtn');
+    const tails = document.getElementById('createChooseTailsBtn');
+    heads.classList.toggle('selected', choice === 'Heads');
+    tails.classList.toggle('selected', choice === 'Tails');
+    heads.setAttribute('aria-pressed', String(choice === 'Heads'));
+    tails.setAttribute('aria-pressed', String(choice === 'Tails'));
     this.updateCreateRoomButton();
   }
 

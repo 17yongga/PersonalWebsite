@@ -21,7 +21,7 @@ if (fs.existsSync(output)) throw new Error(`Refusing to overwrite immutable rele
 const backendFiles = [
   'casino-server.js', 'casino-security.js', 'casino-persistence.js', 'casino-games-authoritative.js',
   'casino-ledger.js', 'casino-fairness.js', 'casino-cases.js', 'casino-case-assets.json', 'casino-email.js', 'poker-engine.js',
-  'cs2-bo3gg-client.js', 'cs2-market-availability.js', 'cs2-free-result-sources.js', 'cs2-team-rankings.json', 'package.json', 'package-lock.json',
+  'cs2-bo3gg-client.js', 'cs2-market-availability.js', 'cs2-wager-rules.js', 'cs2-free-result-sources.js', 'cs2-team-rankings.json', 'package.json', 'package-lock.json',
   'scripts/migrate-casino-ledger.js', 'scripts/export-ledger-balances.js', 'scripts/backup-casino-db.js'
 ];
 const frontendFiles = [
@@ -30,7 +30,7 @@ const frontendFiles = [
   'vendor/socket.io.min.js', 'css/cs2-modern.css', 'js/cs2-modern.js',
   'games/games.css', 'games/premium-games.css', 'games/blackjack.js', 'games/coinflip-casino.js', 'games/roulette-casino.js',
   'games/cs2-betting-casino.js', 'games/poker-casino.js', 'games/crash-casino.js', 'games/pachinko-casino.js',
-  'games/case-opening-casino.js', 'games/case-opening.css'
+  'games/case-opening-casino.js', 'games/case-opening.css', 'casino-controls.css'
 ];
 const teamLogoConfig = JSON.parse(fs.readFileSync(path.join(root, 'cs2-team-logos.json'), 'utf8'));
 const blackjackImageFiles = walk(path.join(root, 'blackjack', 'images'))
