@@ -235,3 +235,28 @@ test('all game action buttons share one dimension and focus contract', () => {
   assert.match(coinflip, /id="createChooseHeadsBtn"[^>]*aria-pressed="false"/);
   assert.match(coinflip, /heads\.setAttribute\('aria-pressed', String\(choice === 'Heads'\)\)/);
 });
+
+test('Blackjack reserves equal dealer and player stages and labels authoritative soft hands', () => {
+  const premium = read('games/premium-games.css');
+  const blackjack = read('games/blackjack.js');
+  assert.match(premium, /--blackjack-hand-stage-min:/);
+  assert.match(premium, /\.dealer-section,\.blackjack-container \.player-section[^\{]*\{[^}]*min-height:var\(--blackjack-hand-stage-min\)/s);
+  assert.match(premium, /grid-template-rows:minmax\(var\(--blackjack-hand-stage-min\),1fr\)[^;]*minmax\(var\(--blackjack-hand-stage-min\),1fr\)/);
+  assert.match(premium, /\.player-section:has\(\.blackjack-player-hand\.is-active\)/);
+  assert.match(blackjack, /hand\.isSoft/);
+  assert.match(blackjack, /state\.dealerSoft/);
+});
+
+test('game transitions use the shared viewport stabilizer instead of ad-hoc smooth scrolling', () => {
+  const casino = read('casino.js');
+  const cases = read('games/case-opening-casino.js');
+  const controls = read('casino-controls.css');
+  assert.match(casino, /stabilizeGameViewport\(/);
+  assert.match(controls, /\.game-view:not\(\.hidden\) \{ overflow-anchor:none; \}/);
+  assert.doesNotMatch(cases, /scrollIntoView\(\{\s*behavior:\s*reducedMotion \? 'auto' : 'smooth'/);
+  for (const file of [
+    'games/blackjack.js', 'games/roulette-casino.js', 'games/coinflip-casino.js',
+    'games/crash-casino.js', 'games/pachinko-casino.js', 'games/poker-casino.js',
+    'games/case-opening-casino.js', 'cs2-betting-modern.js'
+  ]) assert.match(read(file), /stabilizeGameViewport\?\./, `${file} must stabilize its accepted wager transition`);
+});

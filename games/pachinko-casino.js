@@ -281,6 +281,7 @@ class PachinkoGame {
       });
       this.renderDeferredBalance();
       window.casinoSound?.playOnce(`pachinko:${requestId}:wager`, 'wager', { game: 'pachinko' });
+      this.casino.stabilizeGameViewport?.(this.root?.querySelector('.pachinko-canvas-wrap'));
       data.results.forEach((serverResult, index) => {
         const timer = setTimeout(() => {
           if (this._destroyed) return;

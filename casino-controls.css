@@ -9,6 +9,10 @@
   --casino-control-hover: rgba(255,181,77,.12);
 }
 
+/* Stateful game screens own their post-action viewport destination. Browser
+   scroll anchoring otherwise fights large authoritative DOM transitions. */
+.game-view:not(.hidden) { overflow-anchor:none; }
+
 .game-view :where(
   .btn,
   .blackjack-stake-action,

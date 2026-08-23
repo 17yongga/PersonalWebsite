@@ -731,7 +731,10 @@ class CS2ModernBettingGame {
         
         // Reload bets and close modal
         await this.loadBets();
-        setTimeout(() => this.closeBetSlipModal(), 1000);
+        setTimeout(() => {
+          this.closeBetSlipModal();
+          this.casino.stabilizeGameViewport?.(this.root?.querySelector('.cs2-my-bets-workspace'));
+        }, 1000);
         
       } else {
         throw new Error(data.error || 'Unknown error');

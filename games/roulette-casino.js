@@ -413,6 +413,7 @@ class RouletteGame {
         const effect = response.action === 'replaced' ? 'betReplaced' : response.action === 'placed' ? 'betPlaced' : 'ui';
         window.casinoSound?.play(effect, { game: 'roulette' });
         this.updateCurrentBetDisplay();
+        this.casino.stabilizeGameViewport?.(document.querySelector('.rl-belt-section'));
       });
     } catch (err) {
       this.setBetMutationPending(false);

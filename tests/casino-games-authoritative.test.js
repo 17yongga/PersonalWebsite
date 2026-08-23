@@ -8,13 +8,45 @@ const {
   calculatePachinkoSettlement,
   createShuffledDeck,
   generatePachinkoResult,
-  scoreHand
+  scoreHand,
+  evaluateBlackjackHand
 } = require('../casino-games-authoritative');
 
 test('blackjack ace scoring is correct', () => {
   assert.equal(scoreHand([{ value: 'ace' }, { value: 'king' }]), 21);
   assert.equal(scoreHand([{ value: 'ace' }, { value: 'ace' }, { value: '9' }]), 21);
   assert.equal(scoreHand([{ value: 'king' }, { value: 'queen' }, { value: '2' }]), 22);
+});
+
+test('blackjack soft status follows the usable ace, not card position or draw order', () => {
+  const card = value => ({ value });
+  assert.deepEqual(evaluateBlackjackHand([card('ace'), card('6')]), { score: 17, isSoft: true });
+  assert.deepEqual(evaluateBlackjackHand([card('5'), card('3'), card('ace')]), { score: 19, isSoft: true });
+  assert.deepEqual(evaluateBlackjackHand([card('ace'), card('ace'), card('9')]), { score: 21, isSoft: true });
+  assert.deepEqual(evaluateBlackjackHand([card('ace'), card('6'), card('10')]), { score: 17, isSoft: false });
+  assert.deepEqual(evaluateBlackjackHand([card('ace'), card('ace'), card('ace'), card('8')]), { score: 21, isSoft: true });
+});
+
+test('blackjack public state publishes authoritative soft status without treating later 21 as a natural', () => {
+  const service = new BlackjackService({ randomInt: () => 0 });
+  const started = service.start('soft-player', 100, { roundId: 'soft-round' });
+  const round = service.rounds.get('soft-player');
+  round.phase = 'player';
+  round.dealer = [{ value: '10', suit: 'clubs' }, { value: '7', suit: 'hearts' }];
+  round.playerHands = [{ cards: [
+    { value: '5', suit: 'hearts' },
+    { value: '3', suit: 'clubs' },
+    { value: 'ace', suit: 'spades' }
+  ], bet: 100, doubled: false, complete: false, result: null, payout: 0 }];
+  const state = service.publicState(round);
+  assert.equal(state.playerScore, 19);
+  assert.equal(state.playerSoft, true);
+  assert.equal(state.playerHands[0].isSoft, true);
+
+  round.deck = [{ value: '2', suit: 'diamonds' }];
+  const settled = service.action('soft-player', started.roundId, 'hit');
+  assert.equal(settled.playerHands[0].score, 21);
+  assert.notEqual(settled.playerHands[0].result, 'blackjack');
 });
 
 test('blackjack deck contains 52 unique cards', () => {

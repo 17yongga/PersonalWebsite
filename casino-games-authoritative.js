@@ -10,7 +10,7 @@ const PACHINKO_MULTIPLIERS = Object.freeze({
   high: Object.freeze([220, 55, 18, 7, 2.6, 1.25, 0.78, 0.48, 0.28, 0.48, 0.78, 1.25, 2.6, 7, 18, 55, 220])
 });
 
-function scoreHand(hand) {
+function evaluateBlackjackHand(hand) {
   let score = 0;
   let aces = 0;
   for (const card of hand) {
@@ -27,7 +27,11 @@ function scoreHand(hand) {
     score -= 10;
     aces -= 1;
   }
-  return score;
+  return { score, isSoft: aces > 0 };
+}
+
+function scoreHand(hand) {
+  return evaluateBlackjackHand(hand).score;
 }
 
 function createShuffledDeck(randomInt = crypto.randomInt) {
@@ -207,7 +211,7 @@ class BlackjackService {
     const activeHand = this.#activeHand(round) || round.playerHands[0];
     const playerHands = round.playerHands.map((hand, index) => ({
       cards: hand.cards.map(cardPublic),
-      score: scoreHand(hand.cards),
+      ...evaluateBlackjackHand(hand.cards),
       bet: hand.bet,
       doubled: hand.doubled,
       complete: hand.complete,
@@ -216,6 +220,9 @@ class BlackjackService {
       active: !round.settled && round.phase === 'player' && index === round.activeHandIndex
     }));
     const canAct = !round.settled && round.phase === 'player' && Boolean(activeHand) && !activeHand.complete;
+    const activeEvaluation = evaluateBlackjackHand(activeHand.cards);
+    const visibleDealerCards = revealDealer ? round.dealer : round.dealer.slice(1);
+    const dealerEvaluation = evaluateBlackjackHand(visibleDealerCards);
     return {
       roundId: round.id,
       baseBet: round.baseBet,
@@ -229,8 +236,10 @@ class BlackjackService {
       playerHand: activeHand.cards.map(cardPublic),
       playerHands,
       dealerHand: round.dealer.map((card, index) => revealDealer || index !== 0 ? cardPublic(card) : null),
-      playerScore: scoreHand(activeHand.cards),
-      dealerScore: revealDealer ? scoreHand(round.dealer) : scoreHand(round.dealer.slice(1)),
+      playerScore: activeEvaluation.score,
+      playerSoft: activeEvaluation.isSoft,
+      dealerScore: dealerEvaluation.score,
+      dealerSoft: dealerEvaluation.isSoft,
       canHit: canAct && !round.splitAces,
       canStand: canAct,
       canDouble: canAct && activeHand.cards.length === 2 && !activeHand.doubled && !round.splitAces,
@@ -280,5 +289,6 @@ module.exports = {
   calculatePachinkoSettlement,
   createShuffledDeck,
   generatePachinkoResult,
-  scoreHand
+  scoreHand,
+  evaluateBlackjackHand
 };

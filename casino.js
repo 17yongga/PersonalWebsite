@@ -932,6 +932,33 @@ class CasinoManager {
     return this.socket;
   }
 
+  stabilizeGameViewport(target, { force = false } = {}) {
+    const element = typeof target === 'string' ? document.querySelector(target) : target;
+    if (!element?.isConnected) return;
+    const token = (this._gameViewportToken || 0) + 1;
+    this._gameViewportToken = token;
+    for (const timeout of this._gameViewportTimeouts || []) clearTimeout(timeout);
+    this._gameViewportTimeouts = [];
+    const settle = () => {
+      if (this._gameViewportToken !== token || !element.isConnected) return;
+      const rect = element.getBoundingClientRect();
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const header = document.querySelector('.casino-header');
+      const headerBottom = header && getComputedStyle(header).position === 'fixed'
+        ? header.getBoundingClientRect().bottom : 0;
+      const clearance = Math.max(8, headerBottom + 8);
+      const targetBandEnd = Math.min(viewportHeight * 0.42, clearance + 320);
+      if (!force && rect.top >= clearance - 2 && rect.top <= targetBandEnd) return;
+      const top = Math.max(0, window.scrollY + rect.top - clearance);
+      if (Math.abs(window.scrollY - top) > 1) window.scrollTo({ top, behavior: 'auto' });
+    };
+    requestAnimationFrame(() => requestAnimationFrame(settle));
+    for (const delay of [180, 700]) {
+      const timeout = setTimeout(settle, delay);
+      this._gameViewportTimeouts.push(timeout);
+    }
+  }
+
   gameDefinitions() {
     return {
       blackjack: { label: 'Blackjack', viewId: 'blackjackGame', constructors: ['BlackjackGame'] },
@@ -1530,6 +1557,7 @@ class CasinoManager {
               <tr><td>J, Q, K</td><td>10</td></tr>
               <tr><td>Ace</td><td>1 or 11 (whichever helps more)</td></tr>
             </table>
+            <p>A hand is <strong>soft</strong> whenever an Ace is currently counted as 11, even if that Ace was drawn after the opening two cards.</p>
           </div>
           <div class="htp-section">
             <h3>🎮 Actions</h3>
@@ -1551,7 +1579,7 @@ class CasinoManager {
           <div class="htp-section">
             <h3>📋 Dealer Rules</h3>
             <ul>
-              <li>Dealer must hit on 16 or below and stand on 17 or above.</li>
+              <li>Dealer must hit on 16 or below and stand on every 17, including soft 17.</li>
             </ul>
           </div>
         `

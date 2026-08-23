@@ -390,7 +390,7 @@ class CaseOpeningGame {
       <header><div><span>OPENING ${items.length} ${items.length === 1 ? 'CASE' : 'CASES'}</span><h3>Authoritative reveal</h3></div><strong>${this.fastOpen ? 'FAST REVEAL' : 'Result fixed by server'}</strong></header>
       ${items.map((item, index) => this.reelLaneMarkup(item, index)).join('')}
     </section>`;
-    results.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+    this.casino.stabilizeGameViewport?.(results, { force: true });
     if (!reducedMotion) {
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       if (this.presentationToken !== token || this.destroyed) return;
@@ -409,7 +409,7 @@ class CaseOpeningGame {
       </article>`).join('')}</div>
       <div class="case-result-actions"><button class="case-primary-action" data-action="open-again">OPEN AGAIN</button><button data-action="view-inventory">VIEW INVENTORY</button><button data-action="view-proof">VERIFY RESULT</button></div></section>`;
     this.presentationToken = null;
-    results.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+    this.casino.stabilizeGameViewport?.(results, { force: true });
   }
 
   renderBattle() {
@@ -513,7 +513,7 @@ class CaseOpeningGame {
       <div class="battle-scoreboard">${results.map((result, index) => `<div><span>${this.escape(result.userId)}</span><strong id="battleRunningTotal${index}">0</strong></div>`).join('')}</div>
       <div class="battle-round-stage" id="battleRoundStage"></div>
     </section>`;
-    arena.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+    this.casino.stabilizeGameViewport?.(arena, { force: true });
     const stage = arena.querySelector('#battleRoundStage');
     for (let roundIndex = 0; roundIndex < roundCount; roundIndex += 1) {
       if (this.presentationToken !== token || this.destroyed) return;

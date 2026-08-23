@@ -159,7 +159,7 @@ class BlackjackGame {
           </div>
           <div class="blackjack-rules" aria-label="Table rules">
             <span>BLACKJACK PAYS 3:2</span>
-            <span>DEALER STANDS ON 17</span>
+            <span>DEALER STANDS ON ALL 17</span>
           </div>
         </header>
 
@@ -335,6 +335,7 @@ class BlackjackGame {
       if (!response.ok) throw new Error(data.error || 'Unable to start blackjack');
       this.soundAcceptedRoundId = data.state?.roundId || null;
       this.applyServerState(data.state, data.balance);
+      this.casino.stabilizeGameViewport?.(this.getElement('gameArea'));
     } catch (error) {
       this.showError(error.message);
     } finally {
@@ -491,6 +492,7 @@ class BlackjackGame {
     });
     this.displayCards('dealerCards', this.dealerHand, !state.settled, plan.dealerCards);
     this.renderDealerOutcome(state, Boolean(state.settled && !plan.replaySettlement));
+    this.setScoreSoftState('dealerScore', Boolean(state.dealerSoft));
 
     const insurance = this.getElement('insuranceSection');
     const insuranceResolving = previousState?.phase === 'insurance'
@@ -545,7 +547,9 @@ class BlackjackGame {
       const settledDealerCards = (state.dealerHand || []).filter(Boolean);
       const updateDealerScoreThrough = cardCount => {
         const dealerScore = this.getElement('dealerScore');
-        if (dealerScore) dealerScore.textContent = String(this.calculateScore(settledDealerCards.slice(0, cardCount)));
+        const evaluation = this.calculateScoreDetails(settledDealerCards.slice(0, cardCount));
+        if (dealerScore) dealerScore.textContent = String(evaluation.score);
+        this.setScoreSoftState('dealerScore', evaluation.isSoft);
       };
       this.schedulePresentation(generation, plan.revealDealerAtMs || 0, () => updateDealerScoreThrough(Math.min(2, settledDealerCards.length)));
       plan.dealerCards.forEach(card => {
@@ -578,6 +582,7 @@ class BlackjackGame {
       shell?.classList.remove('is-presenting', 'is-dealer-turn', 'is-settling', 'is-credit-settling');
       this.setActiveHandFocus(state.settled ? -1 : activeHandIndex);
       this.updateGameControls();
+      this.casino.stabilizeGameViewport?.(this.getElement('gameArea'));
     };
     if (plan.completionMs > 0) this.schedulePresentation(generation, plan.completionMs, finishPresentation);
     else finishPresentation();
@@ -669,6 +674,7 @@ class BlackjackGame {
       article?.classList.toggle('is-active', !settled && index === activeHandIndex);
       const score = this.getElement(index ? `playerScore${index}` : 'playerScore');
       if (score) score.textContent = String(hand.score ?? this.calculateScore(hand.cards || []));
+      this.setScoreSoftState(index ? `playerScore${index}` : 'playerScore', Boolean(hand.isSoft));
       this.displayCards(index ? `playerCards${index}` : 'playerCards', hand.cards || [], false, animatedCardsByHand[index] || []);
       const cards = this.getElement(index ? `playerCards${index}` : 'playerCards');
       cards?.classList.toggle('is-crowded', (hand.cards?.length || 0) >= 4);
@@ -867,78 +873,49 @@ class BlackjackGame {
     hand.push(this.deck.pop());
   }
 
-  calculateScore(hand) {
+  calculateScoreDetails(hand) {
     let score = 0;
-    let aces = 0;
-
-    hand.forEach(card => {
+    let usableAces = 0;
+    for (const card of hand) {
       if (card.value === 'ace') {
-        aces++;
         score += 11;
+        usableAces += 1;
       } else if (['king', 'queen', 'jack'].includes(card.value)) {
         score += 10;
       } else {
-        score += parseInt(card.value);
+        score += Number(card.value);
       }
-    });
-
-    while (score > 21 && aces > 0) {
-      score -= 10;
-      aces--;
     }
-
-    return score;
+    while (score > 21 && usableAces > 0) {
+      score -= 10;
+      usableAces -= 1;
+    }
+    return { score, isSoft: usableAces > 0 };
   }
 
-  calculateScoreWithAces(hand, isInitialHand = false) {
-    // Returns both scores when aces are present: { high: number, low: number, hasAce: boolean, showBoth: boolean }
-    let score = 0;
-    let aces = 0;
+  calculateScore(hand) {
+    return this.calculateScoreDetails(hand).score;
+  }
 
-    hand.forEach(card => {
-      if (card.value === 'ace') {
-        aces++;
-        score += 11;
-      } else if (['king', 'queen', 'jack'].includes(card.value)) {
-        score += 10;
-      } else {
-        score += parseInt(card.value);
-      }
-    });
-
-    const highScore = score;
-    let lowScore = score;
-    
-    // Calculate low score (all aces as 1)
-    let tempScore = 0;
-    hand.forEach(card => {
-      if (card.value === 'ace') {
-        tempScore += 1;
-      } else if (['king', 'queen', 'jack'].includes(card.value)) {
-        tempScore += 10;
-      } else {
-        tempScore += parseInt(card.value);
-      }
-    });
-    lowScore = tempScore;
-
-    const hasAce = aces > 0 && highScore !== lowScore;
-    const best = highScore > 21 ? lowScore : highScore;
-    
-    // Show "xx/xx" format only when:
-    // 1. It's the initial hand (exactly 2 cards) - only for starting hands
-    // 2. Has ace (high and low scores differ)
-    // 3. Both high and low values are <= 21 (right number in xx/xx doesn't exceed 21)
-    // After drawing more cards (3+), just show the best single score
-    const showBoth = isInitialHand && hasAce && highScore <= 21 && lowScore <= 21;
-
+  calculateScoreWithAces(hand) {
+    const { score, isSoft } = this.calculateScoreDetails(hand);
     return {
-      high: highScore > 21 ? lowScore : highScore,
-      low: lowScore,
-      hasAce: hasAce,
-      best: best,
-      showBoth: showBoth
+      high: score,
+      low: isSoft ? score - 10 : score,
+      hasAce: hand.some(card => card.value === 'ace'),
+      best: score,
+      isSoft,
+      showBoth: false
     };
+  }
+
+  setScoreSoftState(scoreId, isSoft) {
+    const score = this.getElement(scoreId);
+    const label = score?.closest('.score-display')?.querySelector('.score-label');
+    if (!score || !label) return;
+    label.textContent = isSoft ? 'SOFT' : 'HAND';
+    score.closest('.score-display')?.classList.toggle('is-soft', Boolean(isSoft));
+    score.setAttribute('aria-label', `${isSoft ? 'Soft ' : ''}${score.textContent}`);
   }
 
   showInsuranceOption() {
@@ -1029,6 +1006,7 @@ class BlackjackGame {
       ? `${playerScoreInfo.high}/${playerScoreInfo.low}` 
       : playerScoreInfo.best;
     this.animateScoreChange('playerScore', playerScoreDisplay);
+    this.setScoreSoftState('playerScore', playerScoreInfo.isSoft);
     
     // Format dealer score display
     // Before game over: show only visible card(s) score
@@ -1055,6 +1033,7 @@ class BlackjackGame {
       }
     }
     this.animateScoreChange('dealerScore', dealerScoreDisplay);
+    this.setScoreSoftState('dealerScore', this.gameOver ? dealerScoreInfo.isSoft : dealerVisibleScoreInfo.isSoft);
 
     // Display cards
     // Dealer's first card is hidden until gameOver is true (dealer's turn starts)

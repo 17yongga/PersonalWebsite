@@ -217,6 +217,7 @@ class CrashGame {
         // Server already deducted — only update display locally
         this.casino.updateCreditsLocal(-data.amount);
         this.setBetStatus(`Bet placed: ${data.amount} credits`, 'ok');
+        this.casino.stabilizeGameViewport?.(document.querySelector('.crash-canvas-wrap'));
       } else {
         this.setBetStatus(data.error || 'Bet failed', 'err');
       }

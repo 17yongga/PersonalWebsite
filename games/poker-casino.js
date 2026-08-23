@@ -266,6 +266,7 @@ class PokerGame {
         document.getElementById('pokerLobby')?.classList.add('hidden');
         document.getElementById('pokerTable')?.classList.remove('hidden');
         try { this.renderTable(state, previousState); } catch(e) { console.error('[Poker] render error:', e); }
+        if (!previousState) this.casino.stabilizeGameViewport?.(document.getElementById('pokerTable'));
       }
     });
     this._on('pokerChatMessage', ({username, message}) => {

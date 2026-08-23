@@ -715,6 +715,7 @@ class CoinflipGame {
       botBtn.textContent = 'Play with Bot';
     }
     this.resetGameUI();
+    this.casino.stabilizeGameViewport?.(document.getElementById('gameRoom'));
   }
 
   showConfirmation(roomId, betAmount, creatorChoice) {
@@ -731,6 +732,7 @@ class CoinflipGame {
     const joinerChoice = creatorChoice === 'Heads' ? 'Tails' : 'Heads';
     document.getElementById('confirmJoinerChoice').textContent = joinerChoice;
     document.getElementById('confirmJoinerChoice').className = `choice-display confirm-choice ${joinerChoice.toLowerCase()}`;
+    this.casino.stabilizeGameViewport?.(document.getElementById('gameRoom'));
   }
 
   showRoomSelection() {
