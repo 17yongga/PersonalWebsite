@@ -74,6 +74,18 @@ test('case presentation keeps one stage node for preparing, rolling, and reveale
   assert.match(body.innerHTML, /case-result-grid/);
 });
 
+test('case image preparation cannot hang forever when WebKit decode never settles', async () => {
+  const CaseOpeningGame = loadCaseOpeningClass();
+  const game = Object.create(CaseOpeningGame.prototype);
+  const stalledImage = { complete: true, decode: () => new Promise(() => {}) };
+  const stage = { querySelectorAll: () => [stalledImage] };
+  const startedAt = Date.now();
+
+  await game.prepareReelImages(stage, 15);
+
+  assert.ok(Date.now() - startedAt < 100, 'bounded image preparation must release the authoritative reveal');
+});
+
 test('case reveal is permanently mounted, scroll-neutral, image-prepared, and cleans reel acceleration', () => {
   const source = read('games/case-opening-casino.js');
   const renderOpen = source.slice(source.indexOf('renderOpen()'), source.indexOf('isDefinitiveError'));

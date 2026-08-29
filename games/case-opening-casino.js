@@ -289,9 +289,9 @@ class CaseOpeningGame {
     container.classList.add('is-rolling');
   }
 
-  async prepareReelImages(stage) {
+  async prepareReelImages(stage, timeoutMs = 900) {
     const images = [...stage.querySelectorAll('.case-reel-track img')];
-    await Promise.allSettled(images.map(image => {
+    const prepared = Promise.allSettled(images.map(image => {
       if (image.complete) return image.decode?.() || Promise.resolve();
       if (typeof image.decode === 'function') return image.decode();
       return new Promise(resolve => {
@@ -299,6 +299,13 @@ class CaseOpeningGame {
         image.addEventListener('error', resolve, { once: true });
       });
     }));
+    // WebKit can leave HTMLImageElement.decode() pending forever even after
+    // a successful response. Image preparation improves the reveal but must
+    // never hold an authoritative, already-debited result in a busy state.
+    await Promise.race([
+      prepared,
+      new Promise(resolve => setTimeout(resolve, timeoutMs))
+    ]);
   }
 
   finishReels(stage) {

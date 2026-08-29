@@ -1,6 +1,14 @@
 # Casino — STATUS.md
 > Updated: 2026-08-28
 
+## Live CS Cases WebKit Reveal Recovery — frontend `neon777-20260828-r93` / backend `neon777-20260823-r91` (2026-08-28)
+- **User-visible incident:** Gary's iPhone Chrome screenshot showed a 5× Fast Reveal stuck indefinitely on `PUBLISHING COMMITMENT…` while the permanent workbench remained unrevealed.
+- **Production evidence:** nginx recorded both `/api/cases/prepare` and `/api/cases/open` returning `200` for the affected interaction. The server-authoritative result had already settled; the new frontend image-preparation gate never released the UI.
+- **Root cause and repair:** WebKit can leave `HTMLImageElement.decode()` pending forever. Reel image preparation now races a 900ms visual-readiness budget, so optional image decoding cannot trap an already-debited authoritative result in `busy`.
+- **Regression coverage:** added a test with `decode()` deliberately never settling. Full source suite passes **131/131**. Exact and live 390×844 DPR3 forced-WebKit-stall journeys both reached `is-revealed`, cleared `busy`, re-enabled Open, retained zero action-induced scroll, and produced zero console errors.
+- **Immutable production:** 27/27 CDN assets exact; manifest SHA-256 `7158d610ea70eaafa932431fc8322b3ce6c3eafb34d39f0f61011bcb7a772860`; Cases JS SHA-256 `8b14ec4b5a27617cae644631d0b1c83013a1532882e6a9dbcffa22009f3302eb`; entry SHA-256 `95dfd2c8ef36269cf8c08572d62c85c66221474878d91494e75a97a7075edea5`; invalidation `I9V7LCMOYU4S1G9QLURDEL9VCL` completed.
+- **Production integrity:** frontend-only. Backend, PM2, accounts, balances, escrows, and Casino data were not changed. Immediate rollback is frontend `r92`.
+
 ## Live Mobile Game UX + Animation Repair — frontend `neon777-20260828-r92` / backend `neon777-20260823-r91` (2026-08-28)
 - **Roulette:** Latest Results is now a dedicated top-priority mobile panel and renders the newest authoritative spins first. The mobile wager composer uses an even five-column 44px chip grid with deliberate spacing instead of a loose wrapped row.
 - **Crash:** one cached canvas size/aspect/DPR contract now owns allocation and drawing. ResizeObserver handles container changes, DPR-only changes reallocate correctly, and DPR is capped at 2× for a sharp but stable mobile chart.
@@ -127,7 +135,7 @@
 - **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`, and live login captures `live-login-390.png` / `live-login-1280.png`. Subjective listening remains Gary's human acceptance check; technical synthesis, scheduling, recovery, cleanup, and live delivery are verified.
 
 ## What's Live
-- **Frontend:** `r92` at https://gary-yong.com/casino.html (S3/CloudFront)
+- **Frontend:** `r93` at https://gary-yong.com/casino.html (S3/CloudFront)
 - **API/Backend:** `r91` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
 - **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260823-r91/backend`
 
