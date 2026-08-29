@@ -248,20 +248,49 @@
 .crash-cashout-btn[aria-busy="true"] { animation:none; filter:saturate(.72); cursor:progress; }
 .crash-bet-status.pending { color:#fde68a; }
 
-/* Pachinko: jewel-box board and physical chip-like selectors. */
-.pachinko-container { max-width:1080px; margin-inline:auto; padding:clamp(12px,2vw,24px); }
-.pachinko-layout { display:grid!important; grid-template-columns:minmax(0,1fr) minmax(260px,320px)!important; grid-template-areas:"board controls" "board results"; align-items:start; gap:18px!important; }
-.pachinko-canvas-wrap { grid-area:board; min-width:0; overflow:hidden; aspect-ratio:50/59; border:1px solid rgba(192,132,252,.24)!important; border-radius:26px!important; background:radial-gradient(circle at 50% 18%,rgba(168,85,247,.17),transparent 54%),#080812!important; box-shadow:inset 0 0 70px rgba(76,29,149,.13),0 25px 65px rgba(0,0,0,.34); }
-.pachinko-payout-legend { padding:10px 14px 13px; border-top:1px solid rgba(216,180,254,.13); color:#c9bdd5; font-size:10px; line-height:1.5; text-align:center; }
-.pachinko-controls { grid-area:controls; border:1px solid rgba(192,132,252,.18)!important; border-radius:22px!important; background:linear-gradient(150deg,rgba(30,20,42,.94),rgba(8,10,17,.97))!important; box-shadow:0 18px 48px rgba(0,0,0,.26); }
-.pach-results { grid-area:results; min-width:0; }
-.pach-group { padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,.065); }
-.pach-group input { min-height:44px!important; }
-.pach-quick .pqb,.pach-risk-btns .prb,.pach-ball-btns .pbb { min-height:44px; border-radius:12px; transition:transform .18s ease,background .18s ease,border-color .18s ease!important; }
-.pach-quick .pqb:hover,.pach-risk-btns .prb:hover,.pach-ball-btns .pbb:hover,.pach-risk-btns .prb.active,.pach-ball-btns .pbb.active { transform:translateY(-2px); border-color:rgba(216,180,254,.58)!important; box-shadow:0 9px 20px rgba(88,28,135,.2); }
-.pach-quick .pqb.active,.pach-risk-btns .prb.active,.pach-ball-btns .pbb.active { background:var(--amber)!important; border-color:var(--amber)!important; color:var(--bg)!important; box-shadow:0 0 0 2px rgba(255,181,77,.18),0 8px 18px rgba(255,181,77,.2)!important; }
-.pach-drop-btn { min-height:56px!important; border-radius:15px!important; background:linear-gradient(110deg,#7e22ce,#c084fc 55%,#6b21a8)!important; font-weight:900!important; box-shadow:0 14px 34px rgba(147,51,234,.25)!important; }
-.pach-result-item:first-child { animation:premium-result-in .34s cubic-bezier(.2,.8,.2,1) both; }
+/* Pachinko: one responsive cabinet with a dominant board and compact wager rail. */
+.pachinko-container { max-width:1100px; margin-inline:auto; padding:clamp(8px,1.5vw,18px); }
+.pachinko-heading { display:flex; align-items:end; justify-content:space-between; gap:12px; margin:0 2px 10px; }
+.pachinko-heading .game-title { margin:0!important; font-size:clamp(25px,4vw,38px)!important; line-height:.95; }
+.pachinko-eyebrow { display:block; margin-bottom:5px; color:#d8b4fe; font:800 9px/1 "Space Mono",ui-monospace,monospace; letter-spacing:.22em; }
+.pachinko-payout-legend { color:#c9bdd5; font:700 10px/1.3 "Space Mono",ui-monospace,monospace; text-align:right; }
+.pachinko-cabinet { display:grid; grid-template-columns:minmax(0,1fr) minmax(270px,310px); grid-template-areas:"board controls"; align-items:start; gap:14px; padding:12px; border:1px solid rgba(216,180,254,.2); border-radius:24px; background:linear-gradient(145deg,rgba(26,15,35,.97),rgba(6,8,13,.99)); box-shadow:0 28px 70px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.035); }
+.pachinko-machine { grid-area:board; min-width:0; overflow:hidden; border:1px solid rgba(216,180,254,.18); border-radius:18px; background:#07070d; }
+.pachinko-stage { position:relative; width:100%; aspect-ratio:50/51; overflow:hidden; background:#080811; contain:layout paint; }
+.pachinko-static-canvas,.pachinko-dynamic-canvas { position:absolute; inset:0; display:block; width:100%!important; height:100%!important; }
+.pachinko-dynamic-canvas { pointer-events:none; }
+.pachinko-result-tray { min-height:74px; padding:9px 11px 10px; border-top:1px solid rgba(216,180,254,.14); background:linear-gradient(180deg,rgba(21,13,28,.96),rgba(8,9,14,.98)); }
+.pachinko-result-heading { display:flex; justify-content:space-between; gap:8px; margin-bottom:7px; color:#eee6f5; font:800 9px/1.2 "Space Mono",ui-monospace,monospace; letter-spacing:.08em; text-transform:uppercase; }
+.pachinko-result-hint { color:#8f8299; font-weight:600; letter-spacing:0; text-transform:none; }
+.pach-results { display:flex; min-width:0; gap:6px; overflow-x:auto; overflow-y:hidden; padding:1px 1px 3px; scrollbar-width:thin; }
+.pachinko-empty-result,.pachinko-status-error { width:100%; padding:9px 10px; border:1px dashed rgba(216,180,254,.16); border-radius:9px; color:#9f94a8; font-size:11px; text-align:center; }
+.pachinko-status-error { border-style:solid; border-color:rgba(251,113,133,.3); color:#fda4af; background:rgba(127,29,29,.16); }
+.pach-result { display:flex; flex:0 0 auto; min-width:96px; min-height:38px; align-items:center; justify-content:space-between; gap:8px; padding:7px 9px; border:1px solid rgba(148,163,184,.15); border-radius:10px; background:rgba(15,23,42,.62); color:#dbe3ec; font:700 10px/1.1 "Space Mono",ui-monospace,monospace; }
+.pach-result.is-latest { animation:premium-result-in .28s cubic-bezier(.2,.8,.2,1) both; border-color:rgba(251,191,36,.48); }
+.pach-result.big-win { color:#e9d5ff; background:rgba(126,34,206,.24); }
+.pach-result.win { color:#fde68a; background:rgba(120,53,15,.18); }
+.pach-result.loss { color:#cbd5e1; }
+.pach-result-mult { font-size:12px; }
+.pach-result-copy { color:inherit; opacity:.84; }
+.pachinko-controls { grid-area:controls; display:flex; flex-direction:column; gap:11px; padding:14px!important; border:1px solid rgba(216,180,254,.16)!important; border-radius:18px!important; background:linear-gradient(155deg,rgba(31,20,41,.96),rgba(9,10,16,.99))!important; box-shadow:none!important; }
+.pachinko-control-header { display:flex; align-items:center; justify-content:space-between; gap:8px; color:#f5eef8; font-size:12px; font-weight:850; }
+.pachinko-control-header span:last-child { color:#fbbf24; font:700 10px/1.2 "Space Mono",ui-monospace,monospace; text-align:right; }
+.pach-group { min-width:0; padding:0!important; border:0!important; background:transparent!important; }
+.pach-group label { display:block; margin:0 0 6px!important; color:#a99caf; font-size:9px!important; font-weight:800!important; letter-spacing:.09em; text-transform:uppercase; }
+.pach-bet-row { position:relative; }
+.pach-bet-row input { width:100%; min-height:44px!important; padding:8px 68px 8px 11px!important; border:1px solid rgba(216,180,254,.24)!important; border-radius:11px!important; background:rgba(3,5,10,.72)!important; color:#fff4df!important; font:700 16px/1 "Space Mono",ui-monospace,monospace!important; box-sizing:border-box; }
+.pach-bet-row>span { position:absolute; top:50%; right:10px; color:#817489; font-size:9px; transform:translateY(-50%); pointer-events:none; }
+.pach-quick { display:grid!important; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px!important; margin-top:7px!important; }
+.pachinko-choice-grid { display:grid; grid-template-columns:1fr; gap:10px; }
+.pach-risk-btns,.pach-ball-btns { display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px!important; }
+.pach-quick .pqb,.pach-risk-btns .prb,.pach-ball-btns .pbb { min-width:0!important; min-height:44px!important; margin:0!important; padding:7px 4px!important; border:1px solid rgba(216,180,254,.2)!important; border-radius:10px!important; background:rgba(255,255,255,.025)!important; color:#d5cadb!important; font-size:10px!important; font-weight:850!important; transition:transform .16s ease,background .16s ease,border-color .16s ease!important; }
+.pach-quick .pqb:hover,.pach-risk-btns .prb:hover,.pach-ball-btns .pbb:hover { transform:translateY(-1px); border-color:rgba(216,180,254,.5)!important; }
+.pach-quick .pqb.active,.pach-risk-btns .prb.active,.pach-ball-btns .pbb.active { background:#fbbf24!important; border-color:#fcd34d!important; color:#160d05!important; box-shadow:0 6px 18px rgba(251,191,36,.17)!important; }
+.pach-drop-btn { display:flex!important; min-height:54px!important; align-items:center; justify-content:space-between; margin:0!important; padding:0 16px!important; border:1px solid rgba(233,213,255,.5)!important; border-radius:12px!important; background:linear-gradient(110deg,#6b21a8,#a855f7 58%,#7e22ce)!important; color:#fff!important; font-size:13px!important; font-weight:900!important; letter-spacing:.04em; box-shadow:0 13px 30px rgba(126,34,206,.25)!important; }
+.pach-drop-btn span:last-child { font-size:20px; }
+.pach-drop-btn[data-consecutive="true"] { filter:saturate(.82); }
+.pachinko-fair-note { margin:0; color:#817789; font-size:9px; line-height:1.45; text-align:center; }
+.pachinko-fatal { padding:20px; border:1px solid rgba(251,113,133,.3); color:#fecdd3; background:rgba(127,29,29,.14); text-align:center; }
 
 /* Poker: stronger seat focus, true card depth, and compact action hierarchy. */
 .poker-casino-container { max-width:1180px; margin-inline:auto; padding:clamp(12px,2vw,24px); }
@@ -292,8 +321,8 @@
   .rl-belt-section { padding:8px; border-radius:16px; }
   .rl-status-row { align-items:flex-start; gap:8px; }
   .coinflip-casino-container .players-container { padding:18px 10px; }
-  .crash-canvas-wrap,.pachinko-canvas-wrap { border-radius:18px!important; }
-  .pachinko-layout { grid-template-columns:minmax(0,1fr)!important; grid-template-areas:"controls" "board" "results"; }
+
+  .crash-canvas-wrap { border-radius:18px!important; }
   .crash-bet-section,.crash-feed-section,.pachinko-controls,.poker-lobby,.poker-actions { border-radius:16px!important; }
   .poker-action-btns .pa-btn { min-height:44px; }
   .cs2-betting-container { border-radius:18px; }
@@ -380,12 +409,7 @@
 .crash-bet-section { grid-area:controls; }
 .crash-feed-section { grid-area:feed; }
 
-.pachinko-layout {
-  grid-template-columns:minmax(0,760px) minmax(280px,320px)!important;
-  justify-content:center;
-}
-.pach-results:empty { display:none; }
-.pachinko-canvas-wrap canvas,.crash-canvas-wrap canvas { max-width:100%; }
+.crash-canvas-wrap canvas { max-width:100%; }
 
 @media (max-width:1020px) and (min-width:761px) {
   .blackjack-container .betting-section { grid-template-columns:minmax(150px,.45fr) minmax(380px,1.55fr); }
@@ -410,19 +434,29 @@
   }
   .crash-bet-section,.crash-feed-section { padding:12px; }
 
-  .pachinko-layout { grid-template-columns:minmax(0,1fr)!important; grid-template-areas:"controls" "board" "results"; gap:12px!important; }
-  .pachinko-controls { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; padding:10px; }
-  .pach-group { min-width:0; padding:4px 2px 12px; border:0!important; border-bottom:1px solid rgba(255,255,255,.08)!important; border-radius:0!important; background:transparent!important; }
-  .pach-group:last-of-type { border-bottom:0!important; padding-bottom:4px; }
-  .pach-group label { margin-bottom:8px; }
-  .pach-quick { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; margin-top:8px; }
-  .pach-risk-btns,.pach-ball-btns { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
-  .pach-quick .pqb,.pach-risk-btns .prb,.pach-ball-btns .pbb { width:100%; min-width:0; padding:8px 4px; }
+  .pachinko-cabinet { grid-template-columns:minmax(0,1fr); grid-template-areas:"controls" "board"; gap:9px; padding:8px; border-radius:17px; }
+  .pachinko-heading { margin-bottom:7px; }
+  .pachinko-heading .game-title { font-size:27px!important; }
+  .pachinko-eyebrow { font-size:8px; }
+  .pachinko-payout-legend { max-width:48%; font-size:8px; }
+  .pachinko-controls { display:grid; grid-template-columns:minmax(0,1fr); grid-template-areas:"header" "bet" "choices" "drop" "note"; gap:8px; padding:10px!important; border-radius:13px!important; }
+  .pachinko-control-header { grid-area:header; }
+  .pach-bet-group { grid-area:bet; }
+  .pachinko-choice-grid { grid-area:choices; grid-template-columns:1fr; gap:7px; }
+  .pach-drop-btn { grid-area:drop; min-height:48px!important; margin:0; }
+  .pachinko-fair-note { grid-area:note; display:none; }
+  .pach-group { min-width:0; padding:0!important; border:0!important; }
+  .pach-group label { margin-bottom:4px!important; font-size:8px!important; }
+  .pach-bet-row input { min-height:44px!important; }
+  .pach-quick { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; margin-top:5px; }
+  .pach-risk-btns,.pach-ball-btns { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+  .pach-quick .pqb,.pach-risk-btns .prb,.pach-ball-btns .pbb { width:100%; min-width:0; min-height:44px!important; padding:5px 2px!important; font-size:9px!important; }
   .pach-quick .pqb.active,.pach-risk-btns .prb.active,.pach-ball-btns .pbb.active { transform:none; }
-  .pach-drop-btn { margin-top:2px; }
-  .pachinko-canvas-wrap { width:100%; }
-  .pachinko-canvas-wrap canvas { width:100%; height:auto; }
-  .pach-results { max-height:none; overflow:visible; }
+  .pach-results { max-height:none; }
+  .pachinko-machine { border-radius:13px; }
+  .pachinko-result-tray { min-height:65px; padding:7px 8px 8px; }
+  .pachinko-result-heading { margin-bottom:5px; }
+  .pach-result { min-width:88px; min-height:35px; padding:6px 7px; }
 
   .coinflip-casino-container .room-selection-header,.poker-lobby .lobby-header { gap:10px; }
 }

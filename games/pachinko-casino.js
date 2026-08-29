@@ -1,224 +1,320 @@
-// Pachinko Game — Drop balls through pegs, hit big multipliers!
+// Pachinko — server-authoritative outcomes with deterministic presentation paths.
 
 class PachinkoGame {
+  static ROWS = 16;
+
+  static MULTIPLIERS = {
+    low:    [5, 2.5, 1.6, 1.3, 1.15, 1.05, 0.95, 0.9, 0.85, 0.9, 0.95, 1.05, 1.15, 1.3, 1.6, 2.5, 5],
+    medium: [50, 18, 6, 3, 1.8, 1.2, 0.9, 0.75, 0.6, 0.75, 0.9, 1.2, 1.8, 3, 6, 18, 50],
+    high:   [220, 55, 18, 7, 2.6, 1.25, 0.78, 0.48, 0.28, 0.48, 0.78, 1.25, 2.6, 7, 18, 55, 220]
+  };
+
+  static MOTION = Object.freeze({
+    minDuration: 2600,
+    durationVariation: 360,
+    launchY: 0.035,
+    pegStartY: 0.12,
+    pegEndY: 0.70,
+    terminalGateY: 0.755,
+    slotY: 0.79,
+    slotHeight: 0.17,
+    landingY: 0.875,
+    resultHoldMs: 360,
+    trailLength: 9
+  });
+
+  static createGeometry(width, risk = 'medium') {
+    const safeWidth = Math.max(280, Math.min(760, Number(width) || 390));
+    const height = Math.round(safeWidth * 1.02);
+    const rows = PachinkoGame.ROWS;
+    const boardLeft = safeWidth * 0.06;
+    const boardRight = safeWidth * 0.94;
+    const slotWidth = (boardRight - boardLeft) / (rows + 1);
+    const pegStartY = height * PachinkoGame.MOTION.pegStartY;
+    const pegEndY = height * PachinkoGame.MOTION.pegEndY;
+    const pegRowHeight = (pegEndY - pegStartY) / (rows - 1);
+    const pegRadius = Math.max(2.2, safeWidth * 0.0065);
+    const multipliers = PachinkoGame.MULTIPLIERS[risk] || PachinkoGame.MULTIPLIERS.medium;
+    const pegRows = [];
+    const pegs = [];
+
+    for (let row = 0; row < rows; row += 1) {
+      const count = row + 3;
+      const rowWidth = (count - 1) * slotWidth;
+      const startX = (safeWidth - rowWidth) / 2;
+      const current = [];
+      for (let col = 0; col < count; col += 1) {
+        const peg = {
+          id: `${row}:${col}`,
+          row,
+          x: startX + col * slotWidth,
+          y: pegStartY + row * pegRowHeight,
+          r: pegRadius
+        };
+        current.push(peg);
+        pegs.push(peg);
+      }
+      pegRows.push(current);
+    }
+
+    const slotY = height * PachinkoGame.MOTION.slotY;
+    const slotHeight = height * PachinkoGame.MOTION.slotHeight;
+    const slots = multipliers.map((multiplier, index) => ({
+      index,
+      x: boardLeft + index * slotWidth,
+      y: slotY,
+      w: slotWidth,
+      h: slotHeight,
+      multiplier
+    }));
+
+    return {
+      width: safeWidth,
+      height,
+      rows,
+      boardLeft,
+      boardRight,
+      slotWidth,
+      slotCenters: slots.map(slot => slot.x + slot.w / 2),
+      pegStartY,
+      pegEndY,
+      pegRowHeight,
+      pegRadius,
+      pegRows,
+      pegs,
+      slots,
+      terminalGateY: height * PachinkoGame.MOTION.terminalGateY,
+      landingY: height * PachinkoGame.MOTION.landingY
+    };
+  }
+
+  static seededRandom(seed) {
+    let value = (Number(seed) || 1) >>> 0;
+    return () => {
+      value ^= value << 13;
+      value ^= value >>> 17;
+      value ^= value << 5;
+      return (value >>> 0) / 4294967296;
+    };
+  }
+
+  static hashSeed(value) {
+    let hash = 2166136261;
+    const text = String(value);
+    for (let index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  static planPresentationPath(geometry, slotIndex, seed = 1) {
+    if (!geometry || !Array.isArray(geometry.slots) || geometry.slots.length !== 17) {
+      throw new Error('Pachinko path requires valid 17-slot geometry');
+    }
+    const destination = Number(slotIndex);
+    if (!Number.isInteger(destination) || destination < 0 || destination >= geometry.slots.length) {
+      throw new Error('Pachinko path received an invalid authoritative slot');
+    }
+
+    const random = PachinkoGame.seededRandom(seed);
+    const decisions = Array.from({ length: geometry.rows }, (_, index) => index < destination ? 1 : -1);
+    for (let index = decisions.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(random() * (index + 1));
+      [decisions[index], decisions[swapIndex]] = [decisions[swapIndex], decisions[index]];
+    }
+
+    const duration = PachinkoGame.MOTION.minDuration + Math.round(random() * PachinkoGame.MOTION.durationVariation);
+    const pegDuration = duration * 0.82;
+    const points = [{ x: geometry.width / 2, y: geometry.height * PachinkoGame.MOTION.launchY, t: 0, kind: 'launch' }];
+    let x = geometry.width / 2;
+
+    for (let row = 0; row < geometry.rows; row += 1) {
+      x += decisions[row] * geometry.slotWidth * 0.5;
+      points.push({
+        x,
+        y: geometry.pegStartY + row * geometry.pegRowHeight + geometry.pegRowHeight * 0.42,
+        t: Math.round(pegDuration * ((row + 1) / geometry.rows)),
+        kind: 'peg',
+        row
+      });
+    }
+
+    const targetX = geometry.slotCenters[destination];
+    // The route's right-count encodes the destination, so this should be exact.
+    x = targetX;
+    points[points.length - 1].x = targetX;
+    const terminalLockIndex = points.length - 1;
+    points.push({ x, y: geometry.terminalGateY, t: Math.round(duration * 0.9), kind: 'gate' });
+    points.push({ x, y: geometry.landingY, t: duration, kind: 'landing' });
+
+    return { slotIndex: destination, seed, duration, decisions, points, terminalLockIndex };
+  }
+
+  static reduceMotionPath(path, duration = 280) {
+    const safeDuration = Math.max(1, Number(duration) || 280);
+    const scale = safeDuration / path.duration;
+    return {
+      ...path,
+      duration: safeDuration,
+      points: path.points.map(point => ({ ...point, t: Math.round(point.t * scale) }))
+    };
+  }
+
   constructor(casinoManager) {
     this.casino = casinoManager;
-    this.canvas = null;
-    this.ctx = null;
-    this.balls = [];
+    this.root = null;
+    this.stage = null;
+    this.staticCanvas = null;
+    this.dynamicCanvas = null;
+    this.staticCtx = null;
+    this.dynamicCtx = null;
+    this.geometry = null;
     this.pegs = [];
     this.slots = [];
+    this.W = 390;
+    this.H = 398;
+    this.ROWS = PachinkoGame.ROWS;
     this.risk = 'medium';
     this.betAmount = 100;
+    this.ballCount = 1;
+    this.balls = [];
     this.results = [];
-    this.animFrame = null;
-    this.dropTimers = [];
-    this._destroyed = false;
+    this.activeSlotGlows = new Map();
     this.pendingBatches = new Map();
     this.latestAuthoritativeBalance = null;
     this.unresolvedPayout = 0;
     this.queuedBallCount = 0;
     this.dropRequestChain = Promise.resolve();
     this.maxOutstandingBalls = 25;
+    this.presentationGeneration = 1;
+    this.animFrame = null;
     this.resizeFrame = null;
-    this.lastAnimationTimestamp = null;
-    this.animationAccumulator = 0;
-    this.boundResize = () => {
-      if (this.resizeFrame) return;
-      this.resizeFrame = requestAnimationFrame(() => {
-        this.resizeFrame = null;
-        if (!this._destroyed) this.resizeCanvas();
-      });
-    };
-    this.W = 500;
-    this.H = 600;
-    this.ROWS = 16;
+    this.resizeObserver = null;
+    this.timerHandles = new Set();
+    this.pauseStartedAt = null;
+    this._destroyed = false;
+    this.boundVisibility = () => this.handleVisibilityChange();
+    this.boundWindowResize = () => this.scheduleResize();
     this.init();
   }
 
-  // Multiplier maps - balanced by binomial slot probability.
-  // Approx RTP: low 94.7%, medium 94.3%, high 94.3%.
-  // Risk changes variance: low is steady, high is rare-jackpot heavy.
-  // 17 slots for 16 rows. Calibrated for the in-game physics distribution.
-  static MULTIPLIERS = {
-    low:    [5,   2.5, 1.6, 1.3, 1.15, 1.05, 0.95, 0.9,  0.85, 0.9,  0.95, 1.05, 1.15, 1.3, 1.6, 2.5, 5],
-    medium: [50,  18,  6,   3,   1.8,  1.2,  0.9,  0.75, 0.6,  0.75, 0.9,  1.2,  1.8,  3,   6,   18,  50],
-    high:   [220, 55,  18,  7,   2.6,  1.25, 0.78, 0.48, 0.28, 0.48, 0.78, 1.25, 2.6,  7,   18,  55,  220]
-  };
-
   init() {
-    const gv = document.getElementById('pachinkoGame');
-    this.root = gv;
-    gv.innerHTML = `
+    const root = document.getElementById('pachinkoGame');
+    if (!root) throw new Error('Pachinko root is unavailable');
+    this.root = root;
+    root.innerHTML = `
       <div class="pachinko-container">
-        <h2 class="game-title">🔮 Pachinko</h2>
-        <div class="pachinko-layout">
-          <div class="pachinko-canvas-wrap">
-            <canvas id="pachinkoCanvas"></canvas>
-            <div id="pachinkoPayoutLegend" class="pachinko-payout-legend" aria-live="polite"></div>
+        <div class="pachinko-heading">
+          <div>
+            <span class="pachinko-eyebrow">NEON DROP</span>
+            <h2 class="game-title">Pachinko</h2>
           </div>
-          <div class="pachinko-controls">
-            <div class="pach-group">
-              <label for="pachBet">Bet Per Ball</label>
-              <input type="number" id="pachBet" value="100" min="1" step="10">
-              <div class="pach-quick">
+          <div id="pachinkoPayoutLegend" class="pachinko-payout-legend" aria-live="polite"></div>
+        </div>
+        <div class="pachinko-cabinet">
+          <section class="pachinko-machine" aria-label="Pachinko board">
+            <div class="pachinko-stage">
+              <canvas id="pachinkoStaticCanvas" class="pachinko-static-canvas" aria-hidden="true"></canvas>
+              <canvas id="pachinkoDynamicCanvas" class="pachinko-dynamic-canvas" role="img" aria-label="Animated Pachinko ball board"></canvas>
+            </div>
+            <div class="pachinko-result-tray">
+              <div class="pachinko-result-heading">
+                <span>Recent drops</span><span class="pachinko-result-hint">Newest first</span>
+              </div>
+              <div id="pachResults" class="pach-results" aria-live="polite">
+                <div class="pachinko-empty-result">Your landed multipliers appear here.</div>
+              </div>
+            </div>
+          </section>
+          <aside class="pachinko-controls" aria-label="Pachinko wager controls">
+            <div class="pachinko-control-header"><span>Build your drop</span><span id="pachinkoTotal">100 credits</span></div>
+            <div class="pach-group pach-bet-group">
+              <label for="pachBet">Bet per ball</label>
+              <div class="pach-bet-row"><input type="number" id="pachBet" value="100" min="1" step="10" inputmode="numeric"><span>credits</span></div>
+              <div class="pach-quick" aria-label="Quick bet amounts">
                 <button type="button" class="pqb" data-a="50" aria-pressed="false">50</button>
                 <button type="button" class="pqb active" data-a="100" aria-pressed="true">100</button>
                 <button type="button" class="pqb" data-a="250" aria-pressed="false">250</button>
                 <button type="button" class="pqb" data-a="500" aria-pressed="false">500</button>
               </div>
             </div>
-            <div class="pach-group">
-              <label>Risk</label>
-              <div class="pach-risk-btns">
+            <div class="pachinko-choice-grid">
+              <div class="pach-group"><label>Risk</label><div class="pach-risk-btns">
                 <button type="button" class="prb" data-r="low" aria-pressed="false">Low</button>
-                <button type="button" class="prb active" data-r="medium" aria-pressed="true">Medium</button>
+                <button type="button" class="prb active" data-r="medium" aria-pressed="true">Med</button>
                 <button type="button" class="prb" data-r="high" aria-pressed="false">High</button>
-              </div>
-            </div>
-            <div class="pach-group">
-              <label>Balls</label>
-              <div class="pach-ball-btns">
+              </div></div>
+              <div class="pach-group"><label>Balls</label><div class="pach-ball-btns">
                 <button type="button" class="pbb active" data-n="1" aria-pressed="true">1</button>
                 <button type="button" class="pbb" data-n="3" aria-pressed="false">3</button>
                 <button type="button" class="pbb" data-n="5" aria-pressed="false">5</button>
-              </div>
+              </div></div>
             </div>
-            <button id="pachDropBtn" class="btn btn-primary btn-full pach-drop-btn">🔮 Drop!</button>
-          </div>
-          <div id="pachResults" class="pach-results"></div>
+            <button id="pachDropBtn" class="btn btn-primary btn-full pach-drop-btn"><span>Drop balls</span><span aria-hidden="true">↓</span></button>
+            <p class="pachinko-fair-note">Outcome and payout are locked by the server before the animation starts.</p>
+          </aside>
         </div>
-      </div>
-    `;
+      </div>`;
 
+    this.stage = root.querySelector('.pachinko-stage');
+    this.staticCanvas = root.querySelector('#pachinkoStaticCanvas');
+    this.dynamicCanvas = root.querySelector('#pachinkoDynamicCanvas');
+    this.staticCtx = this.staticCanvas?.getContext?.('2d') || null;
+    this.dynamicCtx = this.dynamicCanvas?.getContext?.('2d') || null;
+    if (!this.stage || !this.staticCtx || !this.dynamicCtx) {
+      root.innerHTML = '<div class="pachinko-fatal" role="alert">Pachinko could not start. Please reload and try again.</div>';
+      throw new Error('Pachinko canvas initialization failed');
+    }
 
-    this.canvas = document.getElementById('pachinkoCanvas');
-    this.ctx = this.canvas.getContext('2d');
-    this.ballCount = 1;
-    this.setupBoard();
-    this.renderPayoutLegend();
+    this.cacheElements();
     this.attachEvents();
-    this.resizeCanvas();
-    window.addEventListener('resize', this.boundResize, { passive: true });
-    this.drawFrame();
+    this.renderPayoutLegend();
+    this.updateTotal();
+    this.resizeCanvas(true);
+
+    if (typeof ResizeObserver === 'function') {
+      this.resizeObserver = new ResizeObserver(() => this.scheduleResize());
+      this.resizeObserver.observe(this.stage);
+    } else {
+      window.addEventListener('resize', this.boundWindowResize, { passive: true });
+    }
+    document.addEventListener?.('visibilitychange', this.boundVisibility);
   }
 
-  resizeCanvas() {
-    const wrap = this.canvas?.parentElement;
-    if (!wrap) return;
-    
-    // Fill the available board column. The previous 500px desktop cap and
-    // 40px mobile subtraction left a visible dead band inside the wrapper.
-    const isMobile = window.innerWidth <= 768;
-    const availableW = Math.max(1, Math.floor(wrap.clientWidth));
-    const maxW = Math.min(availableW, 760);
-
-    this.W = maxW;
-    this.H = Math.floor(maxW * 1.18);
-    
-    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
-    this.canvas.width = this.W * dpr;
-    this.canvas.height = this.H * dpr;
-    this.canvas.style.width = this.W + 'px';
-    this.canvas.style.height = this.H + 'px';
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    
-    this.setupBoard();
-    this.drawFrame();
-  }
-
-  setupBoard() {
-    this.pegs = [];
-    this.pegRows = [];
-    this.slots = [];
-    const W = this.W, H = this.H;
-    const pegR = Math.max(2, W * 0.0055);
-    const startY = H * 0.13;
-    const endY = H * 0.73;
-    const rowH = (endY - startY) / Math.max(1, this.ROWS - 1);
-    const slotCount = this.ROWS + 1; // 17 slots for 16 rows
-    const slotW = (W * 0.88) / slotCount;
-
-    for (let row = 0; row < this.ROWS; row++) {
-      const rowPegs = [];
-      const pegsInRow = row + 3;
-      const rowWidth = (pegsInRow - 1) * slotW;
-      const startX = (W - rowWidth) / 2;
-      for (let col = 0; col < pegsInRow; col++) {
-        const peg = {
-          id: `${row}:${col}`,
-          x: startX + col * slotW,
-          y: startY + row * rowH,
-          r: pegR,
-          glow: 0
-        };
-        this.pegs.push(peg);
-        rowPegs.push(peg);
-      }
-      this.pegRows.push(rowPegs);
+  cacheElements() {
+    this.betInput = this.root.querySelector('#pachBet');
+    this.dropButton = this.root.querySelector('#pachDropBtn');
+    this.resultsElement = this.root.querySelector('#pachResults');
+    this.legendElement = this.root.querySelector('#pachinkoPayoutLegend');
+    this.totalElement = this.root.querySelector('#pachinkoTotal');
+    if (!this.betInput || !this.dropButton || !this.resultsElement || !this.legendElement || !this.totalElement) {
+      throw new Error('Pachinko controls failed to initialize');
     }
-
-    // Slots at bottom
-    const slotY = H * 0.79;
-    const slotH = H * 0.18;
-    const slotStartX = (W - slotW * slotCount) / 2;
-    const mults = PachinkoGame.MULTIPLIERS[this.risk];
-
-    for (let i = 0; i < slotCount; i++) {
-      const m = mults[i] || 0.5;
-      this.slots.push({
-        x: slotStartX + i * slotW,
-        y: slotY,
-        w: slotW,
-        h: slotH,
-        multiplier: m,
-        glow: 0
-      });
-    }
-
-    const lastPegY = startY + (this.ROWS - 1) * rowH;
-    this.boardMetrics = {
-      pegStartY: startY,
-      pegEndY: lastPegY,
-      pegRowHeight: rowH,
-      laneEntryY: H * 0.56,
-      terminalGateY: Math.min(slotY - pegR * 3, lastPegY + H * 0.018),
-      slotY,
-      slotWidth: slotW
-    };
-  }
-
-  createAuthoritativeRoute(slotIndex, random = Math.random) {
-    const rightCount = Math.max(0, Math.min(this.ROWS, Number(slotIndex) || 0));
-    const decisions = Array.from({ length: this.ROWS }, (_, index) => index < rightCount ? 1 : -1);
-    for (let index = decisions.length - 1; index > 0; index -= 1) {
-      const swapIndex = Math.floor(random() * (index + 1));
-      [decisions[index], decisions[swapIndex]] = [decisions[swapIndex], decisions[index]];
-    }
-    return decisions;
   }
 
   attachEvents() {
-    const betInput = this.root.querySelector('#pachBet');
     this.root.querySelectorAll('.pqb').forEach(button => button.addEventListener('click', event => {
-      betInput.value = event.currentTarget.dataset.a;
+      this.betInput.value = event.currentTarget.dataset.a;
       this.syncBetSelector();
+      this.updateTotal();
     }));
-    betInput?.addEventListener('input', () => this.syncBetSelector());
+    this.betInput.addEventListener('input', () => {
+      this.syncBetSelector();
+      this.updateTotal();
+    });
     this.root.querySelectorAll('.prb').forEach(button => button.addEventListener('click', event => {
-      const selectedRisk = event.currentTarget.dataset.r;
-      this.syncSelectorState('.prb', control => control.dataset.r === selectedRisk);
-      this.risk = selectedRisk;
-      this.setupBoard();
+      this.risk = event.currentTarget.dataset.r;
+      this.syncSelectorState('.prb', control => control.dataset.r === this.risk);
+      this.rebuildGeometry();
       this.renderPayoutLegend();
-      this.drawFrame();
     }));
     this.root.querySelectorAll('.pbb').forEach(button => button.addEventListener('click', event => {
-      const selectedCount = Number(event.currentTarget.dataset.n);
-      this.syncSelectorState('.pbb', control => Number(control.dataset.n) === selectedCount);
-      this.ballCount = selectedCount;
+      this.ballCount = Number(event.currentTarget.dataset.n);
+      this.syncSelectorState('.pbb', control => Number(control.dataset.n) === this.ballCount);
+      this.updateTotal();
     }));
-    this.root.querySelector('#pachDropBtn')?.addEventListener('click', () => this.dropBalls());
+    this.dropButton.addEventListener('click', () => this.dropBalls());
   }
 
   syncSelectorState(selector, isSelected) {
@@ -230,19 +326,113 @@ class PachinkoGame {
   }
 
   syncBetSelector() {
-    const amount = Number(this.root.querySelector('#pachBet')?.value);
+    const amount = Number(this.betInput.value);
     this.syncSelectorState('.pqb', control => Number(control.dataset.a) === amount);
   }
 
-  dropBalls() {
-    const bet = Number(document.getElementById('pachBet')?.value);
-    if (!Number.isSafeInteger(bet) || bet < 1) return this.showStatus('Enter a valid whole-number bet.', 'error');
-    const totalCost = bet * this.ballCount;
-    const risk = this.risk;
-    const count = this.ballCount;
-    if (this.getOutstandingBallCount() === 0 && this.casino.credits < totalCost) {
-      return this.showStatus('Not enough credits.', 'error');
+  updateTotal() {
+    const bet = Number(this.betInput?.value);
+    const total = Number.isFinite(bet) && bet > 0 ? bet * this.ballCount : 0;
+    if (this.totalElement) this.totalElement.textContent = `${total.toLocaleString()} credits`;
+  }
+
+  scheduleResize() {
+    if (this.resizeFrame || this._destroyed) return;
+    this.resizeFrame = requestAnimationFrame(() => {
+      this.resizeFrame = null;
+      this.resizeCanvas();
+    });
+  }
+
+  resizeCanvas(force = false) {
+    if (!this.stage || this._destroyed) return;
+    const measured = Math.floor(this.stage.getBoundingClientRect?.().width || this.stage.clientWidth || 390);
+    const width = Math.max(280, Math.min(760, measured));
+    const nextGeometry = PachinkoGame.createGeometry(width, this.risk);
+    const dpr = Math.min(Number(window.devicePixelRatio) || 1, width <= 480 ? 1.5 : 2);
+    const sameSize = this.geometry && this.geometry.width === nextGeometry.width && this.geometry.height === nextGeometry.height && this.renderDpr === dpr;
+    if (!force && sameSize) return;
+
+    const now = performance.now();
+    const progressByBall = new Map(this.balls.filter(ball => ball.active).map(ball => [ball, Math.max(0, Math.min(1, (now - ball.startedAt) / ball.path.duration))]));
+    this.geometry = nextGeometry;
+    this.W = nextGeometry.width;
+    this.H = nextGeometry.height;
+    this.renderDpr = dpr;
+    this.pegs = nextGeometry.pegs;
+    this.slots = nextGeometry.slots;
+    this.boardMetrics = {
+      pegStartY: nextGeometry.pegStartY,
+      pegEndY: nextGeometry.pegEndY,
+      pegRowHeight: nextGeometry.pegRowHeight,
+      terminalGateY: nextGeometry.terminalGateY,
+      slotY: nextGeometry.slots[0].y,
+      slotWidth: nextGeometry.slotWidth
+    };
+
+    for (const canvas of [this.staticCanvas, this.dynamicCanvas]) {
+      canvas.width = Math.round(this.W * dpr);
+      canvas.height = Math.round(this.H * dpr);
+      canvas.style.width = `${this.W}px`;
+      canvas.style.height = `${this.H}px`;
     }
+    this.staticCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.dynamicCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    for (const ball of progressByBall.keys()) {
+      const progress = progressByBall.get(ball);
+      const rebuiltPath = PachinkoGame.planPresentationPath(this.geometry, ball.serverResult.slotIndex, ball.seed);
+      ball.path = ball.reducedMotion ? PachinkoGame.reduceMotionPath(rebuiltPath) : rebuiltPath;
+      ball.startedAt = now - progress * ball.path.duration;
+      ball.r = Math.max(4, this.W * 0.011);
+      this.resetTrail(ball);
+    }
+    this.drawStaticBoard();
+    this.drawDynamicFrame(now);
+  }
+
+  rebuildGeometry() {
+    if (!this.geometry) return this.resizeCanvas(true);
+    this.geometry = PachinkoGame.createGeometry(this.geometry.width, this.risk);
+    this.pegs = this.geometry.pegs;
+    this.slots = this.geometry.slots;
+    this.boardMetrics.slotY = this.geometry.slots[0].y;
+    this.drawStaticBoard();
+    this.drawDynamicFrame(performance.now());
+  }
+
+  setupBoard() {
+    const geometry = PachinkoGame.createGeometry(this.W, this.risk);
+    this.geometry = geometry;
+    this.H = geometry.height;
+    this.pegs = geometry.pegs;
+    this.slots = geometry.slots;
+    this.boardMetrics = {
+      pegStartY: geometry.pegStartY,
+      pegEndY: geometry.pegEndY,
+      pegRowHeight: geometry.pegRowHeight,
+      terminalGateY: geometry.terminalGateY,
+      slotY: geometry.slots[0].y,
+      slotWidth: geometry.slotWidth
+    };
+    return geometry;
+  }
+
+  createAuthoritativeRoute(slotIndex, random = Math.random) {
+    const decisions = Array.from({ length: this.ROWS }, (_, index) => index < slotIndex ? 1 : -1);
+    for (let index = decisions.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(random() * (index + 1));
+      [decisions[index], decisions[swapIndex]] = [decisions[swapIndex], decisions[index]];
+    }
+    return decisions;
+  }
+
+  dropBalls() {
+    const bet = Number(this.betInput?.value);
+    if (!Number.isSafeInteger(bet) || bet < 1) return this.showStatus('Enter a valid whole-number bet.', 'error');
+    const count = this.ballCount;
+    const totalCost = bet * count;
+    if (this.getOutstandingBallCount() === 0 && this.casino.credits < totalCost) return this.showStatus('Not enough credits.', 'error');
     if (this.getOutstandingBallCount() + count > this.maxOutstandingBalls) {
       return this.showStatus(`Let some balls land before queueing more than ${this.maxOutstandingBalls}.`, 'error');
     }
@@ -250,8 +440,7 @@ class PachinkoGame {
     const requestId = globalThis.crypto?.randomUUID?.() || `drop_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     this.queuedBallCount += count;
     this.setPresentationControlsLocked(true);
-
-    const request = this.dropRequestChain.then(() => this.submitDrop({ bet, risk, count, requestId }));
+    const request = this.dropRequestChain.then(() => this.submitDrop({ bet, risk: this.risk, count, requestId }));
     this.dropRequestChain = request.catch(() => false);
     return request.finally(() => {
       this.queuedBallCount = Math.max(0, this.queuedBallCount - count);
@@ -259,30 +448,34 @@ class PachinkoGame {
     });
   }
 
+  validateSettlement(data, count) {
+    if (!data || !Array.isArray(data.results) || data.results.length !== count || !Number.isFinite(data.balance) || !Number.isFinite(data.payout) || data.payout < 0) return false;
+    const payoutMilli = Math.round(Number(data.payout) * 1000);
+    if (!Number.isSafeInteger(payoutMilli)) return false;
+    let resultPayoutMilli = 0;
+    for (const result of data.results) {
+      const slot = this.slots[result?.slotIndex];
+      const resultMilli = Number(result?.payout) * 1000;
+      if (!slot || result.multiplier !== slot.multiplier || !Number.isFinite(result.payout) || result.payout < 0 ||
+          !Number.isSafeInteger(Math.round(resultMilli)) || Math.abs(resultMilli - Math.round(resultMilli)) >= 1e-6) return false;
+      resultPayoutMilli += Math.round(resultMilli);
+    }
+    return resultPayoutMilli === payoutMilli;
+  }
+
   async submitDrop({ bet, risk, count, requestId }) {
     if (this._destroyed) return false;
+    const generation = this.presentationGeneration;
     try {
       const response = await this.casino.apiFetch('/api/games/pachinko/drop', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ risk, bet, count, requestId })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Unable to drop balls');
-      const resultPayoutMilli = Array.isArray(data.results)
-        ? data.results.reduce((sum, result) => sum + Math.round(Number(result?.payout) * 1000), 0)
-        : NaN;
-      const batchPayoutMilli = Math.round(Number(data.payout) * 1000);
-      const validResults = Array.isArray(data.results) && data.results.length === count && data.results.every(result => {
-        const slot = this.slots[result?.slotIndex];
-        const payoutMilli = Number(result?.payout) * 1000;
-        return slot && result.multiplier === slot.multiplier && Number.isFinite(result.payout) && result.payout >= 0 &&
-          Number.isSafeInteger(Math.round(payoutMilli)) && Math.abs(payoutMilli - Math.round(payoutMilli)) < 1e-6;
-      });
-      if (!validResults || !Number.isFinite(data.balance) || !Number.isFinite(data.payout) || data.payout < 0 ||
-          !Number.isSafeInteger(batchPayoutMilli) || resultPayoutMilli !== batchPayoutMilli) {
-        throw new Error('Invalid Pachinko settlement response');
-      }
-      if (this._destroyed) {
+      if (!this.validateSettlement(data, count)) throw new Error('Invalid Pachinko settlement response');
+      if (this._destroyed || generation !== this.presentationGeneration) {
         this.casino.setCredits(data.balance);
         return true;
       }
@@ -290,77 +483,164 @@ class PachinkoGame {
       this.betAmount = bet;
       this.latestAuthoritativeBalance = data.balance;
       this.unresolvedPayout += data.payout;
-      this.pendingBatches.set(requestId, {
-        id: requestId,
-        remaining: data.results.length,
-        payout: data.payout
-      });
+      this.pendingBatches.set(requestId, { id: requestId, remaining: count, payout: data.payout });
       this.renderDeferredBalance();
       window.casinoSound?.playOnce(`pachinko:${requestId}:wager`, 'wager', { game: 'pachinko' });
-      this.casino.stabilizeGameViewport?.(this.root?.querySelector('.pachinko-canvas-wrap'));
+      this.casino.stabilizeGameViewport?.(this.root.querySelector('.pachinko-cabinet'));
+
       data.results.forEach((serverResult, index) => {
-        const timer = setTimeout(() => {
-          if (this._destroyed) return;
-          window.casinoSound?.playOnce(`pachinko:${requestId}:drop:${index}`, 'pachinkoDrop', { cooldown: 0, game: 'pachinko' });
-          const targetSlot = this.slots[serverResult.slotIndex];
-          const routeDecisions = this.createAuthoritativeRoute(serverResult.slotIndex);
-          const startSpread = Math.min(12, targetSlot?.w * 0.7 || 12);
-          const ball = {
-            x: this.W / 2 + (Math.random() - 0.5) * startSpread, y: this.H * 0.045,
-            vx: (Math.random() - 0.5), vy: 0, r: Math.max(4, this.W * 0.009),
-            active: true, bet, trail: [], hue: 40 + Math.random() * 40,
-            stuckFrames: 0, lastY: 0, serverResult, soundKey: `${requestId}:${index}`,
-            pegSoundAt: Object.create(null),
-            batchId: requestId, presentationConfirmed: false,
-            phase: 'peg-field', guidePhase: Math.random(), routeDecisions,
-            targetX: targetSlot ? targetSlot.x + targetSlot.w / 2 : this.W / 2
-          };
-          this.balls.push(ball);
-          if (!this.animFrame) this.startAnim();
-        }, index * 300);
-        this.dropTimers.push(timer);
+        this.ownTimeout(() => this.launchBall({ serverResult, bet, requestId, index, generation }), index * 260, generation);
       });
       return true;
     } catch (error) {
-      this.showStatus(error.message, 'error');
+      console.error('Pachinko drop failed', error);
+      this.showStatus(error?.message || 'Pachinko could not complete the drop.', 'error');
       window.casinoSound?.play('error', { game: 'pachinko' });
       return false;
     }
   }
 
-  setPresentationControlsLocked(locked) {
-    const input = document.getElementById('pachBet');
-    const button = document.getElementById('pachDropBtn');
-    if (input) input.disabled = locked;
-    if (button) {
-      button.disabled = false;
-      if (button.dataset) button.dataset.consecutive = locked ? 'true' : 'false';
+  ownTimeout(callback, delay, generation = this.presentationGeneration) {
+    const handle = setTimeout(() => {
+      this.timerHandles.delete(handle);
+      if (this._destroyed || generation !== this.presentationGeneration) return;
+      callback();
+    }, delay);
+    this.timerHandles.add(handle);
+    return handle;
+  }
+
+  launchBall({ serverResult, bet, requestId, index, generation }) {
+    if (this._destroyed || generation !== this.presentationGeneration) return;
+    const seed = PachinkoGame.hashSeed(`${requestId}:${index}:${serverResult.slotIndex}`);
+    const plannedPath = PachinkoGame.planPresentationPath(this.geometry, serverResult.slotIndex, seed);
+    const reducedMotion = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+    const path = reducedMotion ? PachinkoGame.reduceMotionPath(plannedPath) : plannedPath;
+    const startedAt = performance.now();
+    const first = path.points[0];
+    const ball = {
+      x: first.x,
+      y: first.y,
+      r: Math.max(4, this.W * 0.011),
+      active: true,
+      confirmed: false,
+      visuallySettled: false,
+      bet,
+      serverResult,
+      batchId: requestId,
+      soundKey: `${requestId}:${index}`,
+      seed,
+      path,
+      reducedMotion,
+      startedAt,
+      lastPointIndex: 0,
+      trail: Array(PachinkoGame.MOTION.trailLength),
+      trailCursor: 0,
+      trailCount: 0,
+      hue: 38 + (seed % 28),
+      generation
+    };
+    this.balls.push(ball);
+    window.casinoSound?.playOnce(`pachinko:${requestId}:drop:${index}`, 'pachinkoDrop', { cooldown: 0, game: 'pachinko' });
+    this.startAnimation();
+  }
+
+  startAnimation() {
+    if (this.animFrame || this._destroyed || document.hidden) return;
+    const generation = this.presentationGeneration;
+    const frame = timestamp => {
+      if (this._destroyed || generation !== this.presentationGeneration) return;
+      this.animFrame = null;
+      this.updatePresentation(timestamp);
+      this.drawDynamicFrame(timestamp);
+      if (this.balls.length || this.activeSlotGlows.size) this.animFrame = requestAnimationFrame(frame);
+    };
+    this.animFrame = requestAnimationFrame(frame);
+  }
+
+  updatePresentation(timestamp) {
+    for (const ball of this.balls) {
+      if (ball.generation !== this.presentationGeneration) continue;
+      if (ball.active) {
+        const elapsed = Math.max(0, Math.min(ball.path.duration, timestamp - ball.startedAt));
+        const position = this.samplePath(ball.path, elapsed);
+        ball.x = position.x;
+        ball.y = position.y;
+        this.recordTrail(ball, ball.x, ball.y);
+        if (position.pointIndex > ball.lastPointIndex) {
+          const latestPeg = Math.min(position.pointIndex, this.ROWS);
+          for (let point = ball.lastPointIndex + 1; point <= latestPeg; point += 1) this.playPegImpact(ball, point - 1);
+          ball.lastPointIndex = position.pointIndex;
+        }
+        if (elapsed >= ball.path.duration) this.completeBall(ball, timestamp);
+      } else if (!ball.confirmed && timestamp >= ball.confirmAt) {
+        ball.confirmed = true;
+        this.confirmBallPresentation(ball);
+      }
     }
-    (this.root || document).querySelectorAll('.pqb, .prb, .pbb').forEach(control => { control.disabled = locked; });
+
+    for (const [slotIndex, expiresAt] of this.activeSlotGlows) {
+      if (timestamp >= expiresAt) this.activeSlotGlows.delete(slotIndex);
+    }
+    this.balls = this.balls.filter(ball => ball.active || !ball.confirmed || timestamp < ball.confirmAt + 240);
   }
 
-  getOutstandingBallCount() {
-    let active = this.queuedBallCount;
-    for (const batch of this.pendingBatches.values()) active += batch.remaining;
-    return active;
+  samplePath(path, elapsed) {
+    const points = path.points;
+    let upper = 1;
+    while (upper < points.length && elapsed > points[upper].t) upper += 1;
+    if (upper >= points.length) return { ...points.at(-1), pointIndex: points.length - 1 };
+    const from = points[upper - 1];
+    const to = points[upper];
+    const span = Math.max(1, to.t - from.t);
+    const linear = Math.max(0, Math.min(1, (elapsed - from.t) / span));
+    const eased = linear * linear * (3 - 2 * linear);
+    const terminal = upper - 1 >= path.terminalLockIndex;
+    return {
+      x: terminal ? from.x : from.x + (to.x - from.x) * eased,
+      y: from.y + (to.y - from.y) * linear,
+      pointIndex: upper
+    };
   }
 
-  refreshPresentationControls() {
-    this.setPresentationControlsLocked(this.getOutstandingBallCount() > 0);
+  resetTrail(ball) {
+    ball.trail = Array(PachinkoGame.MOTION.trailLength);
+    ball.trailCursor = 0;
+    ball.trailCount = 0;
   }
 
-  renderDeferredBalance() {
-    if (!Number.isFinite(this.latestAuthoritativeBalance)) return;
-    this.casino.setCredits(this.latestAuthoritativeBalance - this.unresolvedPayout);
+  recordTrail(ball, x, y) {
+    const length = PachinkoGame.MOTION.trailLength;
+    ball.trail[ball.trailCursor] = { x, y };
+    ball.trailCursor = (ball.trailCursor + 1) % length;
+    ball.trailCount = Math.min(length, ball.trailCount + 1);
   }
 
-  revealLatestAuthoritativeBalance() {
-    if (!Number.isFinite(this.latestAuthoritativeBalance)) return;
-    const balance = this.latestAuthoritativeBalance;
-    this.latestAuthoritativeBalance = null;
-    this.unresolvedPayout = 0;
-    this.pendingBatches.clear();
-    this.casino.setCredits(balance);
+  playPegImpact(ball, row) {
+    if (row < 0 || row >= this.ROWS) return;
+    window.casinoSound?.play('peg', {
+      game: 'pachinko',
+      impact: 0.28,
+      pan: Math.max(-1, Math.min(1, (ball.x / this.W) * 2 - 1))
+    });
+  }
+
+  completeBall(ball, timestamp) {
+    if (ball.visuallySettled) return;
+    ball.visuallySettled = true;
+    ball.active = false;
+    ball.x = this.geometry.slotCenters[ball.serverResult.slotIndex];
+    ball.y = this.geometry.landingY;
+    ball.confirmAt = timestamp + PachinkoGame.MOTION.resultHoldMs;
+    ball.landedSlot = this.slots[ball.serverResult.slotIndex];
+    ball.slotType = 'server-settled';
+    this.activeSlotGlows.set(ball.serverResult.slotIndex, ball.confirmAt + 420);
+    const multiplier = ball.serverResult.multiplier;
+    this.results.unshift({ multiplier, winnings: ball.serverResult.payout, bet: ball.bet });
+    if (this.results.length > 20) this.results.pop();
+    this.renderResults();
+    const effect = multiplier >= 10 ? 'pachinkoLandingJackpot' : multiplier >= 3 ? 'pachinkoLandingHigh' : multiplier >= 1 ? 'pachinkoLandingMid' : 'pachinkoLandingLow';
+    window.casinoSound?.playOnce(`pachinko:${ball.soundKey}:result`, effect, { volume: multiplier >= 3 ? 0.76 : 0.58, cooldown: 0, game: 'pachinko' });
   }
 
   confirmBallPresentation(ball) {
@@ -377,443 +657,204 @@ class PachinkoGame {
     this.refreshPresentationControls();
   }
 
+  setPresentationControlsLocked(locked) {
+    if (this.betInput) this.betInput.disabled = locked;
+    if (this.dropButton) {
+      this.dropButton.disabled = false;
+      this.dropButton.dataset.consecutive = locked ? 'true' : 'false';
+    }
+    this.root?.querySelectorAll('.pqb, .prb, .pbb').forEach(control => { control.disabled = locked; });
+  }
+
+  getOutstandingBallCount() {
+    let active = this.queuedBallCount;
+    for (const batch of this.pendingBatches.values()) active += batch.remaining;
+    return active;
+  }
+
+  refreshPresentationControls() {
+    this.setPresentationControlsLocked(this.getOutstandingBallCount() > 0);
+  }
+
+  renderDeferredBalance() {
+    if (Number.isFinite(this.latestAuthoritativeBalance)) this.casino.setCredits(this.latestAuthoritativeBalance - this.unresolvedPayout);
+  }
+
+  revealLatestAuthoritativeBalance() {
+    if (!Number.isFinite(this.latestAuthoritativeBalance)) return;
+    const balance = this.latestAuthoritativeBalance;
+    this.latestAuthoritativeBalance = null;
+    this.unresolvedPayout = 0;
+    this.pendingBatches.clear();
+    this.casino.setCredits(balance);
+  }
+
   renderPayoutLegend() {
-    const legend = document.getElementById('pachinkoPayoutLegend');
-    const multipliers = PachinkoGame.MULTIPLIERS[this.risk] || [];
-    if (legend) legend.textContent = `${this.risk[0].toUpperCase()}${this.risk.slice(1)} risk payouts: ${multipliers.map(value => `${value}×`).join(' · ')}`;
+    const values = PachinkoGame.MULTIPLIERS[this.risk] || [];
+    if (!this.legendElement || !values.length) return;
+    const label = this.risk === 'medium' ? 'Medium' : this.risk[0].toUpperCase() + this.risk.slice(1);
+    this.legendElement.textContent = `${label} risk · ${Math.min(...values)}×–${Math.max(...values)}×`;
   }
 
   showStatus(message, type = 'info') {
-    const history = document.getElementById('pachResults');
-    if (history) {
-      history.setAttribute('aria-live', 'polite');
-      history.dataset.status = type;
-      if (type === 'error') history.textContent = message;
-    }
+    if (!this.resultsElement) return;
+    this.resultsElement.dataset.status = type;
+    if (type === 'error') this.resultsElement.innerHTML = `<div class="pachinko-status-error" role="alert"></div>`;
+    const alert = this.resultsElement.querySelector?.('.pachinko-status-error');
+    if (alert) alert.textContent = message;
   }
 
-  startAnim() {
-    this.lastAnimationTimestamp = null;
-    this.animationAccumulator = 0;
-    const fixedStepMs = (1000 / 60) / 1.12;
-    const step = (timestamp) => {
-      if (this._destroyed) return;
-      if (this.lastAnimationTimestamp === null) this.lastAnimationTimestamp = timestamp;
-      const elapsed = Math.min(80, Math.max(0, timestamp - this.lastAnimationTimestamp));
-      this.lastAnimationTimestamp = timestamp;
-      this.animationAccumulator += elapsed;
-      let updates = 0;
-      while (this.animationAccumulator >= fixedStepMs && updates < 5) {
-        this.update();
-        this.animationAccumulator -= fixedStepMs;
-        updates += 1;
-      }
-      this.drawFrame();
-      if (this.balls.some(b => b.active || b.landingHoldFrames > 0 || b.trail.length)) {
-        this.animFrame = requestAnimationFrame(step);
-      } else {
-        this.animFrame = null;
-      }
-    };
-    this.animFrame = requestAnimationFrame(step);
+  renderResults() {
+    if (!this.resultsElement) return;
+    this.resultsElement.dataset.status = 'results';
+    this.resultsElement.innerHTML = this.results.slice(0, 8).map((result, index) => {
+      const kind = result.multiplier >= 5 ? 'big-win' : result.multiplier >= 1 ? 'win' : 'loss';
+      const sign = result.winnings > result.bet ? '+' : '';
+      return `<div class="pach-result ${kind}${index === 0 ? ' is-latest' : ''}"><span class="pach-result-mult">${result.multiplier}×</span><span class="pach-result-copy">${sign}${result.winnings} credits</span></div>`;
+    }).join('');
   }
 
-  update() {
-    const gravity = this.H * 0.0003;
-    const friction = 0.99;
-    const bounce = 0.3;
-    const maxVy = this.H * 0.016;
-    const maxVx = this.W * 0.006;
+  drawStaticBoard() {
+    const ctx = this.staticCtx;
+    if (!ctx || !this.geometry) return;
+    const { width, height, pegs, slots } = this.geometry;
+    ctx.clearRect(0, 0, width, height);
+    const background = ctx.createLinearGradient(0, 0, 0, height);
+    background.addColorStop(0, '#120a19');
+    background.addColorStop(0.55, '#090711');
+    background.addColorStop(1, '#05060b');
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, width, height);
 
-    for (const ball of this.balls) {
-      if (!ball.active) {
-        if (ball.landingHoldFrames > 0) {
-          ball.landingHoldFrames -= 1;
-          if (ball.landingHoldFrames === 0) this.confirmBallPresentation(ball);
-        }
-        ball.trail.shift();
-        continue;
-      }
+    const halo = ctx.createRadialGradient(width / 2, height * 0.1, 0, width / 2, height * 0.35, width * 0.52);
+    halo.addColorStop(0, 'rgba(192,132,252,.16)');
+    halo.addColorStop(1, 'rgba(192,132,252,0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(0, 0, width, height * 0.7);
 
-      const targetSlot = ball.serverResult ? this.slots[ball.serverResult.slotIndex] : null;
-      ball.phase ||= 'peg-field';
-      if (ball.phase === 'terminal-drop') {
-        this.advanceTerminalDrop(ball, targetSlot);
-        continue;
-      }
-      if (ball.phase === 'lane-entry') {
-        this.advanceLaneEntry(ball, targetSlot);
-        continue;
-      }
-
-      ball.vy += gravity;
-      ball.vx *= friction;
-      if (targetSlot) this.applyAuthoritativeGuidance(ball, targetSlot);
-
-      // A short deterministic escape guard handles compound peg contacts without
-      // leaving a ball visibly pinned in place.
-      if (Math.abs(ball.y - ball.lastY) < 0.3) {
-        ball.stuckFrames++;
-        if (ball.stuckFrames > 8) {
-          ball.vy = Math.max(ball.vy, this.H * 0.0008);
-          const escapeDirection = Number.isFinite(ball.targetX)
-            ? Math.sign(ball.targetX - ball.x) || 1
-            : (ball.x <= this.W / 2 ? 1 : -1);
-          ball.vx += escapeDirection * this.W * 0.0007;
-          ball.stuckFrames = 0;
-        }
-      } else {
-        ball.stuckFrames = 0;
-      }
-      ball.lastY = ball.y;
-      ball.x += ball.vx;
-      ball.y += ball.vy;
-      if (ball.vy > maxVy) ball.vy = maxVy;
-      ball.vx = Math.max(-maxVx, Math.min(maxVx, ball.vx));
-
-      // Trail
-      ball.trail.push({x: ball.x, y: ball.y});
-      if (ball.trail.length > 8) ball.trail.shift();
-
-      // Wall bounce
-      if (ball.x < ball.r) { ball.x = ball.r; ball.vx = Math.abs(ball.vx) * bounce; }
-      if (ball.x > this.W - ball.r) { ball.x = this.W - ball.r; ball.vx = -Math.abs(ball.vx) * bounce; }
-
-      // Peg collision only checks the pre-indexed rows near the ball.
-      for (const peg of this.getNearbyPegs(ball.y, ball.r)) {
-        const dx = ball.x - peg.x;
-        const dy = ball.y - peg.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const minD = ball.r + peg.r;
-        if (dist < minD && dist > 0) {
-          const nx = dx / dist, ny = dy / dist;
-          // Separate the overlap first. Velocity is changed only for an inward
-          // impact; reflecting an already departing ball sends it back into the
-          // same peg and was the source of the visible sticking.
-          ball.x = peg.x + nx * (minD + 0.01);
-          ball.y = peg.y + ny * (minD + 0.01);
-          const dot = ball.vx * nx + ball.vy * ny;
-          if (dot < 0) {
-            const impact = Math.max(0, Math.min(1, (-dot) / Math.max(0.001, this.H * 0.004)));
-            ball.vx -= (1 + bounce) * dot * nx;
-            ball.vy -= (1 + bounce) * dot * ny;
-            ball.vx += (Math.random() - 0.5) * 0.35;
-            ball.vy = Math.max(ball.vy, this.H * 0.0004);
-            peg.glow = 1;
-            const now = performance.now();
-            const lastPegSound = ball.pegSoundAt?.[peg.id] || -Infinity;
-            if (impact >= .08 && now - lastPegSound >= 55) {
-              ball.pegSoundAt[peg.id] = now;
-              window.casinoSound?.play('peg', {
-                game: 'pachinko',
-                impact,
-                pan: Math.max(-1, Math.min(1, (ball.x / this.W) * 2 - 1))
-              });
-            }
-          }
-        }
-      }
-
-      // Presentation phases are a one-way boundary. Once lane entry begins all
-      // horizontal alignment completes above the terminal gate; below it the
-      // authoritative lane and x coordinate are immutable.
-      if (targetSlot && ball.y >= this.boardMetrics.laneEntryY) {
-        ball.phase = 'lane-entry';
-        this.advanceLaneEntry(ball, targetSlot);
-      }
-
-      // This guard is for malformed/non-authoritative balls only. Proper server
-      // results enter terminal-drop before reaching any canvas edge.
-      if (ball.phase === 'peg-field' && (ball.y > this.H + 20 || ball.x < -20 || ball.x > this.W + 20)) {
-        const fallbackSlot = ball.serverResult ? this.slots[ball.serverResult.slotIndex] : this.getNearestSlot(ball.x);
-        this.resolveBall(ball, fallbackSlot, 'edge-settle');
-      }
-    }
-
-    // Decay peg/slot glows
-    for (const p of this.pegs) if (p.glow > 0) p.glow -= 0.05;
-    for (const s of this.slots) if (s.glow > 0) s.glow -= 0.02;
-
-    this.balls = this.balls.filter(b => b.active || b.landingHoldFrames > 0 || b.trail.length > 0);
-  }
-
-  applyAuthoritativeGuidance(ball, slot) {
-    const startY = this.H * 0.13;
-    const endY = slot.y - ball.r * 2.2;
-    if (ball.y <= startY || endY <= startY) return;
-    const progress = Math.max(0, Math.min(1, (ball.y - startY) / (endY - startY)));
-    const targetX = slot.x + slot.w / 2;
-    const routeDecisions = Array.isArray(ball.routeDecisions) && ball.routeDecisions.length === this.ROWS
-      ? ball.routeDecisions
-      : this.createAuthoritativeRoute(ball.serverResult?.slotIndex ?? this.slots.indexOf(slot));
-    ball.routeDecisions = routeDecisions;
-    const routeRow = Math.max(0, Math.min(this.ROWS - 1, Math.floor(progress * this.ROWS)));
-    const routeOffset = routeDecisions.slice(0, routeRow + 1).reduce((sum, direction) => sum + direction, 0)
-      * slot.w * 0.5;
-    const phase = Number.isFinite(ball.guidePhase) ? ball.guidePhase : 0.5;
-    const rowVariation = Math.sin((progress * this.ROWS + phase) * Math.PI) * slot.w * 0.12;
-    const routeX = this.W / 2 + routeOffset + rowVariation;
-    const finishBlend = Math.max(0, (progress - 0.68) / 0.32);
-    const guideX = routeX + (targetX - routeX) * finishBlend * finishBlend;
-    const response = 0.0015 + progress * 0.0032;
-    const maxCorrection = this.W * (0.00011 + progress * 0.00056);
-    const correction = Math.max(-maxCorrection, Math.min(maxCorrection, (guideX - ball.x) * response));
-    ball.vx += correction;
-    if (progress > 0.76) ball.vx *= 0.968;
-  }
-
-  getNearbyPegs(y, radius = 0) {
-    const metrics = this.boardMetrics;
-    if (!metrics || !this.pegRows?.length || metrics.pegRowHeight <= 0) return this.pegs;
-    const row = Math.round((y - metrics.pegStartY) / metrics.pegRowHeight);
-    const rowReach = Math.max(1, Math.ceil((radius + (this.pegs[0]?.r || 0)) / metrics.pegRowHeight));
-    const nearby = [];
-    for (let index = row - rowReach; index <= row + rowReach; index += 1) {
-      if (this.pegRows[index]) nearby.push(...this.pegRows[index]);
-    }
-    return nearby;
-  }
-
-  isBallAlignedForSlot(ball, slot) {
-    const inset = Math.max(ball.r, slot.w * 0.12);
-    return ball.x >= slot.x + inset && ball.x <= slot.x + slot.w - inset;
-  }
-
-  advanceLaneEntry(ball, slot) {
-    if (!slot || ball.phase !== 'lane-entry') return;
-    const targetX = slot.x + slot.w / 2;
-    const maxHorizontalStep = slot.w * 0.45;
-    const deltaX = targetX - ball.x;
-    ball.x += Math.max(-maxHorizontalStep, Math.min(maxHorizontalStep, deltaX));
-    ball.vx = 0;
-    ball.vy = Math.max(ball.vy, this.H * 0.006);
-    ball.y = Math.min(this.boardMetrics.terminalGateY - 0.01, ball.y + ball.vy);
-    ball.trail.push({ x: ball.x, y: ball.y });
-    if (ball.trail.length > 8) ball.trail.shift();
-
-    if (Math.abs(targetX - ball.x) > 1e-9) return;
-    ball.x = targetX;
-    ball.laneIndex = ball.serverResult.slotIndex;
-    ball.lockedX = targetX;
-    ball.phase = 'terminal-drop';
-    ball.y = this.boardMetrics.terminalGateY;
-    ball.landing = { startX: targetX, startY: ball.y, progress: 0 };
-    this.advanceTerminalDrop(ball, slot);
-  }
-
-  advanceTerminalDrop(ball, slot) {
-    if (!slot || ball.phase !== 'terminal-drop' || !ball.landing) return;
-    ball.landing.progress = Math.min(1, ball.landing.progress + 1 / 18);
-    const progress = ball.landing.progress;
-    const targetY = this.getLandingTargetY(ball, slot);
-    ball.x = ball.lockedX;
-    ball.y = ball.landing.startY + (targetY - ball.landing.startY) * progress;
-    ball.vx = 0;
-    ball.vy = 0;
-    ball.trail.push({ x: ball.x, y: ball.y });
-    if (ball.trail.length > 8) ball.trail.shift();
-    if (progress >= 1) this.resolveBall(ball, slot, 'server-settled');
-  }
-
-  // Compatibility for isolated presentation callers; production flow enters
-  // this path through the explicit terminal-drop phase.
-  advanceLanding(ball, slot) {
-    if (!ball.phase) {
-      ball.phase = 'terminal-drop';
-      ball.laneIndex = ball.serverResult?.slotIndex ?? this.slots.indexOf(slot);
-      ball.lockedX = ball.landing?.startX ?? ball.x;
-    }
-    this.advanceTerminalDrop(ball, slot);
-  }
-
-  getNearestSlot(x) {
-    return this.slots.reduce((nearest, slot) => {
-      const slotCenter = slot.x + slot.w / 2;
-      const nearestCenter = nearest.x + nearest.w / 2;
-      return Math.abs(slotCenter - x) < Math.abs(nearestCenter - x) ? slot : nearest;
-    }, this.slots[0]);
-  }
-
-  getLandingTargetY(ball, slot) {
-    return Math.min(
-      slot.y + slot.h - ball.r * 1.5,
-      slot.y + Math.max(ball.r * 1.5, slot.h * 0.42)
-    );
-  }
-
-  resolveBall(ball, slot, slotType) {
-    if (!slot || !ball.active) return;
-    ball.x = Math.max(slot.x + ball.r, Math.min(slot.x + slot.w - ball.r, ball.x));
-    ball.y = this.getLandingTargetY(ball, slot);
-    ball.active = false;
-    ball.phase = 'landed';
-    ball.laneIndex = ball.serverResult?.slotIndex ?? this.slots.indexOf(slot);
-    ball.lockedX = ball.x;
-    ball.landing = null;
-    ball.landingHoldFrames = 18;
-    ball.landedSlot = slot;
-    ball.slotType = slotType;
-    slot.glow = 1;
-
-    const multiplier = ball.serverResult?.multiplier ?? slot.multiplier;
-    const winnings = ball.serverResult?.payout;
-    this.results.unshift({ multiplier, winnings, bet: ball.bet });
-    const landingEffect = multiplier >= 10 ? 'pachinkoLandingJackpot'
-      : multiplier >= 3 ? 'pachinkoLandingHigh'
-      : multiplier >= 1 ? 'pachinkoLandingMid'
-      : 'pachinkoLandingLow';
-    window.casinoSound?.playOnce(`pachinko:${ball.soundKey || `${Date.now()}:${multiplier}`}:result`, landingEffect, {
-      volume: multiplier >= 3 ? .76 : .58,
-      cooldown: 0,
-      game: 'pachinko'
-    });
-    if (this.results.length > 20) this.results.pop();
-    this.renderResults();
-  }
-
-  drawFrame() {
-    const ctx = this.ctx, W = this.W, H = this.H;
-    if (!ctx) return;
-
-    // Neon 777 palette — plum/warm-vintage
-    // Background
-    ctx.fillStyle = '#0a0308';
-    ctx.fillRect(0, 0, W, H);
-
-    // Subtle bg pattern (warm amber dots)
-    ctx.fillStyle = 'rgba(255,181,77,.03)';
-    for (let i = 0; i < W; i += 30) {
-      for (let j = 0; j < H; j += 30) {
-        ctx.fillRect(i, j, 1, 1);
-      }
-    }
-
-    // A visible centre chute makes the launch point legible while each ball
-    // still starts with a small, bounded horizontal variation.
-    const chuteHalf = Math.max(12, W * 0.035);
-    const chuteTop = H * 0.018;
-    const chuteBottom = H * 0.095;
-    ctx.strokeStyle = 'rgba(255,217,138,.34)';
-    ctx.lineWidth = Math.max(1, W * 0.002);
+    ctx.strokeStyle = 'rgba(255,220,154,.28)';
+    ctx.lineWidth = Math.max(1, width * 0.0025);
     ctx.beginPath();
-    ctx.moveTo(W / 2 - chuteHalf, chuteTop);
-    ctx.lineTo(W / 2 - chuteHalf * 0.42, chuteBottom);
-    ctx.moveTo(W / 2 + chuteHalf, chuteTop);
-    ctx.lineTo(W / 2 + chuteHalf * 0.42, chuteBottom);
+    ctx.moveTo(width * 0.46, height * 0.018);
+    ctx.lineTo(width * 0.485, height * 0.085);
+    ctx.moveTo(width * 0.54, height * 0.018);
+    ctx.lineTo(width * 0.515, height * 0.085);
     ctx.stroke();
 
-    // Draw pegs (cream bulbs — match marquee aesthetic)
-    for (const peg of this.pegs) {
-      const glow = Math.max(0, peg.glow);
+    for (const peg of pegs) {
       ctx.beginPath();
       ctx.arc(peg.x, peg.y, peg.r, 0, Math.PI * 2);
-      if (glow > 0) {
-        // Hit bulb — intensify amber glow
-        ctx.fillStyle = `rgba(255,217,138,${0.5 + glow * 0.5})`;
-        ctx.shadowColor = '#ffd98a';
-        ctx.shadowBlur = 14 * glow;
-      } else {
-        // Resting cream pegs with subtle amber halo
-        ctx.fillStyle = 'rgba(255,233,181,.55)';
-        ctx.shadowColor = 'rgba(255,181,77,.3)';
-        ctx.shadowBlur = 3;
-      }
+      ctx.fillStyle = 'rgba(255,235,194,.82)';
+      ctx.shadowColor = 'rgba(255,181,77,.48)';
+      ctx.shadowBlur = Math.max(3, width * 0.009);
       ctx.fill();
-      ctx.shadowBlur = 0;
     }
+    ctx.shadowBlur = 0;
 
-    // Draw slots
-    for (let i = 0; i < this.slots.length; i++) {
-      const slot = this.slots[i];
-      const m = slot.multiplier;
-      const glow = Math.max(0, slot.glow);
-
-      // Neon 777 slot colors by multiplier
-      let color;
-      if (m >= 10) color = { r: 176, g: 100, b: 255 };       // violet (jackpot)
-      else if (m >= 5) color = { r: 255, g: 58, b: 92 };     // neon-red
-      else if (m >= 2) color = { r: 255, g: 90, b: 168 };    // neon-pink
-      else if (m >= 1) color = { r: 255, g: 181, b: 77 };    // amber
-      else color = { r: 120, g: 100, b: 110 };                // muted plum
-
-      const alpha = 0.3 + glow * 0.5;
-      ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${alpha})`;
-      if (glow > 0) {
-        ctx.shadowColor = `rgb(${color.r},${color.g},${color.b})`;
-        ctx.shadowBlur = 15 * glow;
-      }
-      ctx.fillRect(slot.x + 1, slot.y, slot.w - 2, slot.h);
-      ctx.shadowBlur = 0;
-
-      // Slot border
-      ctx.strokeStyle = `rgba(${color.r},${color.g},${color.b},0.6)`;
+    for (const slot of slots) {
+      const color = this.slotColor(slot.multiplier);
+      ctx.fillStyle = `rgba(${color},.18)`;
+      ctx.strokeStyle = `rgba(${color},.58)`;
       ctx.lineWidth = 1;
-      ctx.strokeRect(slot.x + 1, slot.y, slot.w - 2, slot.h);
-
-      // Rotate labels inside narrow 17-slot boards instead of clipping long
-      // decimal multipliers horizontally on phones.
-      const label = m >= 1000 ? (m/1000) + 'k' : m + '×';
-      const fontSize = Math.max(7, Math.min(11, slot.w * 0.62, this.W * 0.018));
+      ctx.beginPath();
+      ctx.roundRect?.(slot.x + 1, slot.y, slot.w - 2, slot.h, Math.min(5, slot.w * 0.18));
+      if (typeof ctx.roundRect !== 'function') ctx.rect(slot.x + 1, slot.y, slot.w - 2, slot.h);
+      ctx.fill();
+      ctx.stroke();
+      const label = slot.multiplier >= 100 ? `${slot.multiplier}` : `${slot.multiplier}×`;
       ctx.save();
-      ctx.translate(slot.x + slot.w / 2, slot.y + slot.h / 2);
-      if (slot.w < 34) ctx.rotate(-Math.PI / 2);
-      ctx.fillStyle = '#fff3e4';
-      ctx.font = `bold ${fontSize}px "Space Mono", ui-monospace, monospace`;
+      ctx.translate(slot.x + slot.w / 2, slot.y + slot.h * 0.58);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillStyle = '#fff4dd';
+      ctx.font = `800 ${Math.max(8, Math.min(11, slot.w * 0.58))}px "Space Mono", ui-monospace, monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(label, 0, 0);
       ctx.restore();
     }
+  }
 
-    // Draw balls (with trails)
+  slotColor(multiplier) {
+    if (multiplier >= 10) return '192,132,252';
+    if (multiplier >= 3) return '251,113,133';
+    if (multiplier >= 1) return '251,191,36';
+    return '100,116,139';
+  }
+
+  drawDynamicFrame() {
+    const ctx = this.dynamicCtx;
+    if (!ctx || !this.geometry) return;
+    ctx.clearRect(0, 0, this.W, this.H);
+    for (const [slotIndex] of this.activeSlotGlows) {
+      const slot = this.slots[slotIndex];
+      const color = this.slotColor(slot.multiplier);
+      ctx.fillStyle = `rgba(${color},.34)`;
+      ctx.shadowColor = `rgb(${color})`;
+      ctx.shadowBlur = 18;
+      ctx.fillRect(slot.x + 1, slot.y, slot.w - 2, slot.h);
+      ctx.shadowBlur = 0;
+    }
+
     for (const ball of this.balls) {
-      if (!ball.active && ball.landingHoldFrames <= 0 && ball.trail.length === 0) continue;
-
-      // Trail
-      for (let i = 0; i < ball.trail.length; i++) {
-        const t = ball.trail[i];
-        const alpha = (i / ball.trail.length) * 0.3;
+      for (let index = 0; index < ball.trailCount; index += 1) {
+        const trailIndex = (ball.trailCursor - ball.trailCount + index + ball.trail.length) % ball.trail.length;
+        const point = ball.trail[trailIndex];
         ctx.beginPath();
-        ctx.arc(t.x, t.y, ball.r * 0.6, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${ball.hue},90%,60%,${alpha})`;
+        ctx.arc(point.x, point.y, ball.r * 0.58, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${ball.hue},95%,62%,${((index + 1) / ball.trailCount) * 0.24})`;
         ctx.fill();
       }
-
-      // Ball
-      if (ball.active || ball.landingHoldFrames > 0) {
-        ctx.beginPath();
-        ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-        const grad = ctx.createRadialGradient(ball.x - 2, ball.y - 2, 1, ball.x, ball.y, ball.r);
-        grad.addColorStop(0, `hsla(${ball.hue},100%,80%,1)`);
-        grad.addColorStop(1, `hsla(${ball.hue},90%,50%,1)`);
-        ctx.fillStyle = grad;
-        ctx.shadowColor = `hsl(${ball.hue},90%,60%)`;
-        ctx.shadowBlur = 12;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
+      if (!ball.active && ball.confirmed) continue;
+      const gradient = ctx.createRadialGradient(ball.x - ball.r * 0.35, ball.y - ball.r * 0.4, 1, ball.x, ball.y, ball.r);
+      gradient.addColorStop(0, '#fff8d8');
+      gradient.addColorStop(0.35, `hsl(${ball.hue},100%,68%)`);
+      gradient.addColorStop(1, `hsl(${ball.hue},92%,43%)`);
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.shadowColor = `hsl(${ball.hue},95%,60%)`;
+      ctx.shadowBlur = 14;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(255,255,255,.72)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
   }
 
-  renderResults() {
-    const el = document.getElementById('pachResults');
-    if (!el) return;
-    el.innerHTML = this.results.slice(0, 10).map(r => {
-      const cls = r.multiplier >= 5 ? 'big-win' : r.multiplier >= 1 ? 'win' : 'loss';
-      return `<div class="pach-result ${cls}"><span>${r.multiplier}x</span> <span>${r.winnings > r.bet ? '+' : ''}${r.winnings}</span></div>`;
-    }).join('');
+  handleVisibilityChange() {
+    if (document.hidden) {
+      this.pauseStartedAt = performance.now();
+      if (this.animFrame) cancelAnimationFrame(this.animFrame);
+      this.animFrame = null;
+      return;
+    }
+    if (this.pauseStartedAt !== null) {
+      const pausedFor = Math.max(0, performance.now() - this.pauseStartedAt);
+      for (const ball of this.balls) ball.startedAt += pausedFor;
+      this.pauseStartedAt = null;
+    }
+    if (this.balls.length) this.startAnimation();
   }
 
   destroy() {
+    if (this._destroyed) return;
     this._destroyed = true;
+    this.presentationGeneration += 1;
     this.revealLatestAuthoritativeBalance();
     this.queuedBallCount = 0;
     this.setPresentationControlsLocked(false);
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
     if (this.resizeFrame) cancelAnimationFrame(this.resizeFrame);
-    this.dropTimers.forEach(clearTimeout);
-    this.dropTimers = [];
-    window.removeEventListener('resize', this.boundResize);
+    this.animFrame = null;
+    this.resizeFrame = null;
+    for (const handle of this.timerHandles) clearTimeout(handle);
+    this.timerHandles.clear();
+    this.resizeObserver?.disconnect();
+    window.removeEventListener?.('resize', this.boundWindowResize);
+    document.removeEventListener?.('visibilitychange', this.boundVisibility);
+    this.balls = [];
+    this.activeSlotGlows.clear();
   }
 }
 

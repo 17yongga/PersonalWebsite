@@ -1,5 +1,13 @@
 # Casino — STATUS.md
-> Updated: 2026-08-28
+> Updated: 2026-08-29
+
+## Live Ground-Up Pachinko + Truthful CS2 Live Markets — frontend `neon777-20260828-r94` / backend `neon777-20260823-r91` (2026-08-29)
+- **Pachinko rebuilt:** one responsive cabinet now owns the wager composer, deterministic Galton board, slot labels, and newest-first result tray. Pure normalized geometry scales across portrait, landscape, and desktop without changing the authoritative 16-row/17-slot contract.
+- **Natural terminal behavior:** each server-selected result receives a seeded, reproducible route through the peg field. The route locks to the authoritative slot above the final row; every later sample keeps the same x-coordinate, so a ball cannot slide sideways between bottom slots. Settlement and wallet reveal remain deferred until the visible landing hold completes.
+- **Mobile/live-market UX:** CS2 now separates actionable `BETTABLE LIVE` matches from `WATCHING · MARKETS PAUSED`. Open cards keep 48px real odds actions; paused matches become compact watch-only rows with no stale pseudo-buttons, explicit pause reasons/freshness, and automatic-refresh copy. Mobile cards, refresh control, and typography retain the 44px interaction floor and clear contrast.
+- **Verification:** **140/140** Casino tests passed. Pachinko deterministic/terminal-lock/reduced-motion contracts cover all 17 slots. The exact immutable candidate passed 12 Pachinko/CS2/lifecycle states at 320×568, 390×844, 430×932, and 844×390 with zero overflow, clipping, undersized targets, nav overlap, runtime errors, or lifecycle growth. The CS2 open/paused fixture passed five viewports; live no-wager smoke passed portrait and short landscape.
+- **Immutable production:** 27/27 CDN assets are byte-identical and immutable-cached; manifest SHA-256 `466c397c5451aabb7cc8338adbad4e86273e45e363ad4938f9c76f67411f19ef`; entry SHA-256 `bf176eae359a033a4328fb613d01bbf298c5ac3f635d290364260b4904ca7594`; invalidation `I5ECICYQM3CBBSN5BXJ96B88` completed.
+- **Production integrity:** frontend-only. Backend remains healthy on `r91` with projection `ok`, PM2 online at PID `1893153` / zero restarts, and no production wager or account mutation. Immediate rollback is frontend `r93`; exact pre-switch entry is `/tmp/casino-r93-live.html`.
 
 ## Live CS Cases WebKit Reveal Recovery — frontend `neon777-20260828-r93` / backend `neon777-20260823-r91` (2026-08-28)
 - **User-visible incident:** Gary's iPhone Chrome screenshot showed a 5× Fast Reveal stuck indefinitely on `PUBLISHING COMMITMENT…` while the permanent workbench remained unrevealed.
@@ -135,7 +143,7 @@
 - **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`, and live login captures `live-login-390.png` / `live-login-1280.png`. Subjective listening remains Gary's human acceptance check; technical synthesis, scheduling, recovery, cleanup, and live delivery are verified.
 
 ## What's Live
-- **Frontend:** `r93` at https://gary-yong.com/casino.html (S3/CloudFront)
+- **Frontend:** `r94` at https://gary-yong.com/casino.html (S3/CloudFront)
 - **API/Backend:** `r91` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
 - **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260823-r91/backend`
 

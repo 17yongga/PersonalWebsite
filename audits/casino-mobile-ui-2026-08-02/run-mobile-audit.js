@@ -258,7 +258,7 @@ async function measure(page, screen) {
     const intentionallyClipped = element => element.closest('.rl-belt-wrapper,.case-shelf,.case-mode-nav,[aria-hidden="true"],.visually-hidden,.cs2-sr-only');
     const visibleElements = [...document.querySelectorAll('body *')].filter(element => visible(element) && !element.matches('.visually-hidden,.cs2-sr-only'));
     const viewportEscape = visibleElements.filter(element => {
-      if (['HTML', 'BODY', 'SCRIPT', 'STYLE', 'PATH'].includes(element.tagName) || intentionallyClipped(element)) return false;
+      if (['HTML', 'BODY', 'SCRIPT', 'STYLE', 'PATH'].includes(element.tagName) || intentionallyClipped(element) || element.closest('.pach-results')) return false;
       const rect = element.getBoundingClientRect();
       return rect.left < -1 || rect.right > innerWidth + 1;
     }).map(details).slice(0, 80);

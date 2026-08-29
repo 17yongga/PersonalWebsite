@@ -915,7 +915,10 @@ class CS2ModernBettingGame {
   groupEventsByTournament(events) {
     const grouped = {};
     events.forEach(event => {
-      const tournament = event.status === 'live' ? 'LIVE NOW' : (event.tournamentName || 'Other Events');
+      const market = this.getEventMarketState(event);
+      const tournament = event.status === 'live'
+        ? (market.canBet ? 'BETTABLE LIVE' : 'WATCHING · MARKETS PAUSED')
+        : (event.tournamentName || 'Other Events');
       if (!grouped[tournament]) {
         grouped[tournament] = [];
       }
@@ -937,8 +940,9 @@ class CS2ModernBettingGame {
     Object.keys(grouped).sort((a, b) => {
       const aLower = a.toLowerCase();
       const bLower = b.toLowerCase();
-      const aOrder = aLower === 'live now' ? -1 : (tierOrder[aLower] !== undefined ? tierOrder[aLower] : (aLower === 'other events' ? 99 : 10));
-      const bOrder = bLower === 'live now' ? -1 : (tierOrder[bLower] !== undefined ? tierOrder[bLower] : (bLower === 'other events' ? 99 : 10));
+      const liveOrder = { 'bettable live': -2, 'watching · markets paused': -1 };
+      const aOrder = liveOrder[aLower] !== undefined ? liveOrder[aLower] : (tierOrder[aLower] !== undefined ? tierOrder[aLower] : (aLower === 'other events' ? 99 : 10));
+      const bOrder = liveOrder[bLower] !== undefined ? liveOrder[bLower] : (tierOrder[bLower] !== undefined ? tierOrder[bLower] : (bLower === 'other events' ? 99 : 10));
       if (aOrder !== bOrder) return aOrder - bOrder;
       return a.localeCompare(b);
     }).forEach(key => {
@@ -951,7 +955,8 @@ class CS2ModernBettingGame {
   renderTournamentSection(tournament, events) {
     const safeTournamentName = this.escapeHtml(tournament);
     const lowerName = tournament.toLowerCase();
-    const isLiveSection = lowerName === 'live now';
+    const isLiveSection = lowerName === 'bettable live';
+    const isPausedLiveSection = lowerName === 'watching · markets paused';
 
     // Determine tier
     let tierLabel = '';
@@ -964,13 +969,13 @@ class CS2ModernBettingGame {
       tierLabel = 'B'; tierClass = 'tier-b';
     }
 
-    const sectionTierClass = isLiveSection ? 'live-section' : (tierClass ? `${tierClass}-section` : '');
-    const defaultCollapsed = !isLiveSection && window.matchMedia?.('(max-width: 767px)').matches;
+    const sectionTierClass = isLiveSection ? 'live-section' : (isPausedLiveSection ? 'paused-live-section' : (tierClass ? `${tierClass}-section` : ''));
+    const defaultCollapsed = !isLiveSection && !isPausedLiveSection && window.matchMedia?.('(max-width: 767px)').matches;
 
     return `
       <div class="cs2-tournament-section ${sectionTierClass}${defaultCollapsed ? ' collapsed' : ''}">
         <button type="button" class="cs2-tournament-header" aria-expanded="${String(!defaultCollapsed)}">
-          ${isLiveSection ? '<div class="cs2-live-dot" aria-hidden="true"></div>' : (tierLabel ? `<div class="cs2-tier-badge ${tierClass}">${tierLabel}</div>` : '<div class="cs2-tournament-icon">&#127942;</div>')}
+          ${isLiveSection ? '<div class="cs2-live-dot" aria-hidden="true"></div>' : (isPausedLiveSection ? '<div class="cs2-paused-dot" aria-hidden="true"></div>' : (tierLabel ? `<div class="cs2-tier-badge ${tierClass}">${tierLabel}</div>` : '<div class="cs2-tournament-icon">&#127942;</div>'))}
           <div class="cs2-tournament-logo-area"></div>
           <div class="cs2-tournament-name">${safeTournamentName}</div>
           <div class="cs2-tournament-count">${events.length} ${events.length === 1 ? 'match' : 'matches'}</div>
@@ -986,9 +991,9 @@ class CS2ModernBettingGame {
   renderEventCard(event) {
     const startTime = new Date(event.commenceTime || event.startTime);
     const isLive = event.status === 'live';
-    const hasOdds = this.hasValidOdds(event);
-    const canBet = hasOdds && (event.bettingStatus ? event.bettingStatus === 'open' : (event.status === 'scheduled' || event.status === 'live'));
-    const marketMessage = canBet ? 'Betting open' : (event.reason || 'Market paused');
+    const { hasOdds, canBet, marketMessage } = this.getEventMarketState(event);
+
+    if (isLive && !canBet) return this.renderPausedLiveEvent(event, marketMessage);
 
     // Countdown timer
     const now = new Date();
@@ -1027,10 +1032,10 @@ class CS2ModernBettingGame {
 
     // Status badge
     const statusClass = isLive ? 'live' : (event.status === 'scheduled' ? 'upcoming' : event.status);
-    const statusText = isLive ? 'LIVE' : (event.status === 'scheduled' ? 'Upcoming' : this.getStatusText(event.status));
+    const statusText = isLive ? 'BET LIVE' : (event.status === 'scheduled' ? 'Upcoming' : this.getStatusText(event.status));
 
     return `
-      <div class="cs2-event-card ${isLive ? 'live' : (event.status === 'scheduled' ? 'upcoming' : '')}" data-event-id="${event.id}">
+      <div class="cs2-event-card ${isLive ? 'live live-market-open' : (event.status === 'scheduled' ? 'upcoming' : '')}" data-event-id="${event.id}">
         <div class="event-card-header">
           ${isLive ? '' : `<span class="match-time-countdown"><span class="countdown-icon">⏱</span>${countdownStr}</span>`}
           ${formatBadge ? `<span class="match-format-badge">${formatBadge}</span>` : ''}
@@ -1070,6 +1075,49 @@ class CS2ModernBettingGame {
           </button>
         </div>
       </div>
+    `;
+  }
+
+  getEventMarketState(event) {
+    const hasOdds = this.hasValidOdds(event);
+    const canBet = hasOdds && (event.bettingStatus ? event.bettingStatus === 'open' : (event.status === 'scheduled' || event.status === 'live'));
+    return {
+      hasOdds,
+      canBet,
+      marketMessage: canBet ? 'Fresh odds · tap a team' : (event.reason || 'Market paused · provider has no current odds')
+    };
+  }
+
+  formatPausedMarketReason(reason) {
+    const withoutPrefix = String(reason || 'Provider has no current odds').replace(/^Market paused\s*·\s*/i, '');
+    const concise = withoutPrefix.replace(/(\d+) min ago\b/i, (_match, rawMinutes) => {
+      const minutes = Number(rawMinutes);
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      const remainder = minutes % 60;
+      return `${hours}h${remainder ? ` ${remainder}m` : ''} ago`;
+    });
+    return concise.charAt(0).toUpperCase() + concise.slice(1);
+  }
+
+  renderPausedLiveEvent(event, marketMessage) {
+    const safeId = this.escapeHtml(event.id);
+    const homeTeam = this.escapeHtml(event.homeTeam || event.participant1Name || 'Team 1');
+    const awayTeam = this.escapeHtml(event.awayTeam || event.participant2Name || 'Team 2');
+    const reason = this.escapeHtml(this.formatPausedMarketReason(marketMessage));
+    const format = String(event.bestOf || event.format || '').match(/(\d+)/)?.[1];
+    return `
+      <article class="cs2-event-card live paused-live-card" data-event-id="${safeId}">
+        <div class="paused-live-primary">
+          <div class="paused-live-status"><span class="match-status-badge live">Match live</span>${format ? `<span class="match-format-badge">BO${format}</span>` : ''}</div>
+          <div class="paused-live-matchup"><strong>${homeTeam}</strong><span>vs</span><strong>${awayTeam}</strong></div>
+        </div>
+        <div class="paused-live-reason">
+          <strong>Betting paused</strong>
+          <span>${reason}</span>
+          <small>Automatically checks every minute</small>
+        </div>
+      </article>
     `;
   }
 

@@ -648,6 +648,37 @@
     border-radius: 12px !important;
   }
 
+  .paused-live-card {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 9px !important;
+    padding: 10px !important;
+  }
+
+  .paused-live-reason {
+    gap: 2px;
+    padding: 8px 0 0 !important;
+    border-top: 1px solid rgba(245,158,11,.2);
+    border-left: 0 !important;
+  }
+
+  .paused-live-status { margin-bottom: 5px; }
+  .paused-live-matchup { gap: 6px; font-size: 14px; }
+
+  .cs2-event-card.live-market-open {
+    gap: 7px !important;
+    padding: 9px !important;
+  }
+
+  .cs2-event-card.live-market-open .team-logo-large,
+  .cs2-event-card.live-market-open .team-acronym-circle {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .cs2-event-card.live-market-open .odds-pill {
+    min-height: 48px !important;
+  }
+
   .team-logo-large,
   .team-acronym-circle {
     width: 42px !important;
