@@ -1,6 +1,13 @@
 // Crash Game — Multiplier climbs, cash out before it crashes!
 
 class CrashGame {
+  static CANVAS_ASPECT = 13 / 25;
+
+  static getRenderDpr(deviceDpr = 1) {
+    const numericDpr = Number(deviceDpr);
+    return Math.min(Math.max(Number.isFinite(numericDpr) ? numericDpr : 1, 1), 2);
+  }
+
   constructor(casinoManager) {
     this.casino = casinoManager;
     this.socket = null;
@@ -23,6 +30,10 @@ class CrashGame {
     this._destroyed = false;
     this._listeners = [];
     this.resizeFrame = null;
+    this.renderDpr = CrashGame.getRenderDpr(window.devicePixelRatio);
+    this.canvasAspect = CrashGame.CANVAS_ASPECT;
+    this.canvasMetrics = null;
+    this.resizeObserver = null;
     this.boundResize = () => {
       if (this.resizeFrame) return;
       this.resizeFrame = requestAnimationFrame(() => {
@@ -78,6 +89,16 @@ class CrashGame {
     this.attachEvents();
     this.connectSocket();
     this.resizeCanvas();
+    this.setupResizeHandling();
+  }
+
+  setupResizeHandling() {
+    const wrap = this.canvas?.parentElement;
+    if (typeof ResizeObserver === 'function' && wrap) {
+      this.resizeObserver = new ResizeObserver(() => this.boundResize());
+      this.resizeObserver.observe(wrap);
+    }
+    // Fallback for older browsers; also covers zoom and orientation changes.
     window.addEventListener('resize', this.boundResize, { passive: true });
   }
 
@@ -86,18 +107,24 @@ class CrashGame {
     if (!wrap || !this.canvas) return;
     
     // Fill the chart column instead of leaving a dead band at the right edge.
-    const availableW = Math.max(1, Math.floor(wrap.clientWidth));
-    const w = availableW;
-    
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.canvas.width = w * dpr;
-    this.canvas.height = Math.floor(w * 0.52) * dpr;
-    this.canvas.style.width = w + 'px';
-    this.canvas.style.height = Math.floor(w * 0.52) + 'px';
+    const width = Math.max(1, Math.floor(wrap.clientWidth));
+    const aspect = this.canvasAspect || CrashGame.CANVAS_ASPECT;
+    const height = Math.floor(width * aspect);
+    const renderDpr = CrashGame.getRenderDpr(window.devicePixelRatio);
+    if (this.canvasMetrics?.width === width && this.canvasMetrics?.height === height &&
+        this.canvasMetrics?.dpr === renderDpr) return false;
+
+    this.renderDpr = renderDpr;
+    this.canvasMetrics = { width, height, dpr: renderDpr };
+    this.canvas.width = width * renderDpr;
+    this.canvas.height = height * renderDpr;
+    this.canvas.style.width = width + 'px';
+    this.canvas.style.height = height + 'px';
     
     // Reset transform and apply DPR scaling
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.ctx.setTransform(this.renderDpr, 0, 0, this.renderDpr, 0, 0);
     this.drawFrame();
+    return true;
   }
 
   connectSocket() {
@@ -414,8 +441,9 @@ class CrashGame {
   drawFrame() {
     const c = this.canvas, ctx = this.ctx;
     if (!c || !ctx) return;
-    const W = c.width / (window.devicePixelRatio || 1);
-    const H = c.height / (window.devicePixelRatio || 1);
+    const metricDpr = this.canvasMetrics?.dpr || this.renderDpr || 1;
+    const W = this.canvasMetrics?.width ?? c.width / metricDpr;
+    const H = this.canvasMetrics?.height ?? c.height / metricDpr;
 
     // Neon 777 palette
     const CRASH_BG = '#0a0308';
@@ -525,6 +553,8 @@ class CrashGame {
     if (this.resizeFrame) cancelAnimationFrame(this.resizeFrame);
     if (this._bettingInterval) clearInterval(this._bettingInterval);
     if (this.socket) for (const {e, fn} of this._listeners) this.socket.off(e, fn);
+    if (this.resizeObserver) this.resizeObserver.disconnect();
+    this.resizeObserver = null;
     window.removeEventListener('resize', this.boundResize);
     this._listeners = [];
   }

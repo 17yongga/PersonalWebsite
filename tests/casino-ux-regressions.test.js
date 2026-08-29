@@ -85,9 +85,9 @@ test('Roulette publishes and renders the latest settled spins', () => {
   const resultBroadcast = server.indexOf("io.emit('rouletteSpinResult'");
   assert.ok(historyInsert >= 0 && resultBroadcast >= 0 && historyInsert < resultBroadcast,
     'the settled spin must be inserted before its result payload is broadcast');
-  assert.match(roulette, /this\.history\.slice\(0, 30\)\.reverse\(\)/,
-    'take the newest 30 results before reversing them for chronological display');
-  assert.doesNotMatch(roulette, /\[\.\.\.this\.history\]\.reverse\(\)\.slice\(0, 30\)/);
+  assert.match(roulette, /this\.history\.slice\(0, 30\)\.map\(/,
+    'preserve the server newest-first order in the visible result list');
+  assert.doesNotMatch(roulette, /this\.history\.slice\(0, 30\)\.reverse\(\)/);
 
   const historyElement = { innerHTML: '' };
   const sandbox = {
@@ -108,7 +108,7 @@ test('Roulette publishes and renders the latest settled spins', () => {
   }));
   game.updateHistoryDisplay();
   const displayed = [...historyElement.innerHTML.matchAll(/title="(\d+) \(red\)"/g)].map(match => Number(match[1]));
-  assert.deepEqual(displayed, Array.from({ length: 30 }, (_, index) => index + 21));
+  assert.deepEqual(displayed, Array.from({ length: 30 }, (_, index) => 50 - index));
 });
 
 test('Coinflip renders unambiguous semantic Heads and Tails faces', () => {
@@ -135,7 +135,7 @@ test('Crash cash-out exposes an immediate pending state and clears it authoritat
   assert.match(source, /cashoutRequestedMultiplier/);
   assert.match(source, /this\.cashoutPending = false/);
   assert.match(source, /playOnce\(`crash:\$\{this\.soundRoundId/);
-  assert.match(source, /Math\.min\(window\.devicePixelRatio \|\| 1, 2\)/);
+  assert.match(source, /getRenderDpr\(window\.devicePixelRatio\)/);
   assert.match(source, /cancelAnimationFrame\(this\.resizeFrame\)/);
   assert.match(source, /`Starting in \$\{Math\.ceil\(this\.bettingTimeLeft\)\}s`/);
   assert.doesNotMatch(source, /Starting in \$\{Math\.ceil\(this\.bettingTimeLeft\)\}s — Place your bets!/);
@@ -162,13 +162,17 @@ test('Pachinko owns responsive lifecycle and uses multiplier-tier landing audio'
 });
 
 test('CS2 mobile bet slip owns one scroll region and keeps payout text above its actions', () => {
+  const source = read('cs2-betting-modern.js');
   const css = read('cs2-modern-betting-ui.css');
   const theme = read('neon777-cs2-theme.css');
-  assert.match(css, /@media \(max-width: 768px\)[\s\S]*\.cs2-betslip-modal-content[^}]*height:\s*min\(100dvh,\s*760px\)/);
-  assert.match(css, /@media \(max-width: 768px\)[\s\S]*\.cs2-bet-controls[^}]*min-height:\s*0[^}]*overflow-y:\s*auto/);
+  assert.equal((source.match(/class="betslip-scroll-body"/g) || []).length, 1);
+  assert.match(source, /id="cs2PotentialPayout"[\s\S]*id="cs2BetActions"/);
+  assert.match(css, /@media \(max-width: 768px\)[\s\S]*\.cs2-betslip-modal-content[^}]*height:\s*min\(100dvh,\s*844px\)/);
+  assert.match(css, /\.betslip-scroll-body[^}]*min-height:\s*0[^}]*overflow-y:\s*auto/);
+  assert.match(css, /\.betslip-action-footer[^}]*flex:\s*0 0 auto/);
   assert.match(css, /\.payout-info > div[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*auto\)/);
   assert.match(css, /\.payout-info \.payout-value[^}]*overflow-wrap:\s*anywhere/);
-  assert.match(css, /@media \(max-width: 768px\) and \(max-height: 650px\)[\s\S]*\.potential-payout[^}]*min-height:\s*142px/);
+  assert.match(css, /@media \(max-width:768px\)[\s\S]*\.potential-payout[^}]*min-height:\s*0/);
   assert.match(theme, /@media \(max-width: 900px\)[\s\S]*\.cs2-betslip-modal-content[^}]*max-height:\s*100dvh/);
 });
 
@@ -259,6 +263,10 @@ test('game transitions use the shared viewport stabilizer instead of ad-hoc smoo
   for (const file of [
     'games/blackjack.js', 'games/roulette-casino.js', 'games/coinflip-casino.js',
     'games/crash-casino.js', 'games/pachinko-casino.js', 'games/poker-casino.js',
-    'games/case-opening-casino.js', 'cs2-betting-modern.js'
+    'cs2-betting-modern.js'
   ]) assert.match(read(file), /stabilizeGameViewport\?\./, `${file} must stabilize its accepted wager transition`);
+  const openingStart = cases.indexOf('async animateDrops');
+  const openingPresentation = cases.slice(openingStart, cases.indexOf('\n  renderBattle()', openingStart));
+  assert.doesNotMatch(openingPresentation, /stabilizeGameViewport\?\./,
+    'case opening keeps a permanently mounted presentation stage and must not force-scroll');
 });

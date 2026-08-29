@@ -62,7 +62,7 @@ class RouletteGame {
         <!-- Main Grid -->
         <div class="rl-main-grid">
 
-          <!-- Left: Betting -->
+          <!-- Betting -->
           <div class="rl-bet-panel">
             <div class="rl-panel-title">Place Your Bet</div>
 
@@ -104,16 +104,19 @@ class RouletteGame {
             </div>
           </div>
 
-          <!-- Right: Players + History -->
+          <!-- Latest settled results -->
+          <div class="rl-info-panel rl-history-panel">
+            <div class="rl-panel-title">Latest Results</div>
+            <div id="rlHistory" class="rl-history-strip" tabindex="0" role="region" aria-label="Latest roulette results">
+              <div class="rl-empty-msg">No history</div>
+            </div>
+          </div>
+
+          <!-- Current round -->
           <div class="rl-info-panel">
             <div class="rl-panel-title">This Round</div>
             <div id="rlAllBets" class="rl-players-list">
               <div class="rl-empty-msg">No bets yet</div>
-            </div>
-
-            <div class="rl-panel-title" style="margin-top:1rem">Recent Results</div>
-            <div id="rlHistory" class="rl-history-strip" tabindex="0" role="region" aria-label="Recent roulette results">
-              <div class="rl-empty-msg">No history</div>
             </div>
           </div>
 
@@ -549,9 +552,9 @@ class RouletteGame {
       el.innerHTML = '<div class="rl-empty-msg">No history</div>';
       return;
     }
-    // Server history is newest-first. Select the newest window before reversing
-    // it so the strip reads chronologically without dropping recent spins.
-    el.innerHTML = this.history.slice(0, 30).reverse().map(r => `
+    // The server contract is newest-first; preserve that order in the UI so the
+    // first result is always the spin the player just watched settle.
+    el.innerHTML = this.history.slice(0, 30).map(r => `
       <div class="rl-hist-chip rl-hist-${r.color}" title="${r.number} (${r.color})">${r.number}</div>
     `).join('');
   }

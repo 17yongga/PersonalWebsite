@@ -129,6 +129,7 @@ class PachinkoGame {
 
   setupBoard() {
     this.pegs = [];
+    this.pegRows = [];
     this.slots = [];
     const W = this.W, H = this.H;
     const pegR = Math.max(2, W * 0.0055);
@@ -139,18 +140,22 @@ class PachinkoGame {
     const slotW = (W * 0.88) / slotCount;
 
     for (let row = 0; row < this.ROWS; row++) {
+      const rowPegs = [];
       const pegsInRow = row + 3;
       const rowWidth = (pegsInRow - 1) * slotW;
       const startX = (W - rowWidth) / 2;
       for (let col = 0; col < pegsInRow; col++) {
-        this.pegs.push({
+        const peg = {
           id: `${row}:${col}`,
           x: startX + col * slotW,
           y: startY + row * rowH,
           r: pegR,
           glow: 0
-        });
+        };
+        this.pegs.push(peg);
+        rowPegs.push(peg);
       }
+      this.pegRows.push(rowPegs);
     }
 
     // Slots at bottom
@@ -170,6 +175,17 @@ class PachinkoGame {
         glow: 0
       });
     }
+
+    const lastPegY = startY + (this.ROWS - 1) * rowH;
+    this.boardMetrics = {
+      pegStartY: startY,
+      pegEndY: lastPegY,
+      pegRowHeight: rowH,
+      laneEntryY: H * 0.56,
+      terminalGateY: Math.min(slotY - pegR * 3, lastPegY + H * 0.018),
+      slotY,
+      slotWidth: slotW
+    };
   }
 
   createAuthoritativeRoute(slotIndex, random = Math.random) {
@@ -296,7 +312,7 @@ class PachinkoGame {
             stuckFrames: 0, lastY: 0, serverResult, soundKey: `${requestId}:${index}`,
             pegSoundAt: Object.create(null),
             batchId: requestId, presentationConfirmed: false,
-            guidePhase: Math.random(), routeDecisions,
+            phase: 'peg-field', guidePhase: Math.random(), routeDecisions,
             targetX: targetSlot ? targetSlot.x + targetSlot.w / 2 : this.W / 2
           };
           this.balls.push(ball);
@@ -420,8 +436,13 @@ class PachinkoGame {
       }
 
       const targetSlot = ball.serverResult ? this.slots[ball.serverResult.slotIndex] : null;
-      if (ball.landing) {
-        this.advanceLanding(ball, targetSlot);
+      ball.phase ||= 'peg-field';
+      if (ball.phase === 'terminal-drop') {
+        this.advanceTerminalDrop(ball, targetSlot);
+        continue;
+      }
+      if (ball.phase === 'lane-entry') {
+        this.advanceLaneEntry(ball, targetSlot);
         continue;
       }
 
@@ -458,8 +479,8 @@ class PachinkoGame {
       if (ball.x < ball.r) { ball.x = ball.r; ball.vx = Math.abs(ball.vx) * bounce; }
       if (ball.x > this.W - ball.r) { ball.x = this.W - ball.r; ball.vx = -Math.abs(ball.vx) * bounce; }
 
-      // Peg collision
-      for (const peg of this.pegs) {
+      // Peg collision only checks the pre-indexed rows near the ball.
+      for (const peg of this.getNearbyPegs(ball.y, ball.r)) {
         const dx = ball.x - peg.x;
         const dy = ball.y - peg.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -493,27 +514,17 @@ class PachinkoGame {
         }
       }
 
-      // The authoritative destination is approached throughout the peg field.
-      // Final slot entry starts only after the ball is already inside that lane,
-      // so there is no bottom-of-board horizontal correction.
-      const lastPegY = this.pegs.reduce((max, peg) => Math.max(max, peg.y), this.H * 0.72);
-      const landingGateY = targetSlot
-        ? Math.min(targetSlot.y - ball.r * 2.2, lastPegY + this.H * 0.018)
-        : Infinity;
-      if (targetSlot && ball.y >= landingGateY && this.isBallAlignedForSlot(ball, targetSlot)) {
-        ball.landing = { startX: ball.x, startY: ball.y, progress: 0 };
-        this.advanceLanding(ball, targetSlot);
-      } else if (targetSlot && ball.y >= targetSlot.y - ball.r * 2 && !this.isBallAlignedForSlot(ball, targetSlot)) {
-        // A physical-looking rim rebound is the last-resort funnel. It preserves
-        // continuous motion instead of teleporting an off-lane ball into place.
-        ball.y = targetSlot.y - ball.r * 2;
-        ball.vy = -Math.abs(ball.vy) * 0.22;
-        ball.vx += Math.sign(ball.targetX - ball.x) * this.W * 0.0008;
+      // Presentation phases are a one-way boundary. Once lane entry begins all
+      // horizontal alignment completes above the terminal gate; below it the
+      // authoritative lane and x coordinate are immutable.
+      if (targetSlot && ball.y >= this.boardMetrics.laneEntryY) {
+        ball.phase = 'lane-entry';
+        this.advanceLaneEntry(ball, targetSlot);
       }
 
-      // If physics carries the ball outside the canvas, settle it against the
-      // nearest slot instead of treating escape as a jackpot.
-      if (ball.y > this.H + 20 || ball.x < -20 || ball.x > this.W + 20) {
+      // This guard is for malformed/non-authoritative balls only. Proper server
+      // results enter terminal-drop before reaching any canvas edge.
+      if (ball.phase === 'peg-field' && (ball.y > this.H + 20 || ball.x < -20 || ball.x > this.W + 20)) {
         const fallbackSlot = ball.serverResult ? this.slots[ball.serverResult.slotIndex] : this.getNearestSlot(ball.x);
         this.resolveBall(ball, fallbackSlot, 'edge-settle');
       }
@@ -551,23 +562,68 @@ class PachinkoGame {
     if (progress > 0.76) ball.vx *= 0.968;
   }
 
+  getNearbyPegs(y, radius = 0) {
+    const metrics = this.boardMetrics;
+    if (!metrics || !this.pegRows?.length || metrics.pegRowHeight <= 0) return this.pegs;
+    const row = Math.round((y - metrics.pegStartY) / metrics.pegRowHeight);
+    const rowReach = Math.max(1, Math.ceil((radius + (this.pegs[0]?.r || 0)) / metrics.pegRowHeight));
+    const nearby = [];
+    for (let index = row - rowReach; index <= row + rowReach; index += 1) {
+      if (this.pegRows[index]) nearby.push(...this.pegRows[index]);
+    }
+    return nearby;
+  }
+
   isBallAlignedForSlot(ball, slot) {
     const inset = Math.max(ball.r, slot.w * 0.12);
     return ball.x >= slot.x + inset && ball.x <= slot.x + slot.w - inset;
   }
 
-  advanceLanding(ball, slot) {
-    if (!slot || !ball.landing) return;
+  advanceLaneEntry(ball, slot) {
+    if (!slot || ball.phase !== 'lane-entry') return;
+    const targetX = slot.x + slot.w / 2;
+    const maxHorizontalStep = slot.w * 0.45;
+    const deltaX = targetX - ball.x;
+    ball.x += Math.max(-maxHorizontalStep, Math.min(maxHorizontalStep, deltaX));
+    ball.vx = 0;
+    ball.vy = Math.max(ball.vy, this.H * 0.006);
+    ball.y = Math.min(this.boardMetrics.terminalGateY - 0.01, ball.y + ball.vy);
+    ball.trail.push({ x: ball.x, y: ball.y });
+    if (ball.trail.length > 8) ball.trail.shift();
+
+    if (Math.abs(targetX - ball.x) > 1e-9) return;
+    ball.x = targetX;
+    ball.laneIndex = ball.serverResult.slotIndex;
+    ball.lockedX = targetX;
+    ball.phase = 'terminal-drop';
+    ball.y = this.boardMetrics.terminalGateY;
+    ball.landing = { startX: targetX, startY: ball.y, progress: 0 };
+    this.advanceTerminalDrop(ball, slot);
+  }
+
+  advanceTerminalDrop(ball, slot) {
+    if (!slot || ball.phase !== 'terminal-drop' || !ball.landing) return;
     ball.landing.progress = Math.min(1, ball.landing.progress + 1 / 18);
     const progress = ball.landing.progress;
     const targetY = this.getLandingTargetY(ball, slot);
-    ball.x = ball.landing.startX;
+    ball.x = ball.lockedX;
     ball.y = ball.landing.startY + (targetY - ball.landing.startY) * progress;
     ball.vx = 0;
     ball.vy = 0;
     ball.trail.push({ x: ball.x, y: ball.y });
     if (ball.trail.length > 8) ball.trail.shift();
     if (progress >= 1) this.resolveBall(ball, slot, 'server-settled');
+  }
+
+  // Compatibility for isolated presentation callers; production flow enters
+  // this path through the explicit terminal-drop phase.
+  advanceLanding(ball, slot) {
+    if (!ball.phase) {
+      ball.phase = 'terminal-drop';
+      ball.laneIndex = ball.serverResult?.slotIndex ?? this.slots.indexOf(slot);
+      ball.lockedX = ball.landing?.startX ?? ball.x;
+    }
+    this.advanceTerminalDrop(ball, slot);
   }
 
   getNearestSlot(x) {
@@ -590,6 +646,9 @@ class PachinkoGame {
     ball.x = Math.max(slot.x + ball.r, Math.min(slot.x + slot.w - ball.r, ball.x));
     ball.y = this.getLandingTargetY(ball, slot);
     ball.active = false;
+    ball.phase = 'landed';
+    ball.laneIndex = ball.serverResult?.slotIndex ?? this.slots.indexOf(slot);
+    ball.lockedX = ball.x;
     ball.landing = null;
     ball.landingHoldFrames = 18;
     ball.landedSlot = slot;

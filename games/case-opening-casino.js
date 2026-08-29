@@ -289,6 +289,38 @@ class CaseOpeningGame {
     container.classList.add('is-rolling');
   }
 
+  async prepareReelImages(stage) {
+    const images = [...stage.querySelectorAll('.case-reel-track img')];
+    await Promise.allSettled(images.map(image => {
+      if (image.complete) return image.decode?.() || Promise.resolve();
+      if (typeof image.decode === 'function') return image.decode();
+      return new Promise(resolve => {
+        image.addEventListener('load', resolve, { once: true });
+        image.addEventListener('error', resolve, { once: true });
+      });
+    }));
+  }
+
+  finishReels(stage) {
+    stage.classList.remove('is-rolling');
+    stage.classList.add('is-centered');
+    stage.querySelectorAll('.case-reel-track').forEach(track => {
+      track.style.removeProperty('--reel-duration');
+    });
+  }
+
+  updateCasePresentation(state, { headerMarkup = '', bodyMarkup = '' } = {}) {
+    const stage = this.root?.querySelector('#casePresentationStage');
+    const header = stage?.querySelector('.case-presentation-header');
+    const body = stage?.querySelector('.case-presentation-body');
+    if (!stage || !header || !body) return null;
+    stage.className = `case-presentation-stage is-${state}`;
+    stage.setAttribute('aria-busy', String(state === 'preparing' || state === 'rolling'));
+    header.innerHTML = headerMarkup;
+    body.innerHTML = bodyMarkup;
+    return stage;
+  }
+
   toggleCaseDetails() {
     this.caseDetailsExpanded = !this.caseDetailsExpanded;
     this.root?.querySelectorAll('.case-secondary-details').forEach(element => element.classList.toggle('is-expanded', this.caseDetailsExpanded));
@@ -352,7 +384,11 @@ class CaseOpeningGame {
           <div class="case-drop-list">${active.items.slice().reverse().map(item => `<div class="case-drop-row" style="--skin-color:${item.color}">${this.weaponArt(item)}<div><strong>${this.escape(item.name)}</strong><span>${this.escape(item.officialRarity || item.rarity)}</span></div><div class="case-drop-value"><strong>${this.credits(item.value)}</strong><span>${item.chanceLabel}</span></div></div>`).join('')}</div>
           <footer>Odds total 100% · ${Math.round(active.expectedReturn * 100)}% disclosed RTP · virtual values only</footer>
         </aside>
-      </div><div class="case-results" id="caseResults" aria-live="polite"></div>` : ''}`;
+        <section class="case-presentation-stage is-idle" id="casePresentationStage" aria-live="polite" aria-busy="false">
+          <header class="case-presentation-header"><div><span class="case-eyebrow">READY TO OPEN</span><h3>Your reveal stays in this workbench</h3></div></header>
+          <div class="case-presentation-body"><p class="case-presentation-idle">Choose a count, publish the fairness commitment, and the server-fixed result will appear here.</p></div>
+        </section>
+      </div>` : ''}`;
     this.centerHorizontalControl('.case-era-switch button.active');
     this.centerHorizontalControl('.case-shelf .case-tile.selected');
   }
@@ -377,6 +413,10 @@ class CaseOpeningGame {
   async openSelected() {
     if (this.busy || !this.selectedCaseId) return;
     this.setBusy(true);
+    this.updateCasePresentation('preparing', {
+      headerMarkup: '<div><span class="case-eyebrow">PREPARING</span><h3>Publishing fairness commitment</h3></div><strong>Result remains hidden</strong>',
+      bodyMarkup: '<div class="case-presentation-preparing" role="status"><span aria-hidden="true"></span><p>Securing the server-fixed result…</p></div>'
+    });
     const signature = `${this.selectedCaseId}:${this.openCount}`;
     if (!this.pending.open || this.pending.open.signature !== signature) {
       this.pending.open = { signature, requestId: this.id('open') };
@@ -400,6 +440,10 @@ class CaseOpeningGame {
       this.message(`${data.items.length} ${data.items.length === 1 ? 'skin' : 'skins'} added to inventory.`, 'success');
     } catch (error) {
       if (this.isDefinitiveError(error)) this.pending.open = null;
+      this.updateCasePresentation('error', {
+        headerMarkup: '<div><span class="case-eyebrow">OPENING PAUSED</span><h3>The case was not revealed</h3></div>',
+        bodyMarkup: `<p class="case-presentation-error">${this.escape(error.message)}</p>`
+      });
       this.message(error.message, 'error');
     } finally {
       this.setBusy(false);
@@ -407,36 +451,37 @@ class CaseOpeningGame {
   }
 
   async animateDrops(items) {
-    const results = this.root.querySelector('#caseResults');
-    if (!results) return;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const token = Symbol('case-opening');
     this.presentationToken = token;
-    results.innerHTML = `<section class="case-reel-stage" aria-live="polite">
-      <header><div><span>OPENING ${items.length} ${items.length === 1 ? 'CASE' : 'CASES'}</span><h3>Authoritative reveal</h3></div><strong>${this.fastOpen ? 'FAST REVEAL' : 'Result fixed by server'}</strong></header>
-      ${items.map((item, index) => this.reelLaneMarkup(item, index)).join('')}
-    </section>`;
-    this.casino.stabilizeGameViewport?.(results, { force: true, retryDelays: [] });
+    const stage = this.updateCasePresentation('rolling', {
+      headerMarkup: `<div><span>OPENING ${items.length} ${items.length === 1 ? 'CASE' : 'CASES'}</span><h3>Authoritative reveal</h3></div><strong>${reducedMotion ? 'REDUCED MOTION' : this.fastOpen ? 'FAST REVEAL' : 'Result fixed by server'}</strong>`,
+      bodyMarkup: `<div class="case-reel-stage">${items.map((item, index) => this.reelLaneMarkup(item, index)).join('')}</div>`
+    });
+    if (!stage) return;
+    await this.prepareReelImages(stage);
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    if (this.presentationToken !== token || this.destroyed) return;
+    this.startReels(stage, reducedMotion ? 0 : this.fastOpen ? 700 : 2700);
     if (!reducedMotion) {
-      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      if (this.presentationToken !== token || this.destroyed) return;
-      const stage = results.querySelector('.case-reel-stage');
-      this.startReels(stage, this.fastOpen ? 700 : 2700);
       window.casinoSound?.play('caseReel', { game: 'cases' });
       await this.wait((this.fastOpen ? 980 : 3100) + Math.max(0, items.length - 1) * (this.fastOpen ? 30 : 80));
       if (this.presentationToken !== token || this.destroyed) return;
     }
+    this.finishReels(stage);
     window.casinoSound?.play('caseReveal', { game: 'cases' });
     const totalValue = items.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
     this.lastRevealedItems = items.filter(item => item.inventoryId);
-    results.innerHTML = `<section class="case-result-stage"><header><div><span class="case-eyebrow">UNBOXED</span><h3>${items.length} ${items.length === 1 ? 'item' : 'items'} added to your armory</h3></div><div class="case-result-batch-actions"><strong>${this.credits(totalValue)} credits total</strong>${this.lastRevealedItems.length ? `<button class="case-sell-all" data-action="sell-all" data-scope="results">SELL ALL · ${this.credits(totalValue)}</button>` : ''}</div></header>
+    this.updateCasePresentation('revealed', {
+      headerMarkup: `<div><span class="case-eyebrow">UNBOXED</span><h3>${items.length} ${items.length === 1 ? 'item' : 'items'} added to your armory</h3></div><div class="case-result-batch-actions"><strong>${this.credits(totalValue)} credits total</strong>${this.lastRevealedItems.length ? `<button class="case-sell-all" data-action="sell-all" data-scope="results">SELL ALL · ${this.credits(totalValue)}</button>` : ''}</div>`,
+      bodyMarkup: `<section class="case-result-stage">
       <div class="case-result-grid">${items.map((item, index) => `<article class="case-result-card" data-inventory-id="${this.escape(item.inventoryId || '')}" style="--skin-color:${item.color};--reveal-delay:${index * 90}ms">
         <span class="case-result-rarity">${this.escape(item.officialRarity || item.rarity)}</span>${this.weaponArt(item)}
         <h4>${this.escape(item.weapon)}</h4><p>${this.escape(item.finish)}</p><strong>${this.credits(item.value)} credits</strong><small>✓ Added to inventory</small>${item.inventoryId ? `<footer><button data-keep-item="${this.escape(item.inventoryId)}">KEEP</button><button data-sell-item="${this.escape(item.inventoryId)}">SELL · ${this.credits(item.value)}</button></footer>` : ''}
       </article>`).join('')}</div>
-      <div class="case-result-actions"><button class="case-primary-action" data-action="open-again">OPEN AGAIN</button><button data-action="view-inventory">VIEW INVENTORY</button><button data-action="view-proof">VERIFY RESULT</button></div></section>`;
+      <div class="case-result-actions"><button class="case-primary-action" data-action="open-again">OPEN AGAIN</button><button data-action="view-inventory">VIEW INVENTORY</button><button data-action="view-proof">VERIFY RESULT</button></div></section>`
+    });
     this.presentationToken = null;
-    this.casino.stabilizeGameViewport?.(results, { force: true, retryDelays: [] });
   }
 
   renderBattle() {

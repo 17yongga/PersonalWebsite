@@ -1553,6 +1553,26 @@
   letter-spacing: -0.3px;
 }
 
+.betslip-title-group {
+  min-width: 0;
+}
+
+.betslip-title-group > span {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--cs2-accent);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.betslip-scroll-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 .close-btn {
   display: flex;
   align-items: center;
@@ -1820,6 +1840,13 @@
   display: flex;
   gap: var(--cs2-space-md);
   margin-top: auto;
+}
+
+.betslip-action-footer {
+  flex: 0 0 auto;
+  padding: 14px 20px max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 16, 22, 0.98);
 }
 
 /* Bet Slip Success Overlay */
@@ -2554,7 +2581,7 @@
   .cs2-betslip-modal-content {
     width: 100%;
     max-width: 100%;
-    height: min(100dvh, 760px);
+    height: min(100dvh, 844px);
     max-height: 100dvh;
     border-left: none;
     border-top: 1px solid var(--cs2-border);
@@ -2577,11 +2604,16 @@
     height: 44px;
   }
 
-  .cs2-bet-controls {
+  .betslip-scroll-body {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     scroll-padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
+  .cs2-bet-controls {
+    min-height: 0;
+    overflow: visible;
   }
 
   .potential-payout {
@@ -2597,15 +2629,22 @@
     flex-direction: row;
     gap: 8px;
   }
+
+  .betslip-action-footer {
+    position: relative;
+    inset: auto;
+    margin: 0 !important;
+    padding: 10px var(--casino-mobile-density-pad) max(10px, env(safe-area-inset-bottom));
+  }
 }
 
 @media (max-width: 768px) and (max-height: 650px) {
-  .betslip-modal-header { padding-block: 10px; }
-  .betslip-selection { max-height: 34dvh; overflow-y: auto; }
+  .betslip-modal-header { padding-block: 8px; }
+  .betslip-selection { max-height: none; overflow: visible; }
   .selection-outcome { align-items: start; }
   .outcome-value { min-width: 0; font-size: .92rem; line-height: 1.3; overflow-wrap: anywhere; }
-  .betslip-actions { position:static; margin-inline:-14px!important; }
-  .potential-payout { min-height:142px; }
+  .betslip-action-footer { position:relative; margin:0!important; }
+  .potential-payout { min-height:0; }
 }
 
 /* Mobile adjustments for larger logos */
@@ -3983,26 +4022,24 @@
     text-shadow: none;
   }
 
-  .betslip-actions {
-    position: sticky;
-    bottom: 0;
+  .betslip-action-footer {
+    position: relative;
+    bottom: auto;
     z-index: 2;
     gap: 8px;
-    margin: 0 -14px max(-14px, calc(-1 * env(safe-area-inset-bottom))) !important;
-    padding: 10px 14px max(14px, env(safe-area-inset-bottom));
-    background: linear-gradient(180deg, rgba(12, 16, 22, 0.72), rgba(12, 16, 22, 0.98) 35%);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    margin: 0 !important;
+    padding: 10px var(--casino-mobile-density-pad) max(10px, env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(12, 16, 22, 0.82), rgba(12, 16, 22, 0.99));
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .betslip-actions .btn {
+  .betslip-action-footer .btn {
     min-height: 44px;
     padding: 12px 14px;
     border-radius: 12px;
   }
 
-  .betslip-actions .btn-secondary {
+  .betslip-action-footer .btn-secondary {
     flex: 0 0 92px;
   }
 }
@@ -4096,15 +4133,21 @@
 .parlay-tray-header { display:flex; align-items:end; justify-content:space-between; gap:12px; }
 .parlay-tray-header>div>* { display:block; }.parlay-tray-header span,.parlay-card-kicker { color:var(--cs2-accent); font-size:.62rem; font-weight:900; letter-spacing:.15em; }.parlay-tray-header strong { margin-top:4px; }.parlay-tray-header>b { color:#fff; font-size:1.2rem; }
 .parlay-leg-list,.betslip-parlay-list,.parlay-card-legs { display:grid; gap:7px; }
-.parlay-leg,.betslip-parlay-leg,.parlay-card-leg { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; min-width:0; padding:9px 10px; border:1px solid rgba(255,255,255,.08); border-radius:10px; background:rgba(255,255,255,.035); }
+.parlay-leg,.betslip-parlay-leg,.parlay-card-leg { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; min-width:0; min-height:44px; padding:9px 10px; border:1px solid rgba(255,255,255,.08); border-radius:10px; background:rgba(255,255,255,.035); }
 .parlay-leg>span,.parlay-leg>span>*,.betslip-parlay-leg>div>*,.parlay-card-leg>div>* { display:block; min-width:0; overflow-wrap:anywhere; }.parlay-leg small,.betslip-parlay-leg small,.parlay-card-leg small { margin-top:3px; color:var(--cs2-text-secondary); font-size:.68rem; }.parlay-leg>button { border:1px solid rgba(255,255,255,.12); color:#ff9dcb; background:rgba(255,75,126,.08); cursor:pointer; }
 .parlay-review-btn { width:100%!important; }
 .betslip-parlay-leg,.parlay-card-leg { grid-template-columns:28px minmax(0,1fr) auto; }.betslip-parlay-leg>span,.parlay-card-leg>span { display:grid; width:26px; height:26px; place-items:center; border-radius:50%; color:#07120d; background:var(--cs2-accent); font-size:.7rem; font-weight:900; }.betslip-parlay-leg>b,.parlay-card-leg>b { color:#fff; }
 .cs2-parlay-card { gap:12px; }.parlay-card-kicker { display:block; margin-bottom:4px; }.parlay-card-leg.won { border-color:rgba(57,242,161,.28); }.parlay-card-leg.lost { opacity:.62; border-color:rgba(255,75,126,.3); }.parlay-card-leg.void { opacity:.72; }
 
 @media (max-width:768px) {
-  .cs2-wager-composer { margin-inline:4px; }
+  .cs2-wager-composer { margin-inline:4px; padding:var(--casino-mobile-density-pad); }
   .cs2-wager-mode { width:100%; }
-  .cs2-parlay-tray { padding:10px; }
+  .cs2-parlay-tray { padding:var(--casino-mobile-density-pad); }
   .parlay-leg,.betslip-parlay-leg,.parlay-card-leg { padding:8px; }
+  .betslip-scroll-body { padding:0; }
+  .betslip-selection,.cs2-bet-controls { padding:var(--casino-mobile-density-pad); }
+  .betslip-parlay-list { gap:var(--casino-mobile-density-gap); }
+  .betslip-parlay-leg { grid-template-columns:24px minmax(0,1fr) auto; gap:7px; font-size:var(--casino-mobile-body-size); }
+  .betslip-parlay-leg>span { width:24px; height:24px; }
+  .potential-payout { min-height:0; margin-bottom:0; }
 }

@@ -53,6 +53,11 @@
   --casino-mobile-section-gap: 12px;
   --casino-mobile-control-min: 44px;
   --casino-mobile-primary-min: 48px;
+  --casino-mobile-density-pad: clamp(10px, 3vw, 14px);
+  --casino-mobile-density-gap: 8px;
+  --casino-mobile-label-size: .68rem;
+  --casino-mobile-body-size: .82rem;
+  --casino-mobile-art-height: 74px;
   --casino-mobile-header-height: 69px;
   --casino-mobile-nav-clearance: calc(68px + env(safe-area-inset-bottom));
   /* Glow policy: text uses one restrained layer; surfaces keep dark elevation separate. */

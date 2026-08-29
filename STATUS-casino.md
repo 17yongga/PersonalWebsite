@@ -1,5 +1,15 @@
 # Casino — STATUS.md
-> Updated: 2026-08-23
+> Updated: 2026-08-28
+
+## Live Mobile Game UX + Animation Repair — frontend `neon777-20260828-r92` / backend `neon777-20260823-r91` (2026-08-28)
+- **Roulette:** Latest Results is now a dedicated top-priority mobile panel and renders the newest authoritative spins first. The mobile wager composer uses an even five-column 44px chip grid with deliberate spacing instead of a loose wrapped row.
+- **Crash:** one cached canvas size/aspect/DPR contract now owns allocation and drawing. ResizeObserver handles container changes, DPR-only changes reallocate correctly, and DPR is capped at 2× for a sharp but stable mobile chart.
+- **Pachinko:** the old bottom correction is replaced by explicit `peg-field → lane-entry → terminal-drop → landed` phases. Every one of the 17 authoritative lanes finishes horizontal alignment above the terminal gate; x and slot identity are immutable during the final descent, so the ball can no longer slide into another slot at the bottom.
+- **CS2 parlays:** the builder and betslip use the shared mobile density contract. The betslip has one owned scroll body, compact fixed header, reachable payout summary, and anchored action footer; two-leg mobile journeys remain readable at 320×568 through 430×932.
+- **CS Cases:** the opening presentation is one permanently mounted stage reused for preparing, rolling, and revealed states. Images are prepared before motion and reel acceleration is cleaned up; Open causes exactly zero immediate/acknowledged scroll at all five tested mobile/tablet orientations. Case controls and results are denser without sacrificing the 44px interaction floor.
+- **Verification:** **130/130** Casino source tests passed. Exact-candidate all-eight-game QA covered 40 runs at 320×568 DPR3, 390×844 DPR3, 430×932, 768×1024, and 844×390; the isolated CS2 rerun was 5/5 with zero errors; parlay builder/review/place and Blackjack peer-control QA passed 16/16 states; Cases reduced-motion equivalence passed. Visual review covered Roulette, Crash, Pachinko, Cases, and the parlay builder/betslip.
+- **Immutable production:** 27/27 CDN assets are byte-identical to the tested package and use immutable caching. Bundle manifest SHA-256 `6bbe257dac5917d4ae4586e20f559d1f567cf3ebd7c55ecb288c9ccf7029fc71`; entry SHA-256 `0266b1c4a026e0c2c9b3cf4c4a01386e656c743b29f00ea7951fb3a9c65e5663`; CloudFront invalidation `I5ES8L7R50H6SANGRWWMTOYEUL` completed.
+- **Live verification / integrity:** the live 390×844 DPR3 no-wager smoke passed all eight games with zero console errors. This was frontend-only: backend, PM2, accounts, balances, escrows, and Casino data were untouched. Immediate rollback is frontend `r91`; exact pre-switch entry is `/tmp/casino-r91-live.html`.
 
 ## Live Blackjack Rules + Stable Game Viewports + Compact Mobile Cases — frontend/backend `neon777-20260823-r91` (2026-08-23)
 - **Blackjack rule correction:** one canonical evaluator now publishes score plus soft/hard status after Ace demotion. A hand is soft whenever an Ace remains valued at 11, including an Ace drawn after the opening two cards. The UI shows `SOFT` directly in the score pill; How to Play now explains draw-order-independent softness and that this table stands on all 17.
@@ -117,7 +127,7 @@
 - **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`, and live login captures `live-login-390.png` / `live-login-1280.png`. Subjective listening remains Gary's human acceptance check; technical synthesis, scheduling, recovery, cleanup, and live delivery are verified.
 
 ## What's Live
-- **Frontend:** `r91` at https://gary-yong.com/casino.html (S3/CloudFront)
+- **Frontend:** `r92` at https://gary-yong.com/casino.html (S3/CloudFront)
 - **API/Backend:** `r91` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
 - **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260823-r91/backend`
 

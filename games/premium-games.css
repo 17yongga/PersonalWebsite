@@ -202,6 +202,8 @@
 .rl-belt-indicator { filter:drop-shadow(0 0 9px rgba(255,215,130,.6)); }
 .rl-status-row { min-height:54px; margin:10px 0 18px; padding:10px 16px; border:1px solid rgba(255,255,255,.07); border-radius:14px; background:rgba(255,255,255,.025); }
 .rl-bet-panel,.rl-info-panel { border:1px solid rgba(245,201,106,.13)!important; border-radius:20px!important; background:linear-gradient(150deg,rgba(26,19,28,.94),rgba(8,10,16,.96))!important; box-shadow:0 18px 42px rgba(0,0,0,.25); }
+.rl-main-grid { grid-template-columns:minmax(0,1.45fr) minmax(210px,.62fr) minmax(250px,.72fr)!important; align-items:start; }
+.rl-history-panel { min-width:0; }
 .rl-panel-title { color:#fff4db!important; font-size:11px!important; font-weight:850!important; letter-spacing:.14em!important; text-transform:uppercase; }
 .rl-color-btn,.rl-quick-btn,.rl-adj-btn { transition:transform .18s ease,filter .18s ease,border-color .18s ease,box-shadow .18s ease!important; }
 .rl-btn-green { background:linear-gradient(145deg,#16a34a,#15803d)!important; border-color:rgba(34,197,94,.58)!important; }
@@ -393,8 +395,12 @@
 @media (max-width:768px) {
   .blackjack-container,.rl-container,.coinflip-casino-container,.crash-container,.pachinko-container,.poker-casino-container { padding-inline:8px; }
 
-  .rl-bet-panel { order:1; }
-  .rl-info-panel { order:2; }
+  .rl-main-grid { grid-template-columns:minmax(0,1fr)!important; }
+  .rl-history-panel { order:1; }
+  .rl-info-panel:not(.rl-history-panel) { order:2; }
+  .rl-bet-panel { order:3; }
+  .rl-quick-row { display:grid!important; grid-template-columns:repeat(5,minmax(44px,1fr)); justify-items:center; gap:6px; }
+  .rl-quick-row .wager-chip { width:44px!important; min-width:44px!important; height:44px!important; }
   .rl-clear-btn,.rl-adj-btn,.blackjack-stake-action { min-height:44px; }
 
   .crash-layout {

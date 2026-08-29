@@ -156,47 +156,47 @@ class CS2ModernBettingGame {
           <div class="cs2-betslip-modal-overlay"></div>
           <div class="cs2-betslip-modal-content">
             <div class="betslip-modal-header">
-              <h3 id="cs2BetSlipTitle">Bet Slip</h3>
-              <button id="closeBetSlipBtn" class="close-btn" title="Close">&times;</button>
+              <div class="betslip-title-group"><span>WAGER</span><h3 id="cs2BetSlipTitle">Bet Slip</h3></div>
+              <button id="closeBetSlipBtn" class="close-btn" title="Close" aria-label="Close bet slip">&times;</button>
             </div>
 
-            <!-- Selection Display -->
-            <div id="cs2BetSlip" class="betslip-selection">
-              <div class="empty-state">
-                <div class="empty-state-icon">&#127922;</div>
-                <div class="empty-state-text">Select a match outcome</div>
-                <div class="empty-state-subtext">Choose your prediction to continue</div>
-              </div>
-            </div>
-
-            <!-- Bet Controls -->
-            <div id="cs2BetControls" class="cs2-bet-controls hidden">
-              <div class="bet-input-group">
-                <label for="cs2BetAmount">Bet Amount (Credits)</label>
-                <input type="number" id="cs2BetAmount" class="bet-amount-input"
-                       min="1" value="100" step="10" placeholder="Enter amount">
-                <div class="quick-bets">
-                  <button class="quick-bet-btn" data-amount="100">100</button>
-                  <button class="quick-bet-btn" data-amount="500">500</button>
-                  <button class="quick-bet-btn" data-amount="1000">1K</button>
-                  <button class="quick-bet-btn" data-amount="all">ALL-IN</button>
+            <div class="betslip-scroll-body">
+              <!-- Selection Display -->
+              <div id="cs2BetSlip" class="betslip-selection">
+                <div class="empty-state">
+                  <div class="empty-state-icon">&#127922;</div>
+                  <div class="empty-state-text">Select a match outcome</div>
+                  <div class="empty-state-subtext">Choose your prediction to continue</div>
                 </div>
               </div>
 
-              <div id="cs2PotentialPayout" class="potential-payout hidden">
-                <div class="payout-info">
-                  <div class="loading-spinner" style="width: 20px; height: 20px;"></div>
-                  <div class="loading-text">Calculating payout...</div>
+              <!-- Stake and payout summary share the one owned scroll body. -->
+              <div id="cs2BetControls" class="cs2-bet-controls hidden">
+                <div class="bet-input-group">
+                  <label for="cs2BetAmount">Bet Amount (Credits)</label>
+                  <input type="number" id="cs2BetAmount" class="bet-amount-input"
+                         min="1" value="100" step="10" placeholder="Enter amount">
+                  <div class="quick-bets">
+                    <button class="quick-bet-btn" data-amount="100">100</button>
+                    <button class="quick-bet-btn" data-amount="500">500</button>
+                    <button class="quick-bet-btn" data-amount="1000">1K</button>
+                    <button class="quick-bet-btn" data-amount="all">ALL-IN</button>
+                  </div>
+                </div>
+
+                <div id="cs2PotentialPayout" class="potential-payout hidden">
+                  <div class="payout-info">
+                    <div class="loading-spinner" style="width: 20px; height: 20px;"></div>
+                    <div class="loading-text">Calculating payout...</div>
+                  </div>
                 </div>
               </div>
-
-              <div class="betslip-actions">
-                <button id="placeBetBtn" class="btn btn-primary btn-large">
-                  Place Bet
-                </button>
-                <button id="cancelBetBtn" class="btn btn-secondary">Cancel</button>
-              </div>
             </div>
+
+            <footer id="cs2BetActions" class="betslip-actions betslip-action-footer hidden">
+              <button id="placeBetBtn" class="btn btn-primary btn-large">Place Bet</button>
+              <button id="cancelBetBtn" class="btn btn-secondary">Cancel</button>
+            </footer>
 
             <!-- Success overlay -->
             <div class="betslip-success-overlay hidden" id="betslipSuccessOverlay">
@@ -1113,7 +1113,8 @@ class CS2ModernBettingGame {
   }
 
   showBetSlipModal() {
-    const modal = document.getElementById('cs2BetSlipModal');
+    const modal = this.root?.querySelector('#cs2BetSlipModal');
+    if (!modal) return;
     modal.classList.remove('hidden');
     // Trigger slide-in animation
     requestAnimationFrame(() => {
@@ -1125,13 +1126,14 @@ class CS2ModernBettingGame {
 
     // Focus management for accessibility
     setTimeout(() => {
-      const closeBtn = document.getElementById('closeBetSlipBtn');
+      const closeBtn = this.root?.querySelector('#closeBetSlipBtn');
       if (closeBtn) closeBtn.focus();
     }, 100);
   }
 
   closeBetSlipModal() {
-    const modal = document.getElementById('cs2BetSlipModal');
+    const modal = this.root?.querySelector('#cs2BetSlipModal');
+    if (!modal) return;
     modal.classList.remove('open');
     // Wait for slide-out animation to finish
     setTimeout(() => {
@@ -1149,8 +1151,9 @@ class CS2ModernBettingGame {
     this.pendingBetRequestSignature = null;
     
     // Reset UI
-    const betSlip = document.getElementById('cs2BetSlip');
-    const betControls = document.getElementById('cs2BetControls');
+    const betSlip = this.root?.querySelector('#cs2BetSlip');
+    const betControls = this.root?.querySelector('#cs2BetControls');
+    const betActions = this.root?.querySelector('#cs2BetActions');
     
     if (betSlip) {
       betSlip.innerHTML = `
@@ -1162,11 +1165,10 @@ class CS2ModernBettingGame {
       `;
     }
     
-    if (betControls) {
-      betControls.classList.add('hidden');
-    }
+    betControls?.classList.add('hidden');
+    betActions?.classList.add('hidden');
     
-    const title = document.getElementById('cs2BetSlipTitle');
+    const title = this.root?.querySelector('#cs2BetSlipTitle');
     if (title) title.textContent = 'Bet Slip';
     this.syncOddsSelections();
   }
@@ -1321,14 +1323,17 @@ class CS2ModernBettingGame {
   }
 
   renderBetSelection() {
-    const betSlip = document.getElementById('cs2BetSlip');
-    const betControls = document.getElementById('cs2BetControls');
-    const title = document.getElementById('cs2BetSlipTitle');
+    const betSlip = this.root?.querySelector('#cs2BetSlip');
+    const betControls = this.root?.querySelector('#cs2BetControls');
+    const betActions = this.root?.querySelector('#cs2BetActions');
+    const title = this.root?.querySelector('#cs2BetSlipTitle');
+    if (!betSlip || !betControls || !betActions) return;
     if (this.betMode === 'parlay') {
       if (this.parlayLegs.length < 2) return;
       if (title) title.textContent = `${this.parlayLegs.length}-Leg Parlay`;
       betSlip.innerHTML = `<div class="betslip-parlay-list">${this.parlayLegs.map((leg, index) => `<div class="betslip-parlay-leg"><span>${index + 1}</span><div><strong>${this.escapeHtml(leg.selectionName)}</strong><small>${this.escapeHtml(leg.homeTeam)} vs ${this.escapeHtml(leg.awayTeam)}</small></div><b>${leg.odds.toFixed(2)}×</b></div>`).join('')}</div>`;
       betControls.classList.remove('hidden');
+      betActions.classList.remove('hidden');
       return;
     }
     if (!this.selectedEvent || !this.selectedOutcome) return;
@@ -1343,6 +1348,7 @@ class CS2ModernBettingGame {
       </div>
       <div class="selection-outcome"><div class="outcome-label">Your Selection:</div><div class="outcome-value">${this.escapeHtml(selectionName)} @ ${odds.toFixed(2)}</div></div>`;
     betControls.classList.remove('hidden');
+    betActions.classList.remove('hidden');
   }
 
   updatePotentialPayout() {
