@@ -1,5 +1,13 @@
 # Casino — STATUS.md
-> Updated: 2026-08-29
+> Updated: 2026-08-30
+
+## Live Durable CS2 Portfolio + Mobile Performance Repair — frontend/backend `neon777-20260830-r95` (2026-08-30)
+- **Canonical portfolio:** `/api/cs2/bets` now reconciles CS2 wager display records against the SQLite escrow ledger. Ledger escrow state is authoritative for stake and settlement; an open wager without matching escrow fails visibly instead of disappearing. Settled pre-ledger wagers remain available as explicitly marked legacy history.
+- **Open/History experience:** one server-authored response supplies newest-first Open and History tracks, summary totals, stable revision metadata, and explicit loading/refreshing/stale/error/integrity states. Mobile cards retain complete parlay legs, stake, odds, return, and settlement context.
+- **Interface performance:** event and portfolio refreshes coalesce concurrent callers, ignore stale generations, pause while hidden, and suppress unchanged payload rerenders. Tournament sections are keyed and reused, preserving scroll, focus, and collapse state. Mobile hot surfaces drop decorative fixed noise, blur, and broad `transition: all` work.
+- **Verification:** **147/147** Casino tests passed. Production-shaped rehearsal reconciled 42 wagers with zero integrity issues. Five browser viewports (320×568, 390×844, 430×932, 844×390, 1280×900) passed with zero overflow, undersized critical controls, or console errors; unchanged section identity, focus/state preservation, newest-first tracks, parlay rendering, and mobile effect reductions were verified.
+- **Immutable production:** Linux x86_64 package contains 6,285 manifested files; manifest SHA-256 `3c2b8d7ab19fe8d733d21d5f46ef118b7210fc6f607cc58ad0f5377d0990a699`; entry SHA-256 `bb7b990f464b987bd9d05a6f4f81af57fea5d4db8ef7c7810d50600e7975cab6`; CS2 client SHA-256 `bb64c65908a990664a5b7c9fc9d4023a2373984f38dace36af1e379de1e0308b`; all 26 referenced CDN assets are byte-identical and immutable-cached. CloudFront invalidation `I6E2YCGQECAF26LO2ZNIUI7T84` completed.
+- **Production integrity:** public health/projection is `ok`; PM2 is online and all 10 unrelated processes retained PID/restart state. Startup legitimately settled two completed 1,000-credit CS2 wagers as wins for canonical returns of 3,732 and 3,669 credits. Final live reconciliation covers 5 users / 42 wagers / 7 escrows with 0 open, 42 history, 35 legacy, and 0 integrity issues. JSON/SQLite projection is exact across 39 accounts; SQLite integrity is `ok` with zero foreign-key failures. Rollback is frontend `r94`, backend `r91`; owner-only backup `/home/ubuntu/casino-backups/pre-r95-20260830T174059Z`.
 
 ## Live Ground-Up Pachinko + Truthful CS2 Live Markets — frontend `neon777-20260828-r94` / backend `neon777-20260823-r91` (2026-08-29)
 - **Pachinko rebuilt:** one responsive cabinet now owns the wager composer, deterministic Galton board, slot labels, and newest-first result tray. Pure normalized geometry scales across portrait, landscape, and desktop without changing the authoritative 16-row/17-slot contract.
@@ -143,9 +151,9 @@
 - **Evidence:** `audits/blackjack-mobile-2026-08-02/`, `audits/casino-audio-roulette-2026-08-02/`, local package `/tmp/neon777-releases/neon777-20260802-r45`, Linux package `/tmp/neon777-r45-linux-release/neon777-20260802-r45`, and live login captures `live-login-390.png` / `live-login-1280.png`. Subjective listening remains Gary's human acceptance check; technical synthesis, scheduling, recovery, cleanup, and live delivery are verified.
 
 ## What's Live
-- **Frontend:** `r94` at https://gary-yong.com/casino.html (S3/CloudFront)
-- **API/Backend:** `r91` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
-- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260823-r91/backend`
+- **Frontend:** `r95` at https://gary-yong.com/casino.html (S3/CloudFront)
+- **API/Backend:** `r95` at https://api.gary-yong.com (EC2, nginx → localhost:3001)
+- **Server:** EC2, PM2 process `casino-server`, port 3001, online; stable pointer targets `neon777-20260830-r95/backend`
 
 ## Games (8 total)
 | Game | Type | Notes |

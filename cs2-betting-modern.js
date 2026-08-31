@@ -1,6 +1,8 @@
 // CS2 Modern Betting Game - Production Ready
 // Enhanced with modern UI patterns, animations, and touch optimization
 
+const BET_TABS = Object.freeze({ OPEN: 'open', HISTORY: 'history' });
+
 class CS2ModernBettingGame {
   constructor(casinoManager) {
     this.casino = casinoManager;
@@ -13,10 +15,22 @@ class CS2ModernBettingGame {
     this.betMode = 'single';
     this.parlayLegs = [];
     this.betAmount = 100;
-    this.currentBetsTab = 'open';
+    this.currentBetsTab = BET_TABS.OPEN;
     this.pendingBetRequestId = null;
     this.pendingBetRequestSignature = null;
     this.refreshInterval = null;
+    this.eventRefreshPromise = null;
+    this.portfolioRefreshPromise = null;
+    this.eventRequestGeneration = 0;
+    this.portfolioRequestGeneration = 0;
+    this.eventPayloadRevision = null;
+    this.portfolioRevision = null;
+    this.portfolioState = 'loading';
+    this.portfolioSummary = null;
+    this.portfolioIntegrity = { state: 'ok', issues: [] };
+    this.openBets = [];
+    this.historyBets = [];
+    this.destroyed = false;
     
     // Modern UI state management
     this.isLoading = false;
@@ -136,9 +150,14 @@ class CS2ModernBettingGame {
                   <h3 id="cs2MyBetsHeading">My Bets</h3>
                 </div>
                 <div class="bets-tabs" role="tablist" aria-label="Bet status">
-                  <button class="bet-tab active" data-tab="open" role="tab" aria-selected="true">Open</button>
-                  <button class="bet-tab" data-tab="settled" role="tab" aria-selected="false">History</button>
+                  <button class="bet-tab active" data-tab="open" role="tab" aria-selected="true">Open <span id="cs2OpenCount">0</span></button>
+                  <button class="bet-tab" data-tab="history" role="tab" aria-selected="false">History <span id="cs2HistoryCount">0</span></button>
                 </div>
+              </div>
+              <div id="cs2PortfolioStatus" class="cs2-portfolio-status" data-state="loading" role="status" aria-live="polite">Loading your portfolio…</div>
+              <div id="cs2PortfolioSummary" class="cs2-portfolio-summary" aria-label="Open wager summary">
+                <div><span>Open stake</span><strong id="cs2OpenStake">0</strong></div>
+                <div><span>Potential return</span><strong id="cs2PotentialReturn">0</strong></div>
               </div>
               <div id="cs2MyBets" class="cs2-my-bets" role="tabpanel">
                 <div class="empty-state">
@@ -351,6 +370,17 @@ class CS2ModernBettingGame {
     });
 
     this.addManagedListener(this.root, 'touchstart', e => {
+      const odds = e.target.closest('.odds-pill:not(.disabled)');
+      if (!odds) return;
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = setTimeout(() => {
+        this.triggerHapticFeedback('medium');
+        this.showToast('Tap to select this market', 'info');
+      }, 800);
+    }, { passive: true });
+    this.addManagedListener(this.root, 'touchend', () => clearTimeout(this.longPressTimer), { passive: true });
+
+    this.addManagedListener(this.root, 'touchstart', e => {
       if (window.scrollY === 0) pullState.startY = e.touches[0].clientY;
     });
     this.addManagedListener(this.root, 'touchmove', e => {
@@ -522,7 +552,7 @@ class CS2ModernBettingGame {
 
   handleTabSwitch(activeTab) {
     const tabType = activeTab.dataset.tab;
-    this.currentBetsTab = tabType === 'history' ? 'history' : 'open';
+    this.currentBetsTab = tabType === BET_TABS.HISTORY ? BET_TABS.HISTORY : BET_TABS.OPEN;
     
     // Update tab states with animation
     this.root?.querySelectorAll('.bet-tab').forEach(tab => {
@@ -531,14 +561,7 @@ class CS2ModernBettingGame {
       tab.setAttribute('aria-selected', String(selected));
     });
     
-    // Animate content change
-    const betsContainer = document.getElementById('cs2MyBets');
-    betsContainer.style.opacity = '0.5';
-    
-    setTimeout(() => {
-      this.showBets(tabType);
-      betsContainer.style.opacity = '1';
-    }, 150);
+    this.showBets(this.currentBetsTab);
     
     this.triggerHapticFeedback('light');
   }
@@ -781,12 +804,18 @@ class CS2ModernBettingGame {
       this.socket = io(serverUrl);
     }
 
-    // Set up periodic refresh with intelligent timing
+    const refreshVisibleData = () => {
+      if (document.visibilityState === 'hidden' || this.destroyed) return;
+      this.loadEvents().catch(() => {});
+      this.loadBets().catch(() => {});
+    };
+    this.addManagedListener(document, 'visibilitychange', () => {
+      if (document.visibilityState !== 'hidden') refreshVisibleData();
+    });
+
+    // Poll only while visible. Each loader coalesces concurrent callers.
     this.refreshInterval = setInterval(() => {
-      if (!this.isLoading) {
-        this.loadEvents();
-        this.loadBets();
-      }
+      refreshVisibleData();
     }, 60000);
   }
 
@@ -837,7 +866,9 @@ class CS2ModernBettingGame {
   }
 
   async loadEvents() {
-    try {
+    if (this.eventRefreshPromise) return this.eventRefreshPromise;
+    const generation = ++this.eventRequestGeneration;
+    this.eventRefreshPromise = (async () => {
       const serverUrl = this.getServerUrl();
       const response = await fetch(`${serverUrl}/api/cs2/events`);
       
@@ -847,16 +878,36 @@ class CS2ModernBettingGame {
       
       const data = await response.json();
 
-      if (data.success) {
-        this.events = data.events || [];
-        this.renderEvents();
-      } else {
-        throw new Error('Failed to load events');
-      }
-    } catch (error) {
+      if (!data.success) throw new Error('Failed to load events');
+      if (this.destroyed || generation !== this.eventRequestGeneration) return false;
+      return this.applyEvents(data.events || [], data.revision || null);
+    })().catch(error => {
       console.error('[CS2 Modern] Error loading events:', error);
-      this.renderEventsError(error);
+      if (!this.destroyed && generation === this.eventRequestGeneration) this.renderEventsError(error);
+      throw error;
+    }).finally(() => {
+      if (generation === this.eventRequestGeneration) this.eventRefreshPromise = null;
+    });
+    return this.eventRefreshPromise;
+  }
+
+  eventRevision(events) {
+    let hash = 2166136261;
+    const value = JSON.stringify(events);
+    for (let index = 0; index < value.length; index++) {
+      hash ^= value.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
     }
+    return (hash >>> 0).toString(16);
+  }
+
+  applyEvents(events, serverRevision = null) {
+    const revision = serverRevision || this.eventRevision(events);
+    if (revision === this.eventPayloadRevision) return false;
+    this.events = events;
+    this.eventPayloadRevision = revision;
+    this.renderEvents();
+    return true;
   }
 
   renderEvents() {
@@ -893,21 +944,32 @@ class CS2ModernBettingGame {
       return;
     }
 
-    // Group by live state and tournament
+    // Group by live state and tournament, then reuse unchanged section nodes.
     const groupedEvents = this.groupEventsByTournament(activeEvents);
-    let htmlContent = '';
-
-    Object.entries(groupedEvents).forEach(([tournament, tournamentEvents]) => {
-      htmlContent += this.renderTournamentSection(tournament, tournamentEvents);
-    });
-
-    eventsList.innerHTML = htmlContent;
-    
-    // Add fade-in animation
-    eventsList.classList.add('fade-in');
-    
-    // Attach enhanced event listeners
-    this.attachEventCardListeners();
+    const previousScrollTop = eventsList.scrollTop;
+    const focusedEventId = document.activeElement?.closest?.('[data-event-id]')?.dataset.eventId || null;
+    const existing = new Map(Array.from(eventsList.querySelectorAll(':scope > .cs2-tournament-section')).map(section => [section.dataset.tournamentKey, section]));
+    const template = document.createElement('template');
+    const fragment = document.createDocumentFragment();
+    for (const [tournament, tournamentEvents] of Object.entries(groupedEvents)) {
+      const key = encodeURIComponent(tournament);
+      const rendered = this.renderTournamentSection(tournament, tournamentEvents);
+      template.innerHTML = rendered.trim();
+      const candidate = template.content.firstElementChild;
+      const prior = existing.get(key);
+      if (prior && prior.dataset.renderKey === candidate.dataset.renderKey) {
+        fragment.append(prior);
+      } else {
+        if (prior?.classList.contains('collapsed')) {
+          candidate.classList.add('collapsed');
+          candidate.querySelector('.cs2-tournament-header')?.setAttribute('aria-expanded', 'false');
+        }
+        fragment.append(candidate);
+      }
+    }
+    eventsList.replaceChildren(fragment);
+    eventsList.scrollTop = previousScrollTop;
+    if (focusedEventId) eventsList.querySelector(`[data-event-id="${CSS.escape(focusedEventId)}"] .odds-pill`)?.focus({ preventScroll: true });
     this.syncOddsSelections();
     this.renderParlayTray();
   }
@@ -954,6 +1016,8 @@ class CS2ModernBettingGame {
 
   renderTournamentSection(tournament, events) {
     const safeTournamentName = this.escapeHtml(tournament);
+    const tournamentKey = this.escapeHtml(encodeURIComponent(tournament));
+    const renderKey = this.escapeHtml(this.eventRevision(events));
     const lowerName = tournament.toLowerCase();
     const isLiveSection = lowerName === 'bettable live';
     const isPausedLiveSection = lowerName === 'watching · markets paused';
@@ -973,7 +1037,7 @@ class CS2ModernBettingGame {
     const defaultCollapsed = !isLiveSection && !isPausedLiveSection && window.matchMedia?.('(max-width: 767px)').matches;
 
     return `
-      <div class="cs2-tournament-section ${sectionTierClass}${defaultCollapsed ? ' collapsed' : ''}">
+      <div class="cs2-tournament-section ${sectionTierClass}${defaultCollapsed ? ' collapsed' : ''}" data-tournament-key="${tournamentKey}" data-render-key="${renderKey}">
         <button type="button" class="cs2-tournament-header" aria-expanded="${String(!defaultCollapsed)}">
           ${isLiveSection ? '<div class="cs2-live-dot" aria-hidden="true"></div>' : (isPausedLiveSection ? '<div class="cs2-paused-dot" aria-hidden="true"></div>' : (tierLabel ? `<div class="cs2-tier-badge ${tierClass}">${tierLabel}</div>` : '<div class="cs2-tournament-icon">&#127942;</div>'))}
           <div class="cs2-tournament-logo-area"></div>
@@ -1121,19 +1185,6 @@ class CS2ModernBettingGame {
     `;
   }
 
-  attachEventCardListeners() {
-    // Click selection is delegated once from this.root. Card-local listeners
-    // only implement the optional long-press hint.
-    this.root?.querySelectorAll('.odds-pill:not(.disabled)').forEach(card => {
-      card.addEventListener('touchstart', () => {
-        this.longPressTimer = setTimeout(() => {
-          this.triggerHapticFeedback('medium');
-          this.showToast('💡 Tap to select, hold for quick bet', 'info');
-        }, 800);
-      });
-      card.addEventListener('touchend', () => clearTimeout(this.longPressTimer));
-    });
-  }
 
   async selectOutcome(eventId, selection) {
     const event = this.events.find(e => e.id === eventId);
@@ -1432,17 +1483,23 @@ class CS2ModernBettingGame {
   }
 
   async loadBets() {
-    try {
+    if (this.portfolioRefreshPromise) return this.portfolioRefreshPromise;
+    const generation = ++this.portfolioRequestGeneration;
+    this.portfolioState = this.portfolioRevision ? 'refreshing' : 'loading';
+    this.renderPortfolioStatus();
+    this.portfolioRefreshPromise = (async () => {
       const userId = this.casino.username || sessionStorage.getItem('casinoUsername');
       if (!userId) return;
 
-      const serverUrl = this.getServerUrl();
       const response = await this.casino.apiFetch('/api/cs2/bets');
+      if (!response.ok) throw new Error(`Portfolio request failed (${response.status})`);
       const data = await response.json();
 
-      if (data.success) {
-        const nextBets = (data.bets || []).map(b => b.bet ? b.bet : b);
-        const settled = nextBets.filter(bet => bet.status && bet.status !== 'pending');
+      if (data.success && !this.destroyed && generation === this.portfolioRequestGeneration) {
+        const nextOpen = Array.isArray(data.openBets) ? data.openBets : [];
+        const nextHistory = Array.isArray(data.history) ? data.history : [];
+        const nextBets = [...nextOpen, ...nextHistory];
+        const settled = nextHistory;
         const settledKey = bet => String(bet.id || bet.betId || `${bet.eventId}:${bet.selection}:${bet.placedAt || bet.createdAt || ''}`);
         if (this.soundKnownSettled) {
           settled.filter(bet => !this.soundKnownSettled.has(settledKey(bet))).forEach((bet, index) => {
@@ -1453,35 +1510,59 @@ class CS2ModernBettingGame {
           });
         }
         this.soundKnownSettled = new Set(settled.map(settledKey));
+        this.openBets = nextOpen;
+        this.historyBets = nextHistory;
         this.bets = nextBets;
+        this.portfolioSummary = data.summary || null;
+        this.portfolioIntegrity = data.integrity || { state: 'ok', issues: [] };
+        this.portfolioRevision = data.revision || null;
+        this.portfolioState = this.portfolioIntegrity.state === 'ok' ? 'ready' : 'integrity';
         this.showBets(this.currentBetsTab);
-        this.updateQuickStats();
+        this.updatePortfolioSummary();
+        this.renderPortfolioStatus();
+        return true;
       }
-    } catch (error) {
+      throw new Error('Portfolio response was invalid');
+    })().catch(error => {
       console.error('Error loading bets:', error);
-    }
+      if (!this.destroyed && generation === this.portfolioRequestGeneration) {
+        this.portfolioState = this.portfolioRevision ? 'stale' : 'error';
+        this.renderPortfolioStatus(error);
+        if (!this.portfolioRevision) this.showBets(this.currentBetsTab);
+      }
+      throw error;
+    }).finally(() => {
+      if (generation === this.portfolioRequestGeneration) this.portfolioRefreshPromise = null;
+    });
+    return this.portfolioRefreshPromise;
   }
 
   showBets(tabType) {
-    this.currentBetsTab = tabType === 'history' ? 'history' : 'open';
+    this.currentBetsTab = tabType === BET_TABS.HISTORY ? BET_TABS.HISTORY : BET_TABS.OPEN;
     tabType = this.currentBetsTab;
     const betsContainer = document.getElementById('cs2MyBets');
-    
-    const filteredBets = tabType === 'open' 
-      ? this.bets.filter(b => b.status === 'pending')
-      : this.bets.filter(b => b.status !== 'pending');
+    if (!betsContainer) return;
+    if (this.portfolioState === 'loading') {
+      betsContainer.innerHTML = '<div class="empty-state"><div class="loading-spinner"></div><div class="empty-state-text">Loading portfolio…</div></div>';
+      return;
+    }
+    if (this.portfolioState === 'error') {
+      betsContainer.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">Portfolio unavailable</div><div class="empty-state-subtext">Your balance is unchanged. Retry when the connection recovers.</div></div>';
+      return;
+    }
+    const filteredBets = tabType === BET_TABS.OPEN ? this.openBets : this.historyBets;
 
     if (filteredBets.length === 0) {
-      const emptyMessage = tabType === 'open' 
+      const emptyMessage = tabType === BET_TABS.OPEN
         ? 'No open bets' 
         : 'No betting history';
-      const emptySubtext = tabType === 'open'
+      const emptySubtext = tabType === BET_TABS.OPEN
         ? 'Place a bet to get started'
         : 'Your completed bets will appear here';
       
       betsContainer.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">${tabType === 'open' ? '🎯' : '📊'}</div>
+          <div class="empty-state-icon">${tabType === BET_TABS.OPEN ? '🎯' : '📊'}</div>
           <div class="empty-state-text">${emptyMessage}</div>
           <div class="empty-state-subtext">${emptySubtext}</div>
         </div>
@@ -1489,21 +1570,43 @@ class CS2ModernBettingGame {
       return;
     }
 
-    betsContainer.innerHTML = filteredBets.map(bet => this.renderBetCard(bet)).join('');
+    const integrityNotice = this.portfolioState === 'integrity'
+      ? '<div class="portfolio-integrity-notice">⚠️ Some wager details could not be verified. Canonical reserved credits remain visible.</div>'
+      : '';
+    betsContainer.innerHTML = integrityNotice + filteredBets.map(bet => this.renderBetCard(bet)).join('');
   }
 
-  updateQuickStats() {
-    const today = new Date().toDateString();
-    const todayBets = this.bets.filter(b => {
-      const betDate = new Date(b.placedAt || b.createdAt || 0).toDateString();
-      return betDate === today;
-    });
-    const wins = todayBets.filter(b => b.status === 'won').length;
-    const losses = todayBets.filter(b => b.status === 'lost').length;
+  updatePortfolioSummary() {
+    const summary = this.portfolioSummary || {};
+    const wins = Number(summary.todayWins || 0);
+    const losses = Number(summary.todayLosses || 0);
     const winsEl = document.getElementById('cs2QuickWins');
     const lossesEl = document.getElementById('cs2QuickLosses');
     if (winsEl) winsEl.textContent = `W: ${wins}`;
     if (lossesEl) lossesEl.textContent = `L: ${losses}`;
+    const openCount = document.getElementById('cs2OpenCount');
+    const historyCount = document.getElementById('cs2HistoryCount');
+    const openStake = document.getElementById('cs2OpenStake');
+    const potentialReturn = document.getElementById('cs2PotentialReturn');
+    if (openCount) openCount.textContent = String(summary.openCount || 0);
+    if (historyCount) historyCount.textContent = String(summary.historyCount || 0);
+    if (openStake) openStake.textContent = this.casino.formatCredits?.(summary.openStake || 0) || String(summary.openStake || 0);
+    if (potentialReturn) potentialReturn.textContent = this.casino.formatCredits?.(summary.potentialReturn || 0) || String(summary.potentialReturn || 0);
+  }
+
+  renderPortfolioStatus(error = null) {
+    const status = document.getElementById('cs2PortfolioStatus');
+    if (!status) return;
+    const labels = {
+      loading: 'Loading your portfolio…',
+      ready: 'Portfolio is current',
+      refreshing: 'Refreshing portfolio…',
+      stale: 'Showing your last verified portfolio · refresh failed',
+      error: 'Portfolio unavailable · no wager data is being shown',
+      integrity: 'Portfolio integrity check needs attention'
+    };
+    status.dataset.state = this.portfolioState;
+    status.textContent = error && this.portfolioState === 'error' ? `${labels.error}` : labels[this.portfolioState];
   }
 
   renderParlayBetCard(bet) {
@@ -1821,6 +1924,10 @@ class CS2ModernBettingGame {
     if (this.longPressTimer) {
       clearTimeout(this.longPressTimer);
     }
+    this.eventRequestGeneration++;
+    this.portfolioRequestGeneration++;
+    this.eventRefreshPromise = null;
+    this.portfolioRefreshPromise = null;
     
     // Remove any active toasts
     if (this.toast) {
@@ -1836,6 +1943,7 @@ class CS2ModernBettingGame {
   }
 
   destroy() {
+    this.destroyed = true;
     for (const listener of this._managedListeners) {
       listener.target.removeEventListener(listener.type, listener.handler, listener.options);
     }

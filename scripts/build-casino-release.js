@@ -21,7 +21,7 @@ if (fs.existsSync(output)) throw new Error(`Refusing to overwrite immutable rele
 const backendFiles = [
   'casino-server.js', 'casino-security.js', 'casino-persistence.js', 'casino-games-authoritative.js',
   'casino-ledger.js', 'casino-fairness.js', 'casino-cases.js', 'casino-case-assets.json', 'casino-email.js', 'poker-engine.js',
-  'cs2-bo3gg-client.js', 'cs2-market-availability.js', 'cs2-wager-rules.js', 'cs2-free-result-sources.js', 'cs2-team-rankings.json', 'package.json', 'package-lock.json',
+  'cs2-bo3gg-client.js', 'cs2-market-availability.js', 'cs2-wager-rules.js', 'cs2-portfolio.js', 'cs2-free-result-sources.js', 'cs2-team-rankings.json', 'package.json', 'package-lock.json',
   'scripts/migrate-casino-ledger.js', 'scripts/export-ledger-balances.js', 'scripts/backup-casino-db.js'
 ];
 const frontendFiles = [

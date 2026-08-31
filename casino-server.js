@@ -28,6 +28,7 @@ const { FairRng, FAIR_GAMES } = require('./casino-fairness');
 const { createCasinoMailer } = require('./casino-email');
 const { CaseGameService } = require('./casino-cases');
 const { getCS2BettingAvailability } = require('./cs2-market-availability');
+const { buildCS2Portfolio } = require('./cs2-portfolio');
 const {
   validateParlayLegs,
   potentialPayout: calculateCS2PotentialPayout,
@@ -3662,70 +3663,22 @@ app.get("/api/cs2/events/:eventId/odds", async (req, res) => {
   }
 });
 
-// GET /api/cs2/bets - Get bets for a session/user
+// GET /api/cs2/bets - Canonical wager portfolio for the authenticated user.
 app.get("/api/cs2/bets", requireAuth, async (req, res) => {
   try {
     const userId = req.auth.username;
-    
-    // Filter bets by userId and enrich with team names from events
-    const userBets = Object.values(cs2BettingState.bets)
-      .filter(bet => bet.userId === userId)
-      .map(bet => {
-        const enriched = { ...bet };
-        // Backfill display names from cached events without mutating canonical wager state.
-        if (!enriched.homeTeam || !enriched.awayTeam) {
-          const event = cs2BettingState.events[enriched.eventId];
-          if (event) {
-            enriched.homeTeam = enriched.homeTeam || event.homeTeam || event.participant1Name || 'Unknown';
-            enriched.awayTeam = enriched.awayTeam || event.awayTeam || event.participant2Name || 'Unknown';
-            enriched.selectionName = enriched.selectionName ||
-              (enriched.selection === 'team1' ? enriched.homeTeam :
-               enriched.selection === 'team2' ? enriched.awayTeam : 'Draw');
-          }
-        }
-        return enriched;
-      });
-    
-    // Compute summary stats
-    const user = users[userId];
-    const currentBalance = user?.credits ?? 0;
-    let totalWagered = 0;
-    let totalWon = 0;
-    let wins = 0;
-    let settled = 0;
-
-    // Convert bets to transaction-style items for the history
-    const transactions = userBets.map(bet => {
-      totalWagered += bet.amount || 0;
-      if (bet.status === 'won') {
-        const payout = bet.potentialPayout ?? Math.round((bet.amount || 0) * (bet.odds || 1));
-        totalWon += payout;
-        wins++;
-        settled++;
-        return { type: 'bet_won', amount: payout, description: `Won: ${bet.selectionName || bet.selection}`, timestamp: bet.settledAt || bet.placedAt, bet };
-      } else if (bet.status === 'lost') {
-        settled++;
-        return { type: 'bet_lost', amount: -(bet.amount || 0), description: `Lost: ${bet.selectionName || bet.selection}`, timestamp: bet.settledAt || bet.placedAt, bet };
-      } else if (bet.status === 'void') {
-        return { type: 'bet_void', amount: 0, description: `Void: ${bet.selectionName || bet.selection}`, timestamp: bet.settledAt || bet.placedAt, bet };
-      } else {
-        return { type: 'bet_placed', amount: -(bet.amount || 0), description: `Pending: ${bet.selectionName || bet.selection}`, timestamp: bet.placedAt, bet };
-      }
+    const portfolio = buildCS2Portfolio({
+      userId,
+      bets: Object.values(cs2BettingState.bets),
+      escrows: casinoLedger.escrowsForUser(userId, 'cs2betting'),
+      events: cs2BettingState.events,
+      lastSettlementCheck: cs2BettingState.lastSettlementCheck
     });
-
-    const netProfit = totalWon - totalWagered;
-    const winRate = settled > 0 ? Math.round((wins / settled) * 100) : 0;
-
-    res.json({
+    res.json(sanitizePublicData({
       success: true,
-      bets: sanitizePublicData(transactions),
-      count: transactions.length,
-      currentBalance,
-      totalWagered,
-      totalWon,
-      netProfit,
-      winRate
-    });
+      ...portfolio,
+      currentBalance: casinoLedger.balance(userId)
+    }));
   } catch (error) {
     console.error("Error fetching CS2 bets:", error);
     res.status(500).json({ success: false, error: "Failed to fetch bets" });

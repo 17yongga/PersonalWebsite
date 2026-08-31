@@ -1,0 +1,265 @@
+{
+  "generatedAt": "2026-08-30T16:22:13.328Z",
+  "results": [
+    {
+      "name": "320x568",
+      "metrics": {
+        "overflowX": false,
+        "documentWidth": 320,
+        "critical": [
+          {
+            "label": "Single",
+            "w": 136,
+            "h": 46
+          },
+          {
+            "label": "Parlay",
+            "w": 136,
+            "h": 46
+          },
+          {
+            "label": "🔄\nREFRESH",
+            "w": 96,
+            "h": 44
+          },
+          {
+            "label": "OPEN 2",
+            "w": 125,
+            "h": 54
+          },
+          {
+            "label": "HISTORY 2",
+            "w": 125,
+            "h": 54
+          }
+        ],
+        "undersized": [],
+        "sections": 2,
+        "unchangedReturned": false,
+        "preservedSame": true,
+        "changedApplied": true,
+        "replacedCount": 1,
+        "unchangedCount": 1,
+        "collapsePreserved": true,
+        "openNewestFirst": true,
+        "historyNewestFirst": true,
+        "parlayVisible": true,
+        "historyTabSelected": true,
+        "status": "ready",
+        "summary": "OPEN STAKE\n30.00\nPOTENTIAL RETURN\n83.90",
+        "mobileNoiseDisplay": "none",
+        "eventTransition": "transform 0.15s, opacity 0.15s",
+        "backdropFilter": "none"
+      },
+      "errors": []
+    },
+    {
+      "name": "390x844",
+      "metrics": {
+        "overflowX": false,
+        "documentWidth": 390,
+        "critical": [
+          {
+            "label": "Single",
+            "w": 169.3,
+            "h": 46
+          },
+          {
+            "label": "Parlay",
+            "w": 169.3,
+            "h": 46
+          },
+          {
+            "label": "🔄\nREFRESH",
+            "w": 96,
+            "h": 44
+          },
+          {
+            "label": "OPEN 2",
+            "w": 160,
+            "h": 54
+          },
+          {
+            "label": "HISTORY 2",
+            "w": 160,
+            "h": 54
+          }
+        ],
+        "undersized": [],
+        "sections": 2,
+        "unchangedReturned": false,
+        "preservedSame": true,
+        "changedApplied": true,
+        "replacedCount": 1,
+        "unchangedCount": 1,
+        "collapsePreserved": true,
+        "openNewestFirst": true,
+        "historyNewestFirst": true,
+        "parlayVisible": true,
+        "historyTabSelected": true,
+        "status": "ready",
+        "summary": "OPEN STAKE\n30.00\nPOTENTIAL RETURN\n83.90",
+        "mobileNoiseDisplay": "none",
+        "eventTransition": "transform 0.15s, opacity 0.15s",
+        "backdropFilter": "none"
+      },
+      "errors": []
+    },
+    {
+      "name": "430x932",
+      "metrics": {
+        "overflowX": false,
+        "documentWidth": 430,
+        "critical": [
+          {
+            "label": "Single",
+            "w": 188.1,
+            "h": 46
+          },
+          {
+            "label": "Parlay",
+            "w": 188.1,
+            "h": 46
+          },
+          {
+            "label": "🔄\nREFRESH",
+            "w": 96,
+            "h": 44
+          },
+          {
+            "label": "OPEN 2",
+            "w": 180,
+            "h": 54
+          },
+          {
+            "label": "HISTORY 2",
+            "w": 180,
+            "h": 54
+          }
+        ],
+        "undersized": [],
+        "sections": 2,
+        "unchangedReturned": false,
+        "preservedSame": true,
+        "changedApplied": true,
+        "replacedCount": 1,
+        "unchangedCount": 1,
+        "collapsePreserved": true,
+        "openNewestFirst": true,
+        "historyNewestFirst": true,
+        "parlayVisible": true,
+        "historyTabSelected": true,
+        "status": "ready",
+        "summary": "OPEN STAKE\n30.00\nPOTENTIAL RETURN\n83.90",
+        "mobileNoiseDisplay": "none",
+        "eventTransition": "transform 0.15s, opacity 0.15s",
+        "backdropFilter": "none"
+      },
+      "errors": []
+    },
+    {
+      "name": "844x390",
+      "metrics": {
+        "overflowX": false,
+        "documentWidth": 844,
+        "critical": [
+          {
+            "label": "Single",
+            "w": 171,
+            "h": 46
+          },
+          {
+            "label": "Parlay",
+            "w": 171,
+            "h": 46
+          },
+          {
+            "label": "🔄\nREFRESH",
+            "w": 704,
+            "h": 44
+          },
+          {
+            "label": "OPEN 2",
+            "w": 141,
+            "h": 54
+          },
+          {
+            "label": "HISTORY 2",
+            "w": 141,
+            "h": 54
+          }
+        ],
+        "undersized": [],
+        "sections": 2,
+        "unchangedReturned": false,
+        "preservedSame": true,
+        "changedApplied": true,
+        "replacedCount": 1,
+        "unchangedCount": 1,
+        "collapsePreserved": true,
+        "openNewestFirst": true,
+        "historyNewestFirst": true,
+        "parlayVisible": true,
+        "historyTabSelected": true,
+        "status": "ready",
+        "summary": "OPEN STAKE\n30.00\nPOTENTIAL RETURN\n83.90",
+        "mobileNoiseDisplay": "none",
+        "eventTransition": "0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+        "backdropFilter": "blur(28px) saturate(1.8)"
+      },
+      "errors": []
+    },
+    {
+      "name": "1280x900",
+      "metrics": {
+        "overflowX": false,
+        "documentWidth": 1280,
+        "critical": [
+          {
+            "label": "Single",
+            "w": 171,
+            "h": 46
+          },
+          {
+            "label": "Parlay",
+            "w": 171,
+            "h": 46
+          },
+          {
+            "label": "🔄\nREFRESH",
+            "w": 107.2,
+            "h": 44
+          },
+          {
+            "label": "OPEN 2",
+            "w": 141,
+            "h": 54
+          },
+          {
+            "label": "HISTORY 2",
+            "w": 141,
+            "h": 54
+          }
+        ],
+        "undersized": [],
+        "sections": 2,
+        "unchangedReturned": false,
+        "preservedSame": true,
+        "changedApplied": true,
+        "replacedCount": 1,
+        "unchangedCount": 1,
+        "collapsePreserved": true,
+        "openNewestFirst": true,
+        "historyNewestFirst": true,
+        "parlayVisible": true,
+        "historyTabSelected": true,
+        "status": "ready",
+        "summary": "OPEN STAKE\n30.00\nPOTENTIAL RETURN\n83.90",
+        "mobileNoiseDisplay": "none",
+        "eventTransition": "0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+        "backdropFilter": "blur(28px) saturate(1.8)"
+      },
+      "errors": []
+    }
+  ]
+}

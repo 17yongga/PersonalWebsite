@@ -504,6 +504,14 @@ class CasinoLedger {
 
   activeEscrows() { return this.stmt.activeEscrows.all().map(row => this._publicEscrow(row)); }
 
+  escrowsForUser(userId, game = null) {
+    const normalizedUserId = assertUserId(userId);
+    const rows = game
+      ? this.db.prepare('SELECT * FROM escrows WHERE user_id=? AND game=? ORDER BY created_at DESC, escrow_id DESC').all(normalizedUserId, assertId(game, 'game', 40))
+      : this.db.prepare('SELECT * FROM escrows WHERE user_id=? ORDER BY created_at DESC, escrow_id DESC').all(normalizedUserId);
+    return rows.map(row => this._publicEscrow(row));
+  }
+
   saveRound({ roundId, game, state, status = 'active', commitment = null, seedId = null, nonce = null }) {
     const now = this.now();
     this.stmt.saveRound.run({ roundId: assertId(roundId, 'roundId'), game: assertId(game, 'game', 40),

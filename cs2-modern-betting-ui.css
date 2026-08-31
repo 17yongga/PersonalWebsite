@@ -4151,3 +4151,37 @@
   .betslip-parlay-leg>span { width:24px; height:24px; }
   .potential-payout { min-height:0; margin-bottom:0; }
 }
+
+/* Canonical portfolio status and summary. */
+.cs2-portfolio-status {
+  margin: 10px var(--cs2-space-xl) 0;
+  padding: 9px 12px;
+  border: 1px solid var(--cs2-border);
+  background: rgba(255,255,255,.025);
+  color: var(--cs2-text-secondary);
+  font-size: .76rem;
+}
+.cs2-portfolio-status[data-state="ready"] { color: var(--cs2-success-light); }
+.cs2-portfolio-status[data-state="refreshing"],.cs2-portfolio-status[data-state="stale"] { color: var(--cs2-warning-light); }
+.cs2-portfolio-status[data-state="error"],.cs2-portfolio-status[data-state="integrity"] { color: var(--cs2-danger-light); border-color: rgba(255,71,87,.35); }
+.cs2-portfolio-summary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:8px var(--cs2-space-xl) 14px; }
+.cs2-portfolio-summary>div { min-width:0; padding:10px 12px; border:1px solid var(--cs2-border); background:rgba(255,255,255,.025); }
+.cs2-portfolio-summary span,.cs2-portfolio-summary strong { display:block; overflow-wrap:anywhere; }
+.cs2-portfolio-summary span { color:var(--cs2-text-muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; }
+.cs2-portfolio-summary strong { margin-top:3px; color:var(--cs2-text-primary); font-family:var(--cs2-font-mono); }
+.portfolio-integrity-notice { margin-bottom:10px; padding:10px 12px; border:1px solid rgba(255,71,87,.35); color:var(--cs2-danger-light); background:rgba(255,71,87,.08); }
+.bet-tab span { display:inline-grid; min-width:22px; min-height:22px; place-items:center; margin-left:4px; padding:0 5px; border:1px solid currentColor; font:700 .7rem/1 var(--cs2-font-mono); }
+
+/* Mobile performance contract: no fixed texture, glass blur, or broad transitions on hot surfaces. */
+@media (max-width: 768px) {
+  .cs2-betting-container::before { display: none; }
+  .cs2-events-panel,.cs2-event-card,.cs2-my-bets-workspace,.cs2-bet-card,.cs2-tournament-section {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,.28) !important;
+  }
+  .cs2-event-card { transition: transform 150ms ease, opacity 150ms ease !important; animation: none !important; }
+  .cs2-bet-card,.odds-pill,.bet-tab,.cs2-mode-btn { transition: transform 150ms ease, opacity 150ms ease !important; }
+  .cs2-event-card::after { display:none !important; }
+  .cs2-portfolio-status,.cs2-portfolio-summary { margin-left:var(--casino-mobile-density-pad); margin-right:var(--casino-mobile-density-pad); }
+}
